@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+*.egg-info/
+
+# Node
+node_modules/
+.vite/
+frontend/dist/
+
+# Local data
+*.db
+*.db-wal
+*.db-shm
+storage/
+.env
+.env.local
+
+# Editors and system
+.DS_Store
+.idea/
+*.swp
+
+# Internal working docs — deliberately never committed.
+# Detailed implementation plans, the interface proposal and the strategy notes stay local:
+# the public repo carries README.md, VISION.md, ROADMAP.md and docs/v0-plan.md.
+docs/internal/
