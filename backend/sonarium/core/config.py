@@ -63,6 +63,16 @@ class Settings(BaseSettings):
     # --- Sessions and retention -------------------------------------------
 
     session_ttl_days: int = Field(default=30, gt=0)
+
+    session_cookie_name: str = "sonarium_session"
+
+    session_cookie_secure: bool = True
+    """Set to false only to reach an instance over plain HTTP, which means over localhost.
+    A cookie without this travels in clear text, and it is the whole session."""
+
+    login_attempts_per_minute: int = Field(default=10, gt=0)
+    """Per address and per client. Enough that nobody notices; too few to grind through a
+    password list (``INT-5``)."""
     trash_retention_days: int = Field(default=30, gt=0)
     """``DEC-3``: 30 days by default, per instance, never per library."""
 

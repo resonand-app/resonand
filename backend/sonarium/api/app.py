@@ -22,6 +22,8 @@ from fastapi import FastAPI
 from sonarium import __version__
 from sonarium.api.errors import install_error_handlers
 from sonarium.api.logging import RequestCorrelationMiddleware, configure_logging
+from sonarium.api.rate_limit import AttemptLimiter
+from sonarium.api.routes import admin, audio, auth, health, libraries
 from sonarium.core.config import Settings, get_settings
 
 if TYPE_CHECKING:
@@ -59,13 +61,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.settings = resolved
+    app.state.login_limiter = AttemptLimiter(resolved.login_attempts_per_minute)
 
     app.add_middleware(RequestCorrelationMiddleware)
     install_error_handlers(app)
 
+    for router in (health.router, auth.router, libraries.router, audio.router, admin.router):
+        app.include_router(router)
+
     @app.get("/", tags=["meta"], summary="What this instance is")
     def instance() -> dict[str, Any]:
-        """Enough for a client to know what it is talking to, and nothing that needs a session."""
+        """Enough for a client to know what it is talking to, without a session."""
         return {"name": "sonarium", "version": __version__, "status": "ok"}
 
     return app

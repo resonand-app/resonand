@@ -7,7 +7,6 @@ license = { text = "AGPL-3.0-only" }
 dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
-    "pydantic>=2.9",
     "pydantic-settings>=2.6",
     "sqlalchemy>=2.0.36",
     "alembic>=1.14",
@@ -16,6 +15,7 @@ dependencies = [
     "httpx>=0.28",
     "typer>=0.15",
     "structlog>=24.4",
+    "pydantic>=2.9",
 ]
 
 [project.scripts]
