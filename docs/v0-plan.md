@@ -57,7 +57,8 @@ Notation:
 - `⇢ X, Y` — **depends on**. Cannot start until `X` and `Y` are done.
 - `🔒` — **critical path**: until it is done, entire tracks are stalled.
 - `🧪` — carries a mandatory test before it can be called done.
-- `❓` — depends on a decision that is still open.
+- `❓` — depends on a decision that is still open. **Nothing in this document carries it any
+  more**; every decision the first version needs is settled below.
 
 A task is done when it meets the criterion written next to it, not when it "works".
 
@@ -67,7 +68,9 @@ built. Everything needed to understand *what* a task is and *why* it exists is h
 
 ---
 
-## Decisions already made
+## Decisions
+
+All of them settled. Nothing in the first version is waiting on a conversation.
 
 | Topic | Decision | Consequence |
 |---|---|---|
@@ -81,11 +84,25 @@ built. Everything needed to understand *what* a task is and *why* it exists is h
 | Visual identity | The **Archive** palette, light and dark, and nothing else | `DEC-8`. Tokens recorded below; no palette switcher ships |
 | Audio egress | Nothing leaves the instance without a request, and watched folders only when explicitly configured to | `DEC-9`. Principle 2 made operational |
 | Suggestions | No suggestion storage in the first migration | `DEC-1`, deferred with the AI features it serves |
+| Timestamps | Instants in UTC; a recording's own time as wall clock plus offset | `DEC-11`. Two kinds of value, never mixed |
+| Sessions | A `session` table, opaque id in the cookie | `DEC-12`. Revocation and the active-sessions list become real |
+| Search coverage | Transcripts **and** titles, notes and tags, in one ranked list | `DEC-13`. A second FTS5 table in the first migration |
+| Addressing | `uuid` in URLs, integer ids internal, **404 for unreadable** | `DEC-14`. A 403 confirms the resource exists |
+| Identity keys | Normalised email; first writer owns a tag's display name | `DEC-15`. Unique key and display form kept apart |
+| Duplicates | Hash match includes the trash, and says so | `DEC-16` |
+| Default title | Filename without extension, cleaned, editable | `DEC-16` |
+| Accepted formats | Audio, plus video containers kept whole with audio derived | `DEC-17`. The mp4 is often the one that matters |
+| Transcription | Local `faster-whisper` behind an OpenAI-compatible server | `DEC-18`. Language optional per request, `null` = auto-detect |
+| Waveform | Mono `int8` min/max pairs, fixed rate, version byte | `DEC-19` |
+| Trash retention | 30 days, configurable per instance | `DEC-3` |
+| Search grouping | Grouped under the recording, 3 shown, "+N more" | `DEC-4` |
+| Export sidecar | JSON + derived `.vtt`/`.srt`, carrying the `uuid` | `DEC-5`. Re-import is idempotent |
 
-These are documented as ADRs in `docs/adr/` (`INF-8`) so they can be revisited together with
-their rationale, not from memory.
+`INF-8` transcribes each one into `docs/adr/`, one file per decision, so they can be revisited
+together with their rationale rather than from memory. The subsections below carry the substance
+that a one-line table row cannot.
 
-### DEC-7 · The name, claimed once
+### The name, claimed once (DEC-7)
 
 `sonarium`, under the `sonarium-app` organisation: repository, container image, documentation
 namespace and domain all carry the same string. The repository exists and is private.
@@ -96,7 +113,7 @@ discontinued mobile audio game. **The risk is accepted knowingly.** It is not a 
 trademark exposure, since a sound engineer's services and a piece of software are not the same
 class, but it is a real discovery cost: competition for the term inside the same sector.
 
-### DEC-8 · The Archive palette
+### The Archive palette (DEC-8)
 
 One identity, not a palette switcher. *Paper and ink: a warm neutral with an indigo ink accent,
 legible and sober over long sessions.* The other three proposals (Signal, Chamber, Tape) are kept
@@ -126,14 +143,121 @@ Type scale: Instrument Serif for display, Instrument Sans for the interface, IBM
 timestamps and technical metadata. **No colour is hand-written in a component** — every one of
 these is a token, and the dark values are a token redefinition rather than a second stylesheet.
 
-### DEC-9 · Watched folders and audio egress
+### Watched folders and audio egress (DEC-9)
 
 Principle 2 keeps its standing-configuration clause: a watched folder **may** request
 transcription on arrival, but it is **opt-in per folder and disabled by default**, the
 destination provider is named in the folder's configuration, and the administration view states
 which folders send audio out and where. No folder transcribes because it happened to be created.
 
-### DEC-1 · Suggestion storage, deferred
+### What the first migration contains (DEC-11 to DEC-15)
+
+`DAT-1` writes the schema from the specification **plus these five deltas**, each of which exists
+because the specification promised something it had no storage for. They are listed together
+because this is the artefact `DAT-1` needs, and because every one of them is expensive to add
+afterwards.
+
+1. **`session` table** (`DEC-12`) — `id`, `user_id`, `token_hash`, `created_at`, `last_seen_at`,
+   `user_agent`, `ip`, `expires_at`, `revoked_at`. The cookie carries an opaque id and nothing
+   else. `API-3` promises revocation and `UI-20` promises a list of active sessions; a stateless
+   signed cookie can deliver neither. "Sign out everywhere" is one `UPDATE`.
+
+2. **A second FTS5 table over an `audio` projection** (`DEC-13`) — title, notes and concatenated
+   tag names, synchronised exactly the way `segment_fts` is. The interface brief promises search
+   over titles, notes, tags *and* transcripts; only the last had an index. `LIKE '%x%'` cannot use
+   one, and `UI-16`'s single ranked list needs both halves comparable. Retrofitting this means
+   reindexing the whole archive.
+
+3. **`library.uuid`** (`DEC-14`) — `library`, `category` and `tag` were addressable only by
+   sequential integer id, which is enumerable in a multi-user instance. Public URLs and the API
+   use `uuid`; integer ids stay internal. Adding the column later means a backfill *and* a URL
+   change. Paired with a resolution rule, below.
+
+4. **`user.email_normalised UNIQUE`** (`DEC-15`) — lowercased, with the typed form kept in `email`
+   for display. `UNIQUE` on the typed address makes `Gabriel@x.com` and `gabriel@x.com` two
+   accounts, and `DEC-2`'s OIDC linking would later compare against whichever casing happened to
+   land first.
+
+5. **`audio.recorded_at_offset`** (`DEC-11`) — nullable, in minutes. See the timestamp convention
+   below.
+
+Everything else in the specification's schema goes in unchanged, including the columns v0 never
+reads: `api_token`, `transcript.derived_from`, `segment.speaker`, `share.audio_id`. The data model
+stays whole.
+
+### Timestamps (DEC-11)
+
+Two kinds of value share the `TEXT` type and must never be treated alike.
+
+- **Instants** — `created_at`, `deleted_at`, `job` times, session times. UTC ISO-8601 with
+  milliseconds and a `Z` suffix, **fixed width**, so lexicographic order is chronological order
+  and SQLite can sort them without parsing.
+- **A recording's own time** — `recorded_at`. A local wall-clock ISO-8601 string, with
+  `recorded_at_offset` in minutes when the offset is genuinely known and `NULL` when it is not.
+  **Rendered as written, never converted.** A phone filename gives `2024-03-11 18:22` with no
+  offset; normalise that to UTC and the recording shows as 17:22 to somebody abroad and shifts
+  again across a DST boundary. A recording made at half six in the evening was made at half six in
+  the evening, permanently.
+
+### Addressing and refusals (DEC-14)
+
+Public identifiers are `uuid`s. Anything the caller cannot read at level 10 returns **404, not
+403** — a 403 confirms the resource exists, which is precisely the information the ACL is there to
+withhold. This is a rule in `DAT-3`'s single entry point, not something each endpoint decides.
+
+### Identity keys (DEC-15)
+
+Both places that pair a unique key with a human display form keep them apart. Email is unique on
+`email_normalised` and displayed from `email`. For tags the **first writer sets the display name**,
+`slug` stays globally unique, and autocomplete always offers the canonical name — so somebody
+typing *Física* against an existing *física* sees the existing one rather than silently renaming
+it for everybody.
+
+### Ingestion rules (DEC-16, DEC-17, DEC-19)
+
+- **Accepted formats:** `.m4a`, `.mp3`, `.opus`, `.ogg`, `.oga`, `.wav`, `.flac`, `.aac`, `.amr`,
+  `.3gp`, `.wma`, plus the video containers `.mp4`, `.m4v` and `.mov`. Video is **accepted and the
+  container is kept whole** — principle 1 says the original is intact — with audio-only Opus
+  derived for playback, and it is never presented as a video player. Refusing video would be the
+  wrong call: the file with your grandmother in it is quite often the mp4.
+- **Duplicates:** the hash match **includes trashed recordings**, and says so — *"a deleted copy of
+  this file is in the trash. Restore it instead?"* Excluding them would let a restore produce a
+  real duplicate. It stays a warning, never a silent block, and it only catches byte-identical
+  files.
+- **Default title:** the filename without its extension, lightly cleaned, always editable.
+- **Waveform:** mono-mixed `int8` min/max pairs at a fixed number of peaks per second, behind a
+  one-byte format version. Peaks are derived data and recomputing them is cheap — the version byte
+  is what keeps it that way.
+
+### Transcription (DEC-18)
+
+The reference provider is a local **`faster-whisper` behind an OpenAI-compatible server**, with a
+hosted OpenAI-compatible endpoint as the alternative path. That choice is what makes the utility
+threshold reachable without sending the archive anywhere, and it sets `JOB-13`'s ceiling: a memory
+and timeout limit locally, a 25 MB request limit on the hosted path, so chunking is required
+either way.
+
+**Language** is an optional per-request parameter, falling back to an instance default, with
+`null` meaning auto-detect. It is part of the provider contract from the first implementation
+rather than a parameter added later.
+
+### Search behaviour (DEC-4, DEC-13)
+
+One ranked list over both indexes. When a recording matches several times the results are
+**grouped under the recording**, with the first three matches visible and a "+N more" that
+expands — a flat list lets one long interview bury everything else. Recall against inflected
+forms is `JOB-14`, which is measured rather than assumed.
+
+### Retention and export (DEC-3, DEC-5)
+
+- **Trash retention:** 30 days by default, configurable per instance, not per library.
+- **Export sidecar:** one JSON per recording carrying all metadata and the full transcript, with
+  `.vtt` and `.srt` derived from it, and timestamps following the convention above. It carries the
+  original `uuid`, which makes **re-import idempotent**: importing a recording that is already
+  present updates it instead of creating a second copy. Without that, the export round-trip in the
+  exit criteria doubles the archive rather than verifying it.
+
+### Suggestion storage, deferred (DEC-1)
 
 Automatic category suggestion has no storage in the first migration. When it is needed it will be
 a generic `suggestion` table (`entity`, `entity_id`, `kind`, `value`, `confidence`,
@@ -149,31 +273,52 @@ features it serves.
 
 ```mermaid
 graph TD
-    F0["Phase 0 · Scaffolding<br/>INF"] --> F1["Phase 1 · Decisions<br/>DEC"]
-    F1 --> F2["Phase 2 · Data and permissions<br/>DAT 🔒"]
-    F2 --> F3["Phase 3 · API and auth<br/>API 🔒"]
-    F3 --> A["Track A · Ingestion<br/>ING"]
-    F3 --> B["Track B · Jobs and search<br/>JOB"]
-    F3 --> C["Track C · Frontend<br/>UI"]
+    F0["Phase 0 · Scaffolding<br/>INF"] --> F1["Phase 1 · Data and permissions<br/>DAT 🔒"]
+    F1 --> F2["Phase 2 · API and auth<br/>API 🔒"]
+    F2 --> A["Track A · Ingestion<br/>ING"]
+    F2 --> B["Track B · Jobs and search<br/>JOB"]
+    F2 --> C["Track C · Frontend<br/>UI"]
     F0 --> D["Track D · Operations<br/>OPS"]
-    A --> F5["Phase 5 · Integration<br/>cross-cutting views"]
-    B --> F5
-    C --> F5
-    D --> F5
-    F5 --> V0["v0 · the archive I use"]
+    A --> F4["Phase 4 · Integration<br/>cross-cutting views"]
+    B --> F4
+    C --> F4
+    D --> F4
+    F4 --> V0["v0 · the archive I use"]
 ```
 
 **How much parallelism there actually is**, by point in the project:
 
 | Point | Work that can run in parallel… |
 |---|---|
-| Phases 0–1 | `INF` and `DEC` at the same time; `OPS-1`/`OPS-2` can already be tackled |
-| Phase 2 | Not much else: `DAT` is the bottleneck. In parallel: `UI-1`, `UI-2` (tokens and waveform, without real data), and `JOB-13`, which needs no schema |
-| Phase 3 | `API` alongside `UI-3`/`UI-4` (client and shell against mocks) and `OPS` |
-| Phase 4 | **Four full tracks at once**: `ING`, `JOB`, `UI`, `OPS` |
-| Phase 5 | Everything converges; the cross-cutting tasks want two finished tracks |
+| Phase 0 | All of `INF` at once, and `OPS-1`/`OPS-2` can already be tackled |
+| Phase 1 | Not much else: `DAT` is the bottleneck. In parallel: `UI-1`, `UI-2` (tokens and waveform, without real data), and `JOB-13`, which needs no schema |
+| Phase 2 | `API` alongside `UI-3`/`UI-4` (client and shell against mocks) and `OPS` |
+| Phase 3 | **Four full tracks at once**: `ING`, `JOB`, `UI`, `OPS` |
+| Phase 4 | Everything converges; the cross-cutting tasks want two finished tracks |
 
 ---
+
+## Where to start
+
+Every decision the first version needs is settled, so **`INF-1` can start now** and nothing
+upstream of it is waiting on a conversation.
+
+The order that matters:
+
+1. **`INF-1` → `INF-2` → `INF-3` → `INF-4` → `INF-5`.** Scaffolding and both toolchains, with
+   pre-commit and CI failing identically in each. Then `INF-6` pushes to the remote, which is
+   already attached.
+2. **`INF-8`** in parallel, transcribing each decision above into `docs/adr/`, one file per
+   decision. It is transcription, not fresh thinking — the reasoning is already written.
+3. **`DAT-1`**, using **What the first migration contains** as its checklist. Nothing else in the
+   project can be written first, and this is the one place where getting it wrong is expensive.
+4. **`DAT-2` → `DAT-3`.** The ACL entry point, whose test matrix is the most important one in the
+   repository.
+5. From `API-2` onwards the four tracks open up and order stops mattering much.
+
+Two things worth starting early because they need nothing from the schema: **`UI-1`/`UI-2`** (the
+tokens and the waveform component) and **`JOB-13`** (chunking and timestamp re-stitching), which
+is the highest-risk piece in the whole plan and the one most likely to need a second attempt.
 
 ## Phase 0 · Repository scaffolding
 
@@ -213,131 +358,17 @@ Short and mechanical, but it conditions everything that comes after. No product 
 
 ---
 
-## Phase 1 · Decisions that block code
-
-Each one ends in an ADR in `docs/adr/`, and they can be resolved in parallel. `DEC-1`, `DEC-7`,
-`DEC-8` and `DEC-9` are settled above.
-
-**`DEC-11` to `DEC-15` block `DAT-1`**, because each one either adds a column or adds a table, and
-a migration that later has to be undone is the worst place in the project to get something wrong.
-The rest block a single task each and can wait until that task starts. None of them blocks Phase 0.
-
-- [ ] **DEC-3** · **Trash retention**: the default value and whether it is configurable per
-      instance or per library. *Recommendation:* 30 days, configurable per instance.
-      **Blocks `INT-1`/`INT-2`, not the migration** (`deleted_at` is already there).
-
-- [ ] **DEC-4** · **Grouping of search results** when an audio has several matches: grouped under
-      the audio, or listed flat. *Recommendation:* grouped, with the first 3 matches visible and
-      a "+N more" that expands. It conditions the shape of the `JOB-10` response and the design of
-      `UI-16`.
-
-- [ ] **DEC-5** · **Export sidecar format**, which is principle 1: JSON with metadata + the full
-      transcript, plus derived `.vtt`/`.srt`. It must be re-importable by `ING-11`, and the
-      timestamps inside it follow `DEC-11`.
-      *Decided now because the sidecar is the central promise of the project.*
-      Still to pin down: whether re-import is **idempotent**, which means the sidecar carries the
-      original `uuid` and re-importing an already-present recording updates it instead of creating
-      a second copy. Without that, the round-trip in the exit criteria doubles the archive.
-
-### Blocking the first migration
-
-- [ ] **DEC-11** 🔒 · **Timestamp convention.** Every timestamp is `TEXT` with no stated format,
-      and two different kinds of value are sharing that type: instants that happened
-      (`created_at`, `deleted_at`, the `job` times) and a wall-clock reading that belongs to the
-      recording (`recorded_at`). A phone filename gives `2024-03-11 18:22` with no offset; if that
-      is normalised to UTC and rendered back in the viewer's timezone, a recording made at 18:22
-      displays as 17:22 abroad and shifts again across a DST boundary.
-      *Recommendation:* instants as UTC ISO-8601 with milliseconds and a `Z` suffix, fixed width so
-      lexicographic order is chronological order; `recorded_at` as a local wall-clock ISO-8601
-      string with a separate nullable `recorded_at_offset` in minutes for when the offset is
-      genuinely known, rendered as written and never converted. **Blocks `DAT-1`, `ING-12`.**
-
-- [ ] **DEC-12** 🔒 · **Session storage.** `API-3` promises session revocation and `UI-20` promises
-      a list of active sessions; there is no table for either, and a stateless signed cookie can
-      be neither revoked nor enumerated.
-      *Recommendation:* a `session` table — opaque id in the cookie, `token_hash`, `user_id`,
-      `created_at`, `last_seen_at`, `user_agent`, `ip`, `expires_at`, `revoked_at`. It is small, it
-      makes "sign out everywhere" a single `UPDATE`, and it is the only thing that makes `UI-20`'s
-      list truthful rather than decorative. **Blocks `DAT-1`, `API-3`.**
-
-- [ ] **DEC-13** 🔒 · **Search coverage beyond transcripts.** The interface brief promises global
-      search over titles, notes, tags **and** transcript content. The schema indexes `segment` and
-      nothing else, so three quarters of that promise has no index behind it.
-      *Recommendation:* a second FTS5 table over an `audio` projection (title + notes +
-      concatenated tag names), kept in sync exactly the way `segment_fts` is. `LIKE '%x%'` cannot
-      use an index, and `UI-16`'s single ranked result list needs both halves comparable. Decide
-      now: it is a virtual table plus triggers in the first migration, and retrofitting it means
-      reindexing the whole archive. **Blocks `DAT-1`, `JOB-9`, `JOB-10`.**
-
-- [ ] **DEC-14** 🔒 · **Public identifiers, and what an unauthorised request returns.** `audio` has
-      a `uuid` for URLs; `library`, `category` and `tag` do not, so they get addressed by
-      sequential integer id. In a multi-user instance those are enumerable, and probing
-      `/api/libraries/7` separates "exists but not yours" from "does not exist" unless the API is
-      deliberate about it.
-      *Recommendation:* give `library` a `uuid`, keep integer ids internal, and have the ACL return
-      **404 rather than 403** for anything the caller cannot read — 403 confirms the resource
-      exists. Adding the column later means a backfill and a URL change. **Blocks `DAT-1`,
-      `API-8`.**
-
-- [ ] **DEC-15** 🔒 · **Normalised identity: email and tag display names.** Two places store a
-      unique key alongside a human display form and normalise neither. `user.email` is `UNIQUE` as
-      typed, so `Gabriel@x.com` and `gabriel@x.com` are two accounts — and `DEC-2`'s OIDC linking
-      will later compare against whichever casing happened to be stored. `tag.slug` is globally
-      unique while `tag.name` is not, so the second person to write *Física* collides onto the
-      first's slug and the display name silently becomes whatever was typed first.
-      *Recommendation:* store a lowercased `email_normalised UNIQUE` and keep the typed form for
-      display; for tags, first writer sets the display name and autocomplete always shows the
-      canonical one, so the divergence is visible instead of surprising. **Blocks `DAT-1`,
-      `DAT-6`.**
-
-### Blocking one task each
-
-- [ ] **DEC-16** · **Duplicate detection against the trash, and the default title.** `ix_audio_sha`
-      has no `deleted_at` filter and `ING-3` does not say whether a hash match against a trashed
-      recording counts. If it does, the user is warned about a duplicate they cannot see; if it
-      does not, restoring from the trash produces a genuine duplicate. Separately, `audio.title` is
-      `NOT NULL` and nothing says what ingestion puts in it.
-      *Recommendation:* match trashed recordings too and say so — *"a deleted copy of this file is
-      in the trash. Restore it instead?"* — and default the title to the filename without its
-      extension, lightly cleaned and editable. **Blocks `ING-3`.**
-
-- [ ] **DEC-17** · **Accepted formats, and what happens to video containers.** No allowlist exists
-      anywhere. A real archive holds `.m4a`, `.opus`, `.ogg`, `.mp3`, `.wav`, `.amr`, `.3gp` — and
-      `.mp4`, because phones record video and people send it. Principle 1 says the original is kept
-      intact, which for an mp4 means keeping the video too.
-      *Recommendation:* accept it, keep the container untouched, derive audio-only Opus for
-      playback, and never present it as a video player. Refusing video is the wrong call: the file
-      with your grandmother in it is quite often the mp4. **Blocks `ING-2`, `ING-6`, `UI-18`.**
-
-- [ ] **DEC-18** · **The reference transcription provider, and the language contract.** `JOB-3`
-      says "OpenAI-compatible" without naming what actually runs, and that single choice settles
-      three things: whether `JOB-13`'s ceiling is a 25 MB request limit or a memory limit, whether
-      the utility threshold is reachable at all in the first version, and what a freshly installed
-      instance does before anything is configured. Also unstated: whether the transcript language
-      is auto-detected, chosen per request or an instance default — the provider contract's shape
-      depends on the answer.
-      *Recommendation:* a local `faster-whisper` behind an OpenAI-compatible server as the
-      reference, a hosted OpenAI-compatible endpoint as the fallback, and language as an optional
-      per-request parameter that falls back to an instance setting, with `null` meaning
-      auto-detect. **Blocks `JOB-2`, `JOB-3`, `JOB-13`.**
-
-- [ ] **DEC-19** · **Waveform peak format.** `ING-5` stores "a compact BLOB" and does not say what
-      is in it.
-      *Recommendation:* mono-mixed `int8` min/max pairs at a fixed number of peaks per second,
-      behind a one-byte version prefix. Low stakes, because peaks are derived data and recomputing
-      them is cheap — but only the version prefix keeps it low stakes. **Blocks `ING-5`, `UI-2`.**
-
----
-
-## Phase 2 · Data and permissions core 🔒
+## Phase 1 · Data and permissions core 🔒
 
 **The bottleneck of the project.** Nothing that touches data can be written before it. The ACL
 query is the only source of truth for permissions and everything goes through it.
 
-- [ ] **DAT-1** 🔒 ❓ · Initial Alembic migration with the full schema.
-      ⇢ DEC-11, DEC-12, DEC-13, DEC-14, DEC-15
-      Partial indexes, the composite FK `(category_id, library_id)` and the `share`
-      `CHECK` included — they do not get added "later".
+- [ ] **DAT-1** 🔒 · Initial Alembic migration: the schema from the specification plus the five
+      deltas listed under **What the first migration contains** — the `session` table, the metadata
+      FTS5 table, `library.uuid`, `user.email_normalised` and `audio.recorded_at_offset`. Partial
+      indexes, the composite FK `(category_id, library_id)` and the `share` `CHECK` included; none
+      of it gets added "later". Timestamps follow the `DEC-11` convention from the first row
+      written.
 
 - [ ] **DAT-2** 🔒 · Connection layer: `PRAGMA journal_mode=WAL`, `foreign_keys=ON`,
       `busy_timeout`, `synchronous=NORMAL`. **A single serialised writer** inside the process;
@@ -358,9 +389,9 @@ query is the only source of truth for permissions and everything goes through it
       within the same transaction. ⇢ DAT-4
       🧪 There must be no path that creates a user without a personal library.
 
-- [ ] **DAT-6** · Tag normalisation (`slug` lowercase and without diacritics), display-name
-      collision handling per `DEC-15`, and **ACL-filtered** autocomplete — tag names must not leak
-      information between accounts. ⇢ DAT-4, DEC-15 🧪
+- [ ] **DAT-6** · Tag normalisation (`slug` lowercase and without diacritics), **first writer
+      owns the display name** on a slug collision, and **ACL-filtered** autocomplete offering the
+      canonical name — tag names must not leak information between accounts. ⇢ DAT-4 🧪
 
 - [ ] **DAT-7** · Category tree with `parent_id`: creation, rename, reorder and move, with cycle
       detection and per-level uniqueness. ⇢ DAT-4 🧪
@@ -370,7 +401,7 @@ query is the only source of truth for permissions and everything goes through it
 
 ---
 
-## Phase 3 · API skeleton and authentication 🔒
+## Phase 2 · API skeleton and authentication 🔒
 
 From the end of this phase onwards the four parallel tracks open up.
 
@@ -378,26 +409,26 @@ From the end of this phase onwards the four parallel tracks open up.
       (`type`/`title`/`detail`), pagination, and published OpenAPI. ⇢ DAT-3
 
 - [ ] **API-2** 🔒 · Authentication dependency that resolves the user and injects the ACL level into
-      every endpoint. **No endpoint checks permissions on its own.** ⇢ API-1, DAT-3 🧪
+      every endpoint. **No endpoint checks permissions on its own**, and anything unreadable
+      returns **404 rather than 403**. ⇢ API-1, DAT-3 🧪
 
-- [ ] **API-3** · Local accounts: login, cookie session (`HttpOnly`/`SameSite=Lax`) backed by the
-      `DEC-12` session table, Argon2id hashing, password change, session revocation. Registration
-      is admin-only in v0. ⇢ API-2, DEC-12 🧪
+- [ ] **API-3** · Local accounts: login, cookie session (`HttpOnly`/`SameSite=Lax`) carrying an
+      opaque `session` id, Argon2id hashing, password change, and revocation of one session or all
+      of them. Registration is admin-only in v0. ⇢ API-2, DAT-1 🧪
 
 - [ ] **API-7** · Bootstrap: the first user created is an administrator, who then creates the rest
       by hand. ⇢ API-3
 
 - [ ] **API-8** · CRUD endpoints for `library`, `category`, `tag` and `share`, with the correct
       levels (sharing requires 30). Library-level shares only in v0; the endpoint shape already
-      accepts `audio_id`. Addressing and the unauthorised-response rule per `DEC-14`.
-      ⇢ API-2, DAT-4, DEC-14 🧪
+      accepts `audio_id`. Libraries are addressed by `uuid`. ⇢ API-2, DAT-4 🧪
 
 - [ ] **API-9** · CRUD endpoints for `audio` (metadata: title, notes, recording date, category,
       tags) at level 20. ⇢ API-8 🧪
 
 ---
 
-## Phase 4 · Four parallel tracks
+## Phase 3 · Four parallel tracks
 
 The four tracks only touch the `DAT` layer through `API-2`, so they can be developed
 simultaneously without stepping on each other.
@@ -408,21 +439,24 @@ simultaneously without stepping on each other.
       next to it. The original stays **intact**, never rewritten. ⇢ API-1
 
 - [ ] **ING-2** · Upload through the API: multipart with progress, configurable size limit, and
-      resumption for large uploads (hours-long files), restricted to the formats `DEC-17`
-      allows. ⇢ ING-1, API-9, DEC-17 🧪
+      resumption for large uploads (hours-long files), restricted to the format allowlist under
+      **Ingestion rules**. ⇢ ING-1, API-9 🧪
 
 - [ ] **ING-3** · Streaming SHA-256 hash during ingestion and **duplicate detection**: it warns and
       offers to continue, it never blocks silently. Byte-identical files only — a re-encoded copy
-      of the same recording has a different hash, and the interface must not imply otherwise.
-      Trash behaviour and the default title per `DEC-16`. ⇢ ING-2, DEC-16 🧪
+      of the same recording has a different hash, and the interface must not imply otherwise. The
+      match **includes trashed recordings** and offers to restore instead. Title defaults to the
+      filename without its extension. ⇢ ING-2 🧪
 
 - [ ] **ING-4** · `ffprobe` → `duration_ms`, `sample_rate`, `channels`, `codec`, `mime`,
       `size_bytes`. Run as a job, not inline with the request. ⇢ ING-2, JOB-1
 
 - [ ] **ING-5** · Waveform peak computation, stored in `audio.waveform` (compact BLOB, not JSON).
-      It is the product's "thumbnail". Encoding per `DEC-19`. ⇢ ING-4, DEC-19 🧪
+      It is the product's "thumbnail". Mono `int8` min/max pairs at a fixed rate, behind a
+      one-byte format version. ⇢ ING-4 🧪
 
-- [ ] **ING-6** · Transcoding to Opus into `derived_path` for browser playback. ⇢ ING-4
+- [ ] **ING-6** · Transcoding to Opus into `derived_path` for browser playback, audio-only even
+      when the original is a video container. ⇢ ING-4
 
 - [ ] **ING-7** · **Authenticated streaming with `Range` (HTTP 206).** `<audio>` cannot send
       headers: session cookie or a short-lived signed token in the URL. ⇢ ING-6, API-3 🧪
@@ -433,7 +467,7 @@ simultaneously without stepping on each other.
 - [ ] **ING-9** · *Watch folder*: watching a directory, automatic ingestion into a configured
       library and category, and moving the file to `processed/` or `failed/`. For voice notes this
       ends up being the main entry path. Transcription on arrival is **opt-in per folder and off
-      by default**, with the destination provider named in the folder's configuration (`DEC-9`).
+      by default**, with the destination provider named in the folder's configuration.
       ⇢ ING-3, JOB-1
 
 - [ ] **ING-10** · Moving an audio between libraries: clears the category, changes who can see it,
@@ -442,7 +476,9 @@ simultaneously without stepping on each other.
       ⇢ API-9 🧪
 
 - [ ] **ING-11** · CLI `sonarium import` (bulk, recursive, with `--dry-run`) and `sonarium export`
-      (audio + the `DEC-5` sidecar, re-importable). ⇢ ING-3, DEC-5 🧪
+      (audio + a JSON sidecar carrying the `uuid`, all metadata and the full transcript, with
+      `.vtt`/`.srt` derived). **Re-import is idempotent**: a recording already present is updated,
+      not duplicated. ⇢ ING-3 🧪
       *This is principle 1. It ships in v0 even though nobody else will use it, because it is the
       promise the whole argument rests on and because adding it later always gets postponed.*
 
@@ -450,8 +486,8 @@ simultaneously without stepping on each other.
       populates it: `ffprobe` only returns technical metadata. Extract from, in order, container
       creation tags, the filename (`Recording 2024-03-11 18.22.m4a`, `PTT-20240311-WA0007.opus`,
       `AUD-20240311-…`), and filesystem mtime — recording which source was used, and leaving the
-      field editable. Stored per `DEC-11`, so a wall-clock reading is never silently shifted into
-      another timezone. ⇢ ING-4, DEC-11 🧪
+      field editable. Stored as wall clock plus `recorded_at_offset`, so a reading is never
+      silently shifted into another timezone. ⇢ ING-4 🧪
       *Without this, every `recorded_at` in an imported archive of old voice notes is `NULL`, and
       the field, the sort order and the card decoration are all useless on day one.*
 
@@ -470,11 +506,14 @@ simultaneously without stepping on each other.
 - [ ] **JOB-2** · Transcription provider interface (**asynchronous** contract, never a synchronous
       call) and a provider registry driven by configuration. Carries **per-instance credentials and
       usage metering** — audio-seconds submitted, per user, per provider — from the first
-      implementation. Reference provider and language contract per `DEC-18`. ⇢ JOB-1, DEC-18
+      implementation, and a **language parameter** that is optional per request, falls back to an
+      instance default and means auto-detect when `null`. ⇢ JOB-1
       *The provider interface is a future revenue surface, not an architecture detail. It does not
       get simplified to save work, and a credit-based service without metering is a rewrite.*
 
-- [ ] **JOB-3** · OpenAI-compatible `/v1/audio/transcriptions` provider. ⇢ JOB-2, JOB-13 🧪
+- [ ] **JOB-3** · OpenAI-compatible `/v1/audio/transcriptions` provider, verified against a local
+      `faster-whisper` server as the reference deployment and against a hosted endpoint as the
+      alternative. ⇢ JOB-2, JOB-13 🧪
 
 - [ ] **JOB-6** · Transcript model: **always segments** with `start_ms`/`end_ms` and a `speaker`
       field present even if diarisation is not implemented. Plain text, subtitles and synchronised
@@ -483,13 +522,14 @@ simultaneously without stepping on each other.
 - [ ] **JOB-7** · Several transcripts per audio: re-transcribing creates a new row, only one has
       `is_active = 1`, and switching the active one is atomic. ⇢ JOB-6 🧪
 
-- [ ] **JOB-9** · FTS5 indexes: synchronisation of `segment` → `segment_fts` and of the metadata
-      projection from `DEC-13` (triggers or explicit writes, but one of the two and documented),
-      plus a `sonarium reindex` command that rebuilds both. ⇢ JOB-6, DEC-13 🧪
+- [ ] **JOB-9** · FTS5 indexes: synchronisation of `segment` → `segment_fts` and of the
+      title/notes/tags projection (triggers or explicit writes, but one of the two and documented),
+      plus a `sonarium reindex` command that rebuilds both. ⇢ JOB-6, DAT-1 🧪
 
 - [ ] **JOB-10** · Search endpoint with the ACL applied inside the query, `snippet()` for the
-      highlighted fragment, transcript and metadata matches in one ranked list per `DEC-13`, and
-      whatever grouping format `DEC-4` decides. ⇢ JOB-9, DEC-4, DEC-13, DAT-3 🧪
+      highlighted fragment, transcript and metadata matches in **one ranked list**, and results
+      **grouped under the recording** with three matches shown and a "+N more".
+      ⇢ JOB-9, DAT-3 🧪
       🧪 Test that a user does **not** find transcript text they are not allowed to see.
 
 - [ ] **JOB-11** · Search filters: library, date range, duration range, tags, and transcription
@@ -516,9 +556,9 @@ simultaneously without stepping on each other.
 
 ### Track C · Frontend
 
-`UI-1`/`UI-2` can start during Phase 2, and `UI-3`/`UI-4` against mocks during Phase 3.
+`UI-1`/`UI-2` can start during Phase 1, and `UI-3`/`UI-4` against mocks during Phase 2.
 
-- [ ] **UI-1** · Design system for the **Archive** palette recorded in `DEC-8`: colour tokens,
+- [ ] **UI-1** · Design system for the **Archive** palette recorded above: colour tokens,
       light and dark mode, typographic scale (Instrument Serif / Instrument Sans / IBM Plex Mono),
       spacing and radii. **No colour hand-written in a component**, and no palette switcher — dark
       mode is a token redefinition, not a second theme.
@@ -576,8 +616,8 @@ simultaneously without stepping on each other.
       apologise. ⇢ UI-13, JOB-2
 
 - [ ] **UI-16** · **View C · Search**: transcript results with a context fragment, a timestamp, and
-      playback from that exact point **without opening the detail view**. Grouping according to
-      `DEC-4`. ⇢ UI-5, JOB-10
+      playback from that exact point **without opening the detail view**. Several matches in one
+      recording are grouped under it, three shown, "+N more" expands. ⇢ UI-5, JOB-10
 
 - [ ] **UI-17** · **View D · Library and sharing**: edit name and description, manage the category
       tree, a panel with who has access, at what level, who granted it and when, and the level
@@ -648,16 +688,16 @@ simultaneously without stepping on each other.
 
 ---
 
-## Phase 5 · Integration and cross-cutting views
+## Phase 4 · Integration and cross-cutting views
 
 Everything that needs two finished tracks at once.
 
 - [ ] **INT-1** · **View I · Trash**: deleted audios and libraries with the time they have left,
-      restore and delete now. Permanent deletion requires **typed confirmation**.
-      ⇢ UI-9, DEC-3, API-8 🧪
+      restore and delete now, against a 30-day default retention. Permanent deletion requires
+      **typed confirmation**. ⇢ UI-9, API-8 🧪
 
-- [ ] **INT-2** · Scheduled trash purge according to `DEC-3`, as a recurring job, also deleting the
-      files from `storage/`. ⇢ INT-1, JOB-1 🧪
+- [ ] **INT-2** · Scheduled trash purge at the configured retention (30 days by default, per
+      instance), as a recurring job, also deleting the files from `storage/`. ⇢ INT-1, JOB-1 🧪
 
 - [ ] **INT-3** · **View H · Administration**, visually separated so nobody wanders into it by
       accident: users (list, create, disable — **deleting a user with content is refused in v0**,

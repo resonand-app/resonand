@@ -32,3 +32,7 @@ storage/
 # Detailed implementation plans, the interface proposal and the strategy notes stay local:
 # the public repo carries README.md, VISION.md, ROADMAP.md and docs/v0-plan.md.
 docs/internal/
+
+# Repo snapshots and archives — never committed
+*.zip
+*.tar.gz
