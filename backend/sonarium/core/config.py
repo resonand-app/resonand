@@ -101,6 +101,14 @@ class Settings(BaseSettings):
 
     transcription_timeout_seconds: float = Field(default=900.0, gt=0)
 
+    transcription_max_part_seconds: int = Field(default=600, gt=0)
+    """How long a part may be before ``JOB-13`` splits. Ten minutes keeps a local server
+    inside its memory and timeout ceilings; the byte limit above caps it independently."""
+
+    transcription_overlap_seconds: float = Field(default=3.0, ge=0)
+    """How much each part repeats of the one before, so a word spoken across a cut is not
+    lost. Removed again when the parts are stitched back together."""
+
     # --- Derived paths -----------------------------------------------------
 
     @property
