@@ -126,9 +126,14 @@ Conditional, undated, and listed here mostly so they do not sneak in early and d
 that is being taken now.
 
 - **Semantic search**, alongside the existing full-text search rather than replacing it.
+- **DEC-1** · **Suggestion storage.** Deliberately not in the first migration, because it only
+  exists to serve AI features that are themselves undated. When it is needed: a generic
+  `suggestion` table (`entity`, `entity_id`, `kind`, `value`, `confidence`, `confirmed_at`), which
+  also covers suggested titles and recording dates, rather than a `suggested_category_id` column
+  on `audio`. A new table is purely additive, which is what makes deferring it free.
 - **JOB-12** · Automatic classification: suggested tags with `source = 'llm'` and category
-  suggestion through whatever `DEC-1` decided. **Always a suggestion, never applied directly.**
-  The table it writes to exists from the first migration; the feature does not.
+  suggestion through `DEC-1`. **Always a suggestion, never applied directly.** `audio_tag.source`
+  already exists and already works for tags; only the category half is missing.
 - **Summaries**, with a configurable provider, under the same egress disclosure rule as
   transcription.
 - **Mobile application with capture.** This is the only item that changes the positioning — the

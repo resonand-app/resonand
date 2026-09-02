@@ -17,7 +17,8 @@ in the first version would mean competing on ground that is already lost.
 **Do not publish until it has run against the real archive for several months.** In this niche
 credibility comes exclusively from the author using the tool, and the fastest way to destroy it is
 to ship something that loses files. The repository stays private until the milestone in
-[`ROADMAP.md`](../ROADMAP.md) is met (`DEC-7`).
+[`ROADMAP.md`](../ROADMAP.md) is met; making it public is `REL-5`, at the end of that
+milestone.
 
 ### What is cut, and what is not
 
@@ -76,10 +77,71 @@ built. Everything needed to understand *what* a task is and *why* it exists is h
 | Licence | AGPL-3.0, no CLA | Nobody can offer a closed SaaS out of it without publishing their changes |
 | Topology | **A single container**, in-process job worker | WAL + a single serialised writer. Can be split later without touching the schema |
 | UI language | English as the base language, i18n from day one | No literal written inside a component. Shipping actual translations is a later milestone |
-| Repository | `sonarium-app/sonarium`, private until publishable | The `sonarium-app` organisation is reserved and empty |
+| Name and repository | `sonarium`, at `sonarium-app/sonarium`, private until publishable | `DEC-7`. Created and empty; the same string is the image name and the docs namespace |
+| Visual identity | The **Archive** palette, light and dark, and nothing else | `DEC-8`. Tokens recorded below; no palette switcher ships |
+| Audio egress | Nothing leaves the instance without a request, and watched folders only when explicitly configured to | `DEC-9`. Principle 2 made operational |
+| Suggestions | No suggestion storage in the first migration | `DEC-1`, deferred with the AI features it serves |
 
 These are documented as ADRs in `docs/adr/` (`INF-8`) so they can be revisited together with
 their rationale, not from memory.
+
+### DEC-7 · The name, claimed once
+
+`sonarium`, under the `sonarium-app` organisation: repository, container image, documentation
+namespace and domain all carry the same string. The repository exists and is private.
+
+There is prior use of the term in the same semantic field — a sound designer and recording
+engineer working under this name, with a site and a presence on music platforms, plus a
+discontinued mobile audio game. **The risk is accepted knowingly.** It is not a meaningful
+trademark exposure, since a sound engineer's services and a piece of software are not the same
+class, but it is a real discovery cost: competition for the term inside the same sector.
+
+### DEC-8 · The Archive palette
+
+One identity, not a palette switcher. *Paper and ink: a warm neutral with an indigo ink accent,
+legible and sober over long sessions.* The other three proposals (Signal, Chamber, Tape) are kept
+only as the record of how the choice was made.
+
+Recorded here because `UI-1` needs it and the interface proposal itself is not published:
+
+| Token | Light | Dark |
+|---|---|---|
+| `bg` | `#F4F2ED` | `#121210` |
+| `surface` | `#FFFFFF` | `#1B1B18` |
+| `surface2` | `#EAE7E0` | `#252521` |
+| `border` | `#D9D5CC` | `#34342E` |
+| `text` | `#1A1917` | `#F2F0E9` |
+| `text2` | `#55524B` | `#A8A49A` |
+| `text3` | `#8C887E` | `#6F6C64` |
+| `accent` | `#2E3A8C` | `#9AA5F5` |
+| `accentOn` | `#FFFFFF` | `#12132A` |
+| `accentSoft` | `#E2E4F4` | `#22254A` |
+| `wave` | `#2E3A8C` | `#9AA5F5` |
+| `waveDim` | `#C3C7DE` | `#3B3F63` |
+| `ok` | `#1E7A52` | `#4FBF8B` |
+| `run` | `#B26A00` | `#E0A64A` |
+| `err` | `#B3261E` | `#F2837C` |
+
+Type scale: Instrument Serif for display, Instrument Sans for the interface, IBM Plex Mono for
+timestamps and technical metadata. **No colour is hand-written in a component** — every one of
+these is a token, and the dark values are a token redefinition rather than a second stylesheet.
+
+### DEC-9 · Watched folders and audio egress
+
+Principle 2 keeps its standing-configuration clause: a watched folder **may** request
+transcription on arrival, but it is **opt-in per folder and disabled by default**, the
+destination provider is named in the folder's configuration, and the administration view states
+which folders send audio out and where. No folder transcribes because it happened to be created.
+
+### DEC-1 · Suggestion storage, deferred
+
+Automatic category suggestion has no storage in the first migration. When it is needed it will be
+a generic `suggestion` table (`entity`, `entity_id`, `kind`, `value`, `confidence`,
+`confirmed_at`) rather than a `suggested_category_id` column on `audio` — which is precisely what
+makes deferring it safe: a new table is a purely additive migration that touches no existing row,
+whereas the column would have had to go into a hot table from the start. `audio_tag.source` stays
+in the schema and keeps working for tags. Listed in [`../ROADMAP.md`](../ROADMAP.md) with the AI
+features it serves.
 
 ---
 
@@ -137,15 +199,14 @@ Short and mechanical, but it conditions everything that comes after. No product 
 - [ ] **INF-5** · CI on GitHub Actions: lint + typecheck + tests on both sides, plus a build of the
       Docker image. ⇢ INF-4
 
-- [ ] **INF-6** ❓ · **Create the remote repository and attach it**, private, under the reserved
-      organisation. The organisation exists and is empty; the repository does not exist yet.
-      ⇢ DEC-7
+- [ ] **INF-6** · **Push to the remote.** `sonarium-app/sonarium` exists, is private and is
+      empty; the local remote is attached and points at it through the `github.com-personal` SSH
+      alias (key `id_rsa_personal`), never plain `github.com`.
       ```fish
-      gh repo create sonarium-app/sonarium --private --source . --remote origin
       git push -u origin main
       ```
-      Careful: git operations must go through the `github.com-personal` SSH alias (key
-      `id_rsa_personal`), not `github.com`.
+      *Done when:* `main` is on the remote and `gh repo view sonarium-app/sonarium` no longer
+      reports the repository as empty.
 
 - [ ] **INF-8** · `docs/adr/` with the decisions already made, one per file, with the discarded
       alternatives and the rationale.
@@ -154,18 +215,8 @@ Short and mechanical, but it conditions everything that comes after. No product 
 
 ## Phase 1 · Decisions that block code
 
-Each one ends in an ADR in `docs/adr/`. They can all be resolved in parallel. Two of them block
-the first migration, and writing a migration that later has to be undone is the worst place to get
-it wrong.
-
-- [ ] **DEC-1** 🔒 · **Automatic category suggestion.** `audio_tag.source = 'llm'` already
-      distinguishes a suggested tag from a confirmed one; for the category there is no equivalent.
-      Options: `suggested_category_id` on `audio`, or a generic `suggestion` table
-      (`entity`, `entity_id`, `kind`, `value`, `confidence`, `confirmed_at`).
-      *Recommendation:* the generic table — the same mechanism will serve for title and recording
-      date, which is where this ends up going.
-      **Blocks `DAT-1`**: either it goes into the first migration or it does not. The feature that
-      fills the table is out of v0; the table is not.
+Each one ends in an ADR in `docs/adr/`. They can be resolved in parallel, and none of them blocks
+the first migration any more — `DEC-1`, `DEC-7`, `DEC-8` and `DEC-9` are settled above.
 
 - [ ] **DEC-3** · **Trash retention**: the default value and whether it is configurable per
       instance or per library. *Recommendation:* 30 days, configurable per instance.
@@ -180,30 +231,6 @@ it wrong.
       transcript, plus derived `.vtt`/`.srt`. It must be re-importable by `ING-11`.
       *Decided now because the sidecar is the central promise of the project.*
 
-- [ ] **DEC-7** 🔒 · **Final name variant, registered everywhere at once**: GitHub organisation and
-      repository, domain, container image namespace, documentation. There is prior use of the term
-      in the same semantic field (a sound designer and recording engineer working under this name,
-      with a site and a presence on music platforms) and a discontinued mobile audio game. **The
-      risk is accepted knowingly** — no meaningful trademark exposure, since a sound engineer's
-      services and a piece of software are not the same class, but there is a discovery cost.
-      The consequence that matters here: **the variant is decided once and claimed in every place
-      simultaneously.** The worst outcome is starting with one and having to change it.
-      **Blocks `INF-6`.**
-
-- [ ] **DEC-8** 🔒 · **Colour and typographic direction**, one identity and not a palette switcher.
-      The interface proposal carries four palettes; shipping all four is the opposite of having a
-      visual identity, and it is one of the tells of an auto-generated design that the brief
-      explicitly rejects. Choose one, keep the other three as the record of how the choice was
-      made. **Blocks `UI-1`.**
-
-- [ ] **DEC-9** · **Watch-folder transcription policy.** Principle 2 says audio leaves the instance
-      only when the user asks, audio by audio. A watched folder that auto-transcribes on arrival is
-      by definition not audio by audio. Either the principle keeps its standing-configuration
-      clause and the folder's auto-transcription is opt-in per folder with the destination provider
-      named in the configuration, or auto-transcription is not offered for watched folders at all.
-      *Recommendation:* opt-in per folder, disabled by default, stated in the admin view.
-      **Blocks `ING-9`, `UI-25`.**
-
 ---
 
 ## Phase 2 · Data and permissions core 🔒
@@ -211,9 +238,8 @@ it wrong.
 **The bottleneck of the project.** Nothing that touches data can be written before it. The ACL
 query is the only source of truth for permissions and everything goes through it.
 
-- [ ] **DAT-1** 🔒 · Initial Alembic migration with the full schema, including whatever comes out of
-      `DEC-1`. Partial indexes, the composite FK `(category_id, library_id)` and the `share`
-      `CHECK` included — they do not get added "later". ⇢ DEC-1
+- [ ] **DAT-1** 🔒 · Initial Alembic migration with the full schema. Partial indexes, the composite FK `(category_id, library_id)` and the `share`
+      `CHECK` included — they do not get added "later".
 
 - [ ] **DAT-2** 🔒 · Connection layer: `PRAGMA journal_mode=WAL`, `foreign_keys=ON`,
       `busy_timeout`, `synchronous=NORMAL`. **A single serialised writer** inside the process;
@@ -303,10 +329,11 @@ simultaneously without stepping on each other.
 
 - [ ] **ING-8** · Download of the original with its original filename. ⇢ ING-7
 
-- [ ] **ING-9** ❓ · *Watch folder*: watching a directory, automatic ingestion into a configured
+- [ ] **ING-9** · *Watch folder*: watching a directory, automatic ingestion into a configured
       library and category, and moving the file to `processed/` or `failed/`. For voice notes this
-      ends up being the main entry path. Auto-transcription behaviour per `DEC-9`.
-      ⇢ ING-3, JOB-1, DEC-9
+      ends up being the main entry path. Transcription on arrival is **opt-in per folder and off
+      by default**, with the destination provider named in the folder's configuration (`DEC-9`).
+      ⇢ ING-3, JOB-1
 
 - [ ] **ING-10** · Moving an audio between libraries: clears the category, changes who can see it,
       and **preserves the individual `share` rows**. Single transaction. The preservation clause has
@@ -387,9 +414,10 @@ simultaneously without stepping on each other.
 
 `UI-1`/`UI-2` can start during Phase 2, and `UI-3`/`UI-4` against mocks during Phase 3.
 
-- [ ] **UI-1** ❓ · Design system for the direction chosen in `DEC-8`: colour tokens, light and dark
-      mode, typographic scale (Instrument Serif / Instrument Sans / IBM Plex Mono), spacing and
-      radii. **No colour hand-written in a component.** ⇢ DEC-8
+- [ ] **UI-1** · Design system for the **Archive** palette recorded in `DEC-8`: colour tokens,
+      light and dark mode, typographic scale (Instrument Serif / Instrument Sans / IBM Plex Mono),
+      spacing and radii. **No colour hand-written in a component**, and no palette switcher — dark
+      mode is a token redefinition, not a second theme.
 
 - [ ] **UI-2** · **Waveform component** — the product's signature visual element: bar and stroke
       variants, card / list / large player sizes, played vs pending state, and click to seek.
@@ -478,11 +506,11 @@ simultaneously without stepping on each other.
       headphones, on the move. Gestures, touch target sizes, and the player coexisting with the
       system controls. PWA installability and offline behaviour are a later milestone. ⇢ UI-23
 
-- [ ] **UI-25** ❓ · **External transcription disclosure** — principle 2 made visible. Wherever a
+- [ ] **UI-25** · **External transcription disclosure** — principle 2 made visible. Wherever a
       transcription is requested, the interface names **which provider the audio will be sent to**
-      and that it will leave the instance, before the request is made; the standing-configuration
-      case from `DEC-9` says the same thing in the admin view where it is enabled. No silent egress
-      anywhere, including the retry path. ⇢ UI-13, JOB-2, DEC-9 🧪
+      and that it will leave the instance, before the request is made; per `DEC-9`, the
+      administration view says the same thing for every watched folder configured to transcribe on
+      arrival. No silent egress anywhere, including the retry path. ⇢ UI-13, JOB-2 🧪
       *This is the one principle with no other implementing task. Without it, principle 2 is a
       sentence in a document rather than a property of the software.*
 
