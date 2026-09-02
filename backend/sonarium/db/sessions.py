@@ -13,11 +13,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from sqlalchemy import CursorResult, select, update
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session as DbSession
 
 from sonarium.api.security import hash_session_token, new_session_token
 from sonarium.core.time import instant_after, now_instant
+from sonarium.db.engine import changed_rows
 from sonarium.db.models import Session, User
 
 TOUCH_INTERVAL_SECONDS = 60
@@ -87,7 +88,7 @@ def revoke(db: DbSession, user_id: int, session_id: int) -> bool:
         )
         .values(revoked_at=now_instant())
     )
-    return bool(_changed(result))
+    return bool(changed_rows(result))
 
 
 def revoke_all(db: DbSession, user_id: int, *, except_session_id: int | None = None) -> int:
@@ -95,7 +96,7 @@ def revoke_all(db: DbSession, user_id: int, *, except_session_id: int | None = N
     query = update(Session).where(Session.user_id == user_id, Session.revoked_at.is_(None))
     if except_session_id is not None:
         query = query.where(Session.id != except_session_id)
-    return _changed(db.execute(query.values(revoked_at=now_instant())))
+    return changed_rows(db.execute(query.values(revoked_at=now_instant())))
 
 
 def list_sessions(db: DbSession, user_id: int) -> list[Session]:
@@ -116,13 +117,4 @@ def purge_expired(db: DbSession) -> int:
         .where(Session.expires_at <= now_instant(), Session.revoked_at.is_(None))
         .values(revoked_at=now_instant())
     )
-    return _changed(result)
-
-
-def _changed(result: object) -> int:
-    """How many rows an UPDATE touched.
-
-    ``Session.execute`` is typed as returning a generic ``Result``, which has no row count;
-    every DML statement actually returns a ``CursorResult``, which does.
-    """
-    return int(result.rowcount) if isinstance(result, CursorResult) else 0
+    return changed_rows(result)

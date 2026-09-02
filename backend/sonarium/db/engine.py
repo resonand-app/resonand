@@ -25,7 +25,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from functools import lru_cache
 
-from sqlalchemy import Engine, create_engine
+from sqlalchemy import CursorResult, Engine, create_engine
 from sqlalchemy import event as sqlalchemy_event
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.orm import Session, sessionmaker
@@ -52,6 +52,16 @@ does not promise."""
 
 _WRITE_LOCK = threading.Lock()
 """The single writer. Module-level on purpose: one process, one database, one lock."""
+
+
+def changed_rows(result: object) -> int:
+    """How many rows a DML statement touched.
+
+    ``Session.execute`` is typed as returning a generic ``Result``, which has no row count;
+    every ``UPDATE`` and ``DELETE`` actually returns a ``CursorResult``, which does. One
+    helper rather than an ``isinstance`` at each call site.
+    """
+    return int(result.rowcount) if isinstance(result, CursorResult) else 0
 
 
 def database_url(settings: Settings) -> str:
