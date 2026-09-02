@@ -23,7 +23,7 @@ from sonarium import __version__
 from sonarium.api.errors import install_error_handlers
 from sonarium.api.logging import RequestCorrelationMiddleware, configure_logging
 from sonarium.api.rate_limit import AttemptLimiter
-from sonarium.api.routes import admin, audio, auth, health, libraries, search
+from sonarium.api.routes import admin, audio, auth, health, ingest, libraries, search
 from sonarium.core.config import Settings, get_settings
 
 if TYPE_CHECKING:
@@ -71,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         auth.router,
         libraries.router,
         audio.router,
+        ingest.router,
         search.router,
         admin.router,
     ):

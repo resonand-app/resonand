@@ -37,6 +37,16 @@ PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset(
     }
 )
 
+ANONYMOUS_404_ROUTES: frozenset[tuple[str, str]] = frozenset(
+    {
+        ("GET", "/audio/{audio_uuid}/stream"),
+        # Playback accepts either a session or a signed playback token, because <audio>
+        # cannot send an Authorization header. A request with neither is refused as a 404
+        # rather than a 401, for the same reason as everything else the caller may not read:
+        # a 401 here would confirm that the recording exists (DEC-14).
+    }
+)
+
 AUTH_DEPENDENCIES = frozenset({current_caller, current_admin, optional_caller})
 
 
@@ -115,7 +125,8 @@ def test_no_endpoint_reaches_the_archive_without_resolving_the_caller(app: FastA
 
 def test_the_allowlist_has_no_stale_entries(app: FastAPI) -> None:
     """A route that was public and has since been removed leaves a hole nobody notices."""
-    stale = {entry for entry in PUBLIC_ROUTES if entry not in route_pairs(app)}
+    existing = route_pairs(app)
+    stale = {entry for entry in PUBLIC_ROUTES | ANONYMOUS_404_ROUTES if entry not in existing}
     assert not stale, f"these are allowlisted but do not exist: {sorted(stale)}"
 
 
@@ -123,7 +134,7 @@ def test_every_private_route_actually_refuses_an_anonymous_request(
     app: FastAPI, client: TestClient
 ) -> None:
     """The structural check above proves the dependency is declared. This one proves it bites."""
-    answered: dict[str, int] = {}
+    answered: dict[str, tuple[int, int]] = {}
     for route in api_routes(app):
         for method in sorted(route.methods or set()):
             if (method, route.path) in PUBLIC_ROUTES:
@@ -134,8 +145,11 @@ def test_every_private_route_actually_refuses_an_anonymous_request(
             path = path.replace("{transcript_id}", "1").replace("{session_id}", "1")
             path = path.replace("{user_id}", "1").replace("{grantee_id}", "1")
             response = client.request(method, path, json={})
-            answered[f"{method} {path}"] = response.status_code
-    leaked = {route: code for route, code in answered.items() if code != 401}
-    assert not leaked, (
-        f"these answered an anonymous request with something other than 401: {leaked}"
-    )
+            expected = 404 if (method, route.path) in ANONYMOUS_404_ROUTES else 401
+            answered[f"{method} {path}"] = (response.status_code, expected)
+    leaked = {
+        route: f"answered {got}, expected {wanted}"
+        for route, (got, wanted) in answered.items()
+        if got != wanted
+    }
+    assert not leaked, f"these did not refuse an anonymous request as they should: {leaked}"
