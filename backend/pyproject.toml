@@ -68,7 +68,9 @@ select = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["ARG", "PLR2004", "S101", "S105", "S106"]
+# Row factories and fixtures legitimately take many keyword arguments, and a test that
+# compares against a literal is clearer than one that compares against a named constant.
+"tests/**" = ["ARG", "PLR0913", "PLR2004", "S101", "S105", "S106"]
 "migrations/**" = ["E501", "INP001"]
 
 [tool.ruff.lint.flake8-tidy-imports]
