@@ -35,17 +35,26 @@ from sqlalchemy import (
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from sonarium.core.ids import new_uuid
+from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
 
-LEVEL_READ = 10
-LEVEL_EDIT = 20
-LEVEL_MANAGE = 30
-LEVEL_OWNER = 40
-"""Permission levels as integers so ``MAX()`` resolves the union of them (specification 5).
-
-Only 10, 20 and 30 are grantable -- a ``share`` row carrying 40 is refused by a ``CHECK``.
-Ownership is not a grant: it is read off ``library.owner_id``.
-"""
+__all__ = [
+    "METADATA",
+    "ApiToken",
+    "Audio",
+    "AudioTag",
+    "Base",
+    "Category",
+    "Job",
+    "Level",
+    "Library",
+    "Segment",
+    "Session",
+    "Share",
+    "Tag",
+    "Transcript",
+    "User",
+]
 
 
 class Base(DeclarativeBase):
