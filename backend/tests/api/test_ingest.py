@@ -16,7 +16,7 @@ from tests.api.conftest import ClientFactory, sign_in
 from tests.media.conftest import make_audio, needs_ffmpeg
 
 
-def _upload(client: TestClient, library_uuid: str, path: Path, **data: object) -> dict[str, object]:
+def _upload(client: TestClient, library_uuid: str, path: Path, **data: str) -> dict[str, object]:
     with path.open("rb") as handle:
         response = client.post(
             f"/libraries/{library_uuid}/audio",
