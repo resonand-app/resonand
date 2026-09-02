@@ -24,6 +24,7 @@ from sonarium.acl.query import audio_acl
 from sonarium.core.errors import InvalidRequestError
 from sonarium.core.levels import Level
 from sonarium.core.text import normalise_slug
+from sonarium.db import search_index
 from sonarium.db.models import Audio, AudioTag, Tag
 
 SUGGESTION_LIMIT = 10
@@ -49,6 +50,10 @@ def set_audio_tags(session: Session, audio_id: int, names: list[str]) -> list[Ta
 
     Replacing rather than adding is what makes the interface's "these are the tags" panel honest:
     a caller that sends a list gets that list, and removing one does not need its own endpoint.
+
+    The search index is updated here rather than by the caller. Tag names are a third of the
+    metadata projection, so a tag set without a reindex is a tag nobody can search for -- and
+    making that the caller's job is making it something a caller can forget.
     """
     tags = [resolve_tag(session, name) for name in names]
     wanted = {tag.id for tag in tags}
@@ -64,6 +69,7 @@ def set_audio_tags(session: Session, audio_id: int, names: list[str]) -> list[Ta
     for tag_id in wanted - current:
         session.add(AudioTag(audio_id=audio_id, tag_id=tag_id, source="user"))
     session.flush()
+    search_index.index_audio(session, audio_id)
     return tags
 
 

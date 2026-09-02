@@ -342,3 +342,39 @@ def test_an_administrator_cannot_disable_themselves(
 def test_liveness_and_readiness_answer_without_a_session(client: TestClient) -> None:
     assert client.get("/healthz").json()["status"] == "ok"
     assert client.get("/readyz").json()["status"] == "ready"
+
+
+# --- Search ---------------------------------------------------------------
+
+
+def test_search_finds_a_recording_by_its_title(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    _recording(database, owner_library, accounts["admin"], title="Grandmother")
+    sign_in(client, "admin")
+    found = client.get("/search", params={"q": "grandmother"}).json()
+    assert found["total"] == 1
+    assert found["items"][0]["audio"]["title"] == "Grandmother"
+
+
+def test_search_finds_nothing_for_somebody_who_can_see_nothing(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    _recording(database, owner_library, accounts["admin"], title="Grandmother")
+    sign_in(client, "stranger")
+    assert client.get("/search", params={"q": "grandmother"}).json()["total"] == 0
+
+
+def test_search_says_what_it_cannot_do(client: TestClient, accounts: dict[str, int]) -> None:
+    """JOB-14's limitation comes from the backend, so the interface cannot describe the old
+    behaviour after the index changes."""
+    sign_in(client, "admin")
+    assert "other forms" in client.get("/search/about").json()["recall"]
+
+
+def test_an_empty_search_is_an_empty_page_not_the_whole_archive(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    _recording(database, owner_library, accounts["admin"])
+    sign_in(client, "admin")
+    assert client.get("/search", params={"q": ""}).json()["total"] == 0
