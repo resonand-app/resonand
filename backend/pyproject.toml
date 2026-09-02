@@ -76,6 +76,12 @@ select = [
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
 
+[tool.ruff.lint.pylint]
+# A repository function that writes a row takes one keyword per column, and naming them is
+# what makes the call site readable. Five is too few for that; a patch object is the answer
+# past eight.
+max-args = 8
+
 # --- Types -----------------------------------------------------------------
 
 [tool.mypy]
