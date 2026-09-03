@@ -21,6 +21,7 @@ from sonarium.core.errors import (
     ProviderError,
     UnauthenticatedError,
 )
+from sonarium.db.engine import Database
 
 
 def test_the_instance_answers_without_a_session(client: TestClient) -> None:
@@ -157,7 +158,7 @@ def test_the_page_size_is_bounded(app: FastAPI) -> None:
 
 
 def test_a_subpath_instance_publishes_its_document_under_that_path(
-    tmp_path_factory: pytest.TempPathFactory,
+    tmp_path_factory: pytest.TempPathFactory, database: Database
 ) -> None:
     """OPS-4: the subpath is the one that always ends up broken."""
 
@@ -168,6 +169,7 @@ def test_a_subpath_instance_publishes_its_document_under_that_path(
         base_path="/sonarium",
     )
     app = create_app(subpath_settings)
+    app.state.database = database
     assert app.root_path == "/sonarium"
     with TestClient(app, root_path="/sonarium") as client:
         assert client.get("/openapi.json").json()["servers"][0]["url"] == "/sonarium"

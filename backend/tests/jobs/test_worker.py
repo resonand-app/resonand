@@ -187,7 +187,7 @@ def test_a_provider_failure_is_recorded_with_its_real_message(
     worker = Worker(context_for(database, db_settings, provider))
     assert worker.run_once() is True
     with database.read_session() as session:
-        job = session.execute(select(Job)).scalars().one()
+        job = session.execute(select(Job).where(Job.kind == "transcribe")).scalars().one()
     assert job.error is not None
     assert "whisper.local refused" in job.error
     assert job.state == queue.PENDING, "it will be tried again"
@@ -202,7 +202,7 @@ def test_a_job_with_no_handler_fails_instead_of_spinning(
     worker = Worker(context_for(database, db_settings))
     assert worker.run_once() is True
     with database.read_session() as session:
-        job = session.execute(select(Job)).scalars().one()
+        job = session.execute(select(Job).where(Job.kind == "telepathy")).scalars().one()
     assert job.state == queue.FAILED
     assert "no handler" in (job.error or "")
 
@@ -240,5 +240,5 @@ def test_starting_the_worker_recovers_what_the_last_process_was_holding(
     worker.start()
     worker.stop(timeout=2.0)
     with database.read_session() as session:
-        job = session.execute(select(Job)).scalars().one()
-    assert job.state != queue.RUNNING
+        probe = session.execute(select(Job).where(Job.kind == "probe")).scalars().one()
+    assert probe.state != queue.RUNNING

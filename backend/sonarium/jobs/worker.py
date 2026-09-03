@@ -23,7 +23,7 @@ from dataclasses import dataclass
 import structlog
 
 from sonarium.core.errors import SonariumError
-from sonarium.jobs import queue
+from sonarium.jobs import queue, retention
 from sonarium.jobs.handlers import HANDLERS, Context
 
 IDLE_POLL_SECONDS = 1.0
@@ -83,6 +83,16 @@ class Worker:
         while not self._stopping.wait(1.0):
             continue
 
+    def schedule_maintenance(self) -> bool:
+        """Queue today's retention purge if it has not been queued yet (``INT-2``).
+
+        The idempotency key carries the date, so this is safe to call as often as the loop
+        likes -- which is what lets the schedule survive restarts without any state of its
+        own.
+        """
+        with self._context.database.write_session() as session:
+            return retention.schedule(session)
+
     def run_once(self) -> bool:
         """Claim and run a single job. Returns whether there was one.
 
@@ -140,6 +150,7 @@ class Worker:
     def _loop(self) -> None:
         while not self._stopping.is_set():
             try:
+                self.schedule_maintenance()
                 did_something = self.run_once()
             except Exception:
                 _logger.exception("worker.loop_error")

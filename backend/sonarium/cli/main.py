@@ -20,6 +20,7 @@ import typer
 from sonarium import __version__
 from sonarium.archive import apply_sidecar, export_recording, find_by_uuid, read_sidecar
 from sonarium.cli import integrity
+from sonarium.cli.backup import backup_database, storage_note, verify_backup
 from sonarium.core.config import Settings, get_settings
 from sonarium.core.errors import SonariumError
 from sonarium.core.formats import is_accepted
@@ -231,6 +232,35 @@ def create_admin(
             is_admin=True,
         )
     typer.echo(f"Created administrator {user.email} (#{user.id}).")
+
+
+@app.command()
+def backup(
+    destination: Annotated[Path, typer.Argument(help="Where to write the database copy.")],
+    verify: Annotated[bool, typer.Option(help="Open the copy and check it.")] = True,
+) -> None:
+    """Take a consistent copy of the database without stopping the service.
+
+    Uses VACUUM INTO. Copying a SQLite file in WAL mode with cp is a way to get a torn
+    database, because the file and its write-ahead log are two things caught at two moments.
+    """
+    settings = _settings()
+    result = backup_database(settings, destination)
+    typer.echo(f"Wrote {result.path} ({result.size_bytes / 1_000_000:.1f} MB).")
+    if verify:
+        typer.echo(f"Verified: {verify_backup(result.path)} recordings in the copy.")
+    typer.echo(storage_note(settings))
+
+
+@app.command("verify-backup")
+def verify_backup_command(
+    path: Annotated[Path, typer.Argument(help="The backup to open.")],
+) -> None:
+    """Open a backup and check it.
+
+    A backup nobody has opened is a file, not a backup.
+    """
+    typer.echo(f"{path.name}: {verify_backup(path)} recordings, integrity check passed.")
 
 
 @app.command()

@@ -16,6 +16,7 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 
+import structlog
 from sqlalchemy.orm import Session
 
 from sonarium.core.config import Settings
@@ -24,6 +25,7 @@ from sonarium.db import search_index, transcripts
 from sonarium.db.engine import Database
 from sonarium.db.models import Audio
 from sonarium.db.transcripts import Origin, SegmentDraft
+from sonarium.jobs import retention
 from sonarium.jobs.queue import (
     KIND_TRANSCODE,
     KIND_TRANSCRIBE,
@@ -41,6 +43,8 @@ from sonarium.transcription.chunking import (
     restitch,
 )
 from sonarium.transcription.contract import TranscriptionProvider, TranscriptionRequest
+
+_logger = structlog.get_logger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,11 +201,44 @@ def handle_transcribe(work: Work, context: Context) -> None:
         search_index.index_audio(session, audio_id)
 
 
+def handle_purge(work: Work, context: Context) -> None:
+    """Empty the trash of everything past its retention (``INT-2``).
+
+    The row goes inside a transaction and the file goes after it, deliberately: a crash
+    between the two leaves an orphaned file, which ``sonarium fsck`` reports and an operator
+    can delete. The other order would leave a row pointing at a file that is gone, which
+    reads as data loss.
+    """
+    del work
+    days = context.settings.trash_retention_days
+    with context.database.write_session() as session:
+        uuids = [
+            retention.remove_recording(session, audio)
+            for audio in retention.expired_recordings(session, days)
+        ]
+        libraries = retention.expired_libraries(session, days)
+        for library in libraries:
+            session.delete(library)
+        expired_sessions = retention.purge_sessions(session)
+
+    removed = sum(storage.delete_recording(context.storage_root, uuid) for uuid in uuids)
+    if uuids or libraries or expired_sessions:
+        _logger.info(
+            "trash.purged",
+            recordings=len(uuids),
+            libraries=len(libraries),
+            files=removed,
+            sessions=expired_sessions,
+            retention_days=days,
+        )
+
+
 HANDLERS = {
     "probe": handle_probe,
     KIND_WAVEFORM: handle_waveform,
     KIND_TRANSCODE: handle_transcode,
     KIND_TRANSCRIBE: handle_transcribe,
+    retention.KIND_PURGE: handle_purge,
 }
 
 

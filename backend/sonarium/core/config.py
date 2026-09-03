@@ -89,6 +89,13 @@ class Settings(BaseSettings):
     job_concurrency: int = Field(default=2, gt=0)
     """How many jobs the in-process worker runs at once. Reads are free; writes serialise."""
 
+    run_worker: bool = True
+    """Whether this process runs the job worker.
+
+    One container runs both, which is the topology v0 ships. Setting this false and running
+    ``sonarium work`` beside it splits them without a schema change -- which is the whole
+    reason the worker was allowed in-process to begin with."""
+
     transcription_provider: str = "openai-compatible"
     transcription_base_url: str | None = None
     transcription_api_key: SecretStr | None = None

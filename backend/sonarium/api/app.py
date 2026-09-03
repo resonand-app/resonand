@@ -25,6 +25,11 @@ from sonarium.api.logging import RequestCorrelationMiddleware, configure_logging
 from sonarium.api.rate_limit import AttemptLimiter
 from sonarium.api.routes import admin, audio, auth, health, ingest, libraries, search
 from sonarium.core.config import Settings, get_settings
+from sonarium.db.engine import Database, build_engine
+from sonarium.db.migrate import migrate_at_startup
+from sonarium.jobs.handlers import Context
+from sonarium.jobs.worker import Worker
+from sonarium.transcription.registry import build_provider
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
@@ -87,11 +92,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 @asynccontextmanager
 async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
-    """Prepare the instance, then hand over.
+    """Migrate, start the worker, hand over; then stop the worker.
 
-    Migrations at startup are ``OPS-7`` and belong here, behind a lock, once ``DAT-1`` has landed;
-    the job worker (``JOB-1``) starts and stops here too. Both are deliberately absent rather than
-    stubbed.
+    Migrating here (``OPS-7``) is what makes the ordinary way to upgrade "pull the image and
+    restart" rather than "remember to run a command". The lock is inside
+    :func:`~sonarium.db.migrate.migrate_at_startup`, because two containers coming up together
+    is an ordinary event.
+
+    The worker runs in this process (``JOB-1``). A test hands the application a database of its
+    own, and starting a worker against it would run real ffmpeg during unit tests, so the
+    worker starts only when this process owns its database.
     """
     settings: Settings = app.state.settings
     settings.prepare_directories()
@@ -102,5 +112,36 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         database=str(settings.resolved_database_path),
         storage=str(settings.resolved_storage_dir),
     )
-    yield
-    _logger.info("instance.stopping")
+
+    owns_database = getattr(app.state, "database", None) is None
+    if owns_database:
+        before, after = migrate_at_startup(settings)
+        if before != after:
+            _logger.info("instance.migrated", from_revision=before, to_revision=after)
+        # Built from this application's own settings rather than from the process-wide
+        # singleton, which reads the environment. In a container the two are identical; in a
+        # test they are not, and an application quietly using a different database than the
+        # one it was configured with is a bad thing to have available.
+        app.state.database = Database(build_engine(settings))
+
+    worker = _start_worker(app, settings) if owns_database and settings.run_worker else None
+    try:
+        yield
+    finally:
+        if worker is not None:
+            worker.stop()
+        if owns_database:
+            app.state.database.dispose()
+        _logger.info("instance.stopping")
+
+
+def _start_worker(app: FastAPI, settings: Settings) -> Worker:
+    """Start the in-process job worker (``JOB-1``)."""
+    provider = build_provider(settings) if settings.transcription_base_url else None
+    worker = Worker(
+        Context(database=app.state.database, settings=settings, provider=provider),
+        concurrency=settings.job_concurrency,
+    )
+    worker.start()
+    app.state.worker = worker
+    return worker
