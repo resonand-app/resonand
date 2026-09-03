@@ -41,8 +41,13 @@ from sonarium.db.engine import build_engine
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-BACKEND_ROOT = Path(__file__).resolve().parents[2]
-MIGRATIONS_DIR = BACKEND_ROOT / "migrations"
+MIGRATIONS_DIR = Path(__file__).resolve().parents[1] / "migrations"
+"""Inside the package, so it travels with the installed wheel.
+
+It was derived from the source tree once. That works from a checkout and leaves the container
+unable to find its own migrations, which is the kind of bug that is invisible until the first
+real deployment -- and it was.
+"""
 LOCK_NAME = "sonarium.migrate.lock"
 
 _logger = structlog.get_logger(__name__)

@@ -1,0 +1,33 @@
+# The build context is the whole repository, and the repository holds things that must never end
+# up in an image layer: the working specification and the interface proposal under docs/internal/,
+# the local virtualenv, node_modules, and quite possibly a database with real recordings in it.
+#
+# So this file denies everything first and then allows, by name, only what the Dockerfile copies.
+# Adding a build input means adding a line here -- which is the intended cost.
+
+*
+
+!backend/
+# Allowed already, so that `INF-3`'s frontend stage needs no change in this file.
+!frontend/
+# Copied into the image, because whoever runs a modified copy has to comply with it.
+!LICENSE
+
+# Inside the allowed trees, take back everything generated, local or private.
+backend/.venv/
+backend/**/__pycache__/
+backend/**/*.py[cod]
+backend/.mypy_cache/
+backend/.pytest_cache/
+backend/.ruff_cache/
+backend/htmlcov/
+backend/.coverage
+backend/**/*.db
+backend/**/*.db-wal
+backend/**/*.db-shm
+backend/storage/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+**/.env
+**/.env.local

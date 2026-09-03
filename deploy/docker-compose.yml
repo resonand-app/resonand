@@ -1,0 +1,74 @@
+# Sonarium -- an example deployment (OPS-2).
+#
+# Copy this file and deploy/.env.example (as `.env`) into a directory of their own, edit the .env,
+# and `docker compose up -d`. Those two files plus the named volume are the whole instance.
+#
+# Upgrading is `docker compose pull && docker compose up -d`: the container migrates its own
+# database at startup, under a lock (OPS-7). Read the upgrade section of deploy/README.md once
+# before the first upgrade, because the two minutes it takes is the difference between a rollback
+# and a restore.
+
+name: sonarium
+
+services:
+  sonarium:
+    image: ghcr.io/sonarium-app/sonarium:latest
+    # To run the image you built yourself instead:
+    #   build: { context: .., dockerfile: Dockerfile }
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      # One volume for everything mutable: the database and the originals. This is what a backup
+      # has to cover, and `sonarium backup` covers only the database half of it -- see the
+      # backup section of deploy/README.md.
+      - sonarium-data:/data
+    ports:
+      # Bound to localhost on purpose. Sonarium speaks plain HTTP and expects a reverse proxy in
+      # front of it for TLS; publishing this on 0.0.0.0 would serve session cookies in clear text
+      # across your network. Remove the 127.0.0.1 only if you know why you are doing it.
+      - "127.0.0.1:8000:8000"
+    # The image's own healthcheck asks /readyz, which answers only once the database is reachable
+    # and migrated. Repeated here so `docker compose ps` shows it.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/readyz', timeout=3)
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    # ffmpeg is CPU-hungry and the worker will use everything you give it. Uncomment to keep a
+    # transcode from making the rest of the machine unresponsive.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: "2.0"
+
+  # --- Transcription, on your own hardware ---------------------------------
+  #
+  # Uncomment to run faster-whisper behind an OpenAI-compatible API, which is the reference
+  # deployment (DEC-18). On this path no audio ever leaves the machine.
+  #
+  # The image below is a third-party one and is named here as an example rather than as an
+  # endorsement; any server that speaks POST /v1/audio/transcriptions with
+  # response_format=verbose_json will do. Pin whatever you choose to a digest.
+  #
+  # whisper:
+  #   image: fedirz/faster-whisper-server:latest-cpu
+  #   restart: unless-stopped
+  #   volumes:
+  #     - whisper-models:/root/.cache/huggingface
+  #   # A GPU makes this an order of magnitude faster. On CPU, expect a 40-minute interview to
+  #   # take a while -- which is fine, because transcription is a background job and nothing
+  #   # waits for it.
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - { driver: nvidia, count: 1, capabilities: [gpu] }
+
+volumes:
+  sonarium-data:
+  # whisper-models:

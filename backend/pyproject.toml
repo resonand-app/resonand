@@ -71,7 +71,7 @@ select = [
 # Row factories and fixtures legitimately take many keyword arguments, and a test that
 # compares against a literal is clearer than one that compares against a named constant.
 "tests/**" = ["ARG", "PLR0913", "PLR2004", "S101", "S105", "S106"]
-"migrations/**" = ["E501", "INP001"]
+"sonarium/migrations/**" = ["E501", "INP001"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -94,6 +94,13 @@ enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
 [[tool.mypy.overrides]]
 module = ["alembic.*"]
 ignore_missing_imports = true
+
+# The revision files are DDL scripts Alembic imports by path, not modules anything else
+# imports. Type-checking them buys nothing and their duplicate basenames confuse the module
+# resolver.
+[[tool.mypy.overrides]]
+module = ["sonarium.migrations.*"]
+ignore_errors = true
 
 # --- Tests -----------------------------------------------------------------
 
