@@ -1,0 +1,121 @@
+# CI (INF-5). The same checks as .pre-commit-config.yaml, so they fail identically.
+#
+# The frontend job arrives with INF-3, together with the toolchain it would run. A job that
+# failed on every push against a directory with no package.json would teach everybody to ignore
+# a red tick, which is worse than an honestly absent job.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Least privilege: this workflow reads the repository and builds an image locally. It pushes
+# nothing, so it needs nothing else.
+permissions:
+  contents: read
+
+concurrency:
+  # A second push to the same branch supersedes the first. Not for main, where every commit's
+  # result is worth having on the record.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  UV_FROZEN: "1"
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ffmpeg
+        # The media tests are marked `ffmpeg` and use the real binaries. Skipping them here would
+        # mean the waveform, the transcode and the ffprobe parsing are only ever exercised on a
+        # developer's machine -- which is where they already work.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffprobe -version | head -1
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install
+        working-directory: backend
+        run: uv sync --all-groups
+
+      - name: Lint
+        working-directory: backend
+        run: uv run ruff check .
+
+      - name: Check formatting
+        working-directory: backend
+        # `--check` rather than rewriting: CI reports, it does not edit.
+        run: uv run ruff format --check .
+
+      - name: Typecheck
+        working-directory: backend
+        run: uv run mypy
+
+      - name: Test
+        working-directory: backend
+        run: uv run pytest -q --cov --cov-report=term-missing
+
+      - name: Check the CLI is installed and runnable
+        working-directory: backend
+        # The console entry point is declared in pyproject and is how ING-11 and ING-13 are
+        # actually used. A packaging mistake that breaks it would otherwise only show up in the
+        # container.
+        run: uv run sonarium --help > /dev/null && uv run sonarium version
+
+  image:
+    name: Image
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: sonarium:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Check it starts, migrates itself and becomes ready
+        # The build only proves the image assembles. This proves the thing an operator actually
+        # depends on: that a fresh container creates its own schema and reports itself ready --
+        # which is exactly what was broken when the migration tree was located relative to the
+        # source tree rather than shipped inside the package.
+        run: |
+          docker run -d --name sonarium-ci -p 8000:8000 \
+            -e SONARIUM_SECRET_KEY="$(openssl rand -hex 32)" \
+            -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
+            sonarium:ci
+          for attempt in $(seq 1 30); do
+            if [ "$(docker inspect -f '{{.State.Health.Status}}' sonarium-ci)" = "healthy" ]; then
+              echo "ready after ${attempt}s"
+              curl -fsS localhost:8000/readyz
+              docker rm -f sonarium-ci > /dev/null
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "the container never became healthy:"
+          docker logs sonarium-ci
+          exit 1
+
+      - name: Check the CLI works inside the image
+        run: docker run --rm sonarium:ci sonarium version

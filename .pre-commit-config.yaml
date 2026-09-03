@@ -1,0 +1,87 @@
+# Pre-commit runs the same checks as CI, so a commit that passes here passes there (INF-4).
+#
+# Install once per clone:
+#
+#     uvx pre-commit install
+#
+# The Python hooks are `local` and `system` rather than the usual mirror repositories. That is
+# deliberate: mypy needs this project's own environment to resolve fastapi, sqlalchemy and
+# pydantic, and a mirrored mypy in its own isolated virtualenv would either report hundreds of
+# missing imports or need every dependency listed a second time and kept in step by hand. Running
+# them through `uv run` means there is exactly one description of the toolchain -- backend/
+# pyproject.toml -- and pre-commit, CI and a developer's terminal all use it.
+
+default_install_hook_types: [pre-commit, commit-msg]
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.srt$|\.vtt$'
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-added-large-files
+        # No audio in the repository. Test fixtures are generated with ffmpeg at test time, which
+        # is what keeps the clone small and the fixtures honest about what they contain.
+        args: [--maxkb=512]
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: no-internal-docs
+        name: refuse to commit docs/internal
+        # docs/internal/ is gitignored, but `git add -f` gets past that. The working
+        # specification and the interface proposal stay local while the first version is being
+        # built, and the repository going public later is exactly when this would bite.
+        entry: docs/internal must not be committed -- it is deliberately local
+        language: fail
+        files: '^docs/internal/'
+
+      - id: ruff-check
+        name: ruff (lint)
+        entry: uv run --project backend ruff check --force-exclude --fix
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff (format)
+        entry: uv run --project backend ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: mypy
+        name: mypy (strict)
+        # Passes no filenames: mypy in strict mode over a package needs the whole package, and
+        # checking one file at a time reports errors that do not exist and misses ones that do.
+        entry: bash -c 'cd backend && uv run mypy'
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+
+      - id: pytest
+        name: pytest
+        # The fast subset. The ffmpeg-backed tests run in CI, where ffmpeg is installed as part
+        # of the job rather than as part of somebody's laptop.
+        entry: bash -c 'cd backend && uv run pytest -q -m "not slow"'
+        language: system
+        types: [python]
+        pass_filenames: false
+        require_serial: true
+
+# --- The frontend ----------------------------------------------------------
+#
+# ESLint and Prettier arrive with INF-3, together with the frontend toolchain they need. Adding
+# them now would mean hooks that fail on every commit against a directory with no package.json,
+# which teaches everybody to pass --no-verify -- and a hook nobody runs is worse than one that is
+# honestly absent.
