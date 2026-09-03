@@ -78,6 +78,11 @@ class Worker:
             thread.join(timeout=timeout)
         self._threads.clear()
 
+    def wait(self) -> None:
+        """Block until the worker is stopped. What a foreground ``sonarium work`` does."""
+        while not self._stopping.wait(1.0):
+            continue
+
     def run_once(self) -> bool:
         """Claim and run a single job. Returns whether there was one.
 
