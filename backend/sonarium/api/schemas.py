@@ -306,3 +306,68 @@ class SearchResult(Api):
     total_matches: int
     """Three are shown and the rest are behind "+N more": a flat list lets one long interview
     bury everything else."""
+
+
+# --- Administration -------------------------------------------------------
+
+
+class JobSummary(Api):
+    """One piece of background work, as the administration view lists it (``INT-3``)."""
+
+    id: int
+    kind: str
+    state: str
+    attempts: int
+    audio_uuid: str | None
+    error: str | None
+    created_at: str
+    started_at: str | None
+    finished_at: str | None
+    ready_at: str | None
+    """When a pending job becomes eligible again, which is what a backoff looks like from
+    outside."""
+
+
+class ProviderStatus(Api):
+    """Whether transcription is configured and whether it answers.
+
+    The credential is never included, in any form. What an administrator needs to know is
+    whether one is set, not what it is.
+    """
+
+    provider: str
+    model: str
+    base_url: str | None
+    has_credential: bool
+    default_language: str | None
+    configured: bool
+    reachable: bool | None
+    """``None`` until a connection test has been run, because nothing should reach out to a
+    third party just because somebody opened a page (principle 2)."""
+
+    detail: str
+
+
+class StorageStatus(Api):
+    """What the archive is using."""
+
+    recordings: int
+    trashed_recordings: int
+    libraries: int
+    total_duration_ms: int
+    originals_bytes: int
+    derived_bytes: int
+    database_bytes: int
+    free_bytes: int | None
+
+
+class SystemStatus(Api):
+    """Everything the administration view shows about the instance itself."""
+
+    version: str
+    database_revision: str | None
+    expected_revision: str | None
+    storage: StorageStatus
+    jobs: dict[str, int]
+    transcription: ProviderStatus
+    trash_retention_days: int

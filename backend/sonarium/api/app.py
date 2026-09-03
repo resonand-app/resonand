@@ -23,7 +23,16 @@ from sonarium import __version__
 from sonarium.api.errors import install_error_handlers
 from sonarium.api.logging import RequestCorrelationMiddleware, configure_logging
 from sonarium.api.rate_limit import AttemptLimiter
-from sonarium.api.routes import admin, audio, auth, health, ingest, libraries, search
+from sonarium.api.routes import (
+    admin,
+    audio,
+    auth,
+    health,
+    ingest,
+    libraries,
+    operations,
+    search,
+)
 from sonarium.core.config import Settings, get_settings
 from sonarium.db.engine import Database, build_engine
 from sonarium.db.migrate import migrate_at_startup
@@ -79,6 +88,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ingest.router,
         search.router,
         admin.router,
+        operations.router,
     ):
         app.include_router(router)
 
