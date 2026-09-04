@@ -1,0 +1,30 @@
+<!-- @dsCard group="Spacing" viewport="700x170" name="Elevation" subtitle="Three steps. Elevation replaces borders — the shell floats, it does not draw boxes." -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font-sans); }
+  .pad { padding:var(--space-4) var(--space-6); }
+  .mono { font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .lbl { font-family:var(--font-mono); font-size:var(--type-overline-size); font-weight:var(--type-overline-weight);
+         letter-spacing:var(--type-overline-tracking); text-transform:uppercase; color:var(--text-3); }
+</style>
+</head>
+<body><div class="pad" style="display:flex;gap:12px">
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="height:64px;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-raised)"></div>
+        <span class="mono" style="font-size:11px;color:var(--text-2)">raised</span>
+        <span style="font-size:11.5px;color:var(--text-3)">row group, chip</span>
+      </div><div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="height:64px;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-panel)"></div>
+        <span class="mono" style="font-size:11px;color:var(--text-2)">panel</span>
+        <span style="font-size:11.5px;color:var(--text-3)">nav, sidebar, card</span>
+      </div><div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="height:64px;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-overlay)"></div>
+        <span class="mono" style="font-size:11px;color:var(--text-2)">overlay</span>
+        <span style="font-size:11.5px;color:var(--text-3)">menu, dialog, search</span>
+      </div>
+  </div></body>
+</html>

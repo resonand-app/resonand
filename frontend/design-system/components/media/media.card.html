@@ -1,0 +1,90 @@
+<!-- @dsCard group="Components" viewport="700x360" name="Media — waveform, player, transcript" subtitle="The rounded-bar waveform at every size, the player, synced transcript" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+/* Components come from the compiled bundle once the system is indexed; before that exists, this
+   falls back to the component sources so the card always renders. */
+window.__dsReady = (async function () {
+  await new Promise(resolve => {
+    const s = document.createElement("script");
+    s.src = "../../_ds_bundle.js";
+    s.onload = resolve;
+    s.onerror = () => resolve();
+    document.head.appendChild(s);
+  });
+  const found = (() => {
+    for (const k of Object.keys(window)) {
+      let v; try { v = window[k]; } catch (e) { continue; }
+      if (!v || typeof v !== "object" || v === window) continue;
+      try { if (v.Waveform && v.Button && v.TopNav) return v; } catch (e) {}
+    }
+    return null;
+  })();
+  if (found) return found;
+  const GROUPS = {"foundation":["Icon","Logo"],"forms":["Button","IconButton","TextField","SearchField","ColorSwatchPicker"],"media":["Waveform","PlayerBar","TranscriptLine"],"data":["StateBadge","Chip","LibraryCard","CreateLibraryCard","RecordingRow","RecordingCard"],"navigation":["TopNav","Sidebar","ProfileMenu","SearchResults","Dialog"]};
+  let src = "";
+  for (const [group, names] of Object.entries(GROUPS)) {
+    for (const n of names) {
+      const res = await fetch("../../components/" + group + "/" + n + ".jsx");
+      src += (await res.text())
+        .replace(/^import[^\n]*\n/gm, "")
+        .replace(/^export \{[^}]*\};?\n/gm, "")
+        .replace(/^export (function|const) /gm, "$1 ") + "\n";
+    }
+  }
+  src += "window.SonariumComponents = { Icon, Logo, Button, IconButton, TextField, SearchField, ColorSwatchPicker, Waveform, PlayerBar, TranscriptLine, StateBadge, Chip, LibraryCard, CreateLibraryCard, RecordingRow, RecordingCard, TopNav, Sidebar, ProfileMenu, SearchResults, Dialog };";
+  new Function(Babel.transform(src, { presets: [["react", { runtime: "classic" }]], filename: "components.jsx" }).code)();
+  return window.SonariumComponents;
+})();
+</script>
+<style>
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font-sans); }
+  .wrap { display:flex; flex-direction:column; gap:var(--space-3); padding:var(--space-4) var(--space-6); }
+  .spec { display:flex; flex-direction:column; gap:4px; }
+  .head { display:flex; justify-content:space-between; align-items:baseline; }
+  .lbl { font-family:var(--font-mono); font-size:11px; color:var(--text-3); }
+  .panel { background:var(--surface); border-radius:var(--radius-panel); box-shadow:var(--elevation-raised); padding:8px 12px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/jsx" id="card-src">
+  const { Waveform, PlayerBar, TranscriptLine } = ds;
+  const Spec = ({ label, px, children }) => (
+    <div className="spec">
+      <div className="head"><span className="lbl">{label}</span><span className="lbl">{px}</span></div>
+      <div className="panel">{children}</div>
+    </div>
+  );
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    <div className="wrap">
+      <Spec label="dense row" px="20 px"><Waveform seed={2} height={20} /></Spec>
+      <Spec label="library card strip" px="38 px"><Waveform seed={3} height={38} /></Spec>
+      <Spec label="player · played, unplayed, playhead" px="34 px"><Waveform seed={4} height={34} played={0.42} playhead /></Spec>
+      <Spec label="no waveform yet — the peaks job has not run" px="38 px"><Waveform pending height={38} /></Spec>
+      <PlayerBar style={{ marginTop: 4 }} />
+      <div className="panel" style={{ padding: "10px 12px" }}>
+        <TranscriptLine at="17:52">I remember the stairs were always cold, even in August.</TranscriptLine>
+        <TranscriptLine at="18:04" active>The house on Carrer Nou had a balcony that looked over the square.</TranscriptLine>
+      </div>
+    </div>
+  );
+</script>
+<script>
+/* Babel's inline transform defaults to the automatic JSX runtime, which emits an ES import and
+   cannot run in a classic script — so transform the card source explicitly. */
+window.__dsReady.then(ds => {
+  const src = document.getElementById("card-src").textContent;
+  const code = Babel.transform(src, { presets: [["react", { runtime: "classic" }]], filename: "card.jsx" }).code;
+  new Function("ds", code)(ds);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!-- @dsCard group="Spacing" viewport="700x180" name="Layout constants" subtitle="The shell is fixed: nav 52, sidebar 224, player 64, cards 320×188" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../styles.css">
+<style>
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font-sans); }
+  .pad { padding:var(--space-4) var(--space-6); }
+  .mono { font-family:var(--font-mono); font-variant-numeric:tabular-nums; }
+  .lbl { font-family:var(--font-mono); font-size:var(--type-overline-size); font-weight:var(--type-overline-weight);
+         letter-spacing:var(--type-overline-tracking); text-transform:uppercase; color:var(--text-3); }
+</style>
+</head>
+<body><div class="pad" style="display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;gap:6px;align-items:stretch;height:96px">
+      <div style="width:120px;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-panel);display:grid;place-items:center">
+        <span class="mono" style="font-size:10.5px;color:var(--text-3)">sidebar 224</span>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+        <div style="height:22px;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-panel);display:grid;place-items:center">
+          <span class="mono" style="font-size:10.5px;color:var(--text-3)">nav 52</span>
+        </div>
+        <div style="flex:1;display:flex;gap:6px">
+          <div style="flex:1;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-card);display:grid;place-items:center"><span class="mono" style="font-size:10.5px;color:var(--text-3)">320×188</span></div><div style="flex:1;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-card);display:grid;place-items:center"><span class="mono" style="font-size:10.5px;color:var(--text-3)">320×188</span></div><div style="flex:1;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-card);display:grid;place-items:center"><span class="mono" style="font-size:10.5px;color:var(--text-3)">320×188</span></div>
+        </div>
+        <div style="height:26px;background:var(--surface);border-radius:var(--radius-panel);box-shadow:var(--elevation-panel);display:grid;place-items:center">
+          <span class="mono" style="font-size:10.5px;color:var(--text-3)">player 64</span>
+        </div>
+      </div>
+    </div>
+    <span style="font-size:12px;color:var(--text-3)">Every panel floats in a 12px gap. Nothing shares an edge with anything else.</span>
+  </div></body>
+</html>

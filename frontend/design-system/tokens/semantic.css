@@ -1,0 +1,62 @@
+/* Dark is the default. Every surface below is a step, and steps replace borders. */
+:root {
+  --bg: var(--ink-900);
+  --surface: var(--ink-800);
+  --surface-2: var(--ink-700);
+  --hairline: var(--ink-600);
+  --border: var(--ink-500);
+  --border-strong: var(--ink-400);
+
+  --text: var(--ink-050);
+  --text-2: var(--ink-100);
+  --text-3: var(--ink-200);
+
+  --accent: var(--amber-400);
+  --accent-on: var(--amber-900);
+  --accent-soft: var(--amber-soft-dark);
+  --accent-on-soft: var(--amber-400);
+  --accent-hover: var(--amber-300);
+  --accent-pressed: var(--amber-500);
+
+  --wave: var(--amber-400);
+  --wave-dim: var(--ink-300);
+
+  --elevation-raised: var(--elevation-raised-dark);
+  --elevation-panel: var(--elevation-panel-dark);
+  --elevation-card: var(--elevation-card-dark);
+  --elevation-overlay: var(--elevation-overlay-dark);
+
+  --scrim: rgba(7, 8, 11, 0.72);
+  --empty-fill: rgba(255, 255, 255, 0.03);
+}
+
+[data-theme="light"] {
+  --bg: var(--paper-200);
+  --surface: var(--paper-050);
+  --surface-2: var(--paper-100);
+  --hairline: var(--paper-300);
+  --border: var(--paper-400);
+  --border-strong: var(--paper-500);
+
+  --text: var(--paper-900);
+  --text-2: var(--paper-800);
+  --text-3: var(--paper-700);
+
+  --accent: var(--amber-700);
+  --accent-on: var(--amber-700-on);
+  --accent-soft: var(--amber-soft-light);
+  --accent-on-soft: var(--amber-soft-light-on);
+  --accent-hover: var(--amber-800);
+  --accent-pressed: var(--amber-800);
+
+  --wave: var(--amber-700);
+  --wave-dim: var(--paper-600);
+
+  --elevation-raised: var(--elevation-raised-light);
+  --elevation-panel: var(--elevation-panel-light);
+  --elevation-card: var(--elevation-card-light);
+  --elevation-overlay: var(--elevation-overlay-light);
+
+  --scrim: rgba(20, 23, 29, 0.4);
+  --empty-fill: rgba(20, 23, 29, 0.035);
+}

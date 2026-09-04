@@ -1,0 +1,70 @@
+:root {
+  /* Amber — the only chromatic family in the interface. */
+  --amber-300: #F2C87E;
+  --amber-400: #E8B45C;
+  --amber-500: #D89A38;
+  --amber-600: #B8811F;
+  --amber-700: #8F5810;
+  --amber-800: #6E4310;
+  --amber-900: #3A2609;
+
+  /* On-colours: the text colour that clears AA on each amber step. */
+  --amber-400-on: #3A2609;
+  --amber-600-on: #241C10;
+  --amber-700-on: #FFFFFF;
+
+  /* Ink — the dark neutral ramp. Blue-black, never grey. */
+  --ink-900: #07080B;
+  --ink-800: #12151C;
+  --ink-700: #1A1E27;
+  --ink-600: #1C212B;
+  --ink-500: #262B36;
+  --ink-400: #333A47;
+  --ink-300: #5A6273;
+  --ink-200: #8D94A4;
+  --ink-100: #A2A9B8;
+  --ink-050: #E8EAEF;
+
+  /* Paper — the light neutral ramp. Warm, never blue. */
+  --paper-900: #14171D;
+  --paper-800: #4E545F;
+  --paper-700: #616773;
+  --paper-600: #93938D;
+  --paper-500: #C9C9C3;
+  --paper-400: #D7D7D2;
+  --paper-300: #DEDED9;
+  --paper-200: #EDEDEA;
+  --paper-100: #F4F4F2;
+  --paper-050: #FFFFFF;
+
+  /* Amber tints used as active-state fills. */
+  --amber-soft-dark: #241C10;
+  --amber-soft-light: #F5E7CF;
+  --amber-soft-light-on: #8A5410;
+
+  /* Transcription state. Each pairs with a glyph and a word — colour is never the only signal. */
+  --state-none: #8A8F9C;
+  --state-running: #6F9ECC;
+  --state-done: #6FAE8B;
+  --state-failed: #D2705F;
+  --state-done-bg: #0F2418;
+  --state-failed-bg: #3A1512;
+  --state-failed-fg: #E8917F;
+
+  /* Library identity — the user picks one. Muted, never carries meaning alone. */
+  --library-amber: #E8B45C;
+  --library-clay: #C97F5A;
+  --library-slate: #6F8FB0;
+  --library-moss: #7E9A6B;
+  --library-stone: #8A8F9C;
+  --library-plum: #9B7BA8;
+  --library-teal: #5F9E96;
+
+  --library-amber-light: #B8811F;
+  --library-clay-light: #A85F3C;
+  --library-slate-light: #4E6E90;
+  --library-moss-light: #5C7A49;
+  --library-stone-light: #6A7080;
+  --library-plum-light: #7A5B87;
+  --library-teal-light: #3F7E76;
+}

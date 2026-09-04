@@ -1,0 +1,46 @@
+:root {
+  /* Three families, three jobs. There is no fourth case. */
+  --font-display: "Chillax", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Page title — Chillax, one per screen, nothing else. */
+  --type-page-title-family: var(--font-display);
+  --type-page-title-size: 33px;
+  --type-page-title-weight: var(--weight-semibold);
+  --type-page-title-tracking: -0.02em;
+  --type-page-title-leading: 1.1;
+
+  /* Wordmark — Chillax, and only the wordmark. */
+  --type-wordmark-size: 19px;
+  --type-wordmark-tracking: -0.015em;
+
+  /* Section and card titles — Geist, not Chillax. */
+  --type-title-size: 17px;
+  --type-title-weight: var(--weight-semibold);
+  --type-title-tracking: -0.01em;
+  --type-title-leading: 1.25;
+
+  /* Body and transcript — read for minutes, not glanced at. */
+  --type-body-size: 15px;
+  --type-body-leading: 1.6;
+
+  /* The working size of the app: rows, labels, menu items, buttons. */
+  --type-ui-size: 13px;
+  --type-ui-size-sm: 12px;
+
+  /* Anything comparable to another number is mono and tabular. */
+  --type-numeric-family: var(--font-mono);
+  --type-numeric-size: 11.5px;
+  --type-numeric-size-lg: 22px;
+  --type-numeric-variant: tabular-nums;
+
+  /* Group labels and overlines. */
+  --type-overline-size: 10px;
+  --type-overline-weight: var(--weight-medium);
+  --type-overline-tracking: 0.12em;
+}

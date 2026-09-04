@@ -1,0 +1,29 @@
+:root {
+  --radius-chip: 8px;
+  --radius-control: 10px;
+  --radius-panel: 14px;
+  --radius-pill: 999px;
+  --radius-circle: 50%;
+
+  /* Elevation replaces borders. The shell floats; it does not draw boxes. */
+  --elevation-raised-dark: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --elevation-panel-dark: 0 4px 18px rgba(0, 0, 0, 0.45);
+  --elevation-card-dark: 0 2px 6px rgba(0, 0, 0, 0.34), 0 10px 26px rgba(0, 0, 0, 0.3);
+  --elevation-overlay-dark: 0 8px 30px rgba(0, 0, 0, 0.55);
+
+  --elevation-raised-light: 0 2px 8px rgba(20, 23, 29, 0.06);
+  --elevation-panel-light: 0 2px 10px rgba(20, 23, 29, 0.07);
+  --elevation-card-light: 0 2px 6px rgba(20, 23, 29, 0.07), 0 10px 26px rgba(20, 23, 29, 0.05);
+  --elevation-overlay-light: 0 10px 34px rgba(20, 23, 29, 0.16);
+
+  /* Waveform geometry. Minimum bar height equals bar width, so silence stays a row of dots. */
+  --wave-bar-width: 3px;
+  --wave-bar-width-dense: 2px;
+  --wave-bar-gap-ratio: 0.55;
+  --wave-playhead-width: 2px;
+  --wave-height-dense: 20px;
+  --wave-height-card: 38px;
+  --wave-height-record: 52px;
+  --wave-height-player: 34px;
+  --wave-height-detail: 130px;
+}

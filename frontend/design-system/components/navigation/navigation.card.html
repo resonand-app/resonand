@@ -1,0 +1,107 @@
+<!-- @dsCard group="Components" viewport="700x430" name="Navigation — nav, sidebar, menus, dialog" subtitle="Top bar, left bar expanded and collapsed, account menu, search hits, dialog" -->
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../../styles.css">
+<script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script>
+/* Components come from the compiled bundle once the system is indexed; before that exists, this
+   falls back to the component sources so the card always renders. */
+window.__dsReady = (async function () {
+  await new Promise(resolve => {
+    const s = document.createElement("script");
+    s.src = "../../_ds_bundle.js";
+    s.onload = resolve;
+    s.onerror = () => resolve();
+    document.head.appendChild(s);
+  });
+  const found = (() => {
+    for (const k of Object.keys(window)) {
+      let v; try { v = window[k]; } catch (e) { continue; }
+      if (!v || typeof v !== "object" || v === window) continue;
+      try { if (v.Waveform && v.Button && v.TopNav) return v; } catch (e) {}
+    }
+    return null;
+  })();
+  if (found) return found;
+  const GROUPS = {"foundation":["Icon","Logo"],"forms":["Button","IconButton","TextField","SearchField","ColorSwatchPicker"],"media":["Waveform","PlayerBar","TranscriptLine"],"data":["StateBadge","Chip","LibraryCard","CreateLibraryCard","RecordingRow","RecordingCard"],"navigation":["TopNav","Sidebar","ProfileMenu","SearchResults","Dialog"]};
+  let src = "";
+  for (const [group, names] of Object.entries(GROUPS)) {
+    for (const n of names) {
+      const res = await fetch("../../components/" + group + "/" + n + ".jsx");
+      src += (await res.text())
+        .replace(/^import[^\n]*\n/gm, "")
+        .replace(/^export \{[^}]*\};?\n/gm, "")
+        .replace(/^export (function|const) /gm, "$1 ") + "\n";
+    }
+  }
+  src += "window.SonariumComponents = { Icon, Logo, Button, IconButton, TextField, SearchField, ColorSwatchPicker, Waveform, PlayerBar, TranscriptLine, StateBadge, Chip, LibraryCard, CreateLibraryCard, RecordingRow, RecordingCard, TopNav, Sidebar, ProfileMenu, SearchResults, Dialog };";
+  new Function(Babel.transform(src, { presets: [["react", { runtime: "classic" }]], filename: "components.jsx" }).code)();
+  return window.SonariumComponents;
+})();
+</script>
+<style>
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--font-sans); }
+  .wrap { display:flex; flex-direction:column; gap:var(--space-3); padding:var(--space-3) var(--space-4); }
+  .row { display:flex; gap:var(--space-3); align-items:flex-start; }
+  .lbl { font-family:var(--font-mono); font-size:var(--type-overline-size); font-weight:var(--type-overline-weight);
+         letter-spacing:var(--type-overline-tracking); text-transform:uppercase; color:var(--text-3); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/jsx" id="card-src">
+  const { TopNav, Sidebar, ProfileMenu, SearchResults, Dialog, Button, TextField, ColorSwatchPicker } = ds;
+  const own = [
+    { name: "Personal", colour: "var(--library-amber)", count: 84 },
+    { name: "Àvia Teresa", colour: "var(--library-clay)", count: 3 },
+    { name: "Entrevistes — tesi", colour: "var(--library-slate)", count: 112 },
+    { name: "Assajos", colour: "var(--library-moss)", count: 26 }
+  ];
+  const shared = [{ name: "Reunions Ateneu", colour: "var(--library-plum)", count: 41 }];
+  const hits = [
+    { kind: "recording", title: "The house on Carrer Nou", excerpt: "…la casa del carrer Nou, on vivia la meva àvia…", at: "18:04" },
+    { kind: "recording", title: "Sopar de Nadal 1998", excerpt: "…vam anar al carrer Nou a buscar-la…", at: "04:12" },
+    { kind: "library", title: "Àvia Teresa", excerpt: "Library · 3 recordings" }
+  ];
+  ReactDOM.createRoot(document.getElementById("root")).render(
+    <div className="wrap">
+      <TopNav initials="MC" />
+      <div className="row">
+        <Sidebar own={own} shared={shared} trashCount={4} activeId="libraries" style={{ height: 300 }} />
+        <Sidebar own={own} collapsed activeId="libraries" style={{ height: 300 }} />
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          <span className="lbl">Search quick hits</span>
+          <SearchResults query="carrer nou" total={34} hits={hits} style={{ width: 320 }} />
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          <span className="lbl">Account menu</span>
+          <ProfileMenu />
+        </div>
+        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          <span className="lbl">Dialog</span>
+          <Dialog title="Create a library" width={300}
+            footer={<React.Fragment><Button variant="ghost">Cancel</Button><Button variant="primary">Create</Button></React.Fragment>}>
+            <TextField label="Name" value="Àvia Teresa" />
+            <ColorSwatchPicker value="clay" />
+          </Dialog>
+        </div>
+      </div>
+    </div>
+  );
+</script>
+<script>
+/* Babel's inline transform defaults to the automatic JSX runtime, which emits an ES import and
+   cannot run in a classic script — so transform the card source explicitly. */
+window.__dsReady.then(ds => {
+  const src = document.getElementById("card-src").textContent;
+  const code = Babel.transform(src, { presets: [["react", { runtime: "classic" }]], filename: "card.jsx" }).code;
+  new Function("ds", code)(ds);
+});
+</script>
+</body>
+</html>

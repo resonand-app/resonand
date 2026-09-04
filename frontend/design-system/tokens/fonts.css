@@ -1,0 +1,10 @@
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=Geist+Mono:wght@400;500&display=swap");
+
+/* Chillax — variable, shipped with the system. Display only: the wordmark and page titles. */
+@font-face {
+  font-family: "Chillax";
+  src: url("../assets/fonts/Chillax-Variable.woff2") format("woff2-variations");
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}

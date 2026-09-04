@@ -1,0 +1,28 @@
+:root {
+  /* 4 px base. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  /* Layout constants of the shell. */
+  --panel-gap: 12px;
+  --panel-padding: 16px;
+  --page-padding: 28px;
+  --grid-gap: 16px;
+
+  --sidebar-width: 224px;
+  --sidebar-width-collapsed: 52px;
+  --nav-height: 52px;
+  --player-height: 64px;
+
+  --card-width: 320px;
+  --card-height: 188px;
+  --row-height: 36px;
+  --control-height: 34px;
+  --field-height: 36px;
+  --hit-target: 44px;
+}
