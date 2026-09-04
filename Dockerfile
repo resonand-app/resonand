@@ -81,7 +81,7 @@ RUN apt-get update \
 # volume, and the failure looks like a permissions bug in the application.
 RUN groupadd --system --gid 10001 sonarium \
  && useradd --system --uid 10001 --gid 10001 --home-dir /app --no-create-home sonarium \
- && mkdir -p /app /data/storage \
+ && mkdir -p /app /data/storage /data/tmp \
  && chown -R sonarium:sonarium /app /data
 
 COPY --from=backend-build --chown=sonarium:sonarium /app/.venv /app/.venv
@@ -89,9 +89,16 @@ COPY --from=backend-build --chown=sonarium:sonarium /app/.venv /app/.venv
 COPY --chown=sonarium:sonarium LICENSE /app/LICENSE
 # COPY --from=frontend-build --chown=sonarium:sonarium /src/dist /app/static
 
+# `TMPDIR` inside the volume is not a tidiness preference. An upload is buffered to a temporary
+# file in full before the endpoint that stores it runs, so every recording touches disk twice and
+# the first copy lands wherever the process's temp directory is. Left at `/tmp` that is the
+# container's writable layer, which on a default Docker installation is not sized for an 8 GB
+# recording and is not the disk the archive was given. The directory is created here for a fresh
+# volume and again at startup, because a volume made by an older image will not have it.
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
+    PYTHONDONTWRITEBYTECODE=1 \
+    TMPDIR=/data/tmp
 
 WORKDIR /app
 USER sonarium

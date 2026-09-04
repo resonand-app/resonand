@@ -28,6 +28,21 @@ docker compose logs -f sonarium
 The instance migrates its own database on the way up. The first account you create through the
 API is the administrator, and after that registration is administrator-only.
 
+### How much disk the volume needs
+
+The archive itself, **plus headroom for one upload of the largest recording you will send**.
+
+An upload is buffered to a temporary file in full before the endpoint that stores it runs — this
+is the web framework's doing, not a choice this software gets to make — so every recording is
+written to disk twice: once as that buffer, once into the archive. The image points `TMPDIR` at
+`/data/tmp` so that the buffer lands on the volume you sized for audio rather than on the
+container's writable layer, which is usually much smaller and is not what your backups point at.
+The buffer is removed as soon as the request finishes.
+
+With `SONARIUM_MAX_UPLOAD_BYTES` at its default of 8 GB, that is 8 GB of headroom in the worst
+case. Lower the setting if the volume cannot spare it: an upload that runs the volume out of
+space fails late, having already spent the transfer.
+
 ## Behind a reverse proxy
 
 Sonarium speaks plain HTTP and expects something in front of it for TLS. The compose file binds
