@@ -95,6 +95,25 @@ def test_creating_and_renaming_a_library(client: TestClient, accounts: dict[str,
     assert renamed.json()["name"] == "Field interviews"
 
 
+def test_a_library_colour_is_chosen_and_can_be_changed(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """``DEC-8``: the design system identifies a library by a colour the user picked.
+
+    Unchosen is a neutral default rather than a derived hue, and it is changeable — deriving it
+    from the ``uuid`` would have made both of those false.
+    """
+    sign_in(client, "admin")
+    made = client.post("/libraries", json={"name": "Interviews"}).json()
+    assert made["colour"] == "stone"
+    chosen = client.post("/libraries", json={"name": "Fieldwork", "colour": "moss"}).json()
+    assert chosen["colour"] == "moss"
+    recoloured = client.patch(f"/libraries/{chosen['uuid']}", json={"colour": "plum"})
+    assert recoloured.json()["colour"] == "plum"
+    refused = client.post("/libraries", json={"name": "Nope", "colour": "#E8B45C"})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
 def test_a_personal_library_cannot_be_deleted_over_http(
     client: TestClient, accounts: dict[str, int]
 ) -> None:

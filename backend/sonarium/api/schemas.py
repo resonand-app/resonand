@@ -17,6 +17,8 @@ from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
+from sonarium.core import colours
+from sonarium.core.colours import Colour
 from sonarium.core.levels import Level
 
 _EMAIL_SHAPE = re.compile(r"^[^@\s]+@[^@\s]+$")
@@ -125,6 +127,10 @@ class LibrarySummary(Api):
     level: Level
     """What the caller may do with it, resolved by the ACL rather than guessed by the client."""
 
+    colour: Colour
+    """``DEC-8``: the colour the user picked for it, one of seven. It identifies the library and
+    carries no meaning."""
+
     audio_count: int
     total_duration_ms: int
     deleted_at: str | None
@@ -133,11 +139,13 @@ class LibrarySummary(Api):
 class CreateLibrary(Api):
     name: str = Field(min_length=1, max_length=200)
     description: str | None = None
+    colour: Colour = colours.DEFAULT
 
 
 class UpdateLibrary(Api):
     name: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
+    colour: Colour | None = None
 
 
 class ShareSummary(Api):

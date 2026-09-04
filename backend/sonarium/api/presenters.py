@@ -28,6 +28,7 @@ from sonarium.api.schemas import (
     TranscriptSummary,
     UserSummary,
 )
+from sonarium.core.colours import Colour
 from sonarium.core.levels import DESCRIPTIONS, Level
 from sonarium.db import libraries as library_repo
 from sonarium.db import tags as tag_repo
@@ -94,6 +95,7 @@ def library_summary(session: DbSession, library: Library, level: Level) -> Libra
         is_personal=bool(library.is_personal),
         owner=user_summary(owner) if owner is not None else _unknown_user(library.owner_id),
         level=level,
+        colour=Colour(library.colour),
         audio_count=count,
         total_duration_ms=duration,
         deleted_at=library.deleted_at,

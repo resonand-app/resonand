@@ -18,6 +18,7 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
 from sonarium.acl.query import library_acl, library_select, require_library
+from sonarium.core import colours
 from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
 from sonarium.core.levels import GRANTABLE, Level
 from sonarium.core.time import now_instant
@@ -49,7 +50,12 @@ def library_totals(session: Session, library_id: int) -> tuple[int, int]:
 
 
 def create_library(
-    session: Session, owner_id: int, *, name: str, description: str | None = None
+    session: Session,
+    owner_id: int,
+    *,
+    name: str,
+    description: str | None = None,
+    colour: str = colours.DEFAULT.value,
 ) -> Library:
     """Create a library owned by this user. Anybody with an account may."""
     cleaned = name.strip()
@@ -59,6 +65,7 @@ def create_library(
         owner_id=owner_id,
         name=cleaned,
         description=(description or None),
+        colour=colours.Colour(colour).value,
         created_at=now_instant(),
     )
     session.add(library)
@@ -73,8 +80,9 @@ def update_library(
     *,
     name: str | None = None,
     description: str | None = None,
+    colour: str | None = None,
 ) -> Library:
-    """Rename a library or change its description."""
+    """Rename a library, change its description, or recolour it."""
     library, _ = require_library(session, user_id, library_uuid, Level.EDIT)
     if name is not None:
         cleaned = name.strip()
@@ -83,6 +91,8 @@ def update_library(
         library.name = cleaned
     if description is not None:
         library.description = description or None
+    if colour is not None:
+        library.colour = colours.Colour(colour).value
     session.flush()
     return library
 

@@ -61,7 +61,7 @@ def create_library(
     body: CreateLibrary, caller: CurrentCaller, session: WriteSession
 ) -> LibrarySummary:
     library = library_repo.create_library(
-        session, caller.id, name=body.name, description=body.description
+        session, caller.id, name=body.name, description=body.description, colour=body.colour.value
     )
     return library_summary(session, library, Level.OWNER)
 
@@ -77,7 +77,12 @@ def update_library(
     library_uuid: str, body: UpdateLibrary, caller: CurrentCaller, session: WriteSession
 ) -> LibrarySummary:
     library = library_repo.update_library(
-        session, caller.id, library_uuid, name=body.name, description=body.description
+        session,
+        caller.id,
+        library_uuid,
+        name=body.name,
+        description=body.description,
+        colour=body.colour.value if body.colour is not None else None,
     )
     _, level = require_library(session, caller.id, library_uuid)
     return library_summary(session, library, level)

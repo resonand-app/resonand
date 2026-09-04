@@ -15,6 +15,7 @@ from dataclasses import dataclass
 
 from sqlalchemy.orm import Session
 
+from sonarium.core import colours
 from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
 from sonarium.db import categories, libraries, tags, transcripts, users
@@ -68,6 +69,7 @@ def seed(session: Session) -> Seeded:
         owner.id,
         name="Family",
         description="The recordings this whole thing exists for.",
+        colour=colours.Colour.CLAY.value,
     )
     libraries.share_library(
         session, owner.id, shared.uuid, grantee_id=collaborator.id, level=Level.EDIT

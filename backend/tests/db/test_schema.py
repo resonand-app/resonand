@@ -8,6 +8,7 @@ and putting a mapper between the assertion and the constraint would test the map
 from __future__ import annotations
 
 import pytest
+from sonarium.core import colours
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import IntegrityError
 
@@ -220,3 +221,45 @@ def test_diacritics_do_not_hide_a_transcript_match(db_engine: Engine) -> None:
             {"q": "fabrica"},
         ).scalar_one()
     assert found == 1, "a query typed without accents must find the accented word"
+
+
+def test_a_library_colour_outside_the_seven_is_refused(db_engine: Engine) -> None:
+    """``DEC-8``: the design system defines exactly seven library colours as tokens.
+
+    The ``CHECK`` is what keeps the set closed. Without it the column accepts a hex value, and a
+    colour that is not a token is the one thing the design system forbids — it would reach the
+    interface as a literal and would not flip between light and dark.
+    """
+    with db_engine.begin() as connection:
+        owner = insert_user(connection)
+        with pytest.raises(IntegrityError):
+            connection.execute(
+                text(
+                    "INSERT INTO library (uuid, owner_id, name, colour, created_at) "
+                    "VALUES ('x', :owner, 'Archive', '#E8B45C', '2026-01-01T00:00:00.000Z')"
+                ),
+                {"owner": owner},
+            )
+
+
+def test_a_library_gets_a_neutral_colour_when_nobody_chose(db_engine: Engine) -> None:
+    """An unchosen colour has to read as *not yet chosen* rather than as a decision."""
+    with db_engine.begin() as connection:
+        owner = insert_user(connection)
+        library = insert_library(connection, owner)
+        colour = connection.execute(
+            text("SELECT colour FROM library WHERE id = :id"), {"id": library}
+        ).scalar_one()
+        assert colour == colours.DEFAULT.value
+
+
+def test_the_colour_enum_and_the_schema_check_agree(db_engine: Engine) -> None:
+    """Two lists of the same seven names, in Python and in SQL, and nothing to keep them in step.
+
+    A name added to one and not the other fails at runtime on the first library somebody creates
+    with it, which is exactly the sort of drift this repository writes tests against.
+    """
+    with db_engine.begin() as connection:
+        owner = insert_user(connection)
+        for colour in colours.Colour:
+            assert insert_library(connection, owner, name=colour.value, colour=colour.value)

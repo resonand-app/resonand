@@ -10,7 +10,7 @@ virtual tables cannot be rendered by ``op.create_table`` and would have had to b
 This file is the source of truth for the schema; ``sonarium.db.models`` mirrors it and a test
 asserts the two agree.
 
-It carries the specification's schema **plus the five deltas** listed under *What the first
+It carries the specification's schema **plus the six deltas** listed under *What the first
 migration contains* in ``docs/v0-plan.md``, each of which is expensive to add afterwards:
 
 1. ``session`` (``DEC-12``) -- the cookie carries a random secret and nothing else, so the row is
@@ -29,6 +29,12 @@ migration contains* in ``docs/v0-plan.md``, each of which is expensive to add af
 5. ``audio.recorded_at_offset`` (``DEC-11``) -- nullable, in minutes. ``recorded_at`` is a
    wall-clock reading rendered as written; its offset is stored apart and only when it is genuinely
    known. Every other timestamp column is a fixed-width UTC instant.
+6. ``library.colour`` (``DEC-8``) -- one of seven names, behind a ``CHECK``, defaulting to
+   ``stone``. The design system identifies a library by a colour **the user picks**; deriving it
+   from the ``uuid`` would save the column and quietly make the choice unchangeable, which is a
+   different product decision taken by accident. The ``CHECK`` rather than free text is what keeps
+   the set closed: a hex value in this column would put a colour outside the token system into the
+   interface, which is the one thing the system forbids.
 
 **The two FTS5 tables are kept in step differently, on purpose.**
 
@@ -101,8 +107,10 @@ SCHEMA: tuple[str, ...] = (
       name        TEXT NOT NULL,
       description TEXT,
       is_personal INTEGER NOT NULL DEFAULT 0,      -- created with the user, non-deletable
+      colour      TEXT NOT NULL DEFAULT 'stone',   -- DEC-8: chosen by the user, never derived
       created_at  TEXT NOT NULL,
-      deleted_at  TEXT
+      deleted_at  TEXT,
+      CHECK (colour IN ('amber','clay','slate','moss','stone','plum','teal'))
     )
     """,
     "CREATE INDEX ix_library_owner ON library(owner_id)",

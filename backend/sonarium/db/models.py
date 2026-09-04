@@ -34,6 +34,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from sonarium.core import colours
 from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
@@ -126,6 +127,12 @@ class Library(Base):
     description: Mapped[str | None] = mapped_column(Text)
     is_personal: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
     """Created with the user and non-deletable, so ``audio.library_id`` is always populated."""
+
+    colour: Mapped[str] = mapped_column(
+        Text, nullable=False, server_default=text("'stone'"), default=colours.DEFAULT.value
+    )
+    """``DEC-8``: one of ``sonarium.core.colours.Colour``, chosen by the user and never derived.
+    A ``CHECK`` in the schema keeps the set closed."""
 
     created_at: Mapped[str] = mapped_column(Text, nullable=False, default=now_instant)
     deleted_at: Mapped[str | None] = mapped_column(Text)

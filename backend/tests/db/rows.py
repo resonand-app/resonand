@@ -7,6 +7,7 @@ development seed with realistic content is ``DAT-8``, not this.
 
 from __future__ import annotations
 
+from sonarium.core import colours
 from sonarium.core.ids import new_uuid
 from sonarium.core.time import now_instant
 from sqlalchemy import Connection, text
@@ -29,13 +30,25 @@ def insert_user(connection: Connection, *, email: str = "reader@example.test") -
     return int(result.scalar_one())
 
 
-def insert_library(connection: Connection, owner_id: int, *, name: str = "Archive") -> int:
+def insert_library(
+    connection: Connection,
+    owner_id: int,
+    *,
+    name: str = "Archive",
+    colour: str = colours.DEFAULT.value,
+) -> int:
     result = connection.execute(
         text(
-            "INSERT INTO library (uuid, owner_id, name, created_at) "
-            "VALUES (:uuid, :owner, :name, :now) RETURNING id"
+            "INSERT INTO library (uuid, owner_id, name, colour, created_at) "
+            "VALUES (:uuid, :owner, :name, :colour, :now) RETURNING id"
         ),
-        {"uuid": new_uuid(), "owner": owner_id, "name": name, "now": now_instant()},
+        {
+            "uuid": new_uuid(),
+            "owner": owner_id,
+            "name": name,
+            "colour": colour,
+            "now": now_instant(),
+        },
     )
     return int(result.scalar_one())
 
