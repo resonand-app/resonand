@@ -84,6 +84,10 @@ class User(Base):
 
     oidc_subject: Mapped[str | None] = mapped_column(Text, unique=True)
     is_admin: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+
+    language: Mapped[str | None] = mapped_column(Text)
+    """``DEC-8``: a BCP 47 tag, ``NULL`` meaning follow the instance default, read by ``API-13``.
+    Theme is deliberately not stored: it is per-device and lives in browser storage."""
     created_at: Mapped[str] = mapped_column(Text, nullable=False, default=now_instant)
     disabled_at: Mapped[str | None] = mapped_column(Text)
     """A user with content cannot be deleted in v0, so disabling is the only exit."""

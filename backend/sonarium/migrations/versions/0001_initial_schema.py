@@ -10,7 +10,7 @@ virtual tables cannot be rendered by ``op.create_table`` and would have had to b
 This file is the source of truth for the schema; ``sonarium.db.models`` mirrors it and a test
 asserts the two agree.
 
-It carries the specification's schema **plus the six deltas** listed under *What the first
+It carries the specification's schema **plus the seven deltas** listed under *What the first
 migration contains* in ``docs/v0-plan.md``, each of which is expensive to add afterwards:
 
 1. ``session`` (``DEC-12``) -- the cookie carries a random secret and nothing else, so the row is
@@ -35,6 +35,12 @@ migration contains* in ``docs/v0-plan.md``, each of which is expensive to add af
    different product decision taken by accident. The ``CHECK`` rather than free text is what keeps
    the set closed: a hex value in this column would put a colour outside the token system into the
    interface, which is the one thing the system forbids.
+7. ``user.language`` (``DEC-8``) -- nullable, a BCP 47 tag, ``NULL`` meaning follow the instance
+   default. ``UI-20`` offers the control from the first version with English as its only entry,
+   which is what proves the ``UI-22`` round trip works before there is a translation to lose.
+   **Theme gets no column on purpose**: it is a property of the screen somebody is looking at
+   rather than of the person, and "follow the system" is already a per-device idea, so it belongs
+   in browser storage. Nothing reads this column until ``API-13``.
 
 **The two FTS5 tables are kept in step differently, on purpose.**
 
@@ -80,6 +86,7 @@ SCHEMA: tuple[str, ...] = (
       password_hash    TEXT,                       -- NULL if the account is OIDC-only
       oidc_subject     TEXT UNIQUE,                -- NULL if the account is local-only
       is_admin         INTEGER NOT NULL DEFAULT 0,
+      language         TEXT,                       -- BCP 47; NULL follows the instance (DEC-8)
       created_at       TEXT NOT NULL,
       disabled_at      TEXT
     )
