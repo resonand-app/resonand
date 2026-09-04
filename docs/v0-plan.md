@@ -48,7 +48,7 @@ get renumbered** — a task deferred to `ROADMAP.md` keeps the number it has her
 | `API` | API and authentication | HTTP skeleton, sessions |
 | `ING` | Ingestion and playback | Storage, ffprobe, waveform, streaming, integrity |
 | `JOB` | Jobs, transcription and search | Queue, providers, segments, FTS5 |
-| `UI` | Frontend | Every view in the interface brief |
+| `UI` | Frontend | Every view in the interface specification |
 | `OPS` | Operations | Docker, configuration, backup, observability |
 | `INT` | Integration | Views that cross tracks: trash, administration, security |
 
@@ -62,9 +62,11 @@ Notation:
 
 A task is done when it meets the criterion written next to it, not when it "works".
 
-The schema, the permission query and the per-view interface brief that several tasks below refer
-to live in a working specification kept out of this repository while the first version is being
-built. Everything needed to understand *what* a task is and *why* it exists is here.
+The schema, the permission query and the per-view interface specification that several tasks below
+refer to live in working documents kept out of this repository while the first version is being
+built. The one exception is the **design system**, which is vendored at `frontend/design-system/`
+because the application consumes it directly. Everything needed to understand *what* a task is and
+*why* it exists is here.
 
 ---
 
@@ -81,7 +83,7 @@ All of them settled. Nothing in the first version is waiting on a conversation.
 | Topology | **A single container**, in-process job worker | WAL + a single serialised writer. Can be split later without touching the schema |
 | UI language | English as the base language, i18n from day one | No literal written inside a component. Shipping actual translations is a later milestone |
 | Name and repository | `sonarium`, at `sonarium-app/sonarium`, private until publishable | `DEC-7`. Created and empty; the same string is the image name and the docs namespace |
-| Visual identity | The **Archive** palette, light and dark, and nothing else | `DEC-8`. Tokens recorded below; no palette switcher ships |
+| Visual identity | The **Sonarium design system**, vendored at `frontend/design-system/` | `DEC-8`. Signed off and final; no palette switcher ships |
 | Audio egress | Nothing leaves the instance without a request, and watched folders only when explicitly configured to | `DEC-9`. Principle 2 made operational |
 | Suggestions | No suggestion storage in the first migration | `DEC-1`, deferred with the AI features it serves |
 | Timestamps | Instants in UTC; a recording's own time as wall clock plus offset | `DEC-11`. Two kinds of value, never mixed |
@@ -113,35 +115,57 @@ discontinued mobile audio game. **The risk is accepted knowingly.** It is not a 
 trademark exposure, since a sound engineer's services and a piece of software are not the same
 class, but it is a real discovery cost: competition for the term inside the same sector.
 
-### The Archive palette (DEC-8)
+### The design system (DEC-8)
 
-One identity, not a palette switcher. *Paper and ink: a warm neutral with an indigo ink accent,
-legible and sober over long sessions.* The other three proposals (Signal, Chamber, Tape) are kept
-only as the record of how the choice was made.
+**Settled, and the artefact is in the repository.** The system is vendored at
+[`frontend/design-system/`](../frontend/design-system/README.md): tokens, components, the mark,
+the Chillax webfont, seventeen specimen cards and a click-through app kit. Its `README.md` is the
+system in prose and is the authority — what follows is only enough to know what was decided,
+because a plan should not restate a stylesheet.
 
-Recorded here because `UI-1` needs it and the interface proposal itself is not published:
+This **supersedes the *Archive* palette** — a warm neutral with an indigo ink accent, Instrument
+Serif / Instrument Sans / IBM Plex Mono — and the interface proposal that carried it. Both have
+been retired; neither is an input to anything. The direction was chosen from four built candidates
+and the specimen boards are kept for the record under `docs/internal/design/provenance/`.
 
-| Token | Light | Dark |
-|---|---|---|
-| `bg` | `#F4F2ED` | `#121210` |
-| `surface` | `#FFFFFF` | `#1B1B18` |
-| `surface2` | `#EAE7E0` | `#252521` |
-| `border` | `#D9D5CC` | `#34342E` |
-| `text` | `#1A1917` | `#F2F0E9` |
-| `text2` | `#55524B` | `#A8A49A` |
-| `text3` | `#8C887E` | `#6F6C64` |
-| `accent` | `#2E3A8C` | `#9AA5F5` |
-| `accentOn` | `#FFFFFF` | `#12132A` |
-| `accentSoft` | `#E2E4F4` | `#22254A` |
-| `wave` | `#2E3A8C` | `#9AA5F5` |
-| `waveDim` | `#C3C7DE` | `#3B3F63` |
-| `ok` | `#1E7A52` | `#4FBF8B` |
-| `run` | `#B26A00` | `#E0A64A` |
-| `err` | `#B3261E` | `#F2837C` |
+What it decides:
 
-Type scale: Instrument Serif for display, Instrument Sans for the interface, IBM Plex Mono for
-timestamps and technical metadata. **No colour is hand-written in a component** — every one of
-these is a token, and the dark values are a token redefinition rather than a second stylesheet.
+- **One chromatic family: amber.** `--amber-300…900`, 400 as the accent on dark and 700 on light,
+  every step declaring the on-colour that clears AA against it. A played waveform, a primary
+  button and an active nav item are visibly the same signal.
+- **Two neutral ramps.** `--ink-*` (blue-black) for dark, `--paper-*` (warm) for light, aliased
+  through semantic names that flip on `[data-theme="light"]`. **Dark is the default and light is a
+  full peer** — a token redefinition, never a second stylesheet.
+- **Three type families, three jobs.** *Chillax* 600 for the wordmark and the one page title per
+  screen and nothing else, ever. *Geist* for the interface. *Geist Mono*, tabular, for anything
+  comparable to another number — durations, timestamps, counts, speed.
+- **Elevation, not borders.** Panels float in a 12px gap on three steps of shadow. No gradients,
+  no textures, no glass, no imagery. The waveform is the only graphic the product owns and it is
+  real data.
+- **The waveform**, at five sizes exactly — 20 dense row, 38 library card, 52 recording card,
+  34 player, 130 audio detail — as amplitude in rounded bars, minimum bar height equal to bar
+  width so silence stays a row of dots rather than disappearing. Drawn from the peaks `ING-5`
+  stores; **until that job has run there is no waveform**, only a dashed rule and a duration.
+- **Library colour**, user-chosen from seven muted hues. It identifies a library and carries no
+  meaning; it is never derived from the name or the audio. This is what `library.colour` in
+  `DAT-1` exists for.
+- **Lucide** at 1.7px stroke, on a 24px grid, as the icon set.
+
+**No colour is hand-written in a component**, and no palette switcher ships: the user chooses
+light, dark or follow-the-system, and nothing else.
+
+Two things the system ships as compromises, both of which `UI-1` closes:
+
+- **Geist is fetched from Google Fonts and Lucide from a CDN.** A self-hosted archive that phones
+  out to render its own interface is the wrong shape, and it breaks in an air-gapped deployment.
+  Both get bundled.
+- **The icons are a substitution.** The specimen board's glyphs were drawn for the exploration and
+  Lucide replaced them, so the system ships a complete maintained set rather than a partial
+  hand-drawn one. `Icon` is the only file that changes if that is ever revisited.
+
+Where anything *goes* is not this system's job. Navigation, routes and every view with its real
+fields, states and actions are in the interface specification kept alongside the working
+specification, out of this repository while the first version is being built.
 
 ### Watched folders and audio egress (DEC-9)
 
@@ -150,10 +174,10 @@ transcription on arrival, but it is **opt-in per folder and disabled by default*
 destination provider is named in the folder's configuration, and the administration view states
 which folders send audio out and where. No folder transcribes because it happened to be created.
 
-### What the first migration contains (DEC-11 to DEC-15)
+### What the first migration contains (DEC-8, DEC-11 to DEC-15)
 
-`DAT-1` writes the schema from the specification **plus these five deltas**, each of which exists
-because the specification promised something it had no storage for. They are listed together
+`DAT-1` writes the schema from the specification **plus these six deltas**, each of which exists
+because something was promised elsewhere with no storage behind it. They are listed together
 because this is the artefact `DAT-1` needs, and because every one of them is expensive to add
 afterwards.
 
@@ -180,6 +204,15 @@ afterwards.
 
 5. **`audio.recorded_at_offset`** (`DEC-11`) — nullable, in minutes. See the timestamp convention
    below.
+
+6. **`library.colour`** (`DEC-8`) — `TEXT NOT NULL DEFAULT 'stone'`, one of the seven names the
+   design system defines (`amber`, `clay`, `slate`, `moss`, `stone`, `plum`, `teal`), validated by
+   a `CHECK`. The design system identifies a library by a colour the user picks, in the sidebar,
+   on the library card and on the create dialog — and it is explicit that the colour is *chosen*,
+   never derived from the name or the audio. Without a column there is nowhere to put the choice,
+   and hashing the `uuid` into a hue would make it unchangeable, which is a different product
+   decision taken by accident. It is a one-word column on a table with a handful of rows; the
+   alternative is a migration plus a backfill later for no gain.
 
 Everything else in the specification's schema goes in unchanged, including the columns v0 never
 reads: `api_token`, `transcript.derived_from`, `segment.speaker`, `share.audio_id`. The data model
@@ -291,7 +324,7 @@ graph TD
 | Point | Work that can run in parallel… |
 |---|---|
 | Phase 0 | All of `INF` at once, and `OPS-1`/`OPS-2` can already be tackled |
-| Phase 1 | Not much else: `DAT` is the bottleneck. In parallel: `UI-1`, `UI-2` (tokens and waveform, without real data), and `JOB-13`, which needs no schema |
+| Phase 1 | Not much else: `DAT` is the bottleneck. In parallel: `UI-1`, `UI-2` (the design system and the waveform, against generated peaks), and `JOB-13`, which needs no schema |
 | Phase 2 | `API` alongside `UI-3`/`UI-4` (client and shell against mocks) and `OPS` |
 | Phase 3 | **Four full tracks at once**: `ING`, `JOB`, `UI`, `OPS` |
 | Phase 4 | Everything converges; the cross-cutting tasks want two finished tracks |
@@ -316,9 +349,10 @@ The order that matters:
    repository.
 5. From `API-2` onwards the four tracks open up and order stops mattering much.
 
-Two things worth starting early because they need nothing from the schema: **`UI-1`/`UI-2`** (the
-tokens and the waveform component) and **`JOB-13`** (chunking and timestamp re-stitching), which
-is the highest-risk piece in the whole plan and the one most likely to need a second attempt.
+Two things worth starting early because they need nothing from the schema: **`UI-1`/`UI-2`** —
+adopting the design system and building the waveform, which draws against generated peaks until
+`ING-5` produces real ones — and **`JOB-13`** (chunking and timestamp re-stitching), which is the
+highest-risk piece in the whole plan and the one most likely to need a second attempt.
 
 ## Phase 0 · Repository scaffolding
 
@@ -363,9 +397,10 @@ Short and mechanical, but it conditions everything that comes after. No product 
 **The bottleneck of the project.** Nothing that touches data can be written before it. The ACL
 query is the only source of truth for permissions and everything goes through it.
 
-- [ ] **DAT-1** 🔒 · Initial Alembic migration: the schema from the specification plus the five
+- [ ] **DAT-1** 🔒 · Initial Alembic migration: the schema from the specification plus the six
       deltas listed under **What the first migration contains** — the `session` table, the metadata
-      FTS5 table, `library.uuid`, `user.email_normalised` and `audio.recorded_at_offset`. Partial
+      FTS5 table, `library.uuid`, `user.email_normalised`, `audio.recorded_at_offset` and
+      `library.colour`. Partial
       indexes, the composite FK `(category_id, library_id)` and the `share` `CHECK` included; none
       of it gets added "later". Timestamps follow the `DEC-11` convention from the first row
       written.
@@ -558,21 +593,43 @@ simultaneously without stepping on each other.
 
 `UI-1`/`UI-2` can start during Phase 1, and `UI-3`/`UI-4` against mocks during Phase 2.
 
-- [ ] **UI-1** · Design system for the **Archive** palette recorded above: colour tokens,
-      light and dark mode, typographic scale (Instrument Serif / Instrument Sans / IBM Plex Mono),
-      spacing and radii. **No colour hand-written in a component**, and no palette switcher — dark
-      mode is a token redefinition, not a second theme.
+- [ ] **UI-1** · **Adopt the design system**, which is already built and vendored at
+      `frontend/design-system/` (`DEC-8`). This task is not a design task: it is wiring the
+      finished system into the application. Link `styles.css`, port each component from its `.jsx`
+      to strict TSX against the `.d.ts` that ships beside it, **self-host Geist and bundle Lucide**
+      so the interface makes no outbound request to render itself, and add a Vitest check that
+      fails if a hex colour, an `rgb()` or a font name appears anywhere in a component. The theme
+      is `light` / `dark` / follow-the-system and nothing else.
+      *Done when:* every component in the system renders in the app in both themes, and the
+      no-hardcoded-colour test passes.
 
-- [ ] **UI-2** · **Waveform component** — the product's signature visual element: bar and stroke
-      variants, card / list / large player sizes, played vs pending state, and click to seek.
-      ⇢ UI-1
+- [ ] **UI-2** · **Waveform component** — the product's signature visual element, specified by the
+      system: amplitude in rounded bars at the five documented sizes (20 dense row · 38 library
+      card · 52 recording card · 34 player · 130 audio detail), played vs pending bars, a 2px
+      rounded playhead, click to seek on the large one, and minimum bar height equal to bar width
+      so silence stays a row of dots. It reduces `ING-5`'s stored min/max pairs to the available
+      pixel width — a 48-minute recording is ~28,800 pairs — and when the peaks job has not run it
+      renders **a dashed rule and the duration, never an invented shape**. ⇢ UI-1, ING-5
 
 - [ ] **UI-3** · API client generated from the OpenAPI spec (`openapi-typescript`), with shared
       types. ⇢ API-1
       *This is what keeps the interface a client of the API rather than a privileged path into it.*
 
-- [ ] **UI-4** · Navigation shell: header with global search, sidebar with libraries and shared
-      libraries, and mobile collapse. ⇢ UI-1, UI-3
+- [ ] **UI-4** · Navigation shell, in the two forms the interface specification settles. **Desktop:**
+      the floating shell — a 52px top nav carrying the mark, the global search field, upload and the
+      account; a 224px sidebar (52px collapsed) listing your libraries and, separately, libraries
+      shared with you, then Trash and Settings; the content area; and the 64px player pinned along
+      the bottom whenever something is playing, everything separated by a 12px gap. **Phone:** not a
+      narrowed desktop but four bottom tabs — Libraries, Search, Upload, Settings — with the player
+      docked directly above them as a compact strip that expands to a full-screen player. The
+      sidebar's contents become the Libraries tab. ⇢ UI-1, UI-3
+
+- [ ] **UI-31** · **Libraries landing**, the application's home: the create tile first, then a card
+      per library carrying its name, its user-chosen colour, its recording count and total duration,
+      and the waveform of its most recent recording. Libraries shared with you are a second,
+      separately titled group that **disappears entirely rather than sitting empty**. A brand-new
+      account has exactly one library — the personal one — and that state is an invitation to upload,
+      not an empty grid. ⇢ UI-4, API-8
 
 - [ ] **UI-5** · **Persistent player**: it survives view changes, and a decision on whether the
       large player and the compact one are the same component in two states or two synchronised
@@ -586,8 +643,13 @@ simultaneously without stepping on each other.
 - [ ] **UI-7** · **View A' · Dense compact list** — for 800 audios the grid is useless. Fixed-height
       row, virtualised. ⇢ UI-6
 
-- [ ] **UI-8** · Filters and sorting: category tree, tags as pills, transcription status toggles,
-      and sorting by recording date / upload date / duration / title. ⇢ UI-6, DAT-6, DAT-7, ING-12
+- [ ] **UI-8** · Filters and sorting, as **one filter bar under the page header** rather than a
+      second rail: a category popover holding the tree, tag chips, the four transcription states as
+      toggles, the sort control, and the grid/list switch. A permanent rail would drop the card grid
+      from three columns to two at 1280 and is a lot of chrome for a family archive; a popover also
+      collapses honestly onto a phone. Sorting is by recording date / upload date / duration /
+      title, and **the list's column headings and the bar's sort control are the same sort**.
+      ⇢ UI-6, DAT-6, DAT-7, ING-12
 
 - [ ] **UI-9** · Multiple selection and bulk actions: assign category, add tag, move between
       libraries, send to trash. ⇢ UI-7
@@ -604,7 +666,9 @@ simultaneously without stepping on each other.
 
 - [ ] **UI-13** · Metadata panel, inline-editable according to permission, technical metadata
       collapsed, and a **read-only state that clearly reads as non-editable without looking
-      broken**. ⇢ UI-11, API-9
+      broken**. It is a 320px panel to the right of the transcript on desktop, collapsible, and a
+      **bottom sheet on a phone** opened from the essentials line — the transcript needs the full
+      width and it is the centre of the product. ⇢ UI-11, API-9
 
 - [ ] **UI-14** · Transcript selector when there is more than one (model, language, date, which one
       is active). `JOB-7` makes re-transcription possible, so without this it is unreachable from
@@ -615,9 +679,14 @@ simultaneously without stepping on each other.
       and a retry button** — the error explains what happened and what to do, it does not
       apologise. ⇢ UI-13, JOB-2
 
-- [ ] **UI-16** · **View C · Search**: transcript results with a context fragment, a timestamp, and
-      playback from that exact point **without opening the detail view**. Several matches in one
-      recording are grouped under it, three shown, "+N more" expands. ⇢ UI-5, JOB-10
+- [ ] **UI-16** · **View C · Search**, which is two surfaces over one endpoint: the **quick-hits
+      dropdown** anchored under the nav search field for the three-second case, and the **full
+      search view** that `Enter` and its see-all row lead to, carrying the filters (library, date
+      range, duration range, tags, transcription state). Both show transcript results with a context
+      fragment, a timestamp, and playback from that exact point **without opening the detail view**.
+      Several matches in one recording are grouped under it, three shown, "+N more" expands. A
+      metadata match has no timestamp and no play-from-here, and needs a form that says so. The
+      recall note from `GET /search/about` is shown, not hard-coded. ⇢ UI-5, JOB-10, JOB-11
 
 - [ ] **UI-17** · **View D · Library and sharing**: edit name and description, manage the category
       tree, a panel with who has access, at what level, who granted it and when, and the level
@@ -632,11 +701,22 @@ simultaneously without stepping on each other.
       consequences. It must explicitly warn that it will change who can see the audio and that the
       category will be lost. ⇢ UI-13, ING-10
 
-- [ ] **UI-20** · **View G · Profile**: name, email, avatar, language, theme, password change and
-      active sessions. Tokens are not in v0. ⇢ UI-4, API-3
+- [ ] **UI-20** · **View G · Settings**, one destination with sections rather than a scattering of
+      screens: **Account** (display name, email, password change), **Sessions** (every active
+      sign-in with the current one marked and not revocable by mistake, revoke one or sign out
+      everywhere), **Appearance** (language, and theme as light / dark / follow the system), and —
+      only when `is_admin` — **Administration** from `INT-3`, which keeps its own chrome inside so
+      nobody wanders into it. **There are no avatar images**: no storage exists for one and fetching
+      one from an external service would violate principle 2, so identity is initials or a derived
+      mark. Tokens are not in v0. ⇢ UI-4, API-3
 
 - [ ] **UI-21** · **View J · Authentication**: local sign-in, and the first-run screen that creates
-      the initial administrator. ⇢ API-3, API-7
+      the initial administrator when `GET /instance` reports the instance needs bootstrapping.
+      **There is no sign-up path and the screen must not imply one** — registration is
+      administrator-only in v0, so the design system's app kit, whose login screen offers to create
+      an account, is wrong here and is not copied forward. Wrong credentials, an unknown address and
+      a disabled account are **indistinguishable on purpose**; rate-limiting is a real state.
+      ⇢ API-3, API-7
 
 - [ ] **UI-22** · i18n plumbing: English as the base, **every literal externalised**, localised date
       and duration formatting. Shipping actual translations is a later milestone; making them
@@ -699,11 +779,16 @@ Everything that needs two finished tracks at once.
 - [ ] **INT-2** · Scheduled trash purge at the configured retention (30 days by default, per
       instance), as a recurring job, also deleting the files from `storage/`. ⇢ INT-1, JOB-1 🧪
 
-- [ ] **INT-3** · **View H · Administration**, visually separated so nobody wanders into it by
-      accident: users (list, create, disable — **deleting a user with content is refused in v0**,
-      with a message saying why), transcription provider (configuration, connection test, status),
-      job queue (pending, running, failed, retry, cancel), and system status (space used, audio
-      count, index size). ⇢ UI-20, API-7, JOB-1
+- [ ] **INT-3** · **View H · Administration**, a section inside `UI-20`'s Settings shown only when
+      `is_admin`, and **visually separated inside it so nobody wanders in by accident** — its own
+      chrome rather than its own destination: users (list, create, disable, re-enable — **deleting a
+      user with content is refused in v0**, with a message saying why, which has to read as a
+      considered position and not a bug), transcription provider (configuration, connection test,
+      status, and what leaves the instance and to where), job queue (pending, running, failed,
+      retry, cancel, with the real error text on a failed job), and system status (space used,
+      recording count, index size, and the schema revision against the one the image expects).
+      An empty queue is the healthy case and should look healthy rather than empty.
+      ⇢ UI-20, API-7, JOB-1
 
 - [ ] **INT-5** · Security pass: signed URLs, size limits, login rate limiting, and verification
       that **no endpoint has escaped `API-2`**. ⇢ every track 🧪

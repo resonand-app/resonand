@@ -8,16 +8,19 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
-  <img alt="Status: pre-alpha, no code yet" src="https://img.shields.io/badge/status-design-orange">
+  <img alt="Status: pre-alpha, in development" src="https://img.shields.io/badge/status-pre--alpha-orange">
 </p>
 
 ---
 
-> ### Status: design phase. There is no code yet.
+> ### Status: pre-alpha. Nothing is released.
 >
-> This repository currently holds the vision, the plan and the interface direction. Nothing is
-> installable, and nothing here is asking you to try. The reasoning is on the record from the
-> start on purpose. When there is something to install, this section will say so.
+> The backend, the ingestion pipeline, search and the CLI are written; the web interface is being
+> built against a finished design system. **Nothing is installable, there is no release, and
+> nothing here is asking you to try it.** The first version has to run against a real archive for
+> several months before any of that changes — see [`docs/v0-plan.md`](docs/v0-plan.md). The
+> reasoning is on the record from the start on purpose. When there is something to install, this
+> section will say so.
 
 ## The problem
 
@@ -91,6 +94,7 @@ configured through environment variables.
 | [`VISION.md`](VISION.md) | Why it exists, who it is for, the principles it will not break |
 | [`ROADMAP.md`](ROADMAP.md) | What comes after the first version, and what is explicitly out of scope |
 | [`docs/v0-plan.md`](docs/v0-plan.md) | The build plan for the first version, task by task |
+| [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
 
 ## Contributing
 
