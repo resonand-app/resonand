@@ -93,7 +93,9 @@ Use `Icon` for every glyph; do not inline SVG in a screen. Common names: `search
 
 Component inventory note: no source defined a component list, so this is an authored set sized to the brief — every family here appears in a view the brief specifies. There are no speculative primitives (no Toast, Tooltip, Tabs, Switch, Select) because no view in the brief needed one at the time.
 
-**The interface specification adds nine.** `Toast`, `Tooltip`, `Tabs`, `Switch`, `Select`, `Checkbox`, `Sheet`, `Menu` and `Progress` are now required by views the system did not cover, plus four compositions — `LevelSelector`, `InlineField`, `TypedConfirm` and `EgressNotice`. See *Components the design system still owes* in the interface specification. They are designed the same way as everything here: tokens only, no colour in a component.
+**The interface specification adds thirteen.** `Toast`, `Tooltip`, `Tabs`, `Switch`, `Select`, `Checkbox`, `Sheet`, `Menu` and `Progress` are required by views the system did not cover, plus four compositions — `LevelSelector`, `InlineField`, `TypedConfirm` and `EgressNotice`. See *Components the design system still owes* in the interface specification.
+
+They **extend this folder in place** rather than living in a design file: same three files per component (`.jsx`, `.d.ts`, `.prompt.md`), same family folders, a row added to the index above, and the same rules — tokens only, no colour written in a component. There is one system, and it is versioned with the code.
 
 ## Caveats
 

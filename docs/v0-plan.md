@@ -176,7 +176,7 @@ which folders send audio out and where. No folder transcribes because it happene
 
 ### What the first migration contains (DEC-8, DEC-11 to DEC-15)
 
-`DAT-1` writes the schema from the specification **plus these six deltas**, each of which exists
+`DAT-1` writes the schema from the specification **plus these seven deltas**, each of which exists
 because something was promised elsewhere with no storage behind it. They are listed together
 because this is the artefact `DAT-1` needs, and because every one of them is expensive to add
 afterwards.
@@ -214,9 +214,17 @@ afterwards.
    decision taken by accident. It is a one-word column on a table with a handful of rows; the
    alternative is a migration plus a backfill later for no gain.
 
+7. **`user.language`** (`DEC-8`) — nullable, a BCP 47 tag, `NULL` meaning follow the instance
+   default. `UI-22` makes translation possible without touching a component and `UI-20` offers the
+   control from v0 with English as its only entry, which is what proves the round trip works before
+   there is a translation to lose. **Theme deliberately gets no column**: it is a property of the
+   screen somebody is looking at rather than of the person, and "follow the system" is already a
+   per-device idea, so it lives in browser storage. `API-13` is what reads and writes this.
+
 Everything else in the specification's schema goes in unchanged, including the columns v0 never
 reads: `api_token`, `transcript.derived_from`, `segment.speaker`, `share.audio_id`. The data model
-stays whole.
+stays whole — and `library.colour` and `user.language` are carried here for exactly that reason,
+since a column nobody reads yet is far cheaper than a migration plus a backfill later.
 
 ### Timestamps (DEC-11)
 
@@ -397,10 +405,10 @@ Short and mechanical, but it conditions everything that comes after. No product 
 **The bottleneck of the project.** Nothing that touches data can be written before it. The ACL
 query is the only source of truth for permissions and everything goes through it.
 
-- [ ] **DAT-1** 🔒 · Initial Alembic migration: the schema from the specification plus the six
+- [ ] **DAT-1** 🔒 · Initial Alembic migration: the schema from the specification plus the seven
       deltas listed under **What the first migration contains** — the `session` table, the metadata
-      FTS5 table, `library.uuid`, `user.email_normalised`, `audio.recorded_at_offset` and
-      `library.colour`. Partial
+      FTS5 table, `library.uuid`, `user.email_normalised`, `audio.recorded_at_offset`,
+      `library.colour` and `user.language`. Partial
       indexes, the composite FK `(category_id, library_id)` and the `share` `CHECK` included; none
       of it gets added "later". Timestamps follow the `DEC-11` convention from the first row
       written.
@@ -461,6 +469,57 @@ From the end of this phase onwards the four parallel tracks open up.
 - [ ] **API-9** · CRUD endpoints for `audio` (metadata: title, notes, recording date, category,
       tags) at level 20. ⇢ API-8 🧪
 
+**The seven endpoints the interface needs and does not have.** Every one was found by specifying a
+view against the API as built and discovering the view could not be drawn. They are listed together
+because they share a cause — the interface specification is a client of the API and this is what
+being a client uncovered — and because `UI-*` tasks depend on them individually.
+
+- [ ] **API-10** · **Filter and sort a library's recordings.** `GET /libraries/{uuid}/audio`
+      currently takes only `limit` and `offset`. It gains the parameters search already
+      supports — category, tags (all of which must match), the four transcription states,
+      recording-date range, duration range — plus a sort over recording date / upload date /
+      duration / title with a direction. ⇢ API-9 🧪
+      *`UI-8`'s entire filter bar and `UI-7`'s column sort are unbuildable without it, and the two
+      must resolve to the same sort.*
+
+- [ ] **API-11** · **Request or retry a transcription on an existing recording.** Only possible at
+      upload time today. `POST /audio/{uuid}/transcribe` at level 20, with the optional language
+      from `JOB-2`'s contract. **A recording with a pending or running job returns 409 rather than
+      queueing a second one** — the call to action and the retry button are the same endpoint, and a
+      double click must not cost two transcriptions. ⇢ JOB-2, API-9 🧪
+      *`UI-15`'s call to action, its retry and re-transcribe all depend on it; so, in practice, does
+      `UI-14`, since without it a second transcript can never exist.*
+
+- [ ] **API-12** 🔒 · **The transcription destination, readable by any caller.** The provider is
+      only visible through the administrator-only `GET /admin/transcription`, so **a non-admin
+      cannot be told where their audio is going** — which makes `UI-25` unimplementable for exactly
+      the people principle 2 protects. A narrow `GET /transcription/destination` returns the
+      provider, the host, whether it is local and whether it is configured, and **nothing else**: no
+      credential, no flag about one, no base URL carrying auth. ⇢ JOB-2 🧪
+      *This is principle 2's only implementation. Until it exists, "no silent egress" is a sentence
+      in a document rather than a property of the software, which is why it carries the lock.*
+
+- [ ] **API-13** · **Update your own profile.** Only password change exists. `PATCH /auth/me` takes
+      display name, email and language, re-deriving `email_normalised` and answering 409 on a
+      collision. Theme is not here: it is per-device and lives in browser storage. ⇢ API-3, DAT-1 🧪
+
+- [ ] **API-14** · **Trashed libraries, and retention everybody can read.** Only trashed recordings
+      can be listed, and `trash_retention_days` is only on the administrator-only `/admin/status`,
+      so a non-admin cannot be told how long anything has left. Add `GET /trash/libraries` mirroring
+      `/trash/audio`, and put `trash_retention_days` on `GET /instance`, where instance facts
+      already live. ⇢ API-8 🧪
+      *`INT-1` shows one list with the time each item has left, and cannot do either half today.*
+
+- [ ] **API-15** · **A narrow person lookup for sharing.** Only administrators can list accounts, so
+      a non-admin library manager cannot resolve who to share with. `GET /users/lookup` is available
+      to anyone holding level 30 on at least one library, matches on the **full normalised email and
+      nothing else**, and returns **at most one** account. ⇢ API-8 🧪
+      🧪 A prefix or name search would let any library manager enumerate the instance's accounts —
+      the same leak `DAT-6`'s ACL-filtered autocomplete exists to prevent. The test is that a
+      partial address finds nobody.
+      *Sharing needs to confirm one address somebody was given out of band. It does not need a
+      directory, and the difference is the whole design of the endpoint.*
+
 ---
 
 ## Phase 3 · Four parallel tracks
@@ -489,6 +548,12 @@ simultaneously without stepping on each other.
 - [ ] **ING-5** · Waveform peak computation, stored in `audio.waveform` (compact BLOB, not JSON).
       It is the product's "thumbnail". Mono `int8` min/max pairs at a fixed rate, behind a
       one-byte format version. ⇢ ING-4 🧪
+
+- [ ] **ING-14** · **A downsampling parameter on the waveform endpoint.** The blob is sized for the
+      full recording — at 10 peaks per second a 48-minute recording is ~28,800 pairs — so a screen
+      of 26 dense rows is megabytes of peaks for 20px of drawing each. `GET /audio/{uuid}/waveform`
+      takes a peak count, capped server-side, and reduces before it writes. ⇢ ING-5 🧪
+      *`UI-7`'s waveform column and `UI-31`'s per-card waveform are both unaffordable without it.*
 
 - [ ] **ING-6** · Transcoding to Opus into `derived_path` for browser playback, audio-only even
       when the original is a video container. ⇢ ING-4
@@ -567,8 +632,10 @@ simultaneously without stepping on each other.
       ⇢ JOB-9, DAT-3 🧪
       🧪 Test that a user does **not** find transcript text they are not allowed to see.
 
-- [ ] **JOB-11** · Search filters: library, date range, duration range, tags, and transcription
-      status. ⇢ JOB-10
+- [ ] **JOB-11** · Search filters: library, category, date range, duration range, tags, and
+      transcription state — **all four states, repeatable**, not only *has a transcript* / *has
+      none*. `UI-16` offers the same four toggles as `UI-8`, so the two have to filter on the same
+      set or the vocabulary splits. ⇢ JOB-10
 
 - [ ] **JOB-13** 🔒 · **Chunking long audio, and re-stitching the timestamps.** The
       OpenAI-compatible endpoint caps requests at 25 MB, and compatible local servers impose their
@@ -641,7 +708,8 @@ simultaneously without stepping on each other.
       with overflow, and a play button on the card. ⇢ UI-5, API-9
 
 - [ ] **UI-7** · **View A' · Dense compact list** — for 800 audios the grid is useless. Fixed-height
-      row, virtualised. ⇢ UI-6
+      36px row, virtualised, and the scrollbar honest about the full length before everything is
+      fetched. ⇢ UI-6, API-10, ING-14
 
 - [ ] **UI-8** · Filters and sorting, as **one filter bar under the page header** rather than a
       second rail: a category popover holding the tree, tag chips, the four transcription states as
@@ -649,7 +717,7 @@ simultaneously without stepping on each other.
       from three columns to two at 1280 and is a lot of chrome for a family archive; a popover also
       collapses honestly onto a phone. Sorting is by recording date / upload date / duration /
       title, and **the list's column headings and the bar's sort control are the same sort**.
-      ⇢ UI-6, DAT-6, DAT-7, ING-12
+      ⇢ UI-6, API-10, DAT-6, DAT-7, ING-12
 
 - [ ] **UI-9** · Multiple selection and bulk actions: assign category, add tag, move between
       libraries, send to trash. ⇢ UI-7
@@ -672,12 +740,12 @@ simultaneously without stepping on each other.
 
 - [ ] **UI-14** · Transcript selector when there is more than one (model, language, date, which one
       is active). `JOB-7` makes re-transcription possible, so without this it is unreachable from
-      the interface. The manual editor is a later milestone. ⇢ UI-13, JOB-7
+      the interface. The manual editor is a later milestone. ⇢ UI-13, JOB-7, API-11
 
 - [ ] **UI-15** · Transcription states in the detail view: missing (with a call to action), in
       progress (with progress if the provider offers it), and **failed with the real error message
       and a retry button** — the error explains what happened and what to do, it does not
-      apologise. ⇢ UI-13, JOB-2
+      apologise. ⇢ UI-13, JOB-2, API-11
 
 - [ ] **UI-16** · **View C · Search**, which is two surfaces over one endpoint: the **quick-hits
       dropdown** anchored under the nav search field for the three-second case, and the **full
@@ -690,7 +758,8 @@ simultaneously without stepping on each other.
 
 - [ ] **UI-17** · **View D · Library and sharing**: edit name and description, manage the category
       tree, a panel with who has access, at what level, who granted it and when, and the level
-      selector **explained in plain language**. Library-level grants only in v0. ⇢ UI-4, API-8
+      selector **explained in plain language**, rendered from the API's own `level_description` so
+      the wording cannot drift. Library-level grants only in v0. ⇢ UI-4, API-8, API-15
 
 - [ ] **UI-18** · **View E · Upload dialog**: drag and drop, multiple files, per-file progress,
       destination (library + category), the transcription request from `UI-25`, handling of hash
@@ -708,7 +777,7 @@ simultaneously without stepping on each other.
       only when `is_admin` — **Administration** from `INT-3`, which keeps its own chrome inside so
       nobody wanders into it. **There are no avatar images**: no storage exists for one and fetching
       one from an external service would violate principle 2, so identity is initials or a derived
-      mark. Tokens are not in v0. ⇢ UI-4, API-3
+      mark. Tokens are not in v0. ⇢ UI-4, API-3, API-13
 
 - [ ] **UI-21** · **View J · Authentication**: local sign-in, and the first-run screen that creates
       the initial administrator when `GET /instance` reports the instance needs bootstrapping.
@@ -734,7 +803,7 @@ simultaneously without stepping on each other.
       transcription is requested, the interface names **which provider the audio will be sent to**
       and that it will leave the instance, before the request is made; per `DEC-9`, the
       administration view says the same thing for every watched folder configured to transcribe on
-      arrival. No silent egress anywhere, including the retry path. ⇢ UI-13, JOB-2 🧪
+      arrival. No silent egress anywhere, including the retry path. ⇢ UI-13, JOB-2, API-12 🧪
       *This is the one principle with no other implementing task. Without it, principle 2 is a
       sentence in a document rather than a property of the software.*
 
@@ -774,7 +843,9 @@ Everything that needs two finished tracks at once.
 
 - [ ] **INT-1** · **View I · Trash**: deleted audios and libraries with the time they have left,
       restore and delete now, against a 30-day default retention. Permanent deletion requires
-      **typed confirmation**. ⇢ UI-9, API-8 🧪
+      **typed confirmation**, which states exactly what is destroyed. Recordings and libraries are
+      **one list with a type marker**: the question somebody arrives with is where a thing went, not
+      whether it was a library. ⇢ UI-9, API-8, API-14 🧪
 
 - [ ] **INT-2** · Scheduled trash purge at the configured retention (30 days by default, per
       instance), as a recurring job, also deleting the files from `storage/`. ⇢ INT-1, JOB-1 🧪
