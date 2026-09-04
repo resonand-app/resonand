@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from urllib.parse import unquote
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from sonarium.api.app import create_app
+from sonarium.core.config import Settings
+from sonarium.db.audio import create_audio
 from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Job
+from sonarium.db.models import Audio, Job, Library
+from sonarium.media import storage
 from sqlalchemy import select
 
 from tests.api.conftest import ClientFactory, sign_in
@@ -25,6 +31,20 @@ def _upload(client: TestClient, library_uuid: str, path: Path, **data: str) -> d
         )
     assert response.status_code == status.HTTP_201_CREATED, response.text
     return dict(response.json())
+
+
+def _already_here(database: Database, library_uuid: str, owner_id: int) -> str:
+    """A recording that is already in the archive, for the tests that need one to write to."""
+    with database.write_session() as session:
+        library = session.execute(select(Library).where(Library.uuid == library_uuid)).scalar_one()
+        audio = create_audio(
+            session,
+            library_id=library.id,
+            uploaded_by=owner_id,
+            storage_path="aa/none/original.wav",
+            original_filename="Already here.wav",
+        )
+        return audio.uuid
 
 
 @pytest.fixture
@@ -257,3 +277,87 @@ def test_a_missing_file_says_so_rather_than_serving_nothing(
     gone = client.get(f"/audio/{made['uuid']}/original")
     assert gone.status_code == status.HTTP_404_NOT_FOUND
     assert "missing from storage" in gone.json()["detail"]
+
+
+# --- The write lock covers the row, not the recording (``REV-1``) ---------
+
+
+def test_a_slow_upload_does_not_stop_everybody_else_writing(
+    client: TestClient,
+    app_client_factory: ClientFactory,
+    monkeypatch: pytest.MonkeyPatch,
+    database: Database,
+    accounts: dict[str, int],
+    owner_library: str,
+    tmp_path: Path,
+) -> None:
+    """``REV-1``: an upload used to hold the single write lock for its whole length.
+
+    An hour of driving is an hour in which nothing else in the instance could write -- not a
+    renamed recording, not a sign-in, not the worker claiming a job. This test pins the upload
+    open at the point where the bytes are being written and requires another writer to get
+    through it, which is the only way to tell the two arrangements apart.
+    """
+    sign_in(client, "admin")
+    existing = _already_here(database, owner_library, accounts["admin"])
+
+    writing_bytes = threading.Event()
+    let_it_finish = threading.Event()
+    store = storage.store_original
+
+    def slowly(*args: object, **kwargs: object) -> object:
+        writing_bytes.set()
+        let_it_finish.wait(timeout=30)
+        return store(*args, **kwargs)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(storage, "store_original", slowly)
+
+    uploader = app_client_factory()
+    sign_in(uploader, "admin")
+    recording = tmp_path / "slow.wav"
+    recording.write_bytes(b"RIFF" + bytes(1024))
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        uploading = pool.submit(_upload, uploader, owner_library, recording)
+        assert writing_bytes.wait(timeout=10), "the upload never reached the bytes"
+        renaming = pool.submit(client.patch, f"/audio/{existing}", json={"title": "Renamed"})
+        try:
+            renamed = renaming.result(timeout=10)
+        finally:
+            let_it_finish.set()
+
+    assert renamed.status_code == status.HTTP_200_OK, renamed.text
+    assert renamed.json()["title"] == "Renamed"
+    assert uploading.result()["title"] == "slow", "and the upload still finished"
+
+
+def test_an_upload_that_is_refused_leaves_nothing_in_the_archive(
+    database: Database,
+    settings: Settings,
+    accounts: dict[str, int],
+    owner_library: str,
+    tmp_path: Path,
+) -> None:
+    """The bytes are written before the row exists, so a refusal has to take them away again.
+
+    Over the limit is the ordinary way for an upload to fail late: it is only discovered while
+    streaming, because ``Content-Length`` is something a client can lie about.
+    """
+    app = create_app(settings.model_copy(update={"max_upload_bytes": 64}))
+    app.state.database = database
+    oversized = tmp_path / "too big.wav"
+    oversized.write_bytes(b"RIFF" + bytes(4096))
+
+    with TestClient(app, raise_server_exceptions=False) as client:
+        sign_in(client, "admin")
+        with oversized.open("rb") as handle:
+            refused = client.post(
+                f"/libraries/{owner_library}/audio",
+                files={"file": (oversized.name, handle, "audio/wav")},
+            )
+
+    assert refused.status_code == status.HTTP_400_BAD_REQUEST
+    assert "larger than this instance accepts" in refused.json()["detail"]
+    assert list(settings.resolved_storage_dir.iterdir()) == [], "no half-written recording"
+    with database.read_session() as session:
+        assert session.execute(select(Audio)).all() == [], "and no row describing one"

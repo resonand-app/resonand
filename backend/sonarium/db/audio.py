@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from sonarium.acl.query import audio_acl, audio_select, require_audio, require_library
 from sonarium.core.errors import InvalidRequestError
+from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.text import clean_title
 from sonarium.core.time import is_wall_clock, now_instant
@@ -161,13 +162,14 @@ def find_duplicates(session: Session, user_id: int, sha256: str) -> list[tuple[A
     return [(row[0], row[0].deleted_at is not None) for row in rows]
 
 
-def create_audio(
+def create_audio(  # noqa: PLR0913 -- columns of one row, and every one of them named
     session: Session,
     *,
     library_id: int,
     uploaded_by: int,
     storage_path: str,
     original_filename: str,
+    uuid: str | None = None,
     title: str | None = None,
     sha256: str | None = None,
     size_bytes: int | None = None,
@@ -176,8 +178,13 @@ def create_audio(
 
     The title defaults to the filename without its extension, lightly cleaned (``DEC-16``), and
     stays editable. Guessing harder only produces titles the user has to undo.
+
+    ``uuid`` is accepted rather than always minted by the row because the upload writes the file
+    before the row exists and has to know what to call the directory (``REV-1``). Left out, the
+    row mints its own, which is what every other caller wants.
     """
     audio = Audio(
+        uuid=uuid or new_uuid(),
         library_id=library_id,
         uploaded_by=uploaded_by,
         title=(title or clean_title(original_filename)),

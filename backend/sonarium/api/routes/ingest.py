@@ -8,6 +8,10 @@ Nothing here does any processing. The upload writes the file, records the row an
 work; ffprobe, the waveform, the transcode and any transcription happen in the worker, because a
 browser will not wait for an hour of driving to be transcoded and a request that did would hold
 the single write lock while it ran.
+
+For the same reason **no session is open while the bytes are moving** (``REV-1``). Upload and
+playback take the database rather than a session and reach for one where the rows are, which is
+why they are the only endpoints in the application that manage their own transactions.
 """
 
 from __future__ import annotations
@@ -22,12 +26,11 @@ from starlette.responses import FileResponse, StreamingResponse
 
 from sonarium.acl.query import require_audio, require_library
 from sonarium.api.deps import (
+    ArchiveDatabase,
     Caller,
     CurrentCaller,
     InstanceSettings,
     ReadSession,
-    WriteSession,
-    database_of,
     optional_caller,
     settings_of,
 )
@@ -37,11 +40,10 @@ from sonarium.api.stream_tokens import issue, redeem
 from sonarium.core.config import Settings
 from sonarium.core.errors import InvalidRequestError, NotFoundError
 from sonarium.core.formats import is_accepted
+from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
-from sonarium.db import search_index
 from sonarium.db.audio import create_audio, find_duplicates
-from sonarium.db.engine import Database
 from sonarium.jobs.queue import KIND_TRANSCRIBE, enqueue
 from sonarium.media import ranges, storage
 
@@ -63,7 +65,8 @@ optional here and only here -- and a request with neither still ends in a 404.""
 def upload(
     library_uuid: str,
     caller: CurrentCaller,
-    session: WriteSession,
+    session: ReadSession,
+    database: ArchiveDatabase,
     settings: InstanceSettings,
     file: Annotated[UploadFile, File(description="The recording, in any accepted format.")],
     transcribe: Annotated[bool, Form()] = False,
@@ -73,8 +76,18 @@ def upload(
 
     The bytes are written and hashed in one pass -- an hours-long upload is not walked twice --
     and the original is never rewritten afterwards.
+
+    **The database is not touched while they are arriving** (``REV-1``). The identifier is minted
+    here rather than by the insert, so the file can be written under its final name with nothing
+    open, and the row that describes it goes in afterwards in one short transaction. An upload
+    that held the write lock would stop every other writer in the instance -- the worker
+    included -- for as long as the upload took, which for an hour of driving is an hour.
+
+    The permission is resolved twice deliberately: once before a byte is accepted, so a stranger
+    is refused rather than served eight gigabytes of patience, and once inside the transaction
+    that writes, which is the one that decides.
     """
-    library, _ = require_library(session, caller.id, library_uuid, Level.EDIT)
+    require_library(session, caller.id, library_uuid, Level.EDIT)
     filename = file.filename or "recording"
     if not is_accepted(filename):
         raise InvalidRequestError(
@@ -82,35 +95,43 @@ def upload(
             "containers are accepted; a video's audio is what gets played."
         )
 
-    audio = create_audio(
-        session,
-        library_id=library.id,
-        uploaded_by=caller.id,
-        storage_path="",
-        original_filename=filename,
-    )
-    path, digest = storage.store_original(
-        settings.resolved_storage_dir,
-        audio.uuid,
-        _limited(file, settings.max_upload_bytes),
-        filename=filename,
-    )
-    audio.storage_path = storage.relative(settings.resolved_storage_dir, path)
-    audio.sha256 = digest.sha256
-    audio.size_bytes = digest.size_bytes
-    session.flush()
-
-    enqueue(session, "probe", audio_id=audio.id, idempotency_key=f"probe:{audio.uuid}")
-    if transcribe:
-        enqueue(
-            session,
-            KIND_TRANSCRIBE,
-            audio_id=audio.id,
-            payload={"language": language} if language else {},
-            idempotency_key=f"transcribe:{audio.uuid}",
+    audio_uuid = new_uuid()
+    try:
+        path, digest = storage.store_original(
+            settings.resolved_storage_dir,
+            audio_uuid,
+            _limited(file, settings.max_upload_bytes),
+            filename=filename,
         )
-    search_index.index_audio(session, audio.id)
-    return audio_detail(session, audio, Level.OWNER)
+        with database.write_session() as write:
+            library, _ = require_library(write, caller.id, library_uuid, Level.EDIT)
+            audio = create_audio(
+                write,
+                uuid=audio_uuid,
+                library_id=library.id,
+                uploaded_by=caller.id,
+                storage_path=storage.relative(settings.resolved_storage_dir, path),
+                original_filename=filename,
+                sha256=digest.sha256,
+                size_bytes=digest.size_bytes,
+            )
+            enqueue(write, "probe", audio_id=audio.id, idempotency_key=f"probe:{audio_uuid}")
+            if transcribe:
+                enqueue(
+                    write,
+                    KIND_TRANSCRIBE,
+                    audio_id=audio.id,
+                    payload={"language": language} if language else {},
+                    idempotency_key=f"transcribe:{audio_uuid}",
+                )
+            return audio_detail(write, audio, Level.OWNER)
+    except BaseException:
+        # Whatever went wrong -- a file over the limit, a permission withdrawn between the two
+        # checks, a failed commit -- the bytes belong to a recording that does not exist. They
+        # are removed here rather than left for `fsck` to report, because an upload that failed
+        # should cost the archive nothing.
+        storage.delete_recording(settings.resolved_storage_dir, audio_uuid)
+        raise
 
 
 @router.get(
@@ -155,7 +176,7 @@ def stream(
     request: Request,
     caller: MaybeCaller,
     settings: Annotated[Settings, Depends(settings_of)],
-    database: Annotated[Database, Depends(database_of)],
+    database: ArchiveDatabase,
     token: Annotated[str | None, Query(description="A playback token, for <audio>.")] = None,
 ) -> Response:
     """Serve the Opus derivative, honouring ``Range`` so that seeking works.
