@@ -13,11 +13,17 @@
  * buried in a barrel is one that fires whenever anything imports anything, in an order nobody
  * controls.
  *
- * **It exports the tokens and, for now, nothing else.** The twenty-one components are still
- * `.jsx` -- `UI-1d` through `UI-1h` convert them one family folder at a time, and each of those
- * tasks adds its own line here. That is the whole reason the conversion is five tasks instead of
- * one: the barrel is where you can see how far it has got.
+ * **It grows one family folder at a time.** `UI-1d` through `UI-1h` convert the twenty-one
+ * shipped components from `.jsx`, and each of those tasks adds its own block below. That is the
+ * whole reason the conversion is five tasks instead of one: this file is where you can see how
+ * far it has got.
  */
 
-export { TOKENS, token } from '@/design-system/tokens';
-export type { Token } from '@/design-system/tokens';
+export { TOKENS, token } from './tokens';
+export type { Token } from './tokens';
+
+// --- components/foundation (`UI-1d`) ----------------------------------------
+export { Icon } from './components/foundation/Icon';
+export type { IconName, IconProps } from './components/foundation/Icon';
+export { Logo } from './components/foundation/Logo';
+export type { LogoProps } from './components/foundation/Logo';

@@ -27,12 +27,21 @@ export default mergeConfig(
       // a second global namespace to be told about.
       globals: false,
       setupFiles: [fileURLToPath(new URL('./src/test/setup.ts', import.meta.url))],
-      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      // Both trees. `design-system/` is the application's component source (`DEC-21`), so a
+      // component's test sits beside the component rather than in a parallel folder under
+      // `src/` that has to be kept in step with it by hand.
+      include: ['src/**/*.{test,spec}.{ts,tsx}', 'design-system/**/*.{test,spec}.{ts,tsx}'],
       css: false,
 
       coverage: {
         provider: 'v8',
         reporter: ['text', 'lcov'],
+        // `src/**` only, and `design-system/**` deliberately not yet. `UI-1d` through `UI-1h`
+        // are transcription with a type checker watching -- no visual change, no behaviour
+        // change -- and holding twenty-one components to a coverage floor as they are renamed
+        // would turn five mechanical tasks into twenty-one test-writing ones. The system joins
+        // this list at `UI-1k`, by which point `UI-1i`'s tokens guard, `UI-32b`'s focus walk and
+        // the specimen route give it real tests to be measured against.
         include: ['src/**/*.{ts,tsx}'],
         exclude: [
           'src/**/*.{test,spec}.{ts,tsx}',

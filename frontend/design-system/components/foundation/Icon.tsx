@@ -1,0 +1,156 @@
+import {
+  Check,
+  ChevronLeft,
+  CircleAlert,
+  CircleDashed,
+  Clock,
+  EllipsisVertical,
+  Library,
+  Loader,
+  LogOut,
+  Moon,
+  PanelLeft,
+  Pause,
+  Play,
+  Plus,
+  Search,
+  Share2,
+  SkipBack,
+  SkipForward,
+  SlidersHorizontal,
+  Tag,
+  TextAlignStart,
+  Trash,
+  Upload,
+  X,
+} from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { createElement } from 'react';
+import type { HTMLAttributes } from 'react';
+
+/**
+ * The glyphs this system registers (`UI-1b`).
+ *
+ * Written out rather than derived from the name, which costs a line each and buys two things.
+ * It is what makes the import tree-shakeable: `lucide-react`'s entry point exports some fourteen
+ * hundred icons, and a lookup like `icons[name]` keeps a reference to all of them -- measured at
+ * 759 KB minified against 2.6 KB for three named imports, four times the whole application
+ * bundle for glyphs nothing asks for. And it absorbs upstream's renames: four of these names are
+ * deprecated aliases in Lucide 1.x, so `align-left` is `TextAlignStart`, `alert-circle` is
+ * `CircleAlert`, `more-vertical` is `EllipsisVertical` and `trash-2` is `Trash`. The system's own
+ * vocabulary did not move, and the day the aliases are dropped is a four-line diff in this file.
+ *
+ * These are the glyphs the README documents plus the ones components ask for by computed name --
+ * `StateBadge`'s four states, `SearchResults`' two kinds of hit. Adding one is two lines here.
+ */
+const GLYPHS = {
+  'align-left': TextAlignStart,
+  'alert-circle': CircleAlert,
+  check: Check,
+  'chevron-left': ChevronLeft,
+  'circle-dashed': CircleDashed,
+  clock: Clock,
+  library: Library,
+  loader: Loader,
+  'log-out': LogOut,
+  moon: Moon,
+  'more-vertical': EllipsisVertical,
+  'panel-left': PanelLeft,
+  pause: Pause,
+  play: Play,
+  plus: Plus,
+  search: Search,
+  'share-2': Share2,
+  'skip-back': SkipBack,
+  'skip-forward': SkipForward,
+  'sliders-horizontal': SlidersHorizontal,
+  tag: Tag,
+  'trash-2': Trash,
+  upload: Upload,
+  x: X,
+} as const satisfies Record<string, LucideIcon>;
+
+/** A registered glyph name. Not any Lucide name -- the registry is the vocabulary. */
+export type IconName = keyof typeof GLYPHS;
+
+/**
+ * The registry read by a name that has not been checked.
+ *
+ * `name` is typed, so within the application this cannot miss. It can still miss at runtime: a
+ * glyph chosen from data, a name assembled from a state string, a caller that is not TypeScript.
+ * That is the case the loud failure below exists for, and giving the lookup a type that admits
+ * it is what keeps the check from reading as dead code.
+ */
+function glyphFor(name: string): LucideIcon | undefined {
+  return (GLYPHS as Record<string, LucideIcon | undefined>)[name];
+}
+
+export interface IconProps extends HTMLAttributes<HTMLSpanElement> {
+  /** A registered glyph name, kebab-case, e.g. "search", "upload", "panel-left". */
+  name: IconName;
+  /** Rendered box in px. 17 in rows and buttons, 15 for state glyphs, 21 in the nav. */
+  size?: number;
+  /** Stroke weight. Leave at 1.7 unless the glyph sits under 15px. */
+  strokeWidth?: number;
+  /** Defaults to currentColor so the parent controls it. */
+  color?: string;
+}
+
+/**
+ * A single Lucide glyph at the system's stroke weight.
+ *
+ * Use it for every icon in the interface rather than inlining SVG. The `name` string API is the
+ * point: a screen never imports a glyph, so this stays the one file that changes if a real icon
+ * set ever arrives.
+ */
+export function Icon({
+  name,
+  size = 17,
+  strokeWidth = 1.7,
+  color = 'currentColor',
+  style,
+  ...rest
+}: IconProps) {
+  const Glyph = glyphFor(name);
+
+  /* Loudly in development, quietly in production. An unknown name used to render an empty `<i>`
+     that looked like a spacing bug and got debugged as one; now it stops the person who typed
+     it. In front of somebody using the product it stays a missing glyph in a box of the right
+     size, because a blank screen is not an improvement on a missing icon. */
+  if (Glyph === undefined) {
+    if (import.meta.env.DEV) {
+      throw new Error(
+        `Icon: no glyph named "${name}". Add it to GLYPHS in components/foundation/Icon.tsx.`,
+      );
+    }
+    console.error(`Icon: no glyph named "${name}".`);
+  }
+
+  return (
+    <span
+      style={{
+        display: 'grid',
+        placeItems: 'center',
+        width: size,
+        height: size,
+        flex: '0 0 auto',
+        color,
+        ...style,
+      }}
+      {...rest}
+    >
+      {/* `createElement` rather than `<Glyph />`: the lint rule that watches for a component
+          defined during render cannot tell that apart from one looked up during render, and
+          this is a lookup in a frozen module-level table. The identity is stable for a given
+          `name`, so nothing remounts -- which is the thing the rule exists to prevent. */}
+      {Glyph !== undefined &&
+        createElement(Glyph, {
+          width: size,
+          height: size,
+          strokeWidth,
+          'aria-hidden': true,
+          focusable: 'false',
+        })}
+    </span>
+  );
+}

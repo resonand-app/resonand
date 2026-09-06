@@ -36,9 +36,10 @@ export default defineConfig(
     'node_modules/**',
     // The design system is `.jsx` until Phase C converts it in place (`DEC-21`). Linting it
     // against rules written for the strict `.tsx` it is about to become would report the
-    // conversion as hundreds of errors before anybody had started it. `UI-1d`-`UI-1h` take one
-    // family folder off these lines at a time; what they have converted is already linted,
-    // because `UI-1c` narrowed this from `design-system/**` to the files still waiting.
+    // conversion as hundreds of errors before anybody had started it. `UI-1c` narrowed this from
+    // `design-system/**` to the files still waiting, and the list maintains itself from there:
+    // a component `UI-1d`-`UI-1h` has converted is no longer a `.jsx`, so it is linted the
+    // moment it is renamed and there is no second place to remember to edit.
     'design-system/**/*.jsx',
     // The hand-written prop documentation. Each folds into the component it documents as that
     // component converts, so linting them now is linting something on its way out.
@@ -142,9 +143,9 @@ export default defineConfig(
         {
           patterns: [
             {
-              group: ['@/*', '!@/design-system', '!@/design-system/*'],
+              group: ['@/*'],
               message:
-                'The design system does not import from the application. Use a relative path.',
+                'The design system does not import from the application, and reaches itself with a relative path.',
             },
           ],
         },
