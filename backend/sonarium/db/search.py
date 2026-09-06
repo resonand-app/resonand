@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
 from sqlalchemy import Integer, and_, column, func, literal, or_, select, table, text
@@ -77,6 +78,24 @@ class Hit:
     @property
     def best_rank(self) -> float:
         return min((match.rank for match in self.matches), default=0.0)
+
+
+class SortField(StrEnum):
+    """What a list of recordings can be ordered by (``API-10``).
+
+    Four, and deliberately not every column: these are the ones ``UI-7d`` offers, and a sort
+    nobody can reach from the interface is a query somebody can make expensive for no benefit.
+    """
+
+    RECORDED_AT = "recorded_at"
+    CREATED_AT = "created_at"
+    DURATION_MS = "duration_ms"
+    TITLE = "title"
+
+
+class SortDirection(StrEnum):
+    ASCENDING = "asc"
+    DESCENDING = "desc"
 
 
 @dataclass(frozen=True, slots=True)
