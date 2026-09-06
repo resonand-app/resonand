@@ -18,6 +18,7 @@ from sonarium.api.presenters import (
     audio_detail,
     audio_summaries,
     audio_summary,
+    job_summary,
     transcript_detail,
     transcript_summary,
 )
@@ -25,14 +26,16 @@ from sonarium.api.schemas import (
     AudioDetail,
     AudioSummary,
     DuplicateWarning,
+    JobSummary,
     MoveAudio,
     TagSuggestion,
     TagSummary,
+    TranscribeRequest,
     TranscriptDetail,
     TranscriptSummary,
     UpdateAudio,
 )
-from sonarium.core.errors import NotFoundError
+from sonarium.core.errors import ConflictError, NotFoundError
 from sonarium.core.levels import Level
 from sonarium.db import tags as tag_repo
 from sonarium.db import transcripts as transcript_repo
@@ -46,6 +49,7 @@ from sonarium.db.audio import (
     update_metadata,
 )
 from sonarium.db.models import Library, Transcript
+from sonarium.jobs import queue
 
 router = APIRouter(tags=["recordings"])
 
@@ -194,6 +198,35 @@ def activate_transcript(
     if transcript is None or transcript.audio_id != audio.id:
         raise NotFoundError("No such transcript.")
     return transcript_summary(session, transcript_repo.activate(session, transcript_id))
+
+
+@router.post(
+    "/audio/{audio_uuid}/transcribe",
+    response_model=JobSummary,
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Ask for a transcription",
+)
+def transcribe_audio(
+    audio_uuid: str, body: TranscribeRequest, caller: CurrentCaller, session: WriteSession
+) -> JobSummary:
+    """Queue a transcription, or say that one is already on its way (``API-11``).
+
+    The call to action on a recording with no transcript, the retry after a failure and
+    re-transcribing one that already has a good transcript are all this endpoint, which is why
+    **a recording with a job already pending or running answers 409 rather than queueing a
+    second one**. A double click must not cost two transcriptions, and the interface renders that
+    409 as a state rather than as an error.
+
+    Re-transcribing keeps what is there: ``JOB-7`` writes a new transcript and switches which one
+    is active atomically, so nothing is lost while the new one is being made.
+    """
+    audio, _ = require_audio(session, caller.id, audio_uuid, Level.EDIT)
+    job = queue.enqueue_transcription(
+        session, audio_id=audio.id, audio_uuid=audio.uuid, language=body.language
+    )
+    if job is None:
+        raise ConflictError("This recording is already being transcribed.")
+    return job_summary(job, audio.uuid)
 
 
 # --- Tags -----------------------------------------------------------------

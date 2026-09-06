@@ -20,6 +20,7 @@ from sonarium.api.schemas import (
     AudioDetail,
     AudioSummary,
     CategorySummary,
+    JobSummary,
     LibrarySummary,
     SegmentOut,
     ShareSummary,
@@ -43,6 +44,7 @@ from sonarium.db.models import (
     Transcript,
     User,
 )
+from sonarium.jobs import queue
 
 STATE_NONE = "none"
 STATE_RUNNING = "running"
@@ -216,6 +218,27 @@ def transcript_detail(
     return TranscriptDetail(
         **summary.model_dump(),
         segments=[SegmentOut.model_validate(segment) for segment in segments],
+    )
+
+
+def job_summary(job: Job, audio_uuid: str | None) -> JobSummary:
+    """One piece of background work, wherever it is reported.
+
+    Shared by the administration queue and by ``API-11``'s 202, so a caller who asked for a
+    transcription and an operator watching the queue are looking at the same description of the
+    same thing.
+    """
+    return JobSummary(
+        id=job.id,
+        kind=job.kind,
+        state=job.state,
+        attempts=job.attempts,
+        audio_uuid=audio_uuid,
+        error=job.error,
+        created_at=job.created_at,
+        started_at=job.started_at,
+        finished_at=job.finished_at,
+        ready_at=queue.ready_at(job) if job.state == queue.PENDING else None,
     )
 
 

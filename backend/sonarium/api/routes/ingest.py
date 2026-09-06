@@ -44,7 +44,7 @@ from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
 from sonarium.db.audio import create_audio, find_duplicates
-from sonarium.jobs.queue import KIND_TRANSCRIBE, enqueue
+from sonarium.jobs.queue import enqueue, enqueue_transcription
 from sonarium.media import ranges, storage
 
 router = APIRouter(tags=["ingestion"])
@@ -117,12 +117,8 @@ def upload(
             )
             enqueue(write, "probe", audio_id=audio.id, idempotency_key=f"probe:{audio_uuid}")
             if transcribe:
-                enqueue(
-                    write,
-                    KIND_TRANSCRIBE,
-                    audio_id=audio.id,
-                    payload={"language": language} if language else {},
-                    idempotency_key=f"transcribe:{audio_uuid}",
+                enqueue_transcription(
+                    write, audio_id=audio.id, audio_uuid=audio_uuid, language=language
                 )
             return audio_detail(write, audio, Level.OWNER)
     except BaseException:

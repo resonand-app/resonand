@@ -30,7 +30,7 @@ from sonarium.db.engine import Database, build_engine
 from sonarium.db.migrate import upgrade_to_head
 from sonarium.db.models import Audio, Library
 from sonarium.jobs.handlers import Context
-from sonarium.jobs.queue import enqueue
+from sonarium.jobs.queue import enqueue, enqueue_transcription
 from sonarium.jobs.worker import Worker, drain
 from sonarium.media import storage
 from sonarium.transcription.registry import build_provider
@@ -367,12 +367,7 @@ def _import_one(
             search_index.index_audio(session, audio.id)
         enqueue(session, "probe", audio_id=audio.id, idempotency_key=f"probe:{audio.uuid}")
         if transcribe:
-            enqueue(
-                session,
-                "transcribe",
-                audio_id=audio.id,
-                idempotency_key=f"transcribe:{audio.uuid}",
-            )
+            enqueue_transcription(session, audio_id=audio.id, audio_uuid=audio.uuid)
     return False
 
 

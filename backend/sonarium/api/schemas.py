@@ -336,6 +336,13 @@ class JobSummary(Api):
     outside."""
 
 
+class TranscribeRequest(Api):
+    """Ask for a recording to be transcribed (``API-11``)."""
+
+    language: str | None = Field(default=None, max_length=35)
+    """A BCP 47 tag, or ``None`` to let the provider detect it -- ``JOB-2``'s contract."""
+
+
 class TranscriptionDestination(Api):
     """Where audio goes, readable by anybody who can ask for a transcription (``API-12``).
 
