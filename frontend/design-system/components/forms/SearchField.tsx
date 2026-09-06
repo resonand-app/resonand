@@ -4,9 +4,12 @@ import { Icon } from '../foundation/Icon';
 
 export interface SearchFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   /** Keyboard hint shown at the right edge. Pass null to hide it. */
-  shortcut?: string | null;
-  /** Renders the focus ring for specimen purposes; real focus comes from `:focus-visible`. */
-  focused?: boolean;
+  shortcut?: string | null | undefined;
+  /** Renders the focus ring for specimen purposes; real focus comes from `:focus-visible`.
+   *  Explicitly `| undefined`, like every prop a wrapper forwards: under
+   *  `exactOptionalPropertyTypes`, `TopNav` cannot pass its own optional `searchFocused` to a
+   *  merely optional prop without stripping the key first. */
+  focused?: boolean | undefined;
 }
 
 /**

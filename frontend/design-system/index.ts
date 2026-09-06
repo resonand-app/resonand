@@ -66,3 +66,15 @@ export { RecordingRow } from './components/data/RecordingRow';
 export type { RecordingRowProps } from './components/data/RecordingRow';
 export { StateBadge } from './components/data/StateBadge';
 export type { StateBadgeProps } from './components/data/StateBadge';
+
+// --- components/navigation (`UI-1h`) ----------------------------------------
+export { Dialog } from './components/navigation/Dialog';
+export type { DialogProps } from './components/navigation/Dialog';
+export { ProfileMenu } from './components/navigation/ProfileMenu';
+export type { ProfileMenuProps } from './components/navigation/ProfileMenu';
+export { SearchResults } from './components/navigation/SearchResults';
+export type { SearchHit, SearchResultsProps } from './components/navigation/SearchResults';
+export { Sidebar } from './components/navigation/Sidebar';
+export type { SidebarLibrary, SidebarProps } from './components/navigation/Sidebar';
+export { TopNav } from './components/navigation/TopNav';
+export type { TopNavProps } from './components/navigation/TopNav';

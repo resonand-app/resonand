@@ -3,11 +3,11 @@ import type { InputHTMLAttributes } from 'react';
 import { Icon } from '../foundation/Icon';
 
 export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+  label?: string | undefined;
   /** Error message. Presence switches the field to its error treatment. */
-  error?: string;
+  error?: string | undefined;
   /** Renders the focus ring for specimen purposes; real focus comes from `:focus-visible`. */
-  focused?: boolean;
+  focused?: boolean | undefined;
 }
 
 /**
