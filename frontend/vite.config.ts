@@ -46,12 +46,24 @@ export default defineConfig({
   plugins: [react()],
 
   resolve: {
-    alias: {
-      // The one alias, matching `paths` in tsconfig.app.json. Two descriptions of the same
-      // mapping is one too many, but Vite and tsc each need their own and neither reads the
-      // other's -- so they are written next to each other and changed together.
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
+    // Matching `paths` in tsconfig.app.json. Two descriptions of the same mapping is one too
+    // many, but Vite and tsc each need their own and neither reads the other's -- so they are
+    // written next to each other and changed together.
+    //
+    // The array form rather than the object form, because these two overlap and order decides
+    // it: `@/design-system` is a prefix of `@/`, and the object form's iteration order is not
+    // something to rest a build on. `tsc` needs no such care -- it takes the longest matching
+    // `paths` key whatever order they are written in.
+    alias: [
+      {
+        // `design-system/` sits beside `src/` rather than inside it (`DEC-21`): it is the
+        // application's component source and it is also a folder a designer opens on its own,
+        // with seventeen specimen cards that link its stylesheet with no bundler in the way.
+        find: /^@\/design-system(?=$|\/)/,
+        replacement: fileURLToPath(new URL('./design-system', import.meta.url)),
+      },
+      { find: /^@\//, replacement: fileURLToPath(new URL('./src/', import.meta.url)) },
+    ],
   },
 
   build: {

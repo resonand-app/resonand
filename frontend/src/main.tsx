@@ -1,13 +1,18 @@
 /**
  * The entry point (`INF-3a`).
  *
- * It mounts and does nothing else. The router is `UI-4a`, the query client is `UI-3c`, the theme
- * provider is `UI-1j` and the design system's stylesheet arrives with `UI-1c` -- each of them a
- * task with a criterion of its own, and none of them worth guessing at here.
+ * It mounts and does one other thing: it links the design system's stylesheet. The router is
+ * `UI-4a`, the query client is `UI-3c` and the theme provider is `UI-1j` -- each of them a task
+ * with a criterion of its own, and none of them worth guessing at here.
  */
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+
+// First, and from the entry point rather than from the barrel (`UI-1c`). The tokens have to be
+// defined before anything that reads them renders, and a CSS import buried inside a component
+// module fires in whatever order the bundler happened to choose.
+import '@/design-system/styles.css';
 
 import { App } from '@/app/App';
 

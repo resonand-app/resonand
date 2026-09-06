@@ -36,9 +36,16 @@ export default defineConfig(
     'node_modules/**',
     // The design system is `.jsx` until Phase C converts it in place (`DEC-21`). Linting it
     // against rules written for the strict `.tsx` it is about to become would report the
-    // conversion as hundreds of errors before anybody had started it. `UI-1d`-`UI-1h` delete
-    // this line one folder at a time.
-    'design-system/**',
+    // conversion as hundreds of errors before anybody had started it. `UI-1d`-`UI-1h` take one
+    // family folder off these lines at a time; what they have converted is already linted,
+    // because `UI-1c` narrowed this from `design-system/**` to the files still waiting.
+    'design-system/**/*.jsx',
+    // The hand-written prop documentation. Each folds into the component it documents as that
+    // component converts, so linting them now is linting something on its way out.
+    'design-system/**/*.d.ts',
+    // The click-through kit: React 18 and Babel in a browser, and provenance rather than a
+    // starting point (`UI-1l`).
+    'design-system/ui_kits/**',
   ]),
 
   // --- Everything ---------------------------------------------------------
@@ -72,22 +79,76 @@ export default defineConfig(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      // Import order, so a diff shows a change and not a reshuffle. Prettier has no opinion
-      // about it, which is why it has to be a lint rule.
+      // `console.log` left in a view ships to everybody who opens it. Warnings and errors are
+      // allowed, because an error worth swallowing is worth printing.
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // --- The application ----------------------------------------------------
+  {
+    files: ['src/**'],
+    rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
+              // So a diff shows a change and not a reshuffle. Prettier has no opinion about it,
+              // which is why it has to be a lint rule.
               group: ['../*'],
               message: 'Reach up with the `@/` alias rather than with `../`.',
+            },
+            {
+              // `UI-1c`'s criterion, as a rule rather than as a sentence. The barrel is what
+              // lets a component move between family folders without a hundred call sites
+              // moving with it, and a barrel nobody is held to is a longer path to the same
+              // file.
+              // `styles.css` is the one thing outside it: it is linked once, from the entry
+              // point, and deliberately not re-exported (see design-system/index.ts).
+              group: ['@/design-system/*', '@/design-system/**', '!@/design-system/styles.css'],
+              message:
+                'Import from `@/design-system`, not from a file inside it. The exception is `@/design-system/styles.css` from the entry point.',
             },
           ],
         },
       ],
-      // `console.log` left in a view ships to everybody who opens it. Warnings and errors are
-      // allowed, because an error worth swallowing is worth printing.
-      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // --- Tests that read the repository -------------------------------------
+  //
+  // `*.node.test.ts` checks the shape of the tree rather than the behaviour of a component --
+  // that the fonts are shipped, that the token union matches the CSS. Their subject is files at
+  // paths, so a path is what they are allowed to use: the alias resolves what the application
+  // sees, and what the application sees is exactly what these are not testing.
+  {
+    files: ['src/**/*.node.test.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+
+  // --- The design system --------------------------------------------------
+  //
+  // It is a library that happens to live in this repository (`DEC-21`), so its files reach each
+  // other with relative paths and never through the application's alias. The dependency runs one
+  // way: the app imports the system, and the system knows nothing about the app.
+  {
+    files: ['design-system/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/*', '!@/design-system', '!@/design-system/*'],
+              message:
+                'The design system does not import from the application. Use a relative path.',
+            },
+          ],
+        },
+      ],
     },
   },
 
@@ -106,9 +167,12 @@ export default defineConfig(
     },
   },
 
-  // --- The config files themselves ----------------------------------------
+  // --- Everything that runs in Node ---------------------------------------
+  //
+  // The config files, and the scripts beside them. The same set tsconfig.node.json names, for
+  // the same reason: these have a `process` and the browser half of the codebase does not.
   {
-    files: ['*.config.{js,ts}'],
+    files: ['*.config.{js,ts}', 'scripts/**'],
     languageOptions: {
       globals: globals.node,
     },

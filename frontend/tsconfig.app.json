@@ -28,10 +28,17 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
     "paths": {
+      // `tsc` takes the longest matching key, so these three need no ordering care. Vite's
+      // aliases do, and vite.config.ts says why.
+      "@/design-system": ["./design-system/index.ts"],
+      "@/design-system/*": ["./design-system/*"],
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  // `design-system/` is compiled with the app, not beside it (`DEC-21`). `allowJs` is off, so
+  // this picks up the TypeScript the conversion produces and ignores the `.jsx` still waiting
+  // for it -- which is what lets `UI-1d` through `UI-1h` land one family folder at a time.
+  "include": ["src", "design-system"],
   // `*.node.test.ts` is a test that reads the repository rather than the DOM -- the tokens are
   // self-hosted, no component contains a colour -- and it needs `node:fs`, which this project
   // deliberately cannot see. Giving the browser half of the codebase Node's globals so that a

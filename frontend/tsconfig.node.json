@@ -26,5 +26,11 @@
   // Everything that runs in Node rather than in a browser: the three config files, and the tests
   // that check the shape of the repository itself. tsconfig.app.json excludes the latter by the
   // same glob, so each file belongs to exactly one project.
-  "include": ["vite.config.ts", "vitest.config.ts", "eslint.config.js", "src/**/*.node.test.ts"]
+  "include": [
+    "vite.config.ts",
+    "vitest.config.ts",
+    "eslint.config.js",
+    "scripts/**/*.mjs",
+    "src/**/*.node.test.ts"
+  ]
 }

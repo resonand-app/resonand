@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "tokens": "node scripts/generate-tokens.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --build --force",
     "lint": "eslint .",
