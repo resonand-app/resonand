@@ -6,9 +6,9 @@ import { Waveform } from './Waveform';
 
 const MONO: CSSProperties = {
   fontFamily: 'var(--font-mono)',
-  fontWeight: 500,
-  fontSize: '11.5px',
-  fontVariantNumeric: 'tabular-nums',
+  fontWeight: 'var(--weight-medium)',
+  fontSize: 'var(--type-numeric-size)',
+  fontVariantNumeric: 'var(--type-numeric-variant)',
 };
 
 export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
@@ -103,7 +103,7 @@ export function PlayerBar({
           style={{
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size)',
-            fontWeight: 600,
+            fontWeight: 'var(--weight-semibold)',
             color: 'var(--text)',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -113,7 +113,11 @@ export function PlayerBar({
           {title}
         </span>
         <span
-          style={{ fontFamily: 'var(--font-sans)', fontSize: '11.5px', color: 'var(--text-3)' }}
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+          }}
         >
           {library}
         </span>

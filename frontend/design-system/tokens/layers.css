@@ -1,0 +1,25 @@
+/* What sits on top of what (`UI-33b`).
+ *
+ * Six things overlap in this interface -- the player, the upload tray, dialogs, menus, toasts and
+ * the scrim behind a modal -- and before this they stacked by DOM order, which is to say by
+ * whichever component happened to be rendered last. That works until a menu opens over the player
+ * from a component mounted earlier, and then it does not, and the fix is a literal `z-index: 9999`
+ * somewhere.
+ *
+ * The order is the product's, not a convention. The player is above the page because it must stay
+ * reachable while anything else is happening. The tray is above the player because it is docked to
+ * it. The scrim is above both because a modal means the rest is not available. Menus sit above the
+ * scrim because a dialog can contain one. **Toasts are above everything**, because an upload
+ * finishing or a bulk action failing has to be seen even while a dialog is open -- `UI-34h` says a
+ * toast is never the only place a result exists, and this is what stops it being no place at all.
+ *
+ * Gaps of ten, so something can be slipped between two steps without renumbering the scale.
+ */
+:root {
+  --z-player: 10;
+  --z-tray: 20;
+  --z-scrim: 30;
+  --z-dialog: 40;
+  --z-menu: 50;
+  --z-toast: 60;
+}

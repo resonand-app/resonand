@@ -2,10 +2,10 @@ import type { InputHTMLAttributes } from 'react';
 
 import { Icon } from '../foundation/Icon';
 
-/* eslint-disable-next-line no-restricted-syntax -- UI-33a. This matches no token in the system.
-   It is nearest to `--state-failed`, and choosing that is a decision about what the error
-   treatment should be rather than a rename, so it is UI-33a's to make. */
-const ERROR_RING = '0 0 0 1px #C4574A';
+/* `--state-failed` is the decision UI-33a had to take. The `#C4574A` this replaces matched no
+   token in the system -- it was a fifth red, half a step darker than the one the state badge and
+   the error text already use, and nothing said why. One red for one meaning. */
+const ERROR_RING = '0 0 0 1px var(--state-failed)';
 const FOCUS_RING = '0 0 0 2px var(--accent)';
 
 export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -67,7 +67,7 @@ export function TextField({ label, error, focused, style, ...rest }: TextFieldPr
             outline: 'none',
             background: 'transparent',
             fontFamily: 'var(--font-sans)',
-            fontSize: '13.5px',
+            fontSize: 'var(--type-ui-size)',
             color: 'var(--text)',
           }}
           {...rest}

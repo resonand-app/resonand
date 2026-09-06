@@ -70,8 +70,8 @@ export function Dialog({
               style={{
                 margin: 0,
                 fontFamily: 'var(--font-sans)',
-                fontSize: '13px',
-                lineHeight: 1.55,
+                fontSize: 'var(--type-ui-size)',
+                lineHeight: 'var(--type-body-leading)',
                 color: 'var(--text-3)',
                 textWrap: 'pretty',
               }}

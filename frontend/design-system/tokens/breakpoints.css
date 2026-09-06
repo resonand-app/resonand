@@ -1,0 +1,25 @@
+/* The four widths the layout changes at (`UI-33b`).
+ *
+ * They existed only as prose in the interface specification, which meant every media query would
+ * have restated one of these numbers and the fifth one written down would have been 1181.
+ *
+ * **The order matters and is the reason there are four rather than three.** The sidebar collapses
+ * at 1180, *before* the card grid drops to two columns at 900 -- collapsing the sidebar buys back
+ * 172px, which is most of a third card, so doing it first keeps three columns on screen longer
+ * (`UI-4c`). Below 720 the phone shell replaces the desktop one entirely; it is not a narrowed
+ * desktop (`DEC-23`).
+ *
+ * Custom properties cannot be used in a media query condition -- `@media (max-width: var(--x))`
+ * does not work, and no amount of wanting it to changes that. These are the single written record
+ * of the numbers, and a media query repeating one is repeating something that is declared here.
+ */
+:root {
+  /* Three cards across. The grid is auto-fill from --card-width, not a hard three columns. */
+  --breakpoint-grid-3: 1280px;
+  /* The sidebar collapses to 52px. */
+  --breakpoint-sidebar: 1180px;
+  /* The card grid drops to two columns. */
+  --breakpoint-grid-2: 900px;
+  /* The phone shell replaces the desktop shell. */
+  --breakpoint-phone: 720px;
+}

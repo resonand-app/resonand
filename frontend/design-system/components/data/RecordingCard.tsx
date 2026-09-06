@@ -58,8 +58,8 @@ export function RecordingCard({
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontWeight: 600,
-              fontSize: '15px',
+              fontWeight: 'var(--weight-semibold)',
+              fontSize: 'var(--type-body-size)',
               letterSpacing: '-0.005em',
               color: 'var(--text)',
             }}
@@ -70,7 +70,7 @@ export function RecordingCard({
             style={{
               fontFamily: 'var(--font-mono)',
               fontSize: 'var(--type-numeric-size)',
-              fontVariantNumeric: 'tabular-nums',
+              fontVariantNumeric: 'var(--type-numeric-variant)',
               color: 'var(--text-3)',
             }}
           >

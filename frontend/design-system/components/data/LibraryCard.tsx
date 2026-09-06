@@ -102,7 +102,7 @@ export function LibraryCard({
           marginTop: 4,
           fontFamily: 'var(--font-mono)',
           fontSize: 'var(--type-numeric-size)',
-          fontVariantNumeric: 'tabular-nums',
+          fontVariantNumeric: 'var(--type-numeric-variant)',
           color: 'var(--text-3)',
         }}
       >

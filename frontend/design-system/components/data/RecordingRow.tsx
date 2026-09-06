@@ -92,7 +92,7 @@ export function RecordingRow({
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 'var(--type-numeric-size)',
-          fontVariantNumeric: 'tabular-nums',
+          fontVariantNumeric: 'var(--type-numeric-variant)',
           color: 'var(--text-3)',
           width: 46,
           textAlign: 'right',

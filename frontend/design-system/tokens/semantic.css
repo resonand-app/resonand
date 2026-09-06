@@ -25,9 +25,24 @@
   --elevation-panel: var(--elevation-panel-dark);
   --elevation-card: var(--elevation-card-dark);
   --elevation-overlay: var(--elevation-overlay-dark);
+  --elevation-accent: var(--elevation-accent-dark);
 
   --scrim: rgba(7, 8, 11, 0.72);
   --empty-fill: rgba(255, 255, 255, 0.03);
+  --state-none: var(--state-none-dark);
+  --state-running: var(--state-running-dark);
+  --state-done: var(--state-done-dark);
+  --state-failed: var(--state-failed-dark);
+  --state-done-bg: var(--state-done-bg-dark);
+  --state-failed-bg: var(--state-failed-bg-dark);
+  --state-failed-fg: var(--state-failed-fg-dark);
+  --library-amber: var(--library-amber-dark);
+  --library-clay: var(--library-clay-dark);
+  --library-slate: var(--library-slate-dark);
+  --library-moss: var(--library-moss-dark);
+  --library-stone: var(--library-stone-dark);
+  --library-plum: var(--library-plum-dark);
+  --library-teal: var(--library-teal-dark);
 }
 
 /* The same light values, twice, and there is no way to write them once (`UI-1j`).
@@ -73,9 +88,24 @@
     --elevation-panel: var(--elevation-panel-light);
     --elevation-card: var(--elevation-card-light);
     --elevation-overlay: var(--elevation-overlay-light);
+    --elevation-accent: var(--elevation-accent-light);
 
     --scrim: rgba(20, 23, 29, 0.4);
     --empty-fill: rgba(20, 23, 29, 0.035);
+    --state-none: var(--state-none-light);
+    --state-running: var(--state-running-light);
+    --state-done: var(--state-done-light);
+    --state-failed: var(--state-failed-light);
+    --state-done-bg: var(--state-done-bg-light);
+    --state-failed-bg: var(--state-failed-bg-light);
+    --state-failed-fg: var(--state-failed-fg-light);
+    --library-amber: var(--library-amber-light);
+    --library-clay: var(--library-clay-light);
+    --library-slate: var(--library-slate-light);
+    --library-moss: var(--library-moss-light);
+    --library-stone: var(--library-stone-light);
+    --library-plum: var(--library-plum-light);
+    --library-teal: var(--library-teal-light);
   }
 }
 
@@ -105,7 +135,22 @@
   --elevation-panel: var(--elevation-panel-light);
   --elevation-card: var(--elevation-card-light);
   --elevation-overlay: var(--elevation-overlay-light);
+  --elevation-accent: var(--elevation-accent-light);
 
   --scrim: rgba(20, 23, 29, 0.4);
   --empty-fill: rgba(20, 23, 29, 0.035);
+  --state-none: var(--state-none-light);
+  --state-running: var(--state-running-light);
+  --state-done: var(--state-done-light);
+  --state-failed: var(--state-failed-light);
+  --state-done-bg: var(--state-done-bg-light);
+  --state-failed-bg: var(--state-failed-bg-light);
+  --state-failed-fg: var(--state-failed-fg-light);
+  --library-amber: var(--library-amber-light);
+  --library-clay: var(--library-clay-light);
+  --library-slate: var(--library-slate-light);
+  --library-moss: var(--library-moss-light);
+  --library-stone: var(--library-stone-light);
+  --library-plum: var(--library-plum-light);
+  --library-teal: var(--library-teal-light);
 }

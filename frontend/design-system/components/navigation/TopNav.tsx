@@ -97,8 +97,8 @@ export function TopNav({
             color: 'var(--accent-on-soft)',
             cursor: 'pointer',
             fontFamily: 'var(--font-mono)',
-            fontWeight: 500,
-            fontSize: '11.5px',
+            fontWeight: 'var(--weight-medium)',
+            fontSize: 'var(--type-numeric-size)',
           }}
         >
           {initials}
