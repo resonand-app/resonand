@@ -25,6 +25,10 @@ export { LIBRARY_COLORS } from './library-colors';
 export type { LibraryColorName } from './library-colors';
 export { TRANSCRIPTION_STATES, TRANSCRIPTION_STATE_NAMES } from './transcription-states';
 export type { TranscriptionState } from './transcription-states';
+export { THEME_CHOICES, useTheme } from './theme/theme';
+export type { ResolvedTheme, ThemeChoice, ThemeState } from './theme/theme';
+export { ThemeProvider } from './theme/ThemeProvider';
+export type { ThemeProviderProps } from './theme/ThemeProvider';
 
 // --- components/foundation (`UI-1d`) ----------------------------------------
 export { Icon } from './components/foundation/Icon';

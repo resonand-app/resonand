@@ -30,6 +30,55 @@
   --empty-fill: rgba(255, 255, 255, 0.03);
 }
 
+/* The same light values, twice, and there is no way to write them once (`UI-1j`).
+ *
+ * Which one applies is the whole of the theme model. `[data-theme="light"]` is somebody who chose
+ * light. The media block is somebody who chose nothing and whose system says light -- and
+ * "follow the system" is defined as writing no attribute at all, so it has to be selected for by
+ * the absence of one. CSS has no way to give one declaration block two conditions when one of
+ * them is a media query and the other is a selector, and `light-dark()` cannot help because four
+ * of these tokens are box-shadow lists rather than colours.
+ *
+ * They are kept identical by a test rather than by care: `theme.node.test.ts` fails if the two
+ * blocks declare different tokens or different values. Editing one and not the other is the only
+ * way this file goes wrong, so that is the thing that is checked.
+ *
+ * The two are mutually exclusive by construction -- one requires the attribute to be absent, the
+ * other requires it to be `light` -- so their order and their specificity do not matter.
+ */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: var(--paper-200);
+    --surface: var(--paper-050);
+    --surface-2: var(--paper-100);
+    --hairline: var(--paper-300);
+    --border: var(--paper-400);
+    --border-strong: var(--paper-500);
+
+    --text: var(--paper-900);
+    --text-2: var(--paper-800);
+    --text-3: var(--paper-700);
+
+    --accent: var(--amber-700);
+    --accent-on: var(--amber-700-on);
+    --accent-soft: var(--amber-soft-light);
+    --accent-on-soft: var(--amber-soft-light-on);
+    --accent-hover: var(--amber-800);
+    --accent-pressed: var(--amber-800);
+
+    --wave: var(--amber-700);
+    --wave-dim: var(--paper-600);
+
+    --elevation-raised: var(--elevation-raised-light);
+    --elevation-panel: var(--elevation-panel-light);
+    --elevation-card: var(--elevation-card-light);
+    --elevation-overlay: var(--elevation-overlay-light);
+
+    --scrim: rgba(20, 23, 29, 0.4);
+    --empty-fill: rgba(20, 23, 29, 0.035);
+  }
+}
+
 [data-theme="light"] {
   --bg: var(--paper-200);
   --surface: var(--paper-050);

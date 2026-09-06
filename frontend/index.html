@@ -7,10 +7,33 @@
     <meta name="description" content="A self-hosted archive for the recordings that matter." />
     <!--
       Dark is the default and light is a peer, so the browser is told before the bundle loads.
-      `UI-1j` replaces this with the theme provider, which writes `data-theme` for an explicit
-      choice and writes nothing at all when the choice is to follow the system.
+      This stays after `UI-1j`: it is the answer for somebody who chose to follow the system,
+      which is the choice that writes no attribute at all.
     -->
     <meta name="color-scheme" content="dark light" />
+    <!--
+      No flash of the wrong theme (`UI-1j`).
+
+      Somebody who chose light would otherwise get a dark page for as long as it takes to fetch
+      and run the bundle, which on a cold load is long enough to see. This puts the attribute on
+      the document before the first paint; `ThemeProvider` reads the same key and finds the
+      document already agreeing with it.
+
+      The key is `sonarium-theme`, spelled here and in design-system/theme/theme.ts. This copy
+      cannot import that one -- it has to run before any module does -- so a test asserts the two
+      agree rather than trusting them to.
+    -->
+    <script>
+      try {
+        var choice = localStorage.getItem('sonarium-theme');
+        if (choice === 'light' || choice === 'dark') {
+          document.documentElement.setAttribute('data-theme', choice);
+          document.documentElement.style.setProperty('color-scheme', choice);
+        }
+      } catch (error) {
+        /* Blocked site data. The bundle will fall back to following the system. */
+      }
+    </script>
     <!--
       Straight out of the design system rather than copied into a `public/` directory. Vite
       hashes and emits it like any other asset, and there is exactly one mark in the repository.
