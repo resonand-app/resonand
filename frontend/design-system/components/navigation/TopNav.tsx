@@ -1,0 +1,109 @@
+import type { ChangeEvent, HTMLAttributes, ReactNode } from 'react';
+
+import { Logo } from '../foundation/Logo';
+import { Button } from '../forms/Button';
+import { IconButton } from '../forms/IconButton';
+import { SearchField } from '../forms/SearchField';
+
+export interface TopNavProps extends HTMLAttributes<HTMLElement> {
+  /** Account initials shown in the avatar button. */
+  initials?: string;
+  /** Current search text. */
+  query?: string;
+  /** Called as the search field is typed into. */
+  onQueryChange?: (query: string) => void;
+  searchFocused?: boolean;
+  onToggleSidebar?: () => void;
+  onUpload?: () => void;
+  onProfile?: () => void;
+  /** Rendered inside the search wrapper -- pass `SearchResults` here so it anchors to the field. */
+  children?: ReactNode;
+}
+
+/**
+ * The application's one top bar: sidebar toggle and logo left, search centre, upload and account
+ * right.
+ *
+ * **`onQueryChange` is new, and `UI-1e` is why (`UI-1h`).** `TopNav` passed `query` to a field that
+ * turned it into a `defaultValue`, so the prop was inert and nothing said so. Now that the field
+ * forwards `value`, a `value` with no `onChange` is a field React refuses to let anybody type in --
+ * so the handler is passed always and forwards to this callback when there is one. That is what
+ * `UI-4e` needs to put the query in the URL, which is where §2.1 says it lives.
+ *
+ * There is no avatar image, here or anywhere: no storage exists for one and fetching it externally
+ * would break the promise that nothing leaves the instance. Identity is initials.
+ */
+export function TopNav({
+  initials = '',
+  query,
+  onQueryChange,
+  searchFocused,
+  onToggleSidebar,
+  onUpload,
+  onProfile,
+  children,
+  style,
+  ...rest
+}: TopNavProps) {
+  return (
+    <header
+      style={{
+        height: 'var(--nav-height)',
+        background: 'var(--surface)',
+        borderRadius: 'var(--radius-panel)',
+        boxShadow: 'var(--elevation-panel)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 14,
+        padding: '0 14px',
+        position: 'relative',
+        ...style,
+      }}
+      {...rest}
+    >
+      <IconButton
+        icon="panel-left"
+        label="Toggle sidebar"
+        onClick={onToggleSidebar}
+        style={{ borderRadius: 'var(--radius-control)' }}
+      />
+      <Logo size={21} />
+      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+        <div style={{ width: '100%', maxWidth: 540, position: 'relative' }}>
+          <SearchField
+            value={query}
+            onChange={(event: ChangeEvent<HTMLInputElement>) => {
+              onQueryChange?.(event.target.value);
+            }}
+            focused={searchFocused}
+          />
+          {children}
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Button variant="primary" icon="upload" onClick={onUpload}>
+          Upload audio
+        </Button>
+        <button
+          type="button"
+          onClick={onProfile}
+          aria-label="Account"
+          style={{
+            width: 32,
+            height: 32,
+            border: 'none',
+            borderRadius: 'var(--radius-circle)',
+            background: 'var(--accent-soft)',
+            color: 'var(--accent-on-soft)',
+            cursor: 'pointer',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 500,
+            fontSize: '11.5px',
+          }}
+        >
+          {initials}
+        </button>
+      </div>
+    </header>
+  );
+}

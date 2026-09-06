@@ -27,18 +27,30 @@ export default mergeConfig(
       // a second global namespace to be told about.
       globals: false,
       setupFiles: [fileURLToPath(new URL('./src/test/setup.ts', import.meta.url))],
-      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      // Both trees. `design-system/` is the application's component source (`DEC-21`), so a
+      // component's test sits beside the component rather than in a parallel folder under
+      // `src/` that has to be kept in step with it by hand.
+      include: ['src/**/*.{test,spec}.{ts,tsx}', 'design-system/**/*.{test,spec}.{ts,tsx}'],
       css: false,
 
       coverage: {
         provider: 'v8',
         reporter: ['text', 'lcov'],
-        include: ['src/**/*.{ts,tsx}'],
+        // Both trees, as of `UI-1k`. The conversion tasks were let off this floor on purpose --
+        // holding twenty-one components to it while they were being renamed would have turned
+        // five mechanical tasks into twenty-one test-writing ones -- and the specimen page is
+        // what pays that back, because it imports and renders every one of them at once.
+        include: ['src/**/*.{ts,tsx}', 'design-system/**/*.{ts,tsx}'],
         exclude: [
           'src/**/*.{test,spec}.{ts,tsx}',
           'src/test/**',
           'src/main.tsx',
           'src/vite-env.d.ts',
+          // The specimen page and its sample data (`UI-1k`). Development only -- the production
+          // build drops both -- and its own smoke test already asserts the thing it is for, which
+          // is that every component mounts. Measuring how many of its inline click handlers a
+          // test happened to fire would move this number without meaning anything.
+          'src/dev/**',
         ],
         // A floor, not a target. It is deliberately below where the code sits so that it
         // fails on a real regression rather than on the ordinary shape of a commit -- a

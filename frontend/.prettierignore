@@ -13,3 +13,14 @@ package-lock.json
 # through `UI-1h` into a reformat with a conversion hidden inside it. Each of those tasks takes
 # its own folder off this list as it converts.
 design-system/
+# ...except the TypeScript the conversion produces, which is ordinary source and is formatted
+# like the rest of it (`UI-1c`). `tokens.ts` is generated, and Prettier is what settles the
+# argument between the generator's output and the formatter's opinion of it.
+#
+# The list maintains itself: a component `UI-1d` through `UI-1h` has converted is no longer a
+# `.jsx`, so it is formatted the moment it is renamed. The hand-written `.d.ts` prop
+# documentation stays out -- each folds into its component as that component converts, so
+# reformatting it now is reformatting something on its way out.
+!design-system/**/*.ts
+!design-system/**/*.tsx
+design-system/**/*.d.ts

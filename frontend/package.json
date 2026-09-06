@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "tokens": "node scripts/generate-tokens.mjs",
     "preview": "vite preview",
     "typecheck": "tsc --build --force",
     "lint": "eslint .",
@@ -22,6 +23,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "lucide-react": "^1.41.0",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

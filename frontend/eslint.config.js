@@ -8,9 +8,10 @@
  * `eslint-config-prettier` turns off every rule that would argue with it, which is why that entry
  * is last. It is not a substitute for the type checker -- `npm run typecheck` is a separate
  * script and a separate CI step, because `tsc` reports things ESLint cannot and the two failing
- * for the same reason would hide that. And it is not yet the tokens-only guard: that is `UI-1i`,
- * which ports the three rules the design system's own adherence config encodes so a hex colour
- * fails while it is being typed rather than only in CI.
+ * for the same reason would hide that. It **is** the fast half of the tokens-only guard (`UI-1i`):
+ * a colour or a font stack written inside a component fails while it is being typed, and
+ * `token-adherence.node.test.ts` fails on the same thing in CI. Both read one description of the
+ * rule, in `scripts/token-adherence.mjs`, because two copies of a regex are two rules.
  *
  * **ESLint 9 and not 10, because of `jsx-a11y`.** `eslint-plugin-jsx-a11y@6.10.2` declares
  * `eslint: ^3 || ... || ^9` and there is no 10-compatible release. Accessibility is a criterion
@@ -29,6 +30,13 @@ import prettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+import {
+  COLOUR_MESSAGE,
+  COLOUR_PATTERN,
+  FONT_MESSAGE,
+  FONT_PATTERN,
+} from './scripts/token-adherence.mjs';
+
 export default defineConfig(
   globalIgnores([
     'dist/**',
@@ -36,9 +44,17 @@ export default defineConfig(
     'node_modules/**',
     // The design system is `.jsx` until Phase C converts it in place (`DEC-21`). Linting it
     // against rules written for the strict `.tsx` it is about to become would report the
-    // conversion as hundreds of errors before anybody had started it. `UI-1d`-`UI-1h` delete
-    // this line one folder at a time.
-    'design-system/**',
+    // conversion as hundreds of errors before anybody had started it. `UI-1c` narrowed this from
+    // `design-system/**` to the files still waiting, and the list maintains itself from there:
+    // a component `UI-1d`-`UI-1h` has converted is no longer a `.jsx`, so it is linted the
+    // moment it is renamed and there is no second place to remember to edit.
+    'design-system/**/*.jsx',
+    // The hand-written prop documentation. Each folds into the component it documents as that
+    // component converts, so linting them now is linting something on its way out.
+    'design-system/**/*.d.ts',
+    // The click-through kit: React 18 and Babel in a browser, and provenance rather than a
+    // starting point (`UI-1l`).
+    'design-system/ui_kits/**',
   ]),
 
   // --- Everything ---------------------------------------------------------
@@ -72,22 +88,101 @@ export default defineConfig(
           caughtErrorsIgnorePattern: '^_',
         },
       ],
-      // Import order, so a diff shows a change and not a reshuffle. Prettier has no opinion
-      // about it, which is why it has to be a lint rule.
+      // `console.log` left in a view ships to everybody who opens it. Warnings and errors are
+      // allowed, because an error worth swallowing is worth printing.
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // --- The application ----------------------------------------------------
+  {
+    files: ['src/**'],
+    rules: {
       'no-restricted-imports': [
         'error',
         {
           patterns: [
             {
+              // So a diff shows a change and not a reshuffle. Prettier has no opinion about it,
+              // which is why it has to be a lint rule.
               group: ['../*'],
               message: 'Reach up with the `@/` alias rather than with `../`.',
+            },
+            {
+              // `UI-1c`'s criterion, as a rule rather than as a sentence. The barrel is what
+              // lets a component move between family folders without a hundred call sites
+              // moving with it, and a barrel nobody is held to is a longer path to the same
+              // file.
+              // `styles.css` is the one thing outside it: it is linked once, from the entry
+              // point, and deliberately not re-exported (see design-system/index.ts).
+              group: ['@/design-system/*', '@/design-system/**', '!@/design-system/styles.css'],
+              message:
+                'Import from `@/design-system`, not from a file inside it. The exception is `@/design-system/styles.css` from the entry point.',
             },
           ],
         },
       ],
-      // `console.log` left in a view ships to everybody who opens it. Warnings and errors are
-      // allowed, because an error worth swallowing is worth printing.
-      'no-console': ['error', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // --- Tests that read the repository -------------------------------------
+  //
+  // `*.node.test.ts` checks the shape of the tree rather than the behaviour of a component --
+  // that the fonts are shipped, that the token union matches the CSS. Their subject is files at
+  // paths, so a path is what they are allowed to use: the alias resolves what the application
+  // sees, and what the application sees is exactly what these are not testing.
+  {
+    files: ['src/**/*.node.test.ts'],
+    rules: {
+      'no-restricted-imports': 'off',
+    },
+  },
+
+  // --- The design system --------------------------------------------------
+  //
+  // It is a library that happens to live in this repository (`DEC-21`), so its files reach each
+  // other with relative paths and never through the application's alias. The dependency runs one
+  // way: the app imports the system, and the system knows nothing about the app.
+  {
+    files: ['design-system/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@/*'],
+              message:
+                'The design system does not import from the application, and reaches itself with a relative path.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+
+  // --- The tokens-only guard (`UI-1i`) ------------------------------------
+  //
+  // No colour is ever written inside a component, and no font stack either. This is the half that
+  // fails in the editor; the other half is a test, and both read the patterns above so they cannot
+  // come to disagree. It covers the whole system rather than only `components/`, because
+  // `library-colors.ts` and `transcription-states.ts` are exactly where a literal would look
+  // least out of place.
+  //
+  // The two bypasses that predate the rule carry a disable comment naming `UI-33a`, which is the
+  // task that removes them. The test's exemption list is the same two, and it fails if either
+  // stops existing -- so the excuses cannot outlive the code they excuse.
+  {
+    files: ['design-system/**/*.{ts,tsx}'],
+    ignores: ['design-system/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: `Literal[value=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
+        { selector: `TemplateElement[value.raw=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
+        { selector: `Literal[value=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
+        { selector: `TemplateElement[value.raw=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
+      ],
     },
   },
 
@@ -106,9 +201,12 @@ export default defineConfig(
     },
   },
 
-  // --- The config files themselves ----------------------------------------
+  // --- Everything that runs in Node ---------------------------------------
+  //
+  // The config files, and the scripts beside them. The same set tsconfig.node.json names, for
+  // the same reason: these have a `process` and the browser half of the codebase does not.
   {
-    files: ['*.config.{js,ts}'],
+    files: ['*.config.{js,ts}', 'scripts/**'],
     languageOptions: {
       globals: globals.node,
     },
