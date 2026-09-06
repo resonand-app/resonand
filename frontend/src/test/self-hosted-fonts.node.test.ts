@@ -1,0 +1,61 @@
+/**
+ * The fonts are shipped, not fetched (`UI-1a`).
+ *
+ * `UI-1a`'s criterion is that the interface renders with the network blocked, and a criterion
+ * nobody can run is a criterion that quietly stops being true. The regression it guards against
+ * is small and specific: somebody adds a face by pasting the `@import` line a font service hands
+ * out, and nothing looks wrong until the deployment with no route to the internet draws itself
+ * in the fallback stack.
+ *
+ * It reads the stylesheet off disk rather than through Vite, because that is one of the two ways
+ * the file is read for real -- the seventeen cards in `guidelines/` `<link>` it with no bundler
+ * in the way -- and because a `url()` that Vite would rewrite is not the thing under test.
+ */
+
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { describe, expect, it } from 'vitest';
+
+const TOKENS = resolve(dirname(fileURLToPath(import.meta.url)), '../../design-system/tokens');
+
+const FONTS_CSS = resolve(TOKENS, 'fonts.css');
+
+/**
+ * The stylesheet with its comments taken out.
+ *
+ * The comments are where this file explains which request it closed and what used to make it,
+ * so they name the very things below assert are absent. Only the rules are under test.
+ */
+function rulesOf(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, '');
+}
+
+/** Every `url(...)` in a stylesheet, quoted or not. */
+function urlsIn(css: string): string[] {
+  return [...css.matchAll(/url\(\s*["']?([^"')]+)["']?\s*\)/g)].map((match) => match[1] ?? '');
+}
+
+describe('the design system asks nothing of the network', () => {
+  const css = rulesOf(readFileSync(FONTS_CSS, 'utf8'));
+
+  it('declares no font from a remote origin', () => {
+    expect(css).not.toMatch(/@import/);
+    expect(urlsIn(css).filter((url) => /^(https?:)?\/\//.test(url))).toEqual([]);
+  });
+
+  it('points every face at a file that is actually here', () => {
+    const urls = urlsIn(css);
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls) {
+      expect(existsSync(resolve(TOKENS, url)), `${url} is declared but not shipped`).toBe(true);
+    }
+  });
+
+  it('ships both Geist faces, which were loaded from Google Fonts until UI-1a', () => {
+    for (const family of ['Geist', 'Geist Mono']) {
+      expect(css).toMatch(new RegExp(`font-family:\\s*"${family}"`));
+    }
+  });
+});

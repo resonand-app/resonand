@@ -91,7 +91,7 @@ Chosen once, here, so no task chooses again.
 | Virtualisation | **TanStack Virtual 3** | 36px rows over 800 recordings, and a few hundred transcript segments |
 | i18n | **i18next** + react-i18next | `UI-22` wants every literal externalised and a pseudo-locale for the +30% check |
 | Icons | **lucide-react** | Replaces the CDN UMD build and its `createIcons` effect. Bundled, tree-shaken, no outbound request |
-| Fonts | The **`geist`** npm package | Ships both faces as woff2. Closes the Google Fonts `@import` that `UI-1` was already told to close |
+| Fonts | **Fontsource's** Geist and Geist Mono, vendored | Both faces as subset woff2. Closes the Google Fonts `@import` that `UI-1` was already told to close |
 | Tests | **Vitest** + Testing Library + jsdom; **Playwright** for `INT-6`; **axe-core** in both | Mirrors the backend's arrangement: the same checks locally and in CI |
 | Test doubles | **MSW 2** | The API is real by the time views are built, but a view test must not need a running instance |
 
@@ -103,6 +103,17 @@ registry's `previous` tag and 8 was `latest`; Vitest had reached 5 and ESLint 10
 says what actually landed, because a decision record that disagrees with `package-lock.json` is
 worse than no record. The exact versions live in the lock file, which is the only place a version
 should be written twice.
+
+**The fonts row said the `geist` package, and that package is the wrong object.** It ships TTF
+and no woff2 — 169 KB and 171 KB for the two variable faces, against 84 KB for all four files
+that landed — and it peer-depends on `next >=13.2.0`, because it exists to hand a descriptor to
+Next.js's font loader rather than to produce a stylesheet. `UI-1a` vendors
+`@fontsource-variable/geist` and `@fontsource-variable/geist-mono` instead: the same upstream
+fonts, subset to Latin and Latin Extended and compressed. **They are copied in rather than
+depended on**, because `tokens/fonts.css` is read two ways — Vite processes it for the app, and
+the seventeen cards in `guidelines/` `<link>` it off disk with no bundler — and only a relative
+`url()` works in both. The version they came from is written in that file, which is the one place
+somebody bumping them will be looking.
 
 The one thing that is a ceiling rather than a choice: **TypeScript is 6.0.3 and not 7.**
 TypeScript 7 is the Go port, and `typescript-eslint` peer-requires `typescript >=4.8.4 <6.1.0` —

@@ -31,5 +31,11 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  // `*.node.test.ts` is a test that reads the repository rather than the DOM -- the tokens are
+  // self-hosted, no component contains a colour -- and it needs `node:fs`, which this project
+  // deliberately cannot see. Giving the browser half of the codebase Node's globals so that a
+  // handful of tests can call `readFileSync` is how `process.env` ends up inside a component.
+  // They belong to tsconfig.node.json, which names them.
+  "exclude": ["src/**/*.node.test.ts"]
 }
