@@ -7,6 +7,10 @@ const FILL: Record<NonNullable<ButtonProps['variant']>, CSSProperties> = {
   primary: {
     background: 'var(--accent)',
     color: 'var(--accent-on)',
+    /* The amber glow is hard-coded, so it is identical in light mode where it should not be.
+       Replacing it is a decision about what the token ought to be rather than a rename, and
+       `UI-33a` is the task that takes it. */
+    // eslint-disable-next-line no-restricted-syntax -- UI-33a
     boxShadow: '0 2px 8px rgba(232,180,92,.2)',
     fontWeight: 600,
   },

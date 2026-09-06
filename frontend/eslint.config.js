@@ -8,9 +8,10 @@
  * `eslint-config-prettier` turns off every rule that would argue with it, which is why that entry
  * is last. It is not a substitute for the type checker -- `npm run typecheck` is a separate
  * script and a separate CI step, because `tsc` reports things ESLint cannot and the two failing
- * for the same reason would hide that. And it is not yet the tokens-only guard: that is `UI-1i`,
- * which ports the three rules the design system's own adherence config encodes so a hex colour
- * fails while it is being typed rather than only in CI.
+ * for the same reason would hide that. It **is** the fast half of the tokens-only guard (`UI-1i`):
+ * a colour or a font stack written inside a component fails while it is being typed, and
+ * `token-adherence.node.test.ts` fails on the same thing in CI. Both read one description of the
+ * rule, in `scripts/token-adherence.mjs`, because two copies of a regex are two rules.
  *
  * **ESLint 9 and not 10, because of `jsx-a11y`.** `eslint-plugin-jsx-a11y@6.10.2` declares
  * `eslint: ^3 || ... || ^9` and there is no 10-compatible release. Accessibility is a criterion
@@ -28,6 +29,13 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import prettier from 'eslint-config-prettier/flat';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+
+import {
+  COLOUR_MESSAGE,
+  COLOUR_PATTERN,
+  FONT_MESSAGE,
+  FONT_PATTERN,
+} from './scripts/token-adherence.mjs';
 
 export default defineConfig(
   globalIgnores([
@@ -149,6 +157,31 @@ export default defineConfig(
             },
           ],
         },
+      ],
+    },
+  },
+
+  // --- The tokens-only guard (`UI-1i`) ------------------------------------
+  //
+  // No colour is ever written inside a component, and no font stack either. This is the half that
+  // fails in the editor; the other half is a test, and both read the patterns above so they cannot
+  // come to disagree. It covers the whole system rather than only `components/`, because
+  // `library-colors.ts` and `transcription-states.ts` are exactly where a literal would look
+  // least out of place.
+  //
+  // The two bypasses that predate the rule carry a disable comment naming `UI-33a`, which is the
+  // task that removes them. The test's exemption list is the same two, and it fails if either
+  // stops existing -- so the excuses cannot outlive the code they excuse.
+  {
+    files: ['design-system/**/*.{ts,tsx}'],
+    ignores: ['design-system/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        { selector: `Literal[value=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
+        { selector: `TemplateElement[value.raw=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
+        { selector: `Literal[value=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
+        { selector: `TemplateElement[value.raw=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
       ],
     },
   },

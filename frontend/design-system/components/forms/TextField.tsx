@@ -2,6 +2,12 @@ import type { InputHTMLAttributes } from 'react';
 
 import { Icon } from '../foundation/Icon';
 
+/* eslint-disable-next-line no-restricted-syntax -- UI-33a. This matches no token in the system.
+   It is nearest to `--state-failed`, and choosing that is a decision about what the error
+   treatment should be rather than a rename, so it is UI-33a's to make. */
+const ERROR_RING = '0 0 0 1px #C4574A';
+const FOCUS_RING = '0 0 0 2px var(--accent)';
+
 export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string | undefined;
   /** Error message. Presence switches the field to its error treatment. */
@@ -25,12 +31,7 @@ export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
  * not read is a field they cannot fix.
  */
 export function TextField({ label, error, focused, style, ...rest }: TextFieldProps) {
-  const ring =
-    error !== undefined
-      ? '0 0 0 1px #C4574A'
-      : focused
-        ? '0 0 0 2px var(--accent)'
-        : 'none';
+  const ring = error !== undefined ? ERROR_RING : focused ? FOCUS_RING : 'none';
 
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
