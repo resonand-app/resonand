@@ -131,9 +131,10 @@ def replace_derived(root: Path, uuid: str, chunks: Iterable[bytes]) -> Path:
 def delete_recording(root: Path, uuid: str) -> int:
     """Remove everything belonging to one recording. Returns how many files went.
 
-    Called by the retention purge (``INT-2``), never by the trash. Nothing here is reachable from
-    an ordinary delete: the trash sets ``deleted_at`` and touches no file at all, which is the
-    whole reason a restore is instant.
+    Called by the retention purge (``INT-2``) and by an upload that failed after writing its
+    bytes but before its row existed (``REV-1``) -- never by the trash. Nothing here is reachable
+    from an ordinary delete: the trash sets ``deleted_at`` and touches no file at all, which is
+    the whole reason a restore is instant.
     """
     directory = recording_dir(root, uuid)
     if not directory.exists():

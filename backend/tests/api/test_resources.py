@@ -14,7 +14,7 @@ from sonarium.db import libraries as library_repo
 from sonarium.db.audio import create_audio
 from sonarium.db.engine import Database
 
-from tests.api.conftest import PASSWORD, ClientFactory, sign_in
+from tests.api.conftest import PASSWORD, ClientFactory, acl_resolutions, sign_in
 
 
 def _recording(database: Database, library_uuid: str, owner_id: int, title: str = "A note") -> str:
@@ -277,6 +277,59 @@ def test_moving_a_recording_reports_the_library_it_landed_in(
     moved = client.post(f"/audio/{uuid}/move", json={"library_uuid": destination}).json()
     assert moved["library_uuid"] == destination
     assert moved["category_id"] is None
+
+
+def test_a_write_resolves_the_permission_once(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``REV-7``: each of these used to ask twice, once to write and once for the presenter.
+
+    Two extra resolutions per write, held inside the write lock, for an answer the service
+    function already had in its hand.
+    """
+    uuid = _recording(database, owner_library, accounts["admin"])
+    sign_in(client, "admin")
+
+    with acl_resolutions(database) as renaming:
+        assert client.patch(f"/audio/{uuid}", json={"title": "Renamed"}).status_code == 200
+
+    client.delete(f"/audio/{uuid}")
+    with acl_resolutions(database) as restoring:
+        assert client.post(f"/audio/{uuid}/restore").status_code == 200
+
+    with acl_resolutions(database) as recolouring:
+        patched = client.patch(f"/libraries/{owner_library}", json={"name": "Family archive"})
+        assert patched.status_code == 200
+
+    counted = (len(renaming), len(restoring), len(recolouring))
+    assert counted == (1, 1, 1), f"resolutions per write: {counted}"
+
+
+def test_moving_a_recording_reports_the_level_it_carries_afterwards(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """A move is the one write that changes the answer, so it is the one that asks twice.
+
+    Permissions come from the library a recording is in. Somebody who owns a recording and moves
+    it into a library they merely edit may edit it afterwards and no more, and the response has
+    to say so rather than repeat the level they held on the way in (``REV-7``).
+    """
+    uuid = _recording(database, owner_library, accounts["admin"])
+    with database.write_session() as session:
+        theirs = library_repo.create_library(session, accounts["friend"], name="Theirs")
+        library_repo.share_library(
+            session,
+            accounts["friend"],
+            theirs.uuid,
+            grantee_id=accounts["admin"],
+            level=Level.EDIT,
+        )
+        destination = theirs.uuid
+
+    sign_in(client, "admin")
+    moved = client.post(f"/audio/{uuid}/move", json={"library_uuid": destination}).json()
+    assert moved["library_uuid"] == destination
+    assert moved["level"] == Level.EDIT, "not the ownership they held in the library it left"
 
 
 def test_a_page_carries_the_total(

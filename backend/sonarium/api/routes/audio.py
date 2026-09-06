@@ -76,7 +76,7 @@ def update_audio(
 ) -> AudioDetail:
     """Change what a person may change. Requires edit; a reader is told so rather than refused
     as though the recording did not exist."""
-    audio = update_metadata(
+    audio, level = update_metadata(
         session,
         caller.id,
         audio_uuid,
@@ -90,7 +90,6 @@ def update_audio(
             tags=body.tags,
         ),
     )
-    _, level = require_audio(session, caller.id, audio_uuid)
     return audio_detail(session, audio, level)
 
 
@@ -103,8 +102,7 @@ def move(
     Three consequences, all of which ``UI-19`` has to state before confirming: who can see it
     changes, the category is cleared, and grants made on the recording itself survive.
     """
-    audio = move_audio(session, caller.id, audio_uuid, body.library_uuid)
-    _, level = require_audio(session, caller.id, audio_uuid)
+    audio, level = move_audio(session, caller.id, audio_uuid, body.library_uuid)
     return audio_detail(session, audio, level)
 
 
@@ -116,8 +114,7 @@ def trash(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> None
 
 @router.post("/audio/{audio_uuid}/restore", response_model=AudioDetail)
 def restore(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> AudioDetail:
-    audio = restore_audio(session, caller.id, audio_uuid)
-    _, level = require_audio(session, caller.id, audio_uuid, include_trashed=True)
+    audio, level = restore_audio(session, caller.id, audio_uuid)
     return audio_detail(session, audio, level)
 
 

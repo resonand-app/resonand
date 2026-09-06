@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 
 from sonarium.acl.query import audio_acl, audio_select, require_audio, require_library
 from sonarium.core.errors import InvalidRequestError
+from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.text import clean_title
 from sonarium.core.time import is_wall_clock, now_instant
@@ -60,14 +61,20 @@ class MetadataPatch:
     tags: list[str] | None = None
 
 
-def update_metadata(session: Session, user_id: int, audio_uuid: str, patch: MetadataPatch) -> Audio:
+def update_metadata(
+    session: Session, user_id: int, audio_uuid: str, patch: MetadataPatch
+) -> tuple[Audio, Level]:
     """Change what a person can change about a recording (``API-9``).
 
     ``recorded_at`` is a wall-clock reading and is stored as written (``DEC-11``). Passing an
     instant here would be silently wrong in a way nobody notices until a recording made at half
     six shows as half five to somebody abroad, so it is refused instead.
+
+    The caller's level comes back with the recording, because resolving it is what this function
+    did first and the endpoint needs it to present the answer (``REV-7``). Nothing a patch can
+    change touches it.
     """
-    audio, _ = require_audio(session, user_id, audio_uuid, Level.EDIT)
+    audio, level = require_audio(session, user_id, audio_uuid, Level.EDIT)
     if patch.title is not None:
         cleaned = patch.title.strip()
         if not cleaned:
@@ -92,26 +99,33 @@ def update_metadata(session: Session, user_id: int, audio_uuid: str, patch: Meta
         set_audio_tags(session, audio.id, patch.tags)
     session.flush()
     search_index.index_audio(session, audio.id)
-    return audio
+    return audio, level
 
 
-def move_audio(session: Session, user_id: int, audio_uuid: str, library_uuid: str) -> Audio:
+def move_audio(
+    session: Session, user_id: int, audio_uuid: str, library_uuid: str
+) -> tuple[Audio, Level]:
     """Move a recording into another library, in one transaction.
 
     The individual grants are preserved deliberately. It has no visible effect in v0, where
     recordings are only shared through their library -- and it is implemented anyway, because a
     move that quietly dropped them would be a data-loss bug that only shows up once the feature
     that creates them exists, by which time the grants are already gone.
+
+    The level is resolved **again, afterwards**, and that is the one place where a second
+    resolution is not the waste ``REV-7`` removed: a recording's permissions come from the library
+    it is in, so an owner who moves one into a library they merely edit may edit it and no more.
+    Returning the level from before the move would report a permission the caller no longer has.
     """
-    audio, _ = require_audio(session, user_id, audio_uuid, Level.EDIT)
+    audio, level = require_audio(session, user_id, audio_uuid, Level.EDIT)
     destination, _ = require_library(session, user_id, library_uuid, Level.EDIT)
     if destination.id == audio.library_id:
-        return audio
+        return audio, level
     audio.library_id = destination.id
     audio.category_id = None
     session.flush()
     search_index.index_audio(session, audio.id)
-    return audio
+    return require_audio(session, user_id, audio_uuid)
 
 
 def trash_audio(session: Session, user_id: int, audio_uuid: str) -> Audio:
@@ -123,13 +137,17 @@ def trash_audio(session: Session, user_id: int, audio_uuid: str) -> Audio:
     return audio
 
 
-def restore_audio(session: Session, user_id: int, audio_uuid: str) -> Audio:
-    """Take a recording back out of the trash and put it back in the search index."""
-    audio, _ = require_audio(session, user_id, audio_uuid, Level.EDIT, include_trashed=True)
+def restore_audio(session: Session, user_id: int, audio_uuid: str) -> tuple[Audio, Level]:
+    """Take a recording back out of the trash and put it back in the search index.
+
+    Being in the trash is not a permission, so the level resolved on the way in is the level that
+    comes back out (``REV-7``).
+    """
+    audio, level = require_audio(session, user_id, audio_uuid, Level.EDIT, include_trashed=True)
     audio.deleted_at = None
     session.flush()
     search_index.index_audio(session, audio.id)
-    return audio
+    return audio, level
 
 
 def trashed_audio(user_id: int) -> Select[tuple[Audio, int]]:
@@ -161,13 +179,14 @@ def find_duplicates(session: Session, user_id: int, sha256: str) -> list[tuple[A
     return [(row[0], row[0].deleted_at is not None) for row in rows]
 
 
-def create_audio(
+def create_audio(  # noqa: PLR0913 -- columns of one row, and every one of them named
     session: Session,
     *,
     library_id: int,
     uploaded_by: int,
     storage_path: str,
     original_filename: str,
+    uuid: str | None = None,
     title: str | None = None,
     sha256: str | None = None,
     size_bytes: int | None = None,
@@ -176,8 +195,13 @@ def create_audio(
 
     The title defaults to the filename without its extension, lightly cleaned (``DEC-16``), and
     stays editable. Guessing harder only produces titles the user has to undo.
+
+    ``uuid`` is accepted rather than always minted by the row because the upload writes the file
+    before the row exists and has to know what to call the directory (``REV-1``). Left out, the
+    row mints its own, which is what every other caller wants.
     """
     audio = Audio(
+        uuid=uuid or new_uuid(),
         library_id=library_id,
         uploaded_by=uploaded_by,
         title=(title or clean_title(original_filename)),

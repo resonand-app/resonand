@@ -64,7 +64,15 @@ def reading(database: Annotated[Database, Depends(database_of)]) -> Iterator[DbS
 
 
 def writing(database: Annotated[Database, Depends(database_of)]) -> Iterator[DbSession]:
-    """A write session. Serialised, committed when the endpoint returns without raising."""
+    """A write session. Serialised, committed when the endpoint returns without raising.
+
+    Because it is a dependency, the process-wide write lock is taken when the request enters and
+    released when it leaves. For a mutation that is a few rows that is honest and costs nothing.
+    For an endpoint that moves bytes it is wrong: while it runs, **nothing else in the instance
+    can write** -- no metadata edit, no session row, no job claim by the worker, no retention
+    purge. Such an endpoint takes :data:`ArchiveDatabase` instead and opens its own short
+    transactions around the slow part (``REV-1``).
+    """
     with database.write_session() as session:
         yield session
 
@@ -72,6 +80,14 @@ def writing(database: Annotated[Database, Depends(database_of)]) -> Iterator[DbS
 ReadSession = Annotated[DbSession, Depends(reading)]
 WriteSession = Annotated[DbSession, Depends(writing)]
 InstanceSettings = Annotated[Settings, Depends(settings_of)]
+
+ArchiveDatabase = Annotated[Database, Depends(database_of)]
+"""The archive itself, for the few endpoints that must own their transactions.
+
+Upload and playback both spend their time on a file rather than on rows, and a file here is
+measured in gigabytes. They take this and open a session where the rows actually are, so that
+the write lock covers the insert and not the recording.
+"""
 
 
 def current_caller(

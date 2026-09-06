@@ -10,6 +10,7 @@ it reports *every* problem at once as text a person can act on rather than a tra
 
 from __future__ import annotations
 
+import tempfile
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
@@ -203,12 +204,20 @@ class Settings(BaseSettings):
             raise ConfigurationError(f"This instance is not configured to run:\n{listed}")
 
     def prepare_directories(self) -> None:
-        """Create the directories the instance writes to, before anything tries to."""
+        """Create the directories the instance writes to, before anything tries to.
+
+        The temporary directory is one of them, and not obviously so. An upload is buffered
+        there in full before the endpoint that stores it ever runs, so the image points
+        ``TMPDIR`` inside the volume -- and a volume that predates that change does not have the
+        directory. Creating it here rather than in the image is what keeps an upgrade from
+        failing on the first upload instead of at startup.
+        """
         if self.is_memory_database:
             return
         self.data_dir.mkdir(parents=True, exist_ok=True)
         self.resolved_database_path.parent.mkdir(parents=True, exist_ok=True)
         self.resolved_storage_dir.mkdir(parents=True, exist_ok=True)
+        Path(tempfile.gettempdir()).mkdir(parents=True, exist_ok=True)
 
 
 def _directory_problems(name: str, directory: Path) -> list[str]:
