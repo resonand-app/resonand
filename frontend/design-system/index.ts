@@ -23,6 +23,8 @@ export { TOKENS, token } from './tokens';
 export type { Token } from './tokens';
 export { LIBRARY_COLORS } from './library-colors';
 export type { LibraryColorName } from './library-colors';
+export { TRANSCRIPTION_STATES, TRANSCRIPTION_STATE_NAMES } from './transcription-states';
+export type { TranscriptionState } from './transcription-states';
 
 // --- components/foundation (`UI-1d`) ----------------------------------------
 export { Icon } from './components/foundation/Icon';
@@ -50,3 +52,17 @@ export { TranscriptLine } from './components/media/TranscriptLine';
 export type { TranscriptLineProps } from './components/media/TranscriptLine';
 export { Waveform } from './components/media/Waveform';
 export type { WaveformProps } from './components/media/Waveform';
+
+// --- components/data (`UI-1g`) ----------------------------------------------
+export { Chip } from './components/data/Chip';
+export type { ChipProps } from './components/data/Chip';
+export { CreateLibraryCard } from './components/data/CreateLibraryCard';
+export type { CreateLibraryCardProps } from './components/data/CreateLibraryCard';
+export { LibraryCard } from './components/data/LibraryCard';
+export type { LibraryCardProps } from './components/data/LibraryCard';
+export { RecordingCard } from './components/data/RecordingCard';
+export type { RecordingCardProps } from './components/data/RecordingCard';
+export { RecordingRow } from './components/data/RecordingRow';
+export type { RecordingRowProps } from './components/data/RecordingRow';
+export { StateBadge } from './components/data/StateBadge';
+export type { StateBadgeProps } from './components/data/StateBadge';

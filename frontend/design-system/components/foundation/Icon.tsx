@@ -89,11 +89,16 @@ export interface IconProps extends HTMLAttributes<HTMLSpanElement> {
   /** A registered glyph name, kebab-case, e.g. "search", "upload", "panel-left". */
   name: IconName;
   /** Rendered box in px. 17 in rows and buttons, 15 for state glyphs, 21 in the nav. */
-  size?: number;
+  size?: number | undefined;
   /** Stroke weight. Leave at 1.7 unless the glyph sits under 15px. */
-  strokeWidth?: number;
-  /** Defaults to currentColor so the parent controls it. */
-  color?: string;
+  strokeWidth?: number | undefined;
+  /** Defaults to currentColor so the parent controls it.
+   *
+   *  Explicitly `| undefined`, like the two above. Under `exactOptionalPropertyTypes` a caller
+   *  spreading its own props through -- which is what `StateBadge` and every other wrapper does --
+   *  cannot pass a value that might be absent to a merely optional prop. Requiring each of them
+   *  to strip the key first would buy nothing and be forgotten once. */
+  color?: string | undefined;
 }
 
 /**
