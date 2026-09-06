@@ -81,9 +81,13 @@ def update_library(
     name: str | None = None,
     description: str | None = None,
     colour: str | None = None,
-) -> Library:
-    """Rename a library, change its description, or recolour it."""
-    library, _ = require_library(session, user_id, library_uuid, Level.EDIT)
+) -> tuple[Library, Level]:
+    """Rename a library, change its description, or recolour it.
+
+    The caller's level comes back with it: resolving it is the first thing this does, and the
+    endpoint would otherwise ask the ACL the same question twice inside one write (``REV-7``).
+    """
+    library, level = require_library(session, user_id, library_uuid, Level.EDIT)
     if name is not None:
         cleaned = name.strip()
         if not cleaned:
@@ -94,7 +98,7 @@ def update_library(
     if colour is not None:
         library.colour = colours.Colour(colour).value
     session.flush()
-    return library
+    return library, level
 
 
 def trash_library(session: Session, user_id: int, library_uuid: str) -> Library:

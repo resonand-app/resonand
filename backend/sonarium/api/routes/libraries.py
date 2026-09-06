@@ -76,7 +76,7 @@ def get_library(library_uuid: str, caller: CurrentCaller, session: ReadSession) 
 def update_library(
     library_uuid: str, body: UpdateLibrary, caller: CurrentCaller, session: WriteSession
 ) -> LibrarySummary:
-    library = library_repo.update_library(
+    library, level = library_repo.update_library(
         session,
         caller.id,
         library_uuid,
@@ -84,7 +84,6 @@ def update_library(
         description=body.description,
         colour=body.colour.value if body.colour is not None else None,
     )
-    _, level = require_library(session, caller.id, library_uuid)
     return library_summary(session, library, level)
 
 
