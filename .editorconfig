@@ -1,0 +1,31 @@
+# One description of whitespace, for the editors that read it (INF-3b).
+#
+# It is not a third opinion. Ruff already formats Python and Prettier already formats the
+# frontend; this file says the same things they do, so that an editor opening a file neither of
+# them owns -- a Dockerfile, a workflow, a Markdown table -- gets it right anyway. Where it
+# disagrees with a formatter, the formatter is right and this file is the bug.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+# Ruff's line-length for the backend, and Prettier's printWidth for the frontend. One number,
+# because a repository read in two column widths is a repository read badly.
+max_line_length = 100
+
+[*.py]
+indent_size = 4
+
+# Tabs are the format, not a preference.
+[Makefile]
+indent_style = tab
+
+# Trailing whitespace is significant in Markdown, where two spaces are a line break, and in
+# subtitle formats, where the blank line between cues is structural.
+[*.{md,srt,vtt}]
+trim_trailing_whitespace = false
