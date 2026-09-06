@@ -35,6 +35,7 @@ from sonarium.api.routes import (
     transcription,
     users,
 )
+from sonarium.api.spa import install_spa
 from sonarium.core.config import Settings, get_settings
 from sonarium.db.engine import Database, build_engine
 from sonarium.db.migrate import migrate_at_startup
@@ -97,10 +98,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     ):
         app.include_router(router)
 
-    @app.get("/", tags=["meta"], summary="What this instance is")
-    def instance() -> dict[str, Any]:
-        """Enough for a client to know what it is talking to, without a session."""
-        return {"name": "sonarium", "version": __version__, "status": "ok"}
+    # After every router, and that ordering is the whole design (``INF-3e``): the shell is a
+    # fallback, so a path that is an endpoint stays an endpoint and there is no list of API
+    # prefixes anywhere that could go stale. When the image carries no bundle -- a developer, a
+    # test -- nothing is installed and the root keeps answering below.
+    app.state.spa = install_spa(app, resolved.static_dir)
+
+    if app.state.spa is None:
+
+        @app.get("/", tags=["meta"], summary="What this instance is")
+        def instance() -> dict[str, Any]:
+            """Enough for a client to know what it is talking to, without a session.
+
+            The root belongs to whoever is being served there. With a bundle present it is the
+            interface; without one it is this. ``GET /instance`` is the answer that never
+            moves, which is why it is the one the interface is written against.
+            """
+            return {"name": "sonarium", "version": __version__, "status": "ok"}
 
     return app
 

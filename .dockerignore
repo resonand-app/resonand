@@ -28,6 +28,7 @@ backend/**/*.db-shm
 backend/storage/
 frontend/node_modules/
 frontend/dist/
+frontend/coverage/
 frontend/.vite/
 **/.env
 **/.env.local

@@ -47,6 +47,14 @@ class Settings(BaseSettings):
     storage_dir: Path | None = None
     """Overrides ``<data_dir>/storage``, the tree of intact originals."""
 
+    static_dir: Path = Path("/app/static")
+    """Where the built web interface is, when there is one (``INF-3e``).
+
+    The image copies Vite's bundle here. Nothing else does, so on a developer's machine this
+    path does not exist, no shell is installed and ``/`` goes on saying what the instance is --
+    which is the arrangement ``npm run dev`` beside ``uvicorn`` needs. It is read-only and is
+    deliberately not under ``data_dir``: it is part of the build, not part of the archive."""
+
     # --- Deployment --------------------------------------------------------
 
     secret_key: SecretStr | None = None

@@ -1,0 +1,15 @@
+# Generated, vendored, or not ours to reformat.
+dist/
+coverage/
+node_modules/
+package-lock.json
+
+# The design system, until Phase C converts it in place (`DEC-21`) -- the same boundary
+# eslint.config.js draws, and drawn here for a sharper reason.
+#
+# `frontend/design-system/` is the signed-off visual language (`DEC-8`) and the `.prompt.md`
+# files beside each component are the only record of when not to use it. Running a formatter
+# over all of that today would rewrite the record and turn every conversion diff in `UI-1d`
+# through `UI-1h` into a reformat with a conversion hidden inside it. Each of those tasks takes
+# its own folder off this list as it converts.
+design-system/

@@ -84,7 +84,7 @@ Chosen once, here, so no task chooses again.
 
 | Concern | Choice | Why this one |
 |---|---|---|
-| Build, dev server | **Vite 6** + React 19 + TypeScript strict | Already the decision in `docs/v0-plan.md` and already written into the commented Dockerfile stage |
+| Build, dev server | **Vite 8** + React 19 + TypeScript strict | Already the decision in `docs/v0-plan.md` and already written into the commented Dockerfile stage |
 | Routing | **React Router 7**, declarative mode | Eight routes, and §2.1 puts real state in the URL — the query, the filters, the view mode. Query-param handling is the requirement, not loaders |
 | Server state | **TanStack Query 5** | Every list endpoint is `limit`/`offset` with a `total`; caching, invalidation after a mutation, and a known total before the rows arrive are exactly its shape |
 | Client state | **Zustand 5** | Three stores that outlive a route: playback, the upload tray, toasts. `UI-5` asks for one playback state with two presentations; a store is that sentence |
@@ -97,6 +97,17 @@ Chosen once, here, so no task chooses again.
 
 Nothing here is a framework. Everything is replaceable one file at a time, which is the property
 that matters for a project that intends to be maintained by one person for years.
+
+**The row said Vite 6 when this was signed.** By the time `INF-3a` installed it, Vite 6 was the
+registry's `previous` tag and 8 was `latest`; Vitest had reached 5 and ESLint 10. The table now
+says what actually landed, because a decision record that disagrees with `package-lock.json` is
+worse than no record. The exact versions live in the lock file, which is the only place a version
+should be written twice.
+
+The one thing that is a ceiling rather than a choice: **TypeScript is 6.0.3 and not 7.**
+TypeScript 7 is the Go port, and `typescript-eslint` peer-requires `typescript >=4.8.4 <6.1.0` —
+so `INF-3b`, which needs `typescript-eslint`, decides this and not preference. Revisit when
+`typescript-eslint` supports it; nothing else in the stack is holding it back.
 
 ### DEC-21 · The design system is TypeScript, in place
 
@@ -556,7 +567,16 @@ mistake here that cannot be undone cheaply.
 
 - [ ] **UI-4a** · The router and §2.1's eight routes, the session guard, and the not-found route.
       Public identifiers are UUIDs; a sequential id never appears in a URL. `/sign-in` is the only
-      public route, and `GET /instance` is the only call made without a session. ⇢ UI-3b
+      public route, and `GET /instance` is the only call made without a session.
+      **Settle the namespace before naming a route.** `INF-3e` serves the shell as a fallback
+      registered after every router, so the API keeps every path it already has — and the API is
+      mounted at the root, which means a client route spelled like an endpoint *is* the endpoint.
+      A hard refresh on `/libraries/<uuid>` reaches `GET /libraries/{uuid}` and answers 401, not
+      the shell; both are GET on one path and no ordering fixes it. Either the eight routes avoid
+      the API's top-level names, or `/` becomes content negotiation on paths the API owns. The
+      first is cheaper and is the one to take unless there is a reason not to.
+      `backend/tests/api/test_spa.py` asserts the collision so it cannot be rediscovered.
+      ⇢ UI-3b
 - [ ] **UI-4b** · URL state, exactly as §2.1 divides it. **In the URL:** the search query and its
       filters; a library's `view=list`, category, tags, state toggles and sort; the recording being
       viewed. **Not in the URL:** what is playing and where it is, the tray's contents, whether a
