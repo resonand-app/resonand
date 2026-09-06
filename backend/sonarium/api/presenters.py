@@ -31,6 +31,7 @@ from sonarium.api.schemas import (
 )
 from sonarium.core.colours import Colour
 from sonarium.core.levels import DESCRIPTIONS, Level
+from sonarium.core.states import TranscriptionState
 from sonarium.db import libraries as library_repo
 from sonarium.db import tags as tag_repo
 from sonarium.db.models import (
@@ -46,18 +47,16 @@ from sonarium.db.models import (
 )
 from sonarium.jobs import queue
 
-STATE_NONE = "none"
-STATE_RUNNING = "running"
-STATE_DONE = "done"
-STATE_FAILED = "failed"
 
-
-def transcription_state(session: DbSession, audio_id: int) -> str:
+def transcription_state(session: DbSession, audio_id: int) -> TranscriptionState:
     """Which of the four states a recording is in.
 
     A finished transcript wins over a failed job: re-transcribing after a failure leaves the
     failure in the job table, and a recording that has a transcript is not in a failed state
     whatever happened on the way there.
+
+    The same question is answered in SQL by :func:`sonarium.db.search.apply_filters`, and the two
+    have to agree -- see :mod:`sonarium.core.states`.
     """
     has_transcript = (
         session.execute(
@@ -66,17 +65,19 @@ def transcription_state(session: DbSession, audio_id: int) -> str:
         is not None
     )
     if has_transcript:
-        return STATE_DONE
+        return TranscriptionState.DONE
     states = set(
-        session.execute(select(Job.state).where(Job.audio_id == audio_id, Job.kind == "transcribe"))
+        session.execute(
+            select(Job.state).where(Job.audio_id == audio_id, Job.kind == queue.KIND_TRANSCRIBE)
+        )
         .scalars()
         .all()
     )
-    if states & {"pending", "running"}:
-        return STATE_RUNNING
-    if "failed" in states:
-        return STATE_FAILED
-    return STATE_NONE
+    if states & {queue.PENDING, queue.RUNNING}:
+        return TranscriptionState.RUNNING
+    if queue.FAILED in states:
+        return TranscriptionState.FAILED
+    return TranscriptionState.NONE
 
 
 def user_summary(user: User) -> UserSummary:

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import pytest
 from sonarium.core.levels import Level
+from sonarium.core.states import TranscriptionState
 from sonarium.db import libraries, tags, transcripts, users
 from sonarium.db.audio import create_audio, trash_audio
 from sonarium.db.engine import Database
@@ -302,6 +303,9 @@ def test_a_search_can_be_narrowed_to_what_has_no_transcript(
 ) -> None:
     with database.read_session() as session:
         untranscribed, _ = search(
-            session, archive["owner"], "factory", filters=Filters(transcription_state="none")
+            session,
+            archive["owner"],
+            "factory",
+            filters=Filters(transcription_states=(TranscriptionState.NONE,)),
         )
     assert archive["interview"] not in [hit.audio.id for hit in untranscribed]

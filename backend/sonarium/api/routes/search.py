@@ -18,6 +18,7 @@ from sonarium.api.deps import CurrentCaller, ReadSession, current_caller
 from sonarium.api.pagination import Page, PageRequest, page_of, page_request
 from sonarium.api.presenters import audio_summary
 from sonarium.api.schemas import SearchMatch, SearchResult
+from sonarium.core.states import TranscriptionState
 from sonarium.db.search import Filters, recall_note, search
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -35,13 +36,21 @@ def search_filters(
     recorded_to: Annotated[str | None, Query(description="Wall-clock, inclusive.")] = None,
     min_duration_ms: int | None = None,
     max_duration_ms: int | None = None,
-    transcription_state: Annotated[str | None, Query(pattern="^(none|done)$")] = None,
+    transcription_state: Annotated[
+        list[TranscriptionState] | None,
+        Query(description="Any of the four states. Repeat it to mean either."),
+    ] = None,
 ) -> Filters:
     """The filters, as one dependency (``JOB-11``).
 
     A dependency rather than eight parameters on the endpoint, so that the grid and the search
     apply the same filters through the same code -- which is what stops "has no transcript"
     quietly meaning two different things in two places.
+
+    ``transcription_state`` is **repeatable and takes all four states** (``JOB-11b``). It used to
+    accept one of ``none`` or ``done``, which is why two of the four toggles the interface draws
+    were unanswerable. Repeating it is a union rather than the last one winning, because four
+    independent toggles with two ticked means *either*, not *the second*.
     """
     return Filters(
         library_uuid=library,
@@ -51,7 +60,7 @@ def search_filters(
         recorded_to=recorded_to,
         min_duration_ms=min_duration_ms,
         max_duration_ms=max_duration_ms,
-        transcription_state=transcription_state,
+        transcription_states=tuple(transcription_state or ()),
     )
 
 
