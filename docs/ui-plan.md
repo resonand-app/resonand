@@ -42,7 +42,7 @@ precedent already in the plan. **Identifiers are never renumbered.** A task that
 belong to Milestone 1 keeps its letter and moves to `ROADMAP.md`, which is why gaps here are
 expected and are not mistakes.
 
-Three parents are new, because Track C has no task for them:
+Four parents are new, because Track C has no task for them:
 
 | New parent | What it covers | Why it has no parent today |
 |---|---|---|
@@ -112,8 +112,9 @@ it into `src/components/ui/`. That produces two copies of twenty-one components 
 to keep them in step, and the design tool commits nothing upstream, so the re-syncability it would
 buy does not exist. `DEC-8` said one system, versioned with the code. This is that.
 
-`UI-1`'s stated scope survives intact: thirty-two components, self-hosted Geist, bundled Lucide,
-and a test that fails on a hex colour in a component. It is now thirty-four.
+`UI-1`'s stated scope survives intact: every component, self-hosted Geist, bundled Lucide, and a
+test that fails on a hex colour in a component. It said thirty-two; the count is thirty-four, and
+`INF-9` is where that gets fixed at the source.
 
 ### DEC-22 · Presentational in the system, data-bound in the app
 
@@ -134,28 +135,47 @@ that, and `UI-4f`, `UI-5f`, `UI-8e`, `UI-13f` and `UI-24a` are where the phone l
 in code rather than in a picture. If any of them turns out to need a drawing first, stop and get
 one; a phone layout guessed at 375px is cheaper to draw than to rewrite.
 
-### Two repairs before anything cites them (INF-9)
+### Three repairs before anything cites them (INF-9)
 
 - **`UI-31` names two different things.** It is the libraries landing in `docs/v0-plan.md` and
   shipping actual translations in `ROADMAP.md`. Both documents promise identifiers are never
   renumbered, so one of them is wrong. **`UI-31` stays the libraries landing** — it is the one with
   dependents — and the roadmap's becomes `UI-36`.
-- **The component count is stated four ways.** The README index and the filesystem say twenty-one;
-  the specification says nineteen and that `UI-1` will port thirty-two. The filesystem is right:
+- **The component count is stated three ways.** The filesystem holds twenty-one; the design
+  system's README enumerates those twenty-one by name without ever stating a number; the
+  specification says nineteen, and that `UI-1` will port thirty-two. The filesystem is right:
   **21 shipped + 13 owed = 34**, and `CreateLibraryCard` and `ColorSwatchPicker` are the two that
-  arrived after the count was written.
+  arrived after the count was written. **The wrong number exists only in the specification**, which
+  is not committed — so this half of the repair lands locally and is invisible to a fresh clone.
+- **The four-state search widening had a parent already.** `JOB-11` in `docs/v0-plan.md` promises
+  search's transcription state as "all four states, repeatable", and the rest of `JOB-11` is built —
+  so the widening is a split of a partly-done task, not a new one. It is **`JOB-11b`**, following
+  the `API-7b` precedent, and not `API-10b`: `API-10` is the library grid, and a suffix names its
+  parent. Renaming is free only until something cites it, which is now.
 
-`INF-9` fixes both, in the two documents, in one commit. Every task below is written against the
+`INF-9` makes those three true, in one commit, across `ROADMAP.md`, `docs/v0-plan.md`, this
+document and the specification. It also **registers `UI-32`–`UI-35` and `JOB-11b` in
+`docs/v0-plan.md`**, which is the numbering authority — an identifier that exists only here is an
+identifier the other document will one day hand out twice. Every task below is written against the
 repaired numbers.
 
 ---
 
 ## Phase A · Close the API gaps the interface depends on
 
-Nine gaps, seven existing tasks, one new split. All eight land before the views that need them,
-because five of the nine decide whether a control exists at all and a control designed around a
+Ten gaps, seven existing tasks, one new split. All eight land before the views that need them,
+because five of the ten decide whether a control exists at all and a control designed around a
 shape that then changes is a rewrite, not a tweak. The shape each one needs is in the
 specification's §6.1 — parameter lists and response bodies are written out there.
+
+**The tenth is not in §6.1**, because it was found here rather than there: `UI-18a` is told to read
+the size limit and the accepted formats "from the instance rather than hard-coded", and `GET
+/instance` carries neither. It is folded into `API-14`, which is already the task that grows
+`InstanceState`.
+
+**Two of the eight are not independent.** `JOB-11b` rewrites the filter that `API-10` then wires
+into the library grid — the same `Filters`, the same `apply_filters`, the same dependency. `JOB-11b`
+goes first. The other six touch disjoint files.
 
 These are backend tasks. They belong to this plan only because the interface cannot be finished
 without them.
@@ -172,11 +192,14 @@ without them.
       *Done when:* `UI-8`'s filter bar and `UI-7d`'s column sort are expressible as one request.
       🧪 every sort field, both directions, stable under pagination.
 
-- [ ] **API-10b** · Widen `/search`'s `transcription_state` to all four states and make it
+- [ ] **JOB-11b** · Widen `/search`'s `transcription_state` to all four states and make it
       repeatable. It accepts `none|done` today, which is why two of V6's four state toggles are
-      drawn visibly disabled in the prototype.
+      drawn visibly disabled in the prototype. The four states are derived, not stored: `done` is an
+      active transcript, `running` and `failed` are the `transcribe` job's state, and the filter has
+      to read them the way `AudioSummary` already does or the badge and the toggle disagree.
       *Done when:* the same four toggles work in a library and in search. 🧪 repeated parameters
-      are a union, not the last one wins.
+      are a union, not the last one wins; and the filter's answer equals the badge's, state by
+      state, over a fixture holding all four.
 
 - [ ] **API-11** · `POST /audio/{uuid}/transcribe`, level 20, 202 with the job, **409 when one is
       already pending or running**.
@@ -188,10 +211,13 @@ without them.
       *Done when:* V10's Account and Appearance sections can save. 🧪 email uniqueness against
       `user.email_normalised`, which already exists.
 
-- [ ] **API-14** · `GET /trash/libraries` as `Page[LibrarySummary]`, and `trash_retention_days`
-      added to `GET /instance`.
-      *Done when:* the trash can show one mixed list and everybody — not only admins — can be told
-      how long they have. The retention half is the cheapest of the nine.
+- [ ] **API-14** · `GET /trash/libraries` as `Page[LibrarySummary]`, and the instance facts the
+      interface reads before it can draw: `trash_retention_days`, `max_upload_bytes` and the
+      accepted formats, all added to `GET /instance`.
+      *Done when:* the trash can show one mixed list, everybody — not only admins — can be told how
+      long they have, and `UI-18a` can state the size limit without hard-coding it. `/instance` is
+      the one call made without a session and already gives out the version; none of these four is
+      a secret. The retention half is the cheapest of the ten.
 
 - [ ] **API-15** · `GET /users/lookup?email=` — **full normalised email only, at most one result**,
       for any holder of level 30 on at least one library.
@@ -199,10 +225,15 @@ without them.
       directory: a prefix search would let any library manager enumerate the instance. 🧪 a partial
       address returns nothing, not a list.
 
-- [ ] **ING-14** · `GET /audio/{uuid}/waveform?peaks=N`, N capped server-side.
+- [ ] **ING-14** · `GET /audio/{uuid}/waveform?peaks=N`, N capped server-side. **This is a format
+      change, not a parameter.** The blob's header stores peaks *per second* in one byte, so a
+      48-minute recording reduced to 200 pairs is 0.07 peaks per second — not an integer, not a
+      byte, and `encode` refuses it. Version 2 stores `duration_ms` instead, which is the quantity
+      that survives resampling; `decode` keeps reading version 1, so nothing has to be recomputed
+      and the version byte does the job it was put there for.
       *Done when:* twenty-six dense rows cost twenty-six kilobytes rather than megabytes. A
       48-minute recording stores about 28,800 min/max pairs and V4 draws them into 88 pixels.
-      ⇢ ING-5 🧪 the downsample of a downsample is the same shape.
+      ⇢ ING-5 🧪 the downsample of a downsample is the same shape, and a version 1 blob still reads.
 
 ---
 
@@ -237,8 +268,12 @@ today. Follow them.
       *Done when:* the image serves the built SPA from `/app/static` and `/readyz` still answers.
       ⇢ INF-3a 🧪 the existing image smoke test also loads the shell
 
-- [ ] **INF-9** · The two identifier repairs above, in `docs/v0-plan.md` and `ROADMAP.md`.
-      *Done when:* `UI-31` means one thing and the component count means one number.
+- [ ] **INF-9** · The three repairs above: `UI-36` in `ROADMAP.md`, `JOB-11b` here, the component
+      count in the specification, and `UI-32`–`UI-35` plus `JOB-11b` registered in
+      `docs/v0-plan.md`.
+      *Done when:* `UI-31` means one thing, the component count means one number, and no identifier
+      exists in one document and not the other. It runs **before** Phase A rather than beside it,
+      because Phase A's commits cite these numbers.
 
 ---
 
@@ -729,7 +764,7 @@ The reason the product exists: two surfaces over one endpoint.
       matches found — and pagination with an honest count, because showing the first twenty as if
       they were all is the one thing this screen must not do. ⇢ UI-16a, UI-35b
 - [ ] **UI-16c** · The filters — library, category, date range, duration range, tags — and the four
-      state toggles, now that all four are answerable. ⇢ UI-35g, API-10b
+      state toggles, now that all four are answerable. ⇢ UI-35g, JOB-11b
 - [ ] **UI-16d** · Results grouped under the recording, **three matches shown and `+N more`
       expanding**, each match carrying the fragment the database already marked and its timestamp.
       ⇢ UI-35j, JOB-10
@@ -873,7 +908,7 @@ checked once everything exists because that is the only point at which they can 
 
 ## Order of work
 
-Phase A first and in full, because five of its nine gaps decide whether a control exists at all.
+Phase A first and in full, because five of its ten gaps decide whether a control exists at all.
 `API-12` leads it: until it lands, `UI-25` — the only implementation of the promise that nothing
 leaves the instance silently — cannot be built for exactly the non-administrators it protects.
 
@@ -892,7 +927,8 @@ mocks if a session is short: `UI-21` sign-in and `UI-20b` Account both touch not
 
 Then F, which cannot start early.
 
-**What can run in parallel:** Phase A's eight tasks are independent of each other. In Phase C, the
+**What can run in parallel:** Phase A's eight tasks are independent of each other **except
+`JOB-11b` and `API-10`**, which rewrite and then consume the same filter, in that order. In Phase C, the
 five conversion tasks (`UI-1d`–`UI-1h`) touch disjoint folders, and `UI-34b`–`UI-34n` touch one
 file each after `UI-34a`. In Phase E, V6 search, V7 sharing, V1 sign-in and V10 settings touch
 disjoint routes once the shell exists.

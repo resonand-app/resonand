@@ -637,6 +637,12 @@ simultaneously without stepping on each other.
       none*. `UI-16` offers the same four toggles as `UI-8`, so the two have to filter on the same
       set or the vocabulary splits. ⇢ JOB-10
 
+- [ ] **JOB-11b** · The four-state half of `JOB-11`, split off because the rest of it shipped
+      first. `/search`'s `transcription_state` accepts `none|done` and is not repeatable, so two of
+      the four toggles `UI-8` and `UI-16` both draw are unanswerable. The states are derived — a
+      transcript for `done`, the `transcribe` job for `running` and `failed` — and the filter has to
+      read them the way `AudioSummary` already does. ⇢ JOB-11 🧪
+
 - [ ] **JOB-13** 🔒 · **Chunking long audio, and re-stitching the timestamps.** The
       OpenAI-compatible endpoint caps requests at 25 MB, and compatible local servers impose their
       own memory and timeout ceilings; the anchor use case is a forty-minute interview and the
@@ -806,6 +812,26 @@ simultaneously without stepping on each other.
       arrival. No silent egress anywhere, including the retry path. ⇢ UI-13, JOB-2, API-12 🧪
       *This is the one principle with no other implementing task. Without it, principle 2 is a
       sentence in a document rather than a property of the software.*
+
+The four below were found by `docs/ui-plan.md` while decomposing this track into session-sized
+work. They are registered here because this document hands out the numbers, and an identifier that
+lives in only one of the two would eventually be handed out twice. Their tasks are written out
+there, not here.
+
+- [ ] **UI-32** · **The CSS interaction layer.** The design system is written entirely in inline
+      style objects, so `:hover`, `:focus-visible`, `:active` and `@media` cannot be expressed at
+      all — which means the interaction rules its README states, the single focus treatment `UI-23`
+      requires and the 44px hit targets the accessibility floor demands are documented and none of
+      them is implemented. ⇢ UI-1 🧪
+- [ ] **UI-33** · **Token reconciliation.** Six values in shipped components bypass the tokens, and
+      four token groups the views need — a z-index scale, breakpoints, a disabled opacity, border
+      widths — do not exist. ⇢ UI-1 🧪
+- [ ] **UI-34** · **The thirteen components the design system owes**, named by the interface
+      specification's §5 and drawn in the prototype. `UI-1` is a porting task; authoring thirteen
+      new components with keyboard and positioning behaviour is not porting. ⇢ UI-32
+- [ ] **UI-35** · **The ten composites the prototype invented** — the filter bar, the bulk bar, the
+      upload tray, the skeletons and the rest. Each exists once as markup inside a single artboard,
+      and each is needed by three or more views. ⇢ UI-34
 
 ### Track D · Operations and deployment
 
