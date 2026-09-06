@@ -30,15 +30,28 @@ from pathlib import Path
 from sonarium.core.errors import InvalidRequestError
 from sonarium.core.processes import run_tool
 
-FORMAT_VERSION = 1
-HEADER = struct.Struct("<BBI")
-"""version, peaks per second, bucket count. Little-endian and fixed, so it reads the same
+FORMAT_VERSION = 2
+HEADER = struct.Struct("<BII")
+"""version, duration in milliseconds, bucket count. Little-endian and fixed, so it reads the same
 everywhere.
+
+**Version 1 stored peaks per second instead of a duration, in one byte** (``ING-5``), which was
+right while a blob was only ever written at one fixed rate. ``ING-14`` serves the same recording
+at whatever bucket count a drawing needs, and a 48-minute recording reduced to 200 pairs is 0.07
+peaks per second -- not a byte, not even an integer. Duration is the quantity that survives
+resampling; a rate is derived from it and the count.
 
 The count is 32-bit and not 16-bit, which is not an abundance of caution: at ten buckets a
 second a 16-bit count overflows after 109 minutes, and a forty-minute interview is the anchor
 use case. It is stored at all -- rather than derived from the blob's length -- so that a
 truncated blob is caught rather than drawn."""
+
+HEADER_V1 = struct.Struct("<BBI")
+"""Version 1: version, peaks per second, bucket count. Still read, never written.
+
+Peaks are derived data and the module docstring says to recompute rather than guess, but there is
+nothing to guess here -- a rate and a count give a duration exactly. Reading it costs four lines
+and saves every existing instance a full re-derivation of every recording it holds."""
 
 DECODE_SAMPLE_RATE = 8000
 """Peaks do not need fidelity, they need shape. Decoding at 8 kHz mono is several times faster
@@ -51,26 +64,32 @@ WAVEFORM_TIMEOUT_SECONDS = 900.0
 
 @dataclass(frozen=True, slots=True)
 class Waveform:
-    """A decoded waveform: one ``(minimum, maximum)`` pair per bucket."""
+    """A decoded waveform: one ``(minimum, maximum)`` pair per bucket, over a known duration."""
 
-    peaks_per_second: int
+    duration_ms: int
+    """How much time the picture covers, which is what the player scrubs across. Stored rather
+    than derived, because it is what stays true when the pairs are reduced for a smaller drawing."""
+
     pairs: tuple[tuple[int, int], ...]
 
     @property
-    def duration_ms(self) -> int:
-        """How much time the picture covers, which is what the player scrubs across."""
-        return round(len(self.pairs) * 1000 / self.peaks_per_second)
+    def peaks_per_second(self) -> float:
+        """How dense this particular drawing is. Derived, and not necessarily a whole number
+        once it has been resampled for a twenty-pixel row."""
+        if not self.duration_ms:
+            return 0.0
+        return len(self.pairs) * 1000 / self.duration_ms
 
 
 def encode(waveform: Waveform) -> bytes:
-    """Pack a waveform into the stored form."""
-    if not 1 <= waveform.peaks_per_second <= MAX_PEAK:
-        raise InvalidRequestError("A waveform's rate has to fit in a byte.")
+    """Pack a waveform into the stored form, always at the current version."""
+    if waveform.duration_ms < 0:
+        raise InvalidRequestError("A waveform cannot cover a negative amount of time.")
     body = bytearray()
     for low, high in waveform.pairs:
         body.append(_clamp(low) & 0xFF)
         body.append(_clamp(high) & 0xFF)
-    return HEADER.pack(FORMAT_VERSION, waveform.peaks_per_second, len(waveform.pairs)) + bytes(body)
+    return HEADER.pack(FORMAT_VERSION, waveform.duration_ms, len(waveform.pairs)) + bytes(body)
 
 
 def decode(blob: bytes) -> Waveform:
@@ -78,24 +97,69 @@ def decode(blob: bytes) -> Waveform:
 
     Refusing loudly is the point of the version byte. Reading an unknown format as though it were
     this one would produce a plausible-looking picture of the wrong thing, which nobody would ever
-    report as a bug.
+    report as a bug. Version 1 is not unknown, though -- its rate and count give a duration
+    exactly -- so it is read rather than refused, and nothing already stored has to be recomputed.
     """
-    if len(blob) < HEADER.size:
+    # Length before version: something that is not a waveform at all should be told so, rather
+    # than have its first byte read as a format number and reported as an unknown one.
+    if len(blob) < HEADER_V1.size:
         raise InvalidRequestError("This waveform is too short to be one.")
-    version, peaks_per_second, count = HEADER.unpack_from(blob)
+    version = blob[0]
+    if version == 1:
+        return _decode_v1(blob)
     if version != FORMAT_VERSION:
         raise InvalidRequestError(
             f"This waveform is in format version {version} and this build only reads "
-            f"{FORMAT_VERSION}. Peaks are derived data: recompute them."
+            f"1 and {FORMAT_VERSION}. Peaks are derived data: recompute them."
         )
-    expected = HEADER.size + count * 2
-    if len(blob) != expected:
-        raise InvalidRequestError("This waveform is truncated.")
-    values = struct.unpack_from(f"<{count * 2}b", blob, HEADER.size)
+    if len(blob) < HEADER.size:
+        raise InvalidRequestError("This waveform is too short to be one.")
+    _, duration_ms, count = HEADER.unpack_from(blob)
+    return Waveform(duration_ms=duration_ms, pairs=_unpack_pairs(blob, HEADER.size, count))
+
+
+def _decode_v1(blob: bytes) -> Waveform:
+    if len(blob) < HEADER_V1.size:
+        raise InvalidRequestError("This waveform is too short to be one.")
+    _, peaks_per_second, count = HEADER_V1.unpack_from(blob)
+    if peaks_per_second < 1:
+        raise InvalidRequestError("This waveform claims a rate of nothing per second.")
     return Waveform(
-        peaks_per_second=peaks_per_second,
-        pairs=tuple(zip(values[0::2], values[1::2], strict=True)),
+        duration_ms=round(count * 1000 / peaks_per_second),
+        pairs=_unpack_pairs(blob, HEADER_V1.size, count),
     )
+
+
+def _unpack_pairs(blob: bytes, offset: int, count: int) -> tuple[tuple[int, int], ...]:
+    if len(blob) != offset + count * 2:
+        raise InvalidRequestError("This waveform is truncated.")
+    values = struct.unpack_from(f"<{count * 2}b", blob, offset)
+    return tuple(zip(values[0::2], values[1::2], strict=True))
+
+
+def resample(waveform: Waveform, buckets: int) -> Waveform:
+    """Reduce a waveform to ``buckets`` pairs, keeping its shape and its duration (``ING-14``).
+
+    A bucket takes the lowest low and the highest high of the pairs it covers, which is what
+    keeps a transient visible after reduction -- averaging would flatten a shout in a quiet room
+    into the quiet room.
+
+    **Asking for more buckets than there are returns the waveform unchanged.** Interpolating up
+    would invent detail the recording never had, and a drawing that shows more than was measured
+    is the one thing this file's version byte exists to prevent somebody doing by accident.
+    """
+    if buckets < 1:
+        raise InvalidRequestError("A waveform needs at least one bucket.")
+    total = len(waveform.pairs)
+    if total <= buckets:
+        return waveform
+    reduced: list[tuple[int, int]] = []
+    for index in range(buckets):
+        start = index * total // buckets
+        end = max(start + 1, (index + 1) * total // buckets)
+        window = waveform.pairs[start:end]
+        reduced.append((min(low for low, _ in window), max(high for _, high in window)))
+    return Waveform(duration_ms=waveform.duration_ms, pairs=tuple(reduced))
 
 
 def compute(
@@ -132,7 +196,11 @@ def compute(
 
 
 def from_samples(raw: bytes, *, peaks_per_second: int = DEFAULT_PEAKS_PER_SECOND) -> Waveform:
-    """Reduce signed 16-bit mono samples to buckets."""
+    """Reduce signed 16-bit mono samples to buckets.
+
+    ``peaks_per_second`` is the knob that decides how many buckets to make; the duration comes
+    from how many samples there actually were, which is the honest source for it.
+    """
     samples_per_bucket = max(1, DECODE_SAMPLE_RATE // peaks_per_second)
     total = len(raw) // 2
     pairs: list[tuple[int, int]] = []
@@ -140,7 +208,10 @@ def from_samples(raw: bytes, *, peaks_per_second: int = DEFAULT_PEAKS_PER_SECOND
         count = min(samples_per_bucket, total - start)
         bucket = struct.unpack_from(f"<{count}h", raw, start * 2)
         pairs.append((_to_peak(min(bucket)), _to_peak(max(bucket))))
-    return Waveform(peaks_per_second=peaks_per_second, pairs=tuple(pairs))
+    return Waveform(
+        duration_ms=round(total * 1000 / DECODE_SAMPLE_RATE),
+        pairs=tuple(pairs),
+    )
 
 
 def _to_peak(sample: int) -> int:
