@@ -374,8 +374,10 @@ The product's signature element, and the one shipped component with real defects
 - [ ] **UI-2a** · Resample instead of truncate. `peaks.slice(0, count)` shows only the **beginning**
       of a recording whenever the stored array is longer than the rendered bar count, which
       contradicts the system's own promise that a recording draws the same shape everywhere.
-      Reduce min/max pairs to the available pixel width. Also: `useId` for the clip path rather
-      than `Math.random()`, and drop `preserveAspectRatio="none"`, which stretches the bars.
+      Reduce min/max pairs to the available pixel width. Also drop `preserveAspectRatio="none"`,
+      which stretches the bars. **The `useId` swap already landed in `UI-1f`** — the React
+      Compiler's purity rule refuses a random value read during render, so the conversion could
+      not put the original back.
       *Done when:* the same recording is recognisably the same shape at 20px and at 130px.
       🧪 identical shape across all five heights ⇢ ING-14
 

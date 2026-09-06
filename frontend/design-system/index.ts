@@ -41,3 +41,12 @@ export { SearchField } from './components/forms/SearchField';
 export type { SearchFieldProps } from './components/forms/SearchField';
 export { TextField } from './components/forms/TextField';
 export type { TextFieldProps } from './components/forms/TextField';
+
+// --- components/media (`UI-1f`) ---------------------------------------------
+export { generatePeaks } from './components/media/generate-peaks';
+export { PlayerBar } from './components/media/PlayerBar';
+export type { PlayerBarProps } from './components/media/PlayerBar';
+export { TranscriptLine } from './components/media/TranscriptLine';
+export type { TranscriptLineProps } from './components/media/TranscriptLine';
+export { Waveform } from './components/media/Waveform';
+export type { WaveformProps } from './components/media/Waveform';
