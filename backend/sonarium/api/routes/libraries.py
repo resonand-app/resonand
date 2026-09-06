@@ -233,3 +233,32 @@ def delete_category(
     """Remove a node, uncategorising anything that was in it rather than refusing."""
     require_library(session, caller.id, library_uuid, Level.EDIT)
     category_repo.delete_category(session, caller.id, category_id)
+
+
+trash_router = APIRouter(tags=["libraries"])
+"""The trash lives outside the ``/libraries`` prefix, beside ``/trash/audio``.
+
+``INT-1`` draws one list with a type marker rather than two sections -- the question somebody has
+is where a thing went, not whether it was a library -- and the interface merges the two endpoints
+client-side. Sitting them next to each other in the URL space is what makes that read as one
+thing.
+"""
+
+
+@trash_router.get("/trash/libraries", response_model=Page[LibrarySummary])
+def list_trashed_libraries(
+    caller: CurrentCaller, session: ReadSession, paging: Paging
+) -> Page[LibrarySummary]:
+    """Trashed libraries, closest to being purged first, mirroring ``/trash/audio``.
+
+    It takes level 30, the same as trashing one: somebody who could only read a library has no
+    business being told it is on its way out.
+    """
+    query = library_repo.trashed_libraries(caller.id)
+    total = len(session.execute(query).all())
+    rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
+    return page_of(
+        [library_summary(session, library, Level(level)) for library, level in rows],
+        total=total,
+        request=paging,
+    )

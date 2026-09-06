@@ -85,6 +85,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         health.router,
         auth.router,
         libraries.router,
+        libraries.trash_router,
         audio.router,
         ingest.router,
         search.router,

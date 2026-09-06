@@ -28,6 +28,7 @@ from sonarium.api.schemas import (
     UpdateMe,
 )
 from sonarium.api.security import hash_password, needs_rehash, verify_password
+from sonarium.core import formats
 from sonarium.core.config import Settings
 from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
 from sonarium.core.text import normalise_email
@@ -65,12 +66,20 @@ def _set_cookie(response: Response, token: str, settings: Settings) -> None:
 
 
 @router.get("/instance", response_model=InstanceState, summary="What this instance is")
-def instance_state(session: ReadSession) -> InstanceState:
-    """Answered without a session, because the sign-in screen needs it before there is one."""
+def instance_state(session: ReadSession, settings: InstanceSettings) -> InstanceState:
+    """Answered without a session, because the sign-in screen needs it before there is one.
+
+    It is also where the facts every view needs live, so that nothing hard-codes them: how long
+    the trash keeps things (``INT-1``) and what an upload may be (``UI-18a``).
+    """
     return InstanceState(
         name="sonarium",
         version=__version__,
         needs_bootstrap=users.count_users(session) == 0,
+        trash_retention_days=settings.trash_retention_days,
+        max_upload_bytes=settings.max_upload_bytes,
+        accepted_extensions=sorted(formats.ACCEPTED_EXTENSIONS),
+        video_extensions=sorted(formats.VIDEO_EXTENSIONS),
     )
 
 

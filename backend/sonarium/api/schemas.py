@@ -127,12 +127,29 @@ class SessionSummary(Api):
 
 
 class InstanceState(Api):
-    """What the sign-in screen needs to know before anybody has signed in (``UI-21``)."""
+    """What the interface needs to know about the instance itself (``UI-21``, ``API-14``).
+
+    Everything here is a fact about the instance rather than about a person, which is why this
+    is the one endpoint answered without a session. None of it is a secret: the version is
+    already published, and the rest is what somebody would find out by trying.
+    """
 
     name: str
     version: str
     needs_bootstrap: bool
     """True only while the instance has no accounts at all: the first user is an administrator."""
+
+    trash_retention_days: int
+    """How long a trashed thing can still be brought back. It was on the administrator-only
+    status endpoint, so ``INT-1``'s "time left" could not be shown to anybody else -- which is
+    everybody who most needs to know it."""
+
+    max_upload_bytes: int
+    accepted_extensions: list[str]
+    video_extensions: list[str]
+    """``UI-18a`` states the size limit and the formats **before** somebody picks a file, and is
+    told to read them here rather than hard-code them. Video containers are listed separately
+    because the dialog says they are kept whole and played as audio (``DEC-17``)."""
 
 
 # --- Libraries ------------------------------------------------------------
