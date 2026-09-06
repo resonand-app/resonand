@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, status
 
 from sonarium.acl.query import require_library
 from sonarium.api.deps import CurrentCaller, ReadSession, WriteSession
+from sonarium.api.filters import RecordingFilters, RecordingSort
 from sonarium.api.pagination import Page, PageRequest, page_of, page_request
 from sonarium.api.presenters import (
     audio_summaries,
@@ -103,10 +104,23 @@ def restore_library(
 
 @router.get("/{library_uuid}/audio", response_model=Page[AudioSummary])
 def list_library_audio(
-    library_uuid: str, caller: CurrentCaller, session: ReadSession, paging: Paging
+    library_uuid: str,
+    caller: CurrentCaller,
+    session: ReadSession,
+    paging: Paging,
+    filters: RecordingFilters,
+    sorting: RecordingSort,
 ) -> Page[AudioSummary]:
-    """What is in a library, newest recording first."""
-    query = library_audio(session, caller.id, library_uuid)
+    """What is in a library: filtered, sorted, newest recording first by default (``API-10``).
+
+    The filters are the same dependency search takes, and the sort fields are the ones the filter
+    bar and the column headings both offer -- ``UI-7d`` calls those one sort expressed two ways,
+    which is only true if there is one list of them.
+    """
+    sort, direction = sorting
+    query = library_audio(
+        session, caller.id, library_uuid, filters=filters, sort=sort, direction=direction
+    )
     total = len(session.execute(query).all())
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
@@ -219,3 +233,32 @@ def delete_category(
     """Remove a node, uncategorising anything that was in it rather than refusing."""
     require_library(session, caller.id, library_uuid, Level.EDIT)
     category_repo.delete_category(session, caller.id, category_id)
+
+
+trash_router = APIRouter(tags=["libraries"])
+"""The trash lives outside the ``/libraries`` prefix, beside ``/trash/audio``.
+
+``INT-1`` draws one list with a type marker rather than two sections -- the question somebody has
+is where a thing went, not whether it was a library -- and the interface merges the two endpoints
+client-side. Sitting them next to each other in the URL space is what makes that read as one
+thing.
+"""
+
+
+@trash_router.get("/trash/libraries", response_model=Page[LibrarySummary])
+def list_trashed_libraries(
+    caller: CurrentCaller, session: ReadSession, paging: Paging
+) -> Page[LibrarySummary]:
+    """Trashed libraries, closest to being purged first, mirroring ``/trash/audio``.
+
+    It takes level 30, the same as trashing one: somebody who could only read a library has no
+    business being told it is on its way out.
+    """
+    query = library_repo.trashed_libraries(caller.id)
+    total = len(session.execute(query).all())
+    rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
+    return page_of(
+        [library_summary(session, library, Level(level)) for library, level in rows],
+        total=total,
+        request=paging,
+    )

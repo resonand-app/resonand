@@ -15,7 +15,7 @@ from sonarium.core.config import Settings
 from sonarium.db.audio import create_audio
 from sonarium.db.engine import Database
 from sonarium.db.models import Audio, Job, Library
-from sonarium.media import storage
+from sonarium.media import storage, waveform
 from sqlalchemy import select
 
 from tests.api.conftest import ClientFactory, sign_in
@@ -361,3 +361,91 @@ def test_an_upload_that_is_refused_leaves_nothing_in_the_archive(
     assert list(settings.resolved_storage_dir.iterdir()) == [], "no half-written recording"
     with database.read_session() as session:
         assert session.execute(select(Audio)).all() == [], "and no row describing one"
+
+
+# --- The waveform endpoint (``ING-14``) -----------------------------------
+
+
+def _with_waveform(database: Database, library_uuid: str, owner_id: int, pairs: int) -> str:
+    audio_uuid = _already_here(database, library_uuid, owner_id)
+    with database.write_session() as session:
+        audio = session.execute(select(Audio).where(Audio.uuid == audio_uuid)).scalar_one()
+        audio.waveform = waveform.encode(
+            waveform.Waveform(
+                duration_ms=2_880_000,
+                pairs=tuple((-(index % 100) - 1, (index % 100) + 1) for index in range(pairs)),
+            )
+        )
+    return audio_uuid
+
+
+def test_the_whole_waveform_is_served_when_nothing_is_asked_for(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    sign_in(client, "admin")
+    audio_uuid = _with_waveform(database, owner_library, accounts["admin"], 28_800)
+    served = client.get(f"/audio/{audio_uuid}/waveform")
+    assert served.status_code == status.HTTP_200_OK
+    assert len(waveform.decode(served.content).pairs) == 28_800
+
+
+def test_asking_for_fewer_peaks_makes_a_dense_row_affordable(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """The point of ING-14. A 48-minute recording stores about 28,800 pairs, and V4 draws them
+    into twenty pixels; a screen of twenty-six of those was megabytes to draw a thumbnail each."""
+    sign_in(client, "admin")
+    audio_uuid = _with_waveform(database, owner_library, accounts["admin"], 28_800)
+    whole = client.get(f"/audio/{audio_uuid}/waveform").content
+    reduced = client.get(f"/audio/{audio_uuid}/waveform", params={"peaks": 200}).content
+    assert len(waveform.decode(reduced).pairs) == 200
+    assert len(reduced) < 1000 < len(whole)
+
+
+def test_a_reduced_waveform_still_covers_the_whole_recording(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """A shorter blob must not mean a shorter recording: the player scrubs across the duration."""
+    sign_in(client, "admin")
+    audio_uuid = _with_waveform(database, owner_library, accounts["admin"], 28_800)
+    reduced = client.get(f"/audio/{audio_uuid}/waveform", params={"peaks": 88}).content
+    assert waveform.decode(reduced).duration_ms == 2_880_000
+
+
+def test_asking_for_more_peaks_than_are_stored_gives_what_is_stored(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    sign_in(client, "admin")
+    audio_uuid = _with_waveform(database, owner_library, accounts["admin"], 50)
+    served = client.get(f"/audio/{audio_uuid}/waveform", params={"peaks": 500}).content
+    assert len(waveform.decode(served).pairs) == 50
+
+
+def test_the_peak_count_is_capped_by_the_server(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """The parameter is the client's; the work is the server's."""
+    sign_in(client, "admin")
+    audio_uuid = _with_waveform(database, owner_library, accounts["admin"], 100)
+    refused = client.get(f"/audio/{audio_uuid}/waveform", params={"peaks": 1_000_000})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+def test_a_recording_with_no_waveform_yet_says_so(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """UI-2d draws a dashed rule for this rather than inventing a shape."""
+    sign_in(client, "admin")
+    audio_uuid = _already_here(database, owner_library, accounts["admin"])
+    assert client.get(f"/audio/{audio_uuid}/waveform").status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_somebody_elses_waveform_does_not_exist(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    audio_uuid = _with_waveform(database, owner_library, accounts["admin"], 100)
+    sign_in(client, "stranger")
+    assert (
+        client.get(f"/audio/{audio_uuid}/waveform", params={"peaks": 20}).status_code
+        == status.HTTP_404_NOT_FOUND
+    )

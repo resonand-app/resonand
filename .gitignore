@@ -31,7 +31,8 @@ storage/
 # Internal working docs — deliberately never committed.
 # The functional specification, the interface specification, the strategy notes and the design
 # provenance stay local. The public repo carries README.md, VISION.md, ROADMAP.md,
-# docs/v0-plan.md and frontend/design-system/, which the application consumes directly.
+# docs/v0-plan.md, docs/ui-plan.md and frontend/design-system/, which the application consumes
+# directly.
 docs/internal/
 
 # Repo snapshots and archives — never committed

@@ -10,11 +10,13 @@ the detail view, which is the difference between a search result and a lead to f
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
 from sonarium.api.deps import CurrentCaller, ReadSession, current_caller
+from sonarium.api.filters import RecordingFilters
 from sonarium.api.pagination import Page, PageRequest, page_of, page_request
 from sonarium.api.presenters import audio_summary
 from sonarium.api.schemas import SearchMatch, SearchResult
@@ -26,33 +28,17 @@ Paging = Annotated[PageRequest, Depends(page_request)]
 
 
 def search_filters(
+    filters: RecordingFilters,
     library: Annotated[str | None, Query(description="Restrict to one library's uuid.")] = None,
-    category_id: int | None = None,
-    tag: Annotated[
-        list[str] | None, Query(description="Tag slugs, all of which must match.")
-    ] = None,
-    recorded_from: Annotated[str | None, Query(description="Wall-clock, inclusive.")] = None,
-    recorded_to: Annotated[str | None, Query(description="Wall-clock, inclusive.")] = None,
-    min_duration_ms: int | None = None,
-    max_duration_ms: int | None = None,
-    transcription_state: Annotated[str | None, Query(pattern="^(none|done)$")] = None,
 ) -> Filters:
-    """The filters, as one dependency (``JOB-11``).
+    """The filter bar's parameters, plus the one only search has (``JOB-11``).
 
-    A dependency rather than eight parameters on the endpoint, so that the grid and the search
-    apply the same filters through the same code -- which is what stops "has no transcript"
-    quietly meaning two different things in two places.
+    Search can be told to look in one library; the library grid already knows which one it is
+    looking at, so ``library`` is the only difference between the two and everything else comes
+    from :func:`sonarium.api.filters.recording_filters` -- the same code, so a filter cannot
+    behave one way here and another way on the grid.
     """
-    return Filters(
-        library_uuid=library,
-        category_id=category_id,
-        tag_slugs=tuple(tag or ()),
-        recorded_from=recorded_from,
-        recorded_to=recorded_to,
-        min_duration_ms=min_duration_ms,
-        max_duration_ms=max_duration_ms,
-        transcription_state=transcription_state,
-    )
+    return replace(filters, library_uuid=library)
 
 
 SearchFilters = Annotated[Filters, Depends(search_filters)]

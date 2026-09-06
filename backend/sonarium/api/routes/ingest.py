@@ -44,8 +44,8 @@ from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
 from sonarium.db.audio import create_audio, find_duplicates
-from sonarium.jobs.queue import KIND_TRANSCRIBE, enqueue
-from sonarium.media import ranges, storage
+from sonarium.jobs.queue import enqueue, enqueue_transcription
+from sonarium.media import ranges, storage, waveform
 
 router = APIRouter(tags=["ingestion"])
 
@@ -117,12 +117,8 @@ def upload(
             )
             enqueue(write, "probe", audio_id=audio.id, idempotency_key=f"probe:{audio_uuid}")
             if transcribe:
-                enqueue(
-                    write,
-                    KIND_TRANSCRIBE,
-                    audio_id=audio.id,
-                    payload={"language": language} if language else {},
-                    idempotency_key=f"transcribe:{audio_uuid}",
+                enqueue_transcription(
+                    write, audio_id=audio.id, audio_uuid=audio_uuid, language=language
                 )
             return audio_detail(write, audio, Level.OWNER)
     except BaseException:
@@ -215,18 +211,42 @@ def download(
     )
 
 
+MAX_PEAKS = 2000
+"""The most buckets one request may ask for.
+
+Capped server-side because the parameter is the client's and the work is the server's. Two
+thousand is generous for every drawing that exists -- the largest is the detail view's 130px
+waveform -- and is about four kilobytes.
+"""
+
+
 @router.get("/audio/{audio_uuid}/waveform", summary="The recording's peaks")
-def waveform_blob(audio_uuid: str, caller: CurrentCaller, session: ReadSession) -> Response:
-    """The stored peaks, as the compact binary they are stored as.
+def waveform_blob(
+    audio_uuid: str,
+    caller: CurrentCaller,
+    session: ReadSession,
+    peaks: Annotated[
+        int | None,
+        Query(ge=1, le=MAX_PEAKS, description="Reduce to this many pairs before sending."),
+    ] = None,
+) -> Response:
+    """The stored peaks, as the compact binary they are stored as, optionally reduced.
 
     Expanded into JSON, a grid of eighty cards would pull tens of megabytes to draw eighty small
-    pictures.
+    pictures. Sent whole, it still would: a 48-minute recording stores about 28,800 pairs and a
+    dense row draws them into twenty pixels, so ``peaks`` is what makes ``UI-7c``'s waveform
+    column and ``UI-31b``'s per-card waveform affordable at all (``ING-14``).
+
+    Asking for more than are stored returns what is stored, rather than inventing the difference.
     """
     audio, _ = require_audio(session, caller.id, audio_uuid)
     if audio.waveform is None:
         raise NotFoundError("This recording has no waveform yet.")
+    blob = audio.waveform
+    if peaks is not None:
+        blob = waveform.encode(waveform.resample(waveform.decode(blob), peaks))
     return Response(
-        content=audio.waveform,
+        content=blob,
         media_type="application/octet-stream",
         headers={"Cache-Control": "private, max-age=86400"},
     )

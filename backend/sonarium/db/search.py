@@ -21,14 +21,18 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Any
 
-from sqlalchemy import Integer, column, func, literal, select, table, text
+from sqlalchemy import Integer, and_, column, func, literal, or_, select, table, text
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from sonarium.acl.query import audio_acl
 from sonarium.core.levels import Level
-from sonarium.db.models import Audio, Segment, Transcript
+from sonarium.core.states import TranscriptionState
+from sonarium.db.models import Audio, Job, Segment, Transcript
+from sonarium.jobs import queue
 
 MATCH_TRANSCRIPT = "transcript"
 MATCH_METADATA = "metadata"
@@ -76,6 +80,24 @@ class Hit:
         return min((match.rank for match in self.matches), default=0.0)
 
 
+class SortField(StrEnum):
+    """What a list of recordings can be ordered by (``API-10``).
+
+    Four, and deliberately not every column: these are the ones ``UI-7d`` offers, and a sort
+    nobody can reach from the interface is a query somebody can make expensive for no benefit.
+    """
+
+    RECORDED_AT = "recorded_at"
+    CREATED_AT = "created_at"
+    DURATION_MS = "duration_ms"
+    TITLE = "title"
+
+
+class SortDirection(StrEnum):
+    ASCENDING = "asc"
+    DESCENDING = "desc"
+
+
 @dataclass(frozen=True, slots=True)
 class Filters:
     """What ``JOB-11`` narrows a search by."""
@@ -87,8 +109,13 @@ class Filters:
     recorded_to: str | None = None
     min_duration_ms: int | None = None
     max_duration_ms: int | None = None
-    transcription_state: str | None = None
-    """``none`` | ``done`` -- the toggles on the grid, expressed as a search filter."""
+    transcription_states: tuple[TranscriptionState, ...] = ()
+    """The state toggles on the grid and in search, expressed as a filter.
+
+    A **set**, not a choice: the interface draws four independent toggles, so two of them ticked
+    has to mean *either*. Empty means no state filter at all, which is not the same as all four
+    ticked only in that it is cheaper.
+    """
 
 
 def build_match_query(raw: str) -> str:
@@ -259,12 +286,36 @@ def apply_filters(query: Any, filters: Filters) -> Any:
         query = query.where(Audio.duration_ms >= filters.min_duration_ms)
     if filters.max_duration_ms is not None:
         query = query.where(Audio.duration_ms <= filters.max_duration_ms)
-    if filters.transcription_state == "done":
+    if filters.transcription_states:
         query = query.where(
-            Audio.id.in_(select(Transcript.audio_id).where(Transcript.is_active == 1))
-        )
-    elif filters.transcription_state == "none":
-        query = query.where(
-            Audio.id.not_in(select(Transcript.audio_id).where(Transcript.is_active == 1))
+            or_(*(_state_predicate(state) for state in set(filters.transcription_states)))
         )
     return query
+
+
+def _state_predicate(state: TranscriptionState) -> ColumnElement[bool]:
+    """One of the four states, as a condition on ``audio``.
+
+    This has to answer exactly what :func:`sonarium.api.presenters.transcription_state` answers,
+    including its precedence -- a transcript wins over a failed job, and a *pending* job reads as
+    running. If it did not, a card would carry one badge and the toggle meant to select it would
+    not find it.
+    """
+    transcribed = Audio.id.in_(select(Transcript.audio_id).where(Transcript.is_active == 1))
+    busy = Audio.id.in_(
+        select(Job.audio_id).where(
+            Job.kind == queue.KIND_TRANSCRIBE, Job.state.in_((queue.PENDING, queue.RUNNING))
+        )
+    )
+    failed = Audio.id.in_(
+        select(Job.audio_id).where(Job.kind == queue.KIND_TRANSCRIBE, Job.state == queue.FAILED)
+    )
+    match state:
+        case TranscriptionState.DONE:
+            return transcribed
+        case TranscriptionState.RUNNING:
+            return and_(~transcribed, busy)
+        case TranscriptionState.FAILED:
+            return and_(~transcribed, ~busy, failed)
+        case TranscriptionState.NONE:
+            return and_(~transcribed, ~busy, ~failed)

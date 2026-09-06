@@ -92,7 +92,7 @@ it only makes sense once the API is stable enough that tools built on it do not 
 - **OPS-11** · Packaging for one-click installation platforms. ⇢ DEC-6
 - **UI-28** · Real PWA quality on mobile: installability, offline shell, and behaviour on a flaky
   connection with headphones in.
-- **UI-31** · Shipping actual translations. The plumbing is in the first version (`UI-22`); this is
+- **UI-36** · Shipping actual translations. The plumbing is in the first version (`UI-22`); this is
   the part where Catalan, and then others, genuinely exist.
 - **REL-1** · The README's screenshots — two of them, light and dark. Interface quality is the one
   claim that cannot be verified from a list, which is exactly why it gets shown rather than

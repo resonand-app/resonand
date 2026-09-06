@@ -444,6 +444,57 @@ def test_search_says_what_it_cannot_do(client: TestClient, accounts: dict[str, i
     assert "other forms" in client.get("/search/about").json()["recall"]
 
 
+def test_the_state_filter_is_repeatable_and_means_either(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``JOB-11b``: four independent toggles, so two ticked is a union.
+
+    It used to be a single value, which meant a second toggle silently replaced the first --
+    the interface would have shown two ticked and filtered by one.
+    """
+    _recording(database, owner_library, accounts["admin"], title="Grandmother")
+    sign_in(client, "admin")
+    untranscribed = client.get(
+        "/search", params={"q": "grandmother", "transcription_state": "none"}
+    ).json()
+    assert untranscribed["total"] == 1
+
+    either = client.get(
+        "/search",
+        params=[
+            ("q", "grandmother"),
+            ("transcription_state", "none"),
+            ("transcription_state", "done"),
+        ],
+    ).json()
+    assert either["total"] == 1, "the union still contains it, rather than only the last value"
+
+    elsewhere = client.get(
+        "/search", params={"q": "grandmother", "transcription_state": "done"}
+    ).json()
+    assert elsewhere["total"] == 0
+
+
+def test_all_four_states_are_answerable(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``running`` and ``failed`` used to be rejected, which is why two of the interface's four
+    toggles were drawn visibly disabled."""
+    _recording(database, owner_library, accounts["admin"], title="Grandmother")
+    sign_in(client, "admin")
+    for state in ("none", "running", "done", "failed"):
+        answered = client.get("/search", params={"q": "grandmother", "transcription_state": state})
+        assert answered.status_code == status.HTTP_200_OK, state
+
+
+def test_something_that_is_not_a_state_is_refused(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    sign_in(client, "admin")
+    refused = client.get("/search", params={"q": "x", "transcription_state": "halfway"})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
 def test_an_empty_search_is_an_empty_page_not_the_whole_archive(
     client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
 ) -> None:

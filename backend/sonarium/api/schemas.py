@@ -66,6 +66,26 @@ class Me(Api):
     display_name: str
     email: str
     is_admin: bool
+    language: str | None
+    """The language this person chose, or ``None`` to follow the instance's. It is about the
+    person and follows them to their phone; **theme is not here**, because that is about the
+    screen being looked at and lives in browser storage (``DEC-8``)."""
+
+
+class UpdateMe(Api):
+    """What somebody may change about their own account (``API-13``).
+
+    Every field defaults to "leave this alone", so the interface can save one section of the
+    settings view without sending back the ones it is not editing. Password is not here: it needs
+    the current one and ends every other session, which is a different operation.
+    """
+
+    display_name: str | None = Field(default=None, min_length=1, max_length=200)
+    email: EmailAddress | None = None
+    language: str | None = Field(default=None, max_length=35)
+    clear_language: bool = False
+    """Go back to following the instance's language. ``None`` already means "leave it alone", so
+    clearing needs to be asked for -- the same shape as ``UpdateCategory.clear_parent``."""
 
 
 class SignIn(Api):
@@ -107,12 +127,29 @@ class SessionSummary(Api):
 
 
 class InstanceState(Api):
-    """What the sign-in screen needs to know before anybody has signed in (``UI-21``)."""
+    """What the interface needs to know about the instance itself (``UI-21``, ``API-14``).
+
+    Everything here is a fact about the instance rather than about a person, which is why this
+    is the one endpoint answered without a session. None of it is a secret: the version is
+    already published, and the rest is what somebody would find out by trying.
+    """
 
     name: str
     version: str
     needs_bootstrap: bool
     """True only while the instance has no accounts at all: the first user is an administrator."""
+
+    trash_retention_days: int
+    """How long a trashed thing can still be brought back. It was on the administrator-only
+    status endpoint, so ``INT-1``'s "time left" could not be shown to anybody else -- which is
+    everybody who most needs to know it."""
+
+    max_upload_bytes: int
+    accepted_extensions: list[str]
+    video_extensions: list[str]
+    """``UI-18a`` states the size limit and the formats **before** somebody picks a file, and is
+    told to read them here rather than hard-code them. Video containers are listed separately
+    because the dialog says they are kept whole and played as audio (``DEC-17``)."""
 
 
 # --- Libraries ------------------------------------------------------------
@@ -334,6 +371,33 @@ class JobSummary(Api):
     ready_at: str | None
     """When a pending job becomes eligible again, which is what a backoff looks like from
     outside."""
+
+
+class TranscribeRequest(Api):
+    """Ask for a recording to be transcribed (``API-11``)."""
+
+    language: str | None = Field(default=None, max_length=35)
+    """A BCP 47 tag, or ``None`` to let the provider detect it -- ``JOB-2``'s contract."""
+
+
+class TranscriptionDestination(Api):
+    """Where audio goes, readable by anybody who can ask for a transcription (``API-12``).
+
+    Deliberately the narrowest thing that answers the question. The full ``ProviderStatus``
+    stays administrator-only; this one is what ``UI-25``'s disclosure is drawn from, and a
+    disclosure only some people can read is not one.
+    """
+
+    provider: str
+    host: str | None
+    """Host and port, without any userinfo. ``None`` when nothing is configured."""
+
+    is_local: bool
+    """Whether it is on the instance's own network. It is what lets the notice choose between
+    saying so calmly and stating plainly that audio leaves. Pessimistic: anything that cannot be
+    placed is reported as not local."""
+
+    configured: bool
 
 
 class ProviderStatus(Api):

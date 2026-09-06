@@ -103,6 +103,8 @@ def handle_waveform(work: Work, context: Context) -> None:
     _, path = _locate(work, context)
     peaks = waveform.compute(path, peaks_per_second=context.settings.waveform_peaks_per_second)
     blob = waveform.encode(peaks)
+    # Stored at the configured rate, in full. `ING-14` reduces it per request instead, so one
+    # recording serves the 20px row and the 130px detail view without storing either.
     with context.database.write_session() as session:
         _require(session, work).waveform = blob
 

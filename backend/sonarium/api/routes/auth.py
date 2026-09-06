@@ -25,8 +25,10 @@ from sonarium.api.schemas import (
     Me,
     SessionSummary,
     SignIn,
+    UpdateMe,
 )
 from sonarium.api.security import hash_password, needs_rehash, verify_password
+from sonarium.core import formats
 from sonarium.core.config import Settings
 from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
 from sonarium.core.text import normalise_email
@@ -64,12 +66,20 @@ def _set_cookie(response: Response, token: str, settings: Settings) -> None:
 
 
 @router.get("/instance", response_model=InstanceState, summary="What this instance is")
-def instance_state(session: ReadSession) -> InstanceState:
-    """Answered without a session, because the sign-in screen needs it before there is one."""
+def instance_state(session: ReadSession, settings: InstanceSettings) -> InstanceState:
+    """Answered without a session, because the sign-in screen needs it before there is one.
+
+    It is also where the facts every view needs live, so that nothing hard-codes them: how long
+    the trash keeps things (``INT-1``) and what an upload may be (``UI-18a``).
+    """
     return InstanceState(
         name="sonarium",
         version=__version__,
         needs_bootstrap=users.count_users(session) == 0,
+        trash_retention_days=settings.trash_retention_days,
+        max_upload_bytes=settings.max_upload_bytes,
+        accepted_extensions=sorted(formats.ACCEPTED_EXTENSIONS),
+        video_extensions=sorted(formats.VIDEO_EXTENSIONS),
     )
 
 
@@ -162,6 +172,29 @@ def sign_out(
 @router.get("/auth/me", response_model=Me, summary="The signed-in account")
 def me(caller: CurrentCaller) -> Me:
     return Me.model_validate(caller.user)
+
+
+@router.patch("/auth/me", response_model=Me, summary="Change your own account")
+def update_me(body: UpdateMe, caller: CurrentCaller, session: WriteSession) -> Me:
+    """Display name, address and language (``API-13``).
+
+    Only the password could be changed before, which left V10's Account and Appearance sections
+    with nothing to save to. Changing an address re-derives ``email_normalised`` -- the key
+    identity is decided on -- and answers 409 on a collision, the same as creating an account.
+
+    Theme is deliberately absent. It is a property of the screen rather than of the person, and
+    "follow the system" is already a per-device idea, so it lives in browser storage.
+    """
+    return Me.model_validate(
+        users.update_profile(
+            session,
+            caller.id,
+            display_name=body.display_name,
+            email=body.email,
+            language=body.language,
+            clear_language=body.clear_language,
+        )
+    )
 
 
 @router.post("/auth/password", status_code=status.HTTP_204_NO_CONTENT)

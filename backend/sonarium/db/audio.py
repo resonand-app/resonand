@@ -13,9 +13,11 @@ this module is where they are true.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.elements import ColumnElement
 
 from sonarium.acl.query import audio_acl, audio_select, require_audio, require_library
 from sonarium.core.errors import InvalidRequestError
@@ -25,22 +27,54 @@ from sonarium.core.text import clean_title
 from sonarium.core.time import is_wall_clock, now_instant
 from sonarium.db import search_index
 from sonarium.db.models import Audio, Library
+from sonarium.db.search import Filters, SortDirection, SortField, apply_filters
 from sonarium.db.tags import set_audio_tags
 
 
-def library_audio(session: Session, user_id: int, library_uuid: str) -> Select[tuple[Audio, int]]:
-    """Everything readable in one library, newest recording first.
+def library_audio(
+    session: Session,
+    user_id: int,
+    library_uuid: str,
+    *,
+    filters: Filters | None = None,
+    sort: SortField = SortField.RECORDED_AT,
+    direction: SortDirection = SortDirection.DESCENDING,
+) -> Select[tuple[Audio, int]]:
+    """Everything readable in one library, filtered and sorted (``API-10``).
 
-    Returns the query so the caller pages it; sorting by recording date and falling back to
-    upload date is what makes an imported archive of old voice notes come out in the order it was
-    recorded rather than the order it happened to be copied in.
+    Returns the query so the caller pages it. The default is the most recently recorded first,
+    falling back to upload date, which is what makes an imported archive of old voice notes come
+    out in the order it was recorded rather than the order it happened to be copied in.
+
+    Filtering goes through :func:`sonarium.db.search.apply_filters`, the same function search
+    uses, so a filter cannot mean one thing on the grid and another in the results.
     """
     library, _ = require_library(session, user_id, library_uuid, Level.READ)
-    return (
-        audio_select(user_id)
-        .where(Audio.library_id == library.id)
-        .order_by(Audio.recorded_at.desc().nullslast(), Audio.created_at.desc())
-    )
+    query = audio_select(user_id).where(Audio.library_id == library.id)
+    if filters is not None:
+        query = apply_filters(query, filters)
+    return query.order_by(*_ordering(sort, direction))
+
+
+def _ordering(sort: SortField, direction: SortDirection) -> tuple[ColumnElement[Any], ...]:
+    """The ``ORDER BY``, always ending in something unique.
+
+    ``Audio.id`` is appended whatever the sort, because without it two recordings of the same
+    duration -- or with the same title, or uploaded in the same second -- have no defined order
+    between them, and SQLite is free to return them differently on each page. That shows up as a
+    row appearing twice while somebody scrolls, which is unreproducible and looks like data loss.
+    """
+    column = {
+        SortField.RECORDED_AT: Audio.recorded_at,
+        SortField.CREATED_AT: Audio.created_at,
+        SortField.DURATION_MS: Audio.duration_ms,
+        SortField.TITLE: Audio.title,
+    }[sort]
+    if direction is SortDirection.DESCENDING:
+        # Nulls last in both directions: a recording whose date is unknown is not the oldest
+        # thing in the archive, it is a recording whose date is unknown.
+        return (column.desc().nullslast(), Audio.created_at.desc(), Audio.id.desc())
+    return (column.asc().nullslast(), Audio.created_at.asc(), Audio.id.asc())
 
 
 @dataclass(frozen=True, slots=True)

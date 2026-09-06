@@ -24,6 +24,7 @@ from sqlalchemy import func, select
 from sonarium import __version__
 from sonarium.api.deps import InstanceSettings, ReadSession, WriteSession, current_admin
 from sonarium.api.pagination import Page, PageRequest, page_of, page_request
+from sonarium.api.presenters import job_summary
 from sonarium.api.schemas import (
     JobSummary,
     ProviderStatus,
@@ -69,21 +70,7 @@ def list_jobs(
         query.order_by(Job.id.desc()).limit(paging.limit).offset(paging.offset)
     ).all()
     return page_of(
-        [
-            JobSummary(
-                id=job.id,
-                kind=job.kind,
-                state=job.state,
-                attempts=job.attempts,
-                audio_uuid=audio_uuid,
-                error=job.error,
-                created_at=job.created_at,
-                started_at=job.started_at,
-                finished_at=job.finished_at,
-                ready_at=queue.ready_at(job) if job.state == queue.PENDING else None,
-            )
-            for job, audio_uuid in rows
-        ],
+        [job_summary(job, audio_uuid) for job, audio_uuid in rows],
         total=total,
         request=paging,
     )

@@ -22,7 +22,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -108,6 +108,56 @@ def enqueue(
     except IntegrityError:
         return None
     return job
+
+
+def transcription_in_flight(session: Session, audio_id: int) -> Job | None:
+    """The transcribe job already queued or running for a recording, if there is one.
+
+    ``pending`` counts as in flight: a job waiting on its backoff is one that is going to run.
+    """
+    return (
+        session.execute(
+            select(Job)
+            .where(
+                Job.audio_id == audio_id,
+                Job.kind == KIND_TRANSCRIBE,
+                Job.state.in_((PENDING, RUNNING)),
+            )
+            .order_by(Job.id.desc())
+        )
+        .scalars()
+        .first()
+    )
+
+
+def enqueue_transcription(
+    session: Session, *, audio_id: int, audio_uuid: str, language: str | None = None
+) -> Job | None:
+    """Ask for a recording to be transcribed, unless it already is being (``API-11``).
+
+    Returns ``None`` when one is already pending or running, which the endpoint answers 409 to.
+
+    **The key is per attempt, not per recording.** It was ``transcribe:{uuid}``, which is
+    permanent, so once a recording had been transcribed at upload every later request would find
+    the key taken and be discarded silently -- no second job, no conflict, no way to tell. What
+    prevents a double click costing two transcriptions is now the check above, which is a
+    decision rather than a collision, and the key is left to do what it is for: stopping a retried
+    request that arrives twice from queueing twice.
+    """
+    if transcription_in_flight(session, audio_id) is not None:
+        return None
+    attempted = int(
+        session.execute(
+            select(func.count(Job.id)).where(Job.audio_id == audio_id, Job.kind == KIND_TRANSCRIBE)
+        ).scalar_one()
+    )
+    return enqueue(
+        session,
+        KIND_TRANSCRIBE,
+        audio_id=audio_id,
+        payload={"language": language} if language else {},
+        idempotency_key=f"transcribe:{audio_uuid}:{attempted + 1}",
+    )
 
 
 def claim(session: Session, *, kinds: tuple[str, ...] | None = None) -> Work | None:
