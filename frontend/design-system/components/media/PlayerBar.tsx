@@ -1,6 +1,7 @@
 import type { CSSProperties, HTMLAttributes } from 'react';
 
 import { IconButton } from '../forms/IconButton';
+import type { Peaks } from './peaks';
 import { Waveform } from './Waveform';
 
 const MONO: CSSProperties = {
@@ -14,8 +15,7 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   title?: string;
   /** Library name shown beneath the title. */
   library?: string;
-  peaks?: number[];
-  seed?: number;
+  peaks?: Peaks | undefined;
   /** Formatted elapsed time, mono and tabular. */
   position?: string;
   duration?: string;
@@ -42,7 +42,6 @@ export function PlayerBar({
   title = '',
   library = '',
   peaks,
-  seed = 11,
   position = '',
   duration = '',
   played = 0,
@@ -122,7 +121,7 @@ export function PlayerBar({
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         <span style={{ ...MONO, color: 'var(--accent)' }}>{position}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Waveform peaks={peaks} seed={seed} height={34} played={played} playhead />
+          <Waveform peaks={peaks} size="player" played={played} playhead />
         </div>
         <span style={{ ...MONO, color: 'var(--text-3)' }}>{duration}</span>
       </div>
