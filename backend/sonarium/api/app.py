@@ -33,6 +33,7 @@ from sonarium.api.routes import (
     operations,
     search,
     transcription,
+    users,
 )
 from sonarium.core.config import Settings, get_settings
 from sonarium.db.engine import Database, build_engine
@@ -90,6 +91,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ingest.router,
         search.router,
         transcription.router,
+        users.router,
         admin.router,
         operations.router,
     ):

@@ -228,3 +228,25 @@ def _refusal(required: Level) -> str:
     if required is Level.MANAGE:
         return "You can read this, but not share it or manage who else can."
     return "You do not have permission to do that."
+
+
+def manages_any_library(session: Session, user_id: int) -> bool:
+    """Whether this user holds manage on at least one library (``API-15``).
+
+    The gate on the person lookup, and it is worth being honest about what it does: **every
+    account owns its personal library at level 40, so every account passes it.** It is not the
+    protection. What keeps the lookup from being a directory is that it matches on a full
+    normalised address and returns at most one row -- a prefix or a name search would let anybody
+    enumerate the instance, which is the leak the ACL-filtered tag suggestions already exist to
+    prevent.
+
+    It is here anyway because it is the condition the endpoint is specified under, and because a
+    disabled account fails it: ``library_acl`` joins the user row and requires it to be active.
+    """
+    acl = library_acl(user_id)
+    return (
+        session.execute(
+            select(acl.c.library_id).where(acl.c.level >= int(Level.MANAGE)).limit(1)
+        ).first()
+        is not None
+    )
