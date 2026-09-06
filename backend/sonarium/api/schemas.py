@@ -66,6 +66,26 @@ class Me(Api):
     display_name: str
     email: str
     is_admin: bool
+    language: str | None
+    """The language this person chose, or ``None`` to follow the instance's. It is about the
+    person and follows them to their phone; **theme is not here**, because that is about the
+    screen being looked at and lives in browser storage (``DEC-8``)."""
+
+
+class UpdateMe(Api):
+    """What somebody may change about their own account (``API-13``).
+
+    Every field defaults to "leave this alone", so the interface can save one section of the
+    settings view without sending back the ones it is not editing. Password is not here: it needs
+    the current one and ends every other session, which is a different operation.
+    """
+
+    display_name: str | None = Field(default=None, min_length=1, max_length=200)
+    email: EmailAddress | None = None
+    language: str | None = Field(default=None, max_length=35)
+    clear_language: bool = False
+    """Go back to following the instance's language. ``None`` already means "leave it alone", so
+    clearing needs to be asked for -- the same shape as ``UpdateCategory.clear_parent``."""
 
 
 class SignIn(Api):

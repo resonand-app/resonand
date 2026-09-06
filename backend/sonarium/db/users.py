@@ -58,6 +58,47 @@ def create_user(
     return user
 
 
+def update_profile(
+    session: Session,
+    user_id: int,
+    *,
+    display_name: str | None = None,
+    email: str | None = None,
+    language: str | None = None,
+    clear_language: bool = False,
+) -> User:
+    """Change what somebody may change about their own account (``API-13``).
+
+    Every argument defaults to "leave this alone", so one endpoint serves a rename, an address
+    change and a language change without a caller having to send back the fields it is not
+    touching.
+
+    **Changing an address re-derives ``email_normalised``**, which is the unique key, and
+    conflicts the same way creating an account does. The typed form is kept as typed, because it
+    is what somebody recognises as their address; the normalised one is what identity is decided
+    on (``DEC-15``).
+
+    ``clear_language`` exists because ``None`` already means "leave it", and a null language --
+    follow the instance default -- has to remain reachable.
+    """
+    user = get_user(session, user_id)
+    if display_name is not None:
+        user.display_name = display_name.strip() or user.display_name
+    if email is not None:
+        normalised = normalise_email(email)
+        existing = find_by_email(session, normalised)
+        if existing is not None and existing.id != user_id:
+            raise ConflictError(f"An account already exists for {normalised}.")
+        user.email = email.strip()
+        user.email_normalised = normalised
+    if clear_language:
+        user.language = None
+    elif language is not None:
+        user.language = language.strip()
+    session.flush()
+    return user
+
+
 def find_by_email(session: Session, email: str) -> User | None:
     """Look an account up by address, on the key rather than on the typed form."""
     return session.execute(

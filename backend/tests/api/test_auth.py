@@ -216,3 +216,97 @@ def test_grinding_through_a_password_list_is_slowed_down(
         "/auth/session", json={"email": "admin@example.test", "password": PASSWORD}
     )
     assert blocked.json()["type"] == "/errors/too_many_requests"
+
+
+# --- Changing your own account --------------------------------------------
+
+
+def test_a_display_name_can_be_changed(client: TestClient, accounts: dict[str, int]) -> None:
+    sign_in(client, "admin")
+    changed = client.patch("/auth/me", json={"display_name": "Gabriel"})
+    assert changed.status_code == status.HTTP_200_OK
+    assert changed.json()["display_name"] == "Gabriel"
+    assert client.get("/auth/me").json()["display_name"] == "Gabriel"
+
+
+def test_each_field_is_changed_on_its_own(client: TestClient, accounts: dict[str, int]) -> None:
+    """Everything absent means "leave this alone", so the settings view can save one section
+    without sending back the ones it is not editing."""
+    sign_in(client, "admin")
+    before = client.get("/auth/me").json()
+    client.patch("/auth/me", json={"language": "ca"})
+    after = client.get("/auth/me").json()
+    assert after["language"] == "ca"
+    assert after["display_name"] == before["display_name"]
+    assert after["email"] == before["email"]
+
+
+def test_a_language_round_trips_and_can_be_cleared(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """UI-20d ships a working single-option select, so the round trip is the thing being proved.
+
+    Clearing is asked for explicitly, because absent already means "leave it" and following the
+    instance's language has to stay reachable.
+    """
+    sign_in(client, "admin")
+    assert client.get("/auth/me").json()["language"] is None
+    assert client.patch("/auth/me", json={"language": "en"}).json()["language"] == "en"
+    assert client.patch("/auth/me", json={"clear_language": True}).json()["language"] is None
+
+
+def test_an_address_already_in_use_is_a_conflict(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """Against `email_normalised`, which is the key identity is decided on."""
+    sign_in(client, "admin")
+    clash = client.patch("/auth/me", json={"email": "friend@example.test"})
+    assert clash.status_code == status.HTTP_409_CONFLICT
+    assert "already exists" in clash.json()["detail"]
+
+
+def test_the_conflict_is_on_the_normalised_form_not_the_typed_one(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """A differently-cased version of somebody else's address is the same account."""
+    sign_in(client, "admin")
+    clash = client.patch("/auth/me", json={"email": "Friend@Example.TEST"})
+    assert clash.status_code == status.HTTP_409_CONFLICT
+
+
+def test_changing_to_your_own_address_is_not_a_conflict(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """Saving a form without touching the address must not refuse."""
+    sign_in(client, "admin")
+    assert client.patch("/auth/me", json={"email": "admin@example.test"}).status_code == 200
+
+
+def test_a_changed_address_is_the_one_that_signs_in(
+    client: TestClient, app_client_factory: ClientFactory, accounts: dict[str, int]
+) -> None:
+    """The point of re-deriving the key rather than only storing the typed form."""
+    sign_in(client, "admin")
+    client.patch("/auth/me", json={"email": "Gabriel@Example.Test"})
+    other = app_client_factory()
+    signed_in = other.post(
+        "/auth/session", json={"email": "gabriel@example.test", "password": PASSWORD}
+    )
+    assert signed_in.status_code == status.HTTP_200_OK
+
+
+def test_you_cannot_make_yourself_an_administrator(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """`extra="forbid"` on the schema is what enforces it, so this is the test that it is on."""
+    sign_in(client, "friend")
+    refused = client.patch("/auth/me", json={"is_admin": True})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    assert client.get("/auth/me").json()["is_admin"] is False
+
+
+def test_changing_your_account_needs_an_account(client: TestClient) -> None:
+    assert (
+        client.patch("/auth/me", json={"display_name": "Nobody"}).status_code
+        == status.HTTP_401_UNAUTHORIZED
+    )
