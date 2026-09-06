@@ -21,9 +21,23 @@
 
 export { TOKENS, token } from './tokens';
 export type { Token } from './tokens';
+export { LIBRARY_COLORS } from './library-colors';
+export type { LibraryColorName } from './library-colors';
 
 // --- components/foundation (`UI-1d`) ----------------------------------------
 export { Icon } from './components/foundation/Icon';
 export type { IconName, IconProps } from './components/foundation/Icon';
 export { Logo } from './components/foundation/Logo';
 export type { LogoProps } from './components/foundation/Logo';
+
+// --- components/forms (`UI-1e`) ---------------------------------------------
+export { Button } from './components/forms/Button';
+export type { ButtonProps } from './components/forms/Button';
+export { ColorSwatchPicker } from './components/forms/ColorSwatchPicker';
+export type { ColorSwatchPickerProps } from './components/forms/ColorSwatchPicker';
+export { IconButton } from './components/forms/IconButton';
+export type { IconButtonProps } from './components/forms/IconButton';
+export { SearchField } from './components/forms/SearchField';
+export type { SearchFieldProps } from './components/forms/SearchField';
+export { TextField } from './components/forms/TextField';
+export type { TextFieldProps } from './components/forms/TextField';
