@@ -1,10 +1,8 @@
 # Sonarium -- the container image (`OPS-1`).
 #
-# THIS IMAGE IS BACKEND-ONLY, ON PURPOSE. The frontend build stage cannot be written yet:
-# `frontend/` carries no toolchain until `INF-3`, and a stage running `npm ci` against a directory
-# with no `package.json` would fail every build, including every CI run. The stage is written out
-# below, commented, saying exactly what it will do and which task turns it on. A green build that
-# is honest about being backend-only is worth more than a red one that is aspirational.
+# One container carries both halves: the API and the built web interface come out of the same
+# build and are served on the same origin, which is what lets the session cookie be `SameSite`
+# and lets the interface make relative requests with no origin configured anywhere.
 #
 # The build context is the repository root, because the frontend and the backend are both in it:
 #
@@ -45,25 +43,23 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY backend/ ./
 RUN uv sync --frozen --no-dev --no-editable
 
-# --- Frontend build -- NOT WIRED YET, ADDED BY `INF-3` ---------------------
-#
-# `frontend/` is directory scaffolding only. `INF-3` brings Vite, React, strict TypeScript,
-# ESLint, Prettier and Vitest, and with them the `package.json` and `package-lock.json` that the
-# stage below needs. Turning it on is three edits, all of them here:
-#
-#   1. uncomment this stage,
-#   2. uncomment the `COPY --from=frontend-build` line in the runtime stage,
-#   3. delete the backend-only warning at the top of this file.
-#
-# FROM node:22-bookworm-slim AS frontend-build
-# WORKDIR /src
-# # The lock file on its own first, for the same reason as the backend above.
-# COPY frontend/package.json frontend/package-lock.json ./
-# RUN npm ci
-# COPY frontend/ ./
-# # Vite writes a hashed bundle into dist/, which the API serves as the SPA shell. Making that
-# # shell work under a subpath as well as a subdomain is `OPS-4`, not this stage.
-# RUN npm run build
+# --- Frontend build (`INF-3e`) ---------------------------------------------
+FROM node:22-bookworm-slim AS frontend-build
+WORKDIR /src
+
+# The lock file on its own first, for the same reason as the backend above.
+COPY frontend/package.json frontend/package-lock.json ./
+# `ci` and not `install`: it installs the lock exactly and refuses if package.json has drifted
+# from it, which is this stage's `--frozen`.
+RUN npm ci
+
+# The design system is part of the build and not a sibling of it (`DEC-21`): index.html reads the
+# mark straight out of `design-system/assets/`, so the whole directory has to be here.
+COPY frontend/ ./
+
+# Vite writes a hashed bundle into dist/, which the API serves as the SPA shell. Making that
+# shell work under a subpath as well as a subdomain is `OPS-4`, not this stage.
+RUN npm run build
 
 # --- Runtime ---------------------------------------------------------------
 FROM python:3.12-slim-bookworm AS runtime
@@ -87,7 +83,10 @@ RUN groupadd --system --gid 10001 sonarium \
 COPY --from=backend-build --chown=sonarium:sonarium /app/.venv /app/.venv
 # The licence travels with the image: it is what anyone running a modified copy has to comply with.
 COPY --chown=sonarium:sonarium LICENSE /app/LICENSE
-# COPY --from=frontend-build --chown=sonarium:sonarium /src/dist /app/static
+# The built interface. `SONARIUM_STATIC_DIR` defaults to this path, and the application installs
+# the shell as a fallback after every router -- so an endpoint stays an endpoint, and a build
+# without this line simply serves no interface rather than failing.
+COPY --from=frontend-build --chown=sonarium:sonarium /src/dist /app/static
 
 # `TMPDIR` inside the volume is not a tidiness preference. An upload is buffered to a temporary
 # file in full before the endpoint that stores it runs, so every recording touches disk twice and

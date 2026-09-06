@@ -567,7 +567,16 @@ mistake here that cannot be undone cheaply.
 
 - [ ] **UI-4a** · The router and §2.1's eight routes, the session guard, and the not-found route.
       Public identifiers are UUIDs; a sequential id never appears in a URL. `/sign-in` is the only
-      public route, and `GET /instance` is the only call made without a session. ⇢ UI-3b
+      public route, and `GET /instance` is the only call made without a session.
+      **Settle the namespace before naming a route.** `INF-3e` serves the shell as a fallback
+      registered after every router, so the API keeps every path it already has — and the API is
+      mounted at the root, which means a client route spelled like an endpoint *is* the endpoint.
+      A hard refresh on `/libraries/<uuid>` reaches `GET /libraries/{uuid}` and answers 401, not
+      the shell; both are GET on one path and no ordering fixes it. Either the eight routes avoid
+      the API's top-level names, or `/` becomes content negotiation on paths the API owns. The
+      first is cheaper and is the one to take unless there is a reason not to.
+      `backend/tests/api/test_spa.py` asserts the collision so it cannot be rediscovered.
+      ⇢ UI-3b
 - [ ] **UI-4b** · URL state, exactly as §2.1 divides it. **In the URL:** the search query and its
       filters; a library's `view=list`, category, tags, state toggles and sort; the recording being
       viewed. **Not in the URL:** what is playing and where it is, the tray's contents, whether a

@@ -135,28 +135,53 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Check it starts, migrates itself and becomes ready
-        # The build only proves the image assembles. This proves the thing an operator actually
-        # depends on: that a fresh container creates its own schema and reports itself ready --
-        # which is exactly what was broken when the migration tree was located relative to the
-        # source tree rather than shipped inside the package.
+      - name: Check it starts, migrates itself, becomes ready and serves the interface
+        # The build only proves the image assembles. This proves the two things an operator
+        # actually depends on: that a fresh container creates its own schema and reports itself
+        # ready -- which is exactly what was broken when the migration tree was located relative
+        # to the source tree rather than shipped inside the package -- and that the interface
+        # the same image built is the one it serves.
         run: |
           docker run -d --name sonarium-ci -p 8000:8000 \
             -e SONARIUM_SECRET_KEY="$(openssl rand -hex 32)" \
             -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
             sonarium:ci
+          ready=""
           for attempt in $(seq 1 30); do
             if [ "$(docker inspect -f '{{.State.Health.Status}}' sonarium-ci)" = "healthy" ]; then
               echo "ready after ${attempt}s"
-              curl -fsS localhost:8000/readyz
-              docker rm -f sonarium-ci > /dev/null
-              exit 0
+              ready=yes
+              break
             fi
             sleep 1
           done
-          echo "the container never became healthy:"
-          docker logs sonarium-ci
-          exit 1
+          if [ -z "$ready" ]; then
+            echo "the container never became healthy:"
+            docker logs sonarium-ci
+            docker rm -f sonarium-ci > /dev/null
+            exit 1
+          fi
+          curl -fsS localhost:8000/readyz
+
+          # The shell, asked for the way a browser asks for it. `#root` is what main.tsx mounts
+          # into, so its absence means the bundle was not copied rather than that a page was
+          # merely served -- which a 200 on its own would not distinguish.
+          shell=$(curl -fsS -H 'Accept: text/html' localhost:8000/)
+          echo "$shell" | grep -q 'id="root"' || {
+            echo "the image served no application shell:"
+            echo "$shell" | head -20
+            docker rm -f sonarium-ci > /dev/null
+            exit 1
+          }
+
+          # The hashed bundle the shell points at, actually fetched. A shell referencing a
+          # bundle that 404s is the failure this catches and the one a smoke test on `/` misses.
+          bundle=$(echo "$shell" | grep -o '/assets/[^"]*\.js' | head -1)
+          test -n "$bundle" || { echo "the shell references no bundle"; exit 1; }
+          curl -fsS "localhost:8000${bundle}" > /dev/null
+          echo "served the shell and ${bundle}"
+
+          docker rm -f sonarium-ci > /dev/null
 
       - name: Check the CLI works inside the image
         run: docker run --rm sonarium:ci sonarium version
