@@ -336,6 +336,26 @@ class JobSummary(Api):
     outside."""
 
 
+class TranscriptionDestination(Api):
+    """Where audio goes, readable by anybody who can ask for a transcription (``API-12``).
+
+    Deliberately the narrowest thing that answers the question. The full ``ProviderStatus``
+    stays administrator-only; this one is what ``UI-25``'s disclosure is drawn from, and a
+    disclosure only some people can read is not one.
+    """
+
+    provider: str
+    host: str | None
+    """Host and port, without any userinfo. ``None`` when nothing is configured."""
+
+    is_local: bool
+    """Whether it is on the instance's own network. It is what lets the notice choose between
+    saying so calmly and stating plainly that audio leaves. Pessimistic: anything that cannot be
+    placed is reported as not local."""
+
+    configured: bool
+
+
 class ProviderStatus(Api):
     """Whether transcription is configured and whether it answers.
 

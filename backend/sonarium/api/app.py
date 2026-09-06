@@ -32,6 +32,7 @@ from sonarium.api.routes import (
     libraries,
     operations,
     search,
+    transcription,
 )
 from sonarium.core.config import Settings, get_settings
 from sonarium.db.engine import Database, build_engine
@@ -87,6 +88,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         audio.router,
         ingest.router,
         search.router,
+        transcription.router,
         admin.router,
         operations.router,
     ):
