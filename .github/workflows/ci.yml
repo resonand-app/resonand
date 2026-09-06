@@ -1,8 +1,8 @@
 # CI (INF-5). The same checks as .pre-commit-config.yaml, so they fail identically.
 #
-# The frontend job arrives with INF-3, together with the toolchain it would run. A job that
-# failed on every push against a directory with no package.json would teach everybody to ignore
-# a red tick, which is worse than an honestly absent job.
+# Two check jobs and an image build. `backend` and `frontend` are deliberately not dependent on
+# each other: they touch disjoint trees, and a Python failure that hides a TypeScript one costs
+# a round trip to find out.
 
 name: CI
 
@@ -74,6 +74,47 @@ jobs:
         # actually used. A packaging mistake that breaks it would otherwise only show up in the
         # container.
         run: uv run sonarium --help > /dev/null && uv run sonarium version
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # The version `package.json` declares as its floor. Pinned to a major rather than to
+          # `latest`, so a Node release does not change what CI checked overnight.
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        # `ci` and not `install`: it installs the lock file exactly and fails if package.json
+        # has drifted from it, which is the frontend's `--frozen`.
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        # `--check` rather than rewriting: CI reports, it does not edit.
+        run: npm run format:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm run test:coverage
+
+      - name: Build
+        # The bundle is what the image copies to /app/static, so a build that only ever happens
+        # inside `docker build` is one that fails in the slowest possible place.
+        run: npm run build
 
   image:
     name: Image

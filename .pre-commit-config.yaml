@@ -79,9 +79,56 @@ repos:
         pass_filenames: false
         require_serial: true
 
-# --- The frontend ----------------------------------------------------------
-#
-# ESLint and Prettier arrive with INF-3, together with the frontend toolchain they need. Adding
-# them now would mean hooks that fail on every commit against a directory with no package.json,
-# which teaches everybody to pass --no-verify -- and a hook nobody runs is worse than one that is
-# honestly absent.
+  # --- The frontend --------------------------------------------------------
+  #
+  # The same four checks CI runs, in the same order, through the same npm scripts (INF-3d).
+  # There is one description of each check -- frontend/package.json -- and pre-commit, CI and a
+  # developer's terminal all use it, which is the arrangement the Python hooks above already
+  # have through `uv run`.
+  #
+  # Each entry installs the toolchain if it is not there, because `uv run` does and a frontend
+  # hook that failed on a fresh clone with "eslint: not found" would be the one thing that
+  # teaches everybody to pass --no-verify. After the first run it costs a directory test.
+  #
+  # `pass_filenames: false` throughout, for the reason mypy above passes none: these tools are
+  # configured by project, and handing them one file at a time reports problems that are not
+  # there and misses ones that are.
+
+      - id: frontend-lint
+        name: eslint
+        entry: bash -c 'cd frontend && { [ -d node_modules ] || npm ci --silent; } && npm run --silent lint'
+        language: system
+        files: '^frontend/'
+        exclude: '^frontend/(dist|coverage|node_modules)/'
+        pass_filenames: false
+        require_serial: true
+
+      - id: frontend-format
+        name: prettier
+        entry: bash -c 'cd frontend && { [ -d node_modules ] || npm ci --silent; } && npm run --silent format:check'
+        language: system
+        files: '^frontend/'
+        exclude: '^frontend/(dist|coverage|node_modules)/'
+        pass_filenames: false
+        require_serial: true
+
+      - id: frontend-typecheck
+        name: tsc (strict)
+        entry: bash -c 'cd frontend && { [ -d node_modules ] || npm ci --silent; } && npm run --silent typecheck'
+        language: system
+        files: '^frontend/'
+        exclude: '^frontend/(dist|coverage|node_modules)/'
+        pass_filenames: false
+        require_serial: true
+
+      - id: frontend-test
+        name: vitest
+        # No coverage here, and coverage in CI. The threshold is a property of the whole suite
+        # and the fast loop is a property of the commit -- the same split as the backend's
+        # `-m "not slow"` above.
+        entry: bash -c 'cd frontend && { [ -d node_modules ] || npm ci --silent; } && npm run --silent test:unit'
+        language: system
+        files: '^frontend/'
+        exclude: '^frontend/(dist|coverage|node_modules)/'
+        pass_filenames: false
+        require_serial: true
