@@ -16,6 +16,12 @@
     "recordings_one": "{{count}} recording",
     "recordings_other": "{{count}} recordings"
   },
+  "level": {
+    "read": "Can read",
+    "edit": "Can edit",
+    "manage": "Can manage",
+    "owner": "Owner"
+  },
   "search": {
     "more": "+{{count}} more in this recording"
   },

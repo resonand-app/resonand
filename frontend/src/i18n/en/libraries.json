@@ -6,5 +6,9 @@
   "create": {
     "action": "Create a library",
     "hint": "Name it and pick a colour"
+  },
+  "shared": {
+    "title": "Shared with you",
+    "byline": "{{owner}} · {{level}}"
   }
 }

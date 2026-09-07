@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { AVIA, NOTA, PERSONAL, archive } from '@/test/api/archive';
+import { ATENEU, AVIA, NOTA, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { LibrariesView } from './LibrariesView';
@@ -158,5 +158,31 @@ describe('a card', () => {
       expect(asked.some((url) => url.includes(`/libraries/${PERSONAL}/audio`))).toBe(true);
     });
     expect(asked.some((url) => url.includes(`/audio/${NOTA}/waveform`))).toBe(false);
+  });
+});
+
+describe('the shared group', () => {
+  it('is titled separately and holds what somebody else owns', async () => {
+    renderView();
+    const group = await screen.findByRole('heading', { name: /Shared with you/i });
+    const ateneu = await screen.findByRole('heading', { name: 'Reunions Ateneu' });
+    expect(group.compareDocumentPosition(ateneu)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
+  it('names the owner and what you may do there', async () => {
+    renderView();
+    const card = await cardFor('Reunions Ateneu');
+    // Level 20 in the fixtures. The short name, not the API's whole sentence -- that one is for
+    // the sharing panel, where somebody is deciding what to grant.
+    expect(within(card).getByText('Marta · Can edit')).toBeInTheDocument();
+  });
+
+  it('is absent entirely when nobody has shared anything', async () => {
+    archive.libraries = archive.libraries.filter((one) => one.uuid !== ATENEU);
+    renderView();
+    await screen.findByRole('heading', { name: 'Personal' });
+    // Absent, not empty: a group saying nobody has shared anything with you is a thing to read
+    // every time somebody opens the home page.
+    expect(screen.queryByRole('heading', { name: /Shared with you/i })).toBeNull();
   });
 });

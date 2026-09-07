@@ -29,9 +29,19 @@ import { useLibraryList } from './data';
 import type { LibrarySummary } from './data';
 import { useAfterPaint, useLatestWaveform } from './use-latest-waveform';
 
+/**
+ * The four levels, as the short name a byline has room for.
+ *
+ * Not the API's `level_description`, which is a whole sentence -- "Can read: listen and read the
+ * transcript, and change nothing." -- written for the sharing panel, where somebody is deciding
+ * what to grant. On a card it is a fact about a library you already have, and the fact is three
+ * words. `UI-17c` renders the API's wording where the API's wording is the point.
+ */
+const LEVEL_NAMES: Record<number, string> = { 10: 'read', 20: 'edit', 30: 'manage', 40: 'owner' };
+
 export function LibrariesView() {
   const { t } = useTranslation('libraries');
-  const { own, recordings, durationMs } = useLibraryList();
+  const { own, shared, recordings, durationMs } = useLibraryList();
   const painted = useAfterPaint();
 
   return (
@@ -46,6 +56,28 @@ export function LibrariesView() {
           <Card key={library.uuid} library={library} waveforms={painted} />
         ))}
       </Grid>
+      {shared.length > 0 && (
+        <section style={{ marginTop: 'var(--space-10)' }}>
+          <h2
+            style={{
+              margin: '0 0 var(--space-4)',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 'var(--type-overline-size)',
+              fontWeight: 'var(--type-overline-weight)',
+              letterSpacing: 'var(--type-overline-tracking)',
+              textTransform: 'uppercase',
+              color: 'var(--text-3)',
+            }}
+          >
+            {t('shared.title')}
+          </h2>
+          <Grid>
+            {shared.map((library) => (
+              <Card key={library.uuid} library={library} waveforms={painted} byline />
+            ))}
+          </Grid>
+        </section>
+      )}
     </section>
   );
 }
@@ -57,7 +89,16 @@ export function LibrariesView() {
  * second and a third request per card, so it is deferred and the card renders `pending` until it
  * lands (§V2). Nothing on the card waits for it.
  */
-export function Card({ library, waveforms }: { library: LibrarySummary; waveforms: boolean }) {
+export function Card({
+  library,
+  waveforms,
+  byline = false,
+}: {
+  library: LibrarySummary;
+  waveforms: boolean;
+  /** Name the owner and what you may do here. For a library somebody else shared. */
+  byline?: boolean;
+}) {
   const { t } = useTranslation('libraries');
   const { peaks, pending } = useLatestWaveform(library, waveforms);
 
@@ -69,6 +110,14 @@ export function Card({ library, waveforms }: { library: LibrarySummary; waveform
       meta={`${t('common:count.recordings', { count: library.audio_count })} · ${format.total(
         library.total_duration_ms,
       )}`}
+      {...(byline
+        ? {
+            byline: t('shared.byline', {
+              owner: library.owner.display_name,
+              level: t(`common:level.${LEVEL_NAMES[library.level] ?? 'read'}`),
+            }),
+          }
+        : {})}
       peaks={peaks}
       pending={pending}
       labels={{ options: (name) => t('card.options', { name }) }}
