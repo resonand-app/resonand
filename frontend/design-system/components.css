@@ -441,6 +441,30 @@
   color: var(--accent);
 }
 
+/* InlineField. Three states and three treatments. At rest it is text that fills a step under a
+   pointer, which is the whole affordance -- there is no box until there is something to type in.
+   Read-only because of permission is the third: no box, no pencil, no disabled control, just the
+   value under a hairline. A greyed-out input reads as broken; a fact on a page reads as somebody
+   else's to change. */
+[data-ds='inline-field'] {
+  background: transparent;
+  color: var(--text);
+  cursor: text;
+}
+
+[data-ds='inline-field']:hover {
+  background: var(--surface-2);
+}
+
+[data-ds='inline-field-pencil'] {
+  color: var(--text-3);
+}
+
+[data-ds='inline-field-static'] {
+  color: var(--text-2);
+  box-shadow: inset 0 calc(-1 * var(--border-hairline)) 0 var(--hairline);
+}
+
 /* LevelSelector. The chosen row fills with `--accent-soft` and its dot fills with the accent; the
    others carry the control edge and an empty middle. Sharing is where the product's first promise
    is kept, so the current answer has to be readable at a glance and not only by finding the dot. */

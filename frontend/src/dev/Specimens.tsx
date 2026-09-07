@@ -10,6 +10,7 @@ import {
   Dialog,
   Icon,
   IconButton,
+  InlineField,
   LevelSelector,
   LibraryCard,
   Logo,
@@ -81,6 +82,7 @@ const GLYPHS: IconName[] = [
   'chevron-left',
   'chevron-down',
   'minus',
+  'pencil',
   'circle-dashed',
   'loader',
   'check',
@@ -249,6 +251,7 @@ export default function Specimens() {
   const [picked, setPicked] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [level, setLevel] = useState(20);
+  const [title, setTitle] = useState('Sopar de Nadal 1998');
 
   return (
     <main
@@ -464,6 +467,17 @@ export default function Specimens() {
             <Chip>memòria</Chip>
             <Chip>català</Chip>
             <Chip active>1998</Chip>
+          </div>
+        </Panel>
+        <Panel label="InlineField · editable, and read-only by permission" width={320}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <InlineField label="Title" value={title} onSave={setTitle} />
+            <InlineField
+              label="Title"
+              value="Sopar de Nadal 1998"
+              onSave={() => undefined}
+              readOnly
+            />
           </div>
         </Panel>
         <Panel label="LevelSelector · the API's wording, visible" width={360}>

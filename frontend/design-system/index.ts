@@ -75,6 +75,8 @@ export { Chip } from './components/data/Chip';
 export type { ChipProps } from './components/data/Chip';
 export { CreateLibraryCard } from './components/data/CreateLibraryCard';
 export type { CreateLibraryCardProps } from './components/data/CreateLibraryCard';
+export { InlineField } from './components/data/InlineField';
+export type { InlineFieldProps } from './components/data/InlineField';
 export { LevelSelector, OWNER_LEVEL } from './components/data/LevelSelector';
 export type { LevelOption, LevelSelectorProps } from './components/data/LevelSelector';
 export { LibraryCard } from './components/data/LibraryCard';

@@ -13,6 +13,7 @@ import {
   Moon,
   PanelLeft,
   Pause,
+  Pencil,
   Play,
   Plus,
   Search,
@@ -45,7 +46,7 @@ import type { HTMLAttributes } from 'react';
  * These are the glyphs the README documents plus the ones components ask for by computed name --
  * `StateBadge`'s four states, `SearchResults`' two kinds of hit. Adding one is two lines here,
  * and `UI-34` adds a handful: `chevron-down` for the control that opens a list of values, `minus` for a checkbox that is neither
- * on nor off.
+ * on nor off, `pencil` for a field you can correct in place.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -63,6 +64,7 @@ const GLYPHS = {
   'more-vertical': EllipsisVertical,
   'panel-left': PanelLeft,
   pause: Pause,
+  pencil: Pencil,
   play: Play,
   plus: Plus,
   search: Search,
