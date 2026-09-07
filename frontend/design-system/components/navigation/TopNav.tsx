@@ -12,7 +12,6 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
   query?: string;
   /** Called as the search field is typed into. */
   onQueryChange?: (query: string) => void;
-  searchFocused?: boolean;
   onToggleSidebar?: () => void;
   onUpload?: () => void;
   onProfile?: () => void;
@@ -32,12 +31,15 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
  *
  * There is no avatar image, here or anywhere: no storage exists for one and fetching it externally
  * would break the promise that nothing leaves the instance. Identity is initials.
+ *
+ * **`searchFocused` is gone (`UI-32b`).** It asked a caller to keep a boolean in step with where
+ * the browser thinks focus is, and the browser is the only thing that knows: the field draws its
+ * own ring from `:focus-visible` now, like every other control in the system.
  */
 export function TopNav({
   initials = '',
   query,
   onQueryChange,
-  searchFocused,
   onToggleSidebar,
   onUpload,
   onProfile,
@@ -47,6 +49,7 @@ export function TopNav({
 }: TopNavProps) {
   return (
     <header
+      data-ds="top-nav"
       style={{
         height: 'var(--nav-height)',
         background: 'var(--surface)',
@@ -75,7 +78,6 @@ export function TopNav({
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
               onQueryChange?.(event.target.value);
             }}
-            focused={searchFocused}
           />
           {children}
         </div>
@@ -88,14 +90,13 @@ export function TopNav({
           type="button"
           onClick={onProfile}
           aria-label="Account"
+          data-ds="avatar-button"
+          data-hit-target=""
           style={{
             width: 32,
             height: 32,
             border: 'none',
             borderRadius: 'var(--radius-circle)',
-            background: 'var(--accent-soft)',
-            color: 'var(--accent-on-soft)',
-            cursor: 'pointer',
             fontFamily: 'var(--font-mono)',
             fontWeight: 'var(--weight-medium)',
             fontSize: 'var(--type-numeric-size)',

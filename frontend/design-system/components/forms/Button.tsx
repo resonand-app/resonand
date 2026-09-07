@@ -1,27 +1,13 @@
-import type { ButtonHTMLAttributes, CSSProperties, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
 import { Icon } from '../foundation/Icon';
 import type { IconName } from '../foundation/Icon';
-
-const FILL: Record<NonNullable<ButtonProps['variant']>, CSSProperties> = {
-  primary: {
-    background: 'var(--accent)',
-    color: 'var(--accent-on)',
-    boxShadow: 'var(--elevation-accent)',
-    fontWeight: 'var(--weight-semibold)',
-  },
-  secondary: { background: 'var(--surface-2)', color: 'var(--text-2)', fontWeight: 'var(--weight-medium)' },
-  ghost: { background: 'transparent', color: 'var(--text-2)', fontWeight: 'var(--weight-medium)' },
-  danger: { background: 'var(--state-failed-bg)', color: 'var(--state-failed-fg)', fontWeight: 'var(--weight-medium)' },
-};
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /** primary for the one main action per view; ghost for Cancel; danger for destructive confirms. */
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** Glyph rendered before the label. */
   icon?: IconName;
-  /** Renders the focus ring for specimen purposes; real focus comes from `:focus-visible`. */
-  focused?: boolean;
   children?: ReactNode;
 }
 
@@ -30,19 +16,20 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  *
  * One primary per view: it is the same amber as a playing waveform and an active nav item, and
  * two of them on a screen means neither is the main action.
+ *
+ * **It draws none of its own colour (`UI-32a`).** The four variants are four blocks in
+ * `components.css`, selected by `data-variant`, which is what makes hover and press expressible
+ * at all -- an inline `background` beats every rule a stylesheet can write, so the resting fill
+ * has to live beside the fill it changes to. The `focused` prop that faked the ring for the
+ * specimen boards is gone with it: focus is `:focus-visible` now, once, for everything.
  */
-export function Button({
-  variant = 'primary',
-  icon,
-  children,
-  disabled,
-  focused,
-  style,
-  ...rest
-}: ButtonProps) {
+export function Button({ variant = 'primary', icon, children, disabled, style, ...rest }: ButtonProps) {
   return (
     <button
       type="button"
+      data-ds="button"
+      data-variant={variant}
+      data-hit-target=""
       disabled={disabled}
       style={{
         height: 'var(--control-height)',
@@ -54,12 +41,8 @@ export function Button({
         gap: 7,
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--type-ui-size)',
-        cursor: disabled ? 'default' : 'pointer',
-        opacity: disabled ? 0.38 : 1,
-        transition: 'background var(--transition-state), color var(--transition-state)',
-        outline: focused ? 'var(--focus-ring-width) solid var(--accent)' : 'none',
-        outlineOffset: 'var(--focus-ring-offset)',
-        ...FILL[variant],
+        transition:
+          'background var(--transition-state), color var(--transition-state), box-shadow var(--transition-state)',
         ...style,
       }}
       {...rest}

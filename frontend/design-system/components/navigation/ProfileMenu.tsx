@@ -15,18 +15,16 @@ function Row({ icon, label, value, onClick }: RowProps) {
     <button
       type="button"
       onClick={onClick}
+      data-ds="menu-row"
       style={{
         height: 34,
         width: '100%',
         border: 'none',
-        background: 'transparent',
-        color: 'var(--text-2)',
         borderRadius: 'var(--radius-control)',
         display: 'flex',
         alignItems: 'center',
         gap: 10,
         padding: '0 10px',
-        cursor: 'pointer',
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--type-ui-size)',
         transition: 'background var(--transition-state)',
@@ -85,6 +83,7 @@ export function ProfileMenu({
   return (
     <div
       role="menu"
+      data-ds="profile-menu"
       style={{
         width: 236,
         background: 'var(--surface)',

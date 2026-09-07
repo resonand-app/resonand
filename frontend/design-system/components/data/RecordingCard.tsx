@@ -26,6 +26,11 @@ export interface RecordingCardProps extends HTMLAttributes<HTMLElement> {
  * The play control is a real button in the corner, which is what leaves the opposite corner free
  * for `UI-9a`'s selection checkbox -- the two must not fight, because selecting forty recordings
  * and playing one are things people do in the same minute.
+ *
+ * It asks for `variant="accent-soft"` rather than passing the same two colours through `style`,
+ * which is what it did until `UI-32a` -- and an inline background is a paint no hover rule can
+ * reach, so the card's play button was one of the two controls in the product that did not
+ * respond to a pointer.
  */
 export function RecordingCard({
   name,
@@ -41,6 +46,7 @@ export function RecordingCard({
 }: RecordingCardProps) {
   return (
     <article
+      data-ds="recording-card"
       style={{
         background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
@@ -77,13 +83,7 @@ export function RecordingCard({
             {meta}
           </span>
         </div>
-        <IconButton
-          icon="play"
-          size={32}
-          label={`Play ${name}`}
-          onClick={onPlay}
-          style={{ background: 'var(--accent-soft)', color: 'var(--accent-on-soft)' }}
-        />
+        <IconButton icon="play" variant="accent-soft" size={32} label={`Play ${name}`} onClick={onPlay} />
       </div>
       <Waveform
         peaks={peaks}

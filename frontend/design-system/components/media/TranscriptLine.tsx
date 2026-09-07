@@ -44,12 +44,13 @@ export function TranscriptLine({
       onKeyDown={handleKeyDown}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
+      data-ds="transcript-line"
+      data-active={active === true ? 'true' : undefined}
       style={{
         display: 'flex',
         gap: 12,
         padding: '7px 9px',
         borderRadius: 'var(--radius-control)',
-        background: active ? 'var(--accent-soft)' : 'transparent',
         cursor: interactive ? 'pointer' : 'default',
         transition: 'background var(--transition-state)',
         ...style,

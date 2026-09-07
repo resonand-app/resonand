@@ -20,7 +20,9 @@ export interface ColorSwatchPickerProps
  * The seven library colours as a single row of swatches.
  *
  * The selected swatch is ringed rather than ticked, because a tick on a colour is a glyph whose
- * contrast depends on the colour underneath it -- and two of the seven would fail.
+ * contrast depends on the colour underneath it -- and two of the seven would fail. The ring is
+ * drawn by `components.css` from `data-selected`; the colour itself stays inline, because it is
+ * the one thing here that is data rather than state (`UI-32a`).
  */
 export function ColorSwatchPicker({
   value = 'clay',
@@ -50,6 +52,9 @@ export function ColorSwatchPicker({
             type="button"
             aria-label={colour.name}
             aria-pressed={value === colour.name}
+            data-ds="swatch"
+            data-selected={value === colour.name ? 'true' : undefined}
+            data-hit-target=""
             onClick={() => onChange?.(colour.name)}
             style={{
               width: size,
@@ -57,9 +62,6 @@ export function ColorSwatchPicker({
               border: 'none',
               borderRadius: 'var(--radius-circle)',
               background: colour.value,
-              cursor: 'pointer',
-              boxShadow:
-                value === colour.name ? '0 0 0 2px var(--bg), 0 0 0 4px var(--accent)' : 'none',
               transition: 'box-shadow var(--transition-state)',
             }}
           />

@@ -1,0 +1,483 @@
+/* The interaction layer (`UI-32a`).
+ *
+ * Every component in this system is a function returning an inline style object, which is a
+ * complete way to describe a resting appearance and no way at all to describe an interaction:
+ * `:hover`, `:focus-visible`, `:active`, `@media` and pseudo-elements cannot be written as a
+ * property on a style object, at any price. So the README's interaction rules, `UI-23`'s single
+ * focus treatment and the 44px hit targets the accessibility floor demands were all documented and
+ * none of them existed. The specimen boards faked the missing half with a prototyping harness that
+ * does not ship.
+ *
+ * **The division of labour.** A component owns its geometry -- height, padding, gap, radius, the
+ * things that do not change when a pointer arrives -- and this file owns everything that responds.
+ * That is not a preference: an inline `background: transparent` beats every stylesheet rule ever
+ * written, so a hover that changes a background is only possible if the resting background is
+ * declared here too. Any property this file needs to vary has to leave the component, and the
+ * components in `components/` have had exactly those properties removed. What stayed inline is
+ * data (`LibraryCard`'s library colour) and geometry (`IconButton`'s diameter).
+ *
+ * **Selectors are `data-*` attributes on component roots**, never class names and never element
+ * types. A class would be a second vocabulary to keep in step with `index.ts`; an element type
+ * would break the moment a `<div>` became a `<button>`. `data-ds` names the component and the
+ * rest name state the component was told about -- `data-variant`, `data-active`, `data-selected`.
+ * Interaction state is never among them, which is the point: hover is not a React state variable
+ * here, and a component re-rendering because a pointer moved is a bug this file makes impossible.
+ *
+ * Values are `var(--token)` throughout, so the tokens-only rule holds on this side of the line as
+ * well. There is no colour written in this file.
+ */
+
+/* ==========================================================================
+   One focus treatment, everywhere (`UI-32b`)
+   ========================================================================== */
+
+/* A 2px `--accent` ring at 2px offset, on every interactive element in the product.
+ *
+ * `:where()` gives the whole selector zero specificity, so a component that needs to draw
+ * something else on focus can, with one attribute selector, rather than with `!important`. The
+ * list is the focusable set rather than `*`: an `outline` on everything would ring the `<div>`
+ * a `tabindex="-1"` was put on to be scrolled to.
+ *
+ * Both halves matter. `:focus-visible` and not `:focus`, because a mouse click on a button
+ * should not leave a ring behind it -- and the browsers' own heuristic is better than any rule
+ * written here, including the one that always shows the ring on a text field. And a ring rather
+ * than a fill, because focus and selection are different facts about a row and have to be
+ * legible at the same time. */
+:where(
+  a[href],
+  area[href],
+  button,
+  input,
+  select,
+  textarea,
+  summary,
+  [tabindex]:not([tabindex^='-'])
+):focus-visible {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* A field draws the ring around the box and not around the bare input.
+ *
+ * The input fills a wrapper that carries the background, the radius and -- in `TextField` -- the
+ * error ring and the trailing glyph, so a ring on the input alone would sit inside its own
+ * chrome. `:has()` moves it to the wrapper, and the input's own outline is then suppressed here
+ * rather than inline: the two shipped fields set `outline: none` in their style objects and gave
+ * nothing back, which is the exact failure this pair of rules replaces. */
+[data-ds='field-box']:has(:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--accent);
+  outline-offset: var(--focus-ring-offset);
+}
+
+[data-ds='field-box'] :where(input, textarea):focus-visible {
+  outline: none;
+}
+
+/* ==========================================================================
+   Hit targets (`UI-32b`)
+   ========================================================================== */
+
+/* 44px minimum, grown with a pseudo-element rather than by growing the box.
+ *
+ * The visual is 32 for an icon button, 34 for a text button, 22 for a colour swatch, and the
+ * floor is 44 -- so the target has to be bigger than the thing it belongs to without moving
+ * anything next to it. A transparent `::after` centred on the control does that: it is part of
+ * the button for hit-testing, and part of nothing for layout.
+ *
+ * `width: 100%` with `min-width: var(--hit-target)` means "the box, or 44, whichever is more",
+ * in each axis independently. A 34px-tall pill 150px wide grows vertically and not horizontally.
+ *
+ * **It is applied to discrete controls only**, and the reason is that stacked rows cannot have
+ * it. Expanding a 34px menu row to 44 overlaps its neighbours by 5px at each edge, so the top of
+ * every row would belong to two targets and the answer to which one a click lands on would be
+ * DOM order. A full-bleed row is 34px in one axis and the width of a panel in the other; that is
+ * a large target that is short, not a small one. `hit-targets.test.tsx` holds both halves: 44 in
+ * both axes for anything discrete, and an entry in its own list naming the reason for anything
+ * exempt. */
+[data-hit-target] {
+  position: relative;
+}
+
+[data-hit-target]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  width: 100%;
+  height: 100%;
+  min-width: var(--hit-target);
+  min-height: var(--hit-target);
+}
+
+/* ==========================================================================
+   Unavailable
+   ========================================================================== */
+
+/* 0.38 opacity and never a colour change, from one token, in one place.
+ *
+ * Greying the text instead produces a different contrast failure per surface, which is why the
+ * system has a disabled opacity and not a disabled colour. `aria-disabled` is here beside
+ * `:disabled` for the controls that must stay focusable to be able to say why they are
+ * unavailable. */
+[data-ds]:disabled,
+[data-ds][aria-disabled='true'] {
+  opacity: var(--opacity-disabled);
+  cursor: default;
+}
+
+/* ==========================================================================
+   forms
+   ========================================================================== */
+
+/* Button. Hover moves the accent one step lighter on dark and one darker on light -- which is
+   what `--accent-hover` is for, and why it is a token rather than a calculation -- and press
+   takes `--accent-pressed`. A neutral variant raises one surface step instead: transparent to
+   `--surface-2`, `--surface-2` to `--border`. */
+[data-ds='button'] {
+  cursor: pointer;
+}
+
+[data-ds='button'][data-variant='primary'] {
+  background: var(--accent);
+  color: var(--accent-on);
+  box-shadow: var(--elevation-accent);
+  font-weight: var(--weight-semibold);
+}
+
+[data-ds='button'][data-variant='primary']:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+[data-ds='button'][data-variant='primary']:active:not(:disabled) {
+  background: var(--accent-pressed);
+  box-shadow: none;
+}
+
+[data-ds='button'][data-variant='secondary'] {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-weight: var(--weight-medium);
+}
+
+[data-ds='button'][data-variant='secondary']:hover:not(:disabled) {
+  background: var(--border);
+  color: var(--text);
+}
+
+[data-ds='button'][data-variant='secondary']:active:not(:disabled) {
+  background: var(--border-strong);
+}
+
+[data-ds='button'][data-variant='ghost'] {
+  background: transparent;
+  color: var(--text-2);
+  font-weight: var(--weight-medium);
+}
+
+[data-ds='button'][data-variant='ghost']:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+[data-ds='button'][data-variant='ghost']:active:not(:disabled) {
+  background: var(--border);
+}
+
+[data-ds='button'][data-variant='danger'] {
+  background: var(--state-failed-bg);
+  color: var(--state-failed-fg);
+  font-weight: var(--weight-medium);
+}
+
+/* The one hover in the system that is not a surface step, because there is no token for one.
+ *
+ * `--state-failed-bg` is the deepest red the palette has and a step up from it would be a new
+ * colour -- and the obvious alternative, filling with `--state-failed` itself, has no on-colour
+ * that clears AA in both themes: dark needs dark text at 4.26 and light needs white at 6.35, and
+ * each fails the other. So the destructive button answers a pointer with the edge that
+ * `--border-control` exists for, in the red already audited against the fill it sits on. */
+[data-ds='button'][data-variant='danger']:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 var(--border-control) var(--state-failed);
+}
+
+/* IconButton. Four paints: the two the component always had, plus the two that were being passed
+   in as inline `style` overrides by `PlayerBar` and `RecordingCard` -- which is to say as inline
+   backgrounds, which no hover rule can reach past. They are variants now (`UI-32a`). */
+[data-ds='icon-button'] {
+  cursor: pointer;
+}
+
+[data-ds='icon-button'][data-variant='filled'] {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+[data-ds='icon-button'][data-variant='filled']:hover:not(:disabled) {
+  background: var(--border);
+  color: var(--text);
+}
+
+[data-ds='icon-button'][data-variant='ghost'] {
+  background: transparent;
+  color: var(--text-3);
+}
+
+[data-ds='icon-button'][data-variant='ghost']:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+[data-ds='icon-button'][data-variant='accent'] {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+
+[data-ds='icon-button'][data-variant='accent']:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+[data-ds='icon-button'][data-variant='accent']:active:not(:disabled) {
+  background: var(--accent-pressed);
+}
+
+/* `accent-soft` and `active` draw the same thing on purpose: the engaged toggle, the current nav
+   destination and the card's play control are the same signal at the same weight. They are two
+   attributes because they are two facts -- one is what the control is, the other is what it is
+   doing -- and `UI-34c`'s menus will need to tell them apart. */
+[data-ds='icon-button'][data-variant='accent-soft'],
+[data-ds='icon-button'][data-active='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+}
+
+[data-ds='icon-button'][data-variant='accent-soft']:hover:not(:disabled),
+[data-ds='icon-button'][data-active='true']:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* TextField. The error ring, and nothing else -- the focus ring is the shared rule above, and the
+   two must be able to appear together: a field can be both wrong and focused, and hiding one of
+   those is how somebody loses the thread of what they were fixing. */
+[data-ds='field-box'][data-invalid='true'] {
+  box-shadow: 0 0 0 var(--border-hairline) var(--state-failed);
+}
+
+/* SearchField. The magnifier goes amber while the field has focus, and it does it by inheritance:
+   `Icon` defaults to `currentColor`, so a colour on the wrapper reaches the glyph and reaches
+   nothing else -- the input and the ⌘K hint both state their own. */
+[data-ds='search-field'] {
+  color: var(--text-3);
+}
+
+[data-ds='search-field']:has(:focus-visible) {
+  color: var(--accent);
+}
+
+/* ColorSwatchPicker. The selected swatch is ringed rather than ticked, because a tick on a colour
+   is a glyph whose contrast depends on the colour underneath it, and two of the seven would fail.
+   The `--bg` in the middle of the shadow is a gap punched between the swatch and its ring. */
+[data-ds='swatch'] {
+  cursor: pointer;
+}
+
+[data-ds='swatch'][data-selected='true'] {
+  box-shadow:
+    0 0 0 var(--border-strong-width) var(--bg),
+    0 0 0 4px var(--accent);
+}
+
+/* Hover shows the ring it would get, in a neutral, so picking a colour from seven small circles
+   does not depend on hitting the right one first time. */
+[data-ds='swatch']:not([data-selected='true']):hover {
+  box-shadow:
+    0 0 0 var(--border-strong-width) var(--bg),
+    0 0 0 4px var(--border-strong);
+}
+
+/* ==========================================================================
+   data
+   ========================================================================== */
+
+/* Chip. Inert as a tag and interactive as a filter, which is the same component in two places --
+   so the hover is written against the interactive case only. */
+[data-ds='chip'] {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+[data-ds='chip'][data-active='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+}
+
+[data-ds='chip']:where(button, [role='button']) {
+  cursor: pointer;
+}
+
+[data-ds='chip']:where(button, [role='button']):hover:not(:disabled) {
+  background: var(--border);
+  color: var(--text);
+}
+
+[data-ds='chip'][data-active='true']:where(button, [role='button']):hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* RecordingRow. `UI-32a`'s own criterion: hovering a row raises it one surface step, with no
+   React state variable anywhere. A selected row is already at `--surface-2`, so its hover has to
+   go one further or a pointer over the current selection would do nothing. */
+[data-ds='recording-row'] {
+  background: transparent;
+}
+
+[data-ds='recording-row'][data-selected='true'] {
+  background: var(--surface-2);
+}
+
+[data-ds='recording-row'][role='button']:hover {
+  background: var(--surface-2);
+}
+
+[data-ds='recording-row'][role='button'][data-selected='true']:hover {
+  background: var(--border);
+}
+
+/* LibraryCard. A card floats further off the page than the chrome does, and one you can open
+   floats further still while the pointer is on it -- `--elevation-card` to `--elevation-overlay`,
+   which is the step the component's `transition: box-shadow` was already written for and never
+   had. A card with no `onOpen` does not move. */
+[data-ds='library-card'] {
+  box-shadow: var(--elevation-card);
+}
+
+[data-ds='library-card'][data-interactive='true']:hover {
+  box-shadow: var(--elevation-overlay);
+}
+
+/* CreateLibraryCard. It does not float, because it is not a thing yet -- so its hover is the
+   surface step rather than an elevation one. */
+[data-ds='create-library-card'] {
+  background: var(--empty-fill);
+  cursor: pointer;
+}
+
+[data-ds='create-library-card']:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+/* ==========================================================================
+   media
+   ========================================================================== */
+
+/* TranscriptLine. The active line is the one being spoken and keeps its accent fill under the
+   pointer; every other line raises a step, so a transcript reads as a column of things you can
+   click without any of them announcing it. */
+[data-ds='transcript-line'] {
+  background: transparent;
+}
+
+[data-ds='transcript-line'][data-active='true'] {
+  background: var(--accent-soft);
+}
+
+[data-ds='transcript-line'][role='button']:not([data-active='true']):hover {
+  background: var(--surface-2);
+}
+
+/* Waveform. Seekable only on the detail size, and the cursor is the only affordance it gets --
+   the bars are the data and nothing is drawn over them. */
+[data-ds='waveform'][data-seekable='true'] {
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   navigation
+   ========================================================================== */
+
+/* Sidebar. The current destination is `--accent-soft`, the same signal as a playing waveform and
+   a primary button. Hover on a destination you are not at raises a step; hover on the one you are
+   at does nothing, because arriving somewhere you already are is not an action. */
+[data-ds='sidebar-item'] {
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+[data-ds='sidebar-item'][data-active='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+}
+
+[data-ds='sidebar-item']:not([data-active='true']):hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* Menu rows: `ProfileMenu`'s three, `SearchResults`' hits and its see-all row, `Dialog`'s close.
+   One rule, because they are one gesture -- a row in an overlay that fills as the pointer crosses
+   it. `UI-34c`'s `Menu` joins this rule rather than inventing a second one. */
+[data-ds='menu-row'],
+[data-ds='search-hit'],
+[data-ds='search-see-all'],
+[data-ds='dialog-close'] {
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Their resting text colours, here rather than inline for the reason the fills are: hover moves
+   both, and a colour a stylesheet cannot reach is a colour that does not move. */
+[data-ds='menu-row'] {
+  color: var(--text-2);
+}
+
+[data-ds='dialog-close'] {
+  color: var(--text-3);
+}
+
+[data-ds='menu-row']:hover:not(:disabled),
+[data-ds='search-hit']:hover:not(:disabled),
+[data-ds='search-see-all']:hover:not(:disabled),
+[data-ds='dialog-close']:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* TopNav's account button. Initials and never an image: no storage exists for an avatar and
+   fetching one externally would break the promise that nothing leaves the instance. */
+[data-ds='avatar-button'] {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+  cursor: pointer;
+}
+
+[data-ds='avatar-button']:hover {
+  color: var(--accent);
+}
+
+/* ==========================================================================
+   Reduced motion (`UI-32c`)
+   ========================================================================== */
+
+/* The two duration tokens already zero themselves in `tokens/motion.css`, which covers every
+   transition in the system, because every transition in the system is written in terms of them.
+   What that cannot reach is anything the platform animates on its own, and scrolling is the one
+   the product actually does: `UI-12b`'s transcript follows playback by scrolling, and a smooth
+   scroll is a movement nobody asked for.
+ *
+ * A script that scrolls has to opt in by itself -- `usePrefersReducedMotion` in `theme/` is what
+ * it reads -- because `scroll-behavior` is not consulted by `scrollTo({ behavior: 'smooth' })`.
+ * This is the declarative half. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  /* Nothing in this system animates on a keyframe, and this is what keeps that true: an
+     animation added later stops instead of shipping. */
+  [data-ds] {
+    animation: none;
+  }
+}

@@ -115,9 +115,19 @@ export default defineConfig(
               // file.
               // `styles.css` is the one thing outside it: it is linked once, from the entry
               // point, and deliberately not re-exported (see design-system/index.ts).
-              group: ['@/design-system/*', '@/design-system/**', '!@/design-system/styles.css'],
+              // A `?raw` stylesheet is the other, added by `UI-32a`: it is not a component
+              // reached past the barrel, it is a stylesheet read as text, and the only thing
+              // that does it is `interaction-layer.test.tsx` -- which holds every component to
+              // what `components.css` claims to own, and would otherwise have to keep a second
+              // copy of those claims beside it.
+              group: [
+                '@/design-system/*',
+                '@/design-system/**',
+                '!@/design-system/styles.css',
+                '!@/design-system/*.css?raw',
+              ],
               message:
-                'Import from `@/design-system`, not from a file inside it. The exception is `@/design-system/styles.css` from the entry point.',
+                'Import from `@/design-system`, not from a file inside it. The two exceptions are `@/design-system/styles.css` from the entry point and a `?raw` stylesheet from a test.',
             },
           ],
         },

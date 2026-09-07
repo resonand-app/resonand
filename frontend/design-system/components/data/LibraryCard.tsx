@@ -49,12 +49,13 @@ export function LibraryCard({
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- UI-31b, see above
     <article
       onClick={onOpen}
+      data-ds="library-card"
+      data-interactive={onOpen === undefined ? undefined : 'true'}
       style={{
         width: '100%',
         height: 'var(--card-height)',
         background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
-        boxShadow: 'var(--elevation-card)',
         padding: 'var(--panel-padding)',
         display: 'flex',
         flexDirection: 'column',
