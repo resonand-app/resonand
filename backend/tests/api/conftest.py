@@ -113,8 +113,26 @@ def owner_library(database: Database, accounts: dict[str, int]) -> str:
         return library.uuid
 
 
+API_BASE = "http://testserver/api"
+"""Where the API lives since ``API-16``.
+
+The fixtures below are based there rather than at the origin, so a test still writes the path the
+endpoint declares -- ``/auth/me``, not ``/api/auth/me``. That is also the shape of every real
+client: the interface's fetch wrapper carries the same base and calls the same paths. The tests
+that care about the boundary itself -- the shell, the probes, the root -- use ``origin_client``
+and write paths out in full.
+"""
+
+
 @pytest.fixture
 def client(app: FastAPI) -> Iterator[TestClient]:
+    with TestClient(app, base_url=API_BASE, raise_server_exceptions=False) as test_client:
+        yield test_client
+
+
+@pytest.fixture
+def origin_client(app: FastAPI) -> Iterator[TestClient]:
+    """A client at the origin, for the paths that are deliberately not under ``/api``."""
     with TestClient(app, raise_server_exceptions=False) as test_client:
         yield test_client
 
@@ -131,7 +149,7 @@ def app_client_factory(app: FastAPI) -> Iterator[ClientFactory]:
     opened: list[TestClient] = []
 
     def make() -> TestClient:
-        client = TestClient(app, raise_server_exceptions=False)
+        client = TestClient(app, base_url=API_BASE, raise_server_exceptions=False)
         client.__enter__()
         opened.append(client)
         return client

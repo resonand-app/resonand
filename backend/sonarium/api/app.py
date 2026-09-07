@@ -22,6 +22,7 @@ from fastapi import FastAPI
 from sonarium import __version__
 from sonarium.api.errors import install_error_handlers
 from sonarium.api.logging import RequestCorrelationMiddleware, configure_logging
+from sonarium.api.namespace import API_PREFIX
 from sonarium.api.rate_limit import AttemptLimiter
 from sonarium.api.routes import (
     admin,
@@ -45,6 +46,7 @@ from sonarium.transcription.registry import build_provider
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
+
 
 DESCRIPTION = """\
 A self-hosted archive for the recordings that matter.
@@ -73,8 +75,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         license_info={"name": "AGPL-3.0-only", "url": "https://www.gnu.org/licenses/agpl-3.0.html"},
         root_path=resolved.base_path,
         lifespan=_lifespan,
-        openapi_url="/openapi.json",
-        docs_url="/docs",
+        openapi_url=f"{API_PREFIX}/openapi.json",
+        docs_url=f"{API_PREFIX}/docs",
+        # Named rather than defaulted: it is the one path FastAPI keeps at the root when the
+        # viewer moves, and a page of the interface could be given the same name tomorrow.
+        swagger_ui_oauth2_redirect_url=f"{API_PREFIX}/docs/oauth2-redirect",
         redoc_url=None,
     )
     app.state.settings = resolved
@@ -83,8 +88,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(RequestCorrelationMiddleware)
     install_error_handlers(app)
 
+    app.include_router(health.router)
     for router in (
-        health.router,
         auth.router,
         libraries.router,
         libraries.trash_router,
@@ -96,11 +101,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         admin.router,
         operations.router,
     ):
-        app.include_router(router)
+        app.include_router(router, prefix=API_PREFIX)
 
     # After every router, and that ordering is the whole design (``INF-3e``): the shell is a
     # fallback, so a path that is an endpoint stays an endpoint and there is no list of API
-    # prefixes anywhere that could go stale. When the image carries no bundle -- a developer, a
+    # prefixes anywhere that could go stale. Since ``API-16`` the two namespaces are disjoint by
+    # construction as well as by ordering. When the image carries no bundle -- a developer, a
     # test -- nothing is installed and the root keeps answering below.
     app.state.spa = install_spa(app, resolved.static_dir)
 
@@ -111,7 +117,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             """Enough for a client to know what it is talking to, without a session.
 
             The root belongs to whoever is being served there. With a bundle present it is the
-            interface; without one it is this. ``GET /instance`` is the answer that never
+            interface; without one it is this. ``GET /api/instance`` is the answer that never
             moves, which is why it is the one the interface is written against.
             """
             return {"name": "sonarium", "version": __version__, "status": "ok"}

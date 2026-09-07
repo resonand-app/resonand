@@ -18,7 +18,7 @@ from sonarium.db.models import Audio, Job, Library
 from sonarium.media import storage, waveform
 from sqlalchemy import select
 
-from tests.api.conftest import ClientFactory, sign_in
+from tests.api.conftest import API_BASE, ClientFactory, sign_in
 from tests.media.conftest import make_audio, needs_ffmpeg
 
 
@@ -348,7 +348,7 @@ def test_an_upload_that_is_refused_leaves_nothing_in_the_archive(
     oversized = tmp_path / "too big.wav"
     oversized.write_bytes(b"RIFF" + bytes(4096))
 
-    with TestClient(app, raise_server_exceptions=False) as client:
+    with TestClient(app, base_url=API_BASE, raise_server_exceptions=False) as client:
         sign_in(client, "admin")
         with oversized.open("rb") as handle:
             refused = client.post(

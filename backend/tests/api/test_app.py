@@ -24,27 +24,31 @@ from sonarium.core.errors import (
 from sonarium.db.engine import Database
 
 
-def test_the_instance_answers_without_a_session(client: TestClient) -> None:
-    body = client.get("/").json()
+def test_the_instance_answers_without_a_session(origin_client: TestClient) -> None:
+    body = origin_client.get("/").json()
     assert body["name"] == "sonarium"
     assert body["status"] == "ok"
 
 
 def test_the_openapi_document_is_published(client: TestClient) -> None:
-    """UI-3 generates its typed client from this, so it is part of the product, not a debug aid."""
+    """UI-3 generates its typed client from this, so it is part of the product, not a debug aid.
+
+    It moved under ``/api`` with everything else it documents (``API-16``): a document at the
+    origin would be the one path claiming the API still owns a name there.
+    """
     document = client.get("/openapi.json").json()
     assert document["info"]["title"] == "Sonarium"
     assert document["info"]["license"]["name"] == "AGPL-3.0-only"
 
 
-def test_a_request_carries_its_id_back(client: TestClient) -> None:
-    assert client.get("/").headers[REQUEST_ID_HEADER]
+def test_a_request_carries_its_id_back(origin_client: TestClient) -> None:
+    assert origin_client.get("/").headers[REQUEST_ID_HEADER]
 
 
-def test_an_id_assigned_by_a_reverse_proxy_is_reused(client: TestClient) -> None:
+def test_an_id_assigned_by_a_reverse_proxy_is_reused(origin_client: TestClient) -> None:
     """One request is one id end to end, or correlating anything is guesswork."""
     given = "proxy-assigned-id"
-    response = client.get("/", headers={REQUEST_ID_HEADER: given})
+    response = origin_client.get("/", headers={REQUEST_ID_HEADER: given})
     assert response.headers[REQUEST_ID_HEADER] == given
 
 
@@ -172,4 +176,4 @@ def test_a_subpath_instance_publishes_its_document_under_that_path(
     app.state.database = database
     assert app.root_path == "/sonarium"
     with TestClient(app, root_path="/sonarium") as client:
-        assert client.get("/openapi.json").json()["servers"][0]["url"] == "/sonarium"
+        assert client.get("/api/openapi.json").json()["servers"][0]["url"] == "/sonarium"

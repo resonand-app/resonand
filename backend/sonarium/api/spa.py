@@ -9,13 +9,18 @@ Three things it is careful about.
 
 **The API owns its own paths.** The shell is a fallback registered after every router, so a path
 that is an endpoint is an endpoint and nothing here can shadow one by accident. There is no list
-of API prefixes to keep in step -- the router table is the list.
+of API prefixes to keep in step -- the router table is the list. Since ``API-16`` there is also
+nothing to shadow: the whole documented surface is under ``/api`` and the interface owns
+everything else, so the two namespaces are disjoint by construction rather than by ordering.
 
 **An unknown path answers differently depending on who asked.** A browser navigating to
-``/libraries/<uuid>`` has to receive the shell, because the route is the client's and the server
+``/library/<uuid>`` has to receive the shell, because the route is the client's and the server
 has never heard of it. A client asking for JSON has to receive the ordinary 404 in the ordinary
 envelope, because inventing a 200 for it would turn every typo into a silent success. The
-``Accept`` header is what separates them, and it is the only thing that can.
+``Accept`` header is what separates them, and it is the only thing that can -- **except under**
+``/api``, where a mistyped endpoint is a mistyped endpoint whoever asked. Serving the shell there
+would hand a browser a 200 and a page for a call the API does not have, which is the one place
+the ``Accept`` rule produces the wrong answer.
 
 **A path is not a file name.** Everything is resolved and checked to be inside the root before it
 is opened, so ``../../data/sonarium.db`` is the shell and not the database.
@@ -38,6 +43,7 @@ from fastapi import Request
 from starlette.responses import FileResponse
 from starlette.staticfiles import StaticFiles
 
+from sonarium.api.namespace import API_PREFIX
 from sonarium.core.errors import NotFoundError
 
 if TYPE_CHECKING:
@@ -111,6 +117,11 @@ class SinglePageApp:
             held = self.file_within(requested)
             if held is not None:
                 return FileResponse(held)
+            if within_the_api(requested):
+                raise NotFoundError(
+                    "There is no such endpoint. The API is served under "
+                    f"{API_PREFIX}, and the interface is not."
+                )
             if not wants_html(request):
                 raise NotFoundError(
                     "There is no such endpoint. The interface is served from this same origin, "
@@ -129,6 +140,16 @@ class SinglePageApp:
         if not candidate.is_file():
             return None
         return candidate
+
+
+def within_the_api(requested: str) -> bool:
+    """Whether this path belongs to the API's namespace rather than the interface's.
+
+    It reached the fallback, so it is not an endpoint -- but under ``/api`` that means a mistyped
+    endpoint and not a client route, and the answer is the ordinary 404 whoever asked.
+    """
+    prefix = API_PREFIX.strip("/")
+    return requested == prefix or requested.startswith(f"{prefix}/")
 
 
 def wants_html(request: Request) -> bool:

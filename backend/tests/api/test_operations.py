@@ -19,7 +19,7 @@ from sonarium.db.audio import create_audio, trash_audio
 from sonarium.db.engine import Database
 from sonarium.jobs import queue
 
-from tests.api.conftest import sign_in
+from tests.api.conftest import API_BASE, sign_in
 
 
 def _a_job(database: Database, accounts: dict[str, int], owner_library: str) -> int:
@@ -160,7 +160,7 @@ def test_the_credential_is_never_reported_in_any_form(
     )
     app = create_app(settings)
     app.state.database = database
-    with TestClient(app, raise_server_exceptions=False) as keyed:
+    with TestClient(app, base_url=API_BASE, raise_server_exceptions=False) as keyed:
         sign_in(keyed, "admin")
         response = keyed.get("/admin/transcription")
     assert secret not in response.text
