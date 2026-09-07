@@ -496,6 +496,27 @@
   color: var(--text);
 }
 
+/* Tabs. A hairline track with a 2px accent bar under the current tab, drawn as an inset shadow so
+   it costs no layout and cannot push the row it sits in. **No pill track**: a segmented control
+   reads as a filter in this interface, and the filter bar above a library grid is made of pills. */
+[data-ds='tablist'] {
+  box-shadow: inset 0 calc(-1 * var(--border-hairline)) 0 var(--hairline);
+}
+
+[data-ds='tab'] {
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+[data-ds='tab']:hover {
+  color: var(--text-2);
+}
+
+[data-ds='tab'][data-selected='true'] {
+  color: var(--text);
+  box-shadow: inset 0 calc(-1 * var(--border-strong-width)) 0 var(--accent);
+}
+
 /* Menu. The surface is the same overlay as the search results and the profile menu; the rows are
    the shared `menu-row` rule above. Only the destructive one differs, and it differs in the one
    direction that matters: it fills with the red it is already written in rather than raising a

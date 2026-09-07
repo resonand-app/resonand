@@ -21,6 +21,7 @@ import {
   Select,
   Sidebar,
   StateBadge,
+  Tabs,
   TextField,
   THEME_CHOICES,
   TopNav,
@@ -98,6 +99,14 @@ const RECORDING_ACTIONS = [
     destructive: true,
     separated: true,
   },
+];
+
+/** Settings' four sections (§4, V10). */
+const SETTINGS_TABS = [
+  { value: 'account', label: 'Account' },
+  { value: 'sessions', label: 'Sessions' },
+  { value: 'appearance', label: 'Appearance' },
+  { value: 'administration', label: 'Administration' },
 ];
 
 /** The seventeen specimen cards in `guidelines/`, which are standalone HTML and stay that way. */
@@ -216,6 +225,7 @@ export default function Specimens() {
   const [colour, setColour] = useState<LibraryColorName>('clay');
   const [query, setQuery] = useState('carrer nou');
   const [sort, setSort] = useState('recorded');
+  const [section, setSection] = useState('appearance');
 
   return (
     <main
@@ -448,6 +458,14 @@ export default function Specimens() {
         </Panel>
         <Panel label="Sidebar · collapsed" width={52}>
           <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} collapsed />
+        </Panel>
+        <Panel label="Tabs" width={420}>
+          <Tabs
+            label="Settings sections"
+            tabs={SETTINGS_TABS}
+            value={section}
+            onChange={setSection}
+          />
         </Panel>
         <Panel label="Menu · open" width={236}>
           {/* Held open for the same reason the Select above is: most of a menu's geometry only

@@ -88,6 +88,8 @@ export type { ProfileMenuProps } from './components/navigation/ProfileMenu';
 export { SearchResults } from './components/navigation/SearchResults';
 export type { SearchHit, SearchResultsProps } from './components/navigation/SearchResults';
 export { Sidebar } from './components/navigation/Sidebar';
+export { Tabs } from './components/navigation/Tabs';
+export type { Tab, TabsProps } from './components/navigation/Tabs';
 export type { SidebarLibrary, SidebarProps } from './components/navigation/Sidebar';
 export { TopNav } from './components/navigation/TopNav';
 export type { TopNavProps } from './components/navigation/TopNav';
