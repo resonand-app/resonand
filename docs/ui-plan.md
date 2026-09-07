@@ -440,6 +440,12 @@ faked them with a prototyping harness that does not ship.
       and give nothing back.
       *Done when:* nothing focusable is invisible when focused, and nothing tappable is under 44px.
       🧪 a test that walks every component's focusables ⇢ UI-32a
+      **Eight controls carry a documented exemption from the 44px floor, and all eight are stacked
+      rows.** The pseudo-element cannot be applied to one: a 34px menu row grown to 44 overlaps its
+      neighbours by 5px at each edge, so the top of every row belongs to two targets and which one
+      a click lands on is settled by DOM order. A full-bleed row is short in one axis and the width
+      of a panel in the other. The list is in `focus-and-targets.ts` and is checked in both
+      directions, like the colour guard's.
 
 - [ ] **UI-32c** · `prefers-reduced-motion` verified end to end: the two duration tokens already
       zero themselves, but the transcript's follow-scroll is a script and has to opt in by itself.
@@ -480,6 +486,10 @@ the rest consume it.
 - [ ] **UI-34h** · `Toast` — bulk outcomes, an upload finishing, a background failure. Success is
       one line; failure is multi-line with actions. **Never the only place a result exists.**
       ⇢ UI-34a
+      **It does not consume `UI-34a` after all.** The anchored overlay places a surface against a
+      control and a toast has no anchor; the placement, the polite live region, the stacking and
+      the timers are all `UI-35f`'s `ToastRegion`, which is one region for every toast because two
+      announcing themselves over each other is a screen reader nobody can follow.
 - [ ] **UI-34i** · `Progress` — per-file upload progress **and nothing else**. It has **no
       indeterminate mode**, deliberately, so transcription cannot borrow it: transcription has no
       percentage and is described in elapsed time. 🧪 the component has no such prop to reach for
@@ -497,6 +507,13 @@ the rest consume it.
       numbers and requires the exact name typed. Settle case and accent sensitivity, since the
       names are Catalan and the prototype compares with a bare `===`. 🧪 the action cannot fire
       before the match
+      **Settled as: NFC-normalised, trimmed, case-insensitive, accent-sensitive.** The first two
+      because `À` has two Unicode spellings and phone keyboards add trailing spaces; case-insensitive
+      because shift is a typing convention and not part of a name; accent-sensitive because an
+      accent is part of the word, and this is the one place where being strict costs a retype and
+      being lax costs a library. **The confirm button is drawn and `disabled` rather than absent**
+      — `UI-34c`'s rule is for an action you will never be able to take, and this is one you are
+      three keystrokes away from.
 - [ ] **UI-34n** · `EgressNotice` — §3.4's disclosure, in its **three placements** (dialog, panel,
       beside a retry) and its **two registers** (local, calm; off the instance, factual), plus the
       no-provider-configured case. ⇢ API-12

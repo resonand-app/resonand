@@ -116,17 +116,21 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 
 **To look at it: `npm run dev`, then `#/specimens`.** Every component, every glyph, the seventeen guideline cards, and a control that switches between light, dark and the system's answer (`UI-1k`). It is development-only and is not in a build.
 
-Component inventory note: no source defined a component list, so this is an authored set sized to the brief — every family here appears in a view the brief specifies. There are no speculative primitives (no Toast, Tooltip, Tabs, Switch, Select) because no view in the brief needed one at the time.
+Component inventory note: no source defined a component list, so the first twenty-one were an authored set sized to the brief. There were no speculative primitives, and there still are none — everything added since was named by a view that needed it.
 
-**The interface specification adds thirteen.** `Toast`, `Tooltip`, `Tabs`, `Switch`, `Select`, `Checkbox`, `Sheet`, `Menu` and `Progress` are required by views the system did not cover, plus four compositions — `LevelSelector`, `InlineField`, `TypedConfirm` and `EgressNotice`. See *Components the design system still owes* in the interface specification.
+**The specification's thirteen are built** (`UI-34`). `Select`, `Menu`, `Tabs`, `Switch`, `Checkbox`, `Sheet`, `Toast`, `Progress` and `Tooltip` are the nine primitives; `LevelSelector`, `InlineField`, `TypedConfirm` and `EgressNotice` are the four compositions. They extend this folder in place — same two files per component, same family folders, same rules — because there is one system and it is versioned with the code.
 
-They **extend this folder in place** rather than living in a design file: same two files per component (`.tsx` and `.prompt.md`), same family folders, a row added to the index above, an export added to `index.ts`, and the same rules — tokens only, no colour written in a component. There is one system, and it is versioned with the code. **None of the thirteen is built yet**; they are `UI-34`, and the ten composites the prototype invented are `UI-35`.
+Underneath five of them is `components/overlay/useAnchoredOverlay` (`UI-34a`), which settles placement, focus trapping, `Esc`, the outside click and the scroll lock once. It is **not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay.
+
+**Six of the ten composites the prototype invented are here too** (`UI-35`), in `components/layout/` and `components/data/`. The other four — `FilterBar`, `BulkBar`, `UploadTray` and `ResultGroup` — hold a query, a mutation or a store, so `DEC-22` puts them in `frontend/src/components/` instead. Without that line, "make it reusable" ends with the design system importing TanStack Query.
+
+Three of the components carry an absence that is part of the design, and each says so in its own file: `Progress` has **no indeterminate mode**, so transcription cannot borrow it; `MenuItem` has **no `disabled`**, so an action the user cannot take is absent; and `PageHeader` takes its title as a `string`, so nothing else can get inside the one piece of display type the product has.
 
 ## Caveats
 
 - ~~**Geist is loaded from Google Fonts**, not shipped.~~ **Closed by `UI-1a`.** Both faces ship as subset woff2 in `assets/fonts/`, Latin and Latin Extended, no italics — 84 KB for all four files. They come from `@fontsource-variable/geist` and its mono twin, and the version is written in `tokens/fonts.css`, which is the only place it exists. Nothing here reaches the network.
 - ~~**Icons are Lucide, loaded from a CDN.**~~ **Closed by `UI-1b`.** Bundled and tree-shaken — see ICONOGRAPHY. The substitution itself still stands: no icon set was supplied, and `Icon` is still the one file that changes if one arrives.
-- **The system is complete; the interface is not.** Twenty-one components, and the specification names thirteen more plus ten composites the prototype invented. See above.
+- **The system is complete; the interface is not.** Thirty-four components and six composites, drawn and built. What does not exist yet is a single view: `frontend/src/` holds the application's four composites, the specimen page and a hello. Phase D puts a router, a client and a shell around them.
 - **Sample content is invented**, written to be plausible for a Catalan family-archive user. It now lives in the application's `src/dev/specimen-data.ts` rather than in this folder — component defaults are deliberately empty, so a forgotten prop reads as missing rather than as somebody else's recording.
 
 ### The UI kit is provenance, not a starting point
