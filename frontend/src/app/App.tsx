@@ -14,10 +14,11 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy, useState } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
 
 import { createQueryClient } from '@/api/query-client';
 
+import { AppShell } from './AppShell';
 import { NotBuiltYet } from './NotBuiltYet';
 import { NotFound } from './NotFound';
 import { RequireSession } from './RequireSession';
@@ -53,21 +54,35 @@ function Archive() {
       <Routes>
         <Route path={routes.signIn} element={<NotBuiltYet view="V1 - Sign in" />} />
         <Route element={<RequireSession />}>
-          <Route path={routes.libraries} element={<NotBuiltYet view="V2 - Libraries" />} />
-          <Route path={routes.library} element={<NotBuiltYet view="V3/V4 - A library" />} />
-          <Route
-            path={routes.librarySettings}
-            element={<NotBuiltYet view="V7 - Library settings" />}
-          />
-          <Route path={routes.recording} element={<NotBuiltYet view="V5 - Audio detail" />} />
-          <Route path={routes.search} element={<NotBuiltYet view="V6 - Search" />} />
-          <Route path={routes.trash} element={<NotBuiltYet view="V9 - Trash" />} />
-          <Route path={routes.settings} element={<NotBuiltYet view="V10 - Settings" />} />
+          {/* Everything with a session is drawn inside the frame, and the frame is outside the
+              routes on purpose: the nav, the sidebar and the player must not remount when the
+              view changes, which is what makes the player persistent (`UI-5a`). */}
+          <Route element={<Framed />}>
+            <Route path={routes.libraries} element={<NotBuiltYet view="V2 - Libraries" />} />
+            <Route path={routes.library} element={<NotBuiltYet view="V3/V4 - A library" />} />
+            <Route
+              path={routes.librarySettings}
+              element={<NotBuiltYet view="V7 - Library settings" />}
+            />
+            <Route path={routes.recording} element={<NotBuiltYet view="V5 - Audio detail" />} />
+            <Route path={routes.search} element={<NotBuiltYet view="V6 - Search" />} />
+            <Route path={routes.trash} element={<NotBuiltYet view="V9 - Trash" />} />
+            <Route path={routes.settings} element={<NotBuiltYet view="V10 - Settings" />} />
+          </Route>
         </Route>
         {/* A trailing slash is the same place, not a different one. */}
         <Route path="/index.html" element={<Navigate to={routes.libraries} replace />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </QueryClientProvider>
+  );
+}
+
+/** The shell, with whichever view the route resolved to inside it. */
+function Framed() {
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
   );
 }

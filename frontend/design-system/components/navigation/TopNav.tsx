@@ -15,6 +15,20 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
   onToggleSidebar?: () => void;
   onUpload?: () => void;
   onProfile?: () => void;
+  /**
+   * The copy, for an application that has its own (`UI-22a`).
+   *
+   * The defaults are English, because a component with no label at all is a component that draws
+   * an empty button in a specimen. But every literal a person reads has to be replaceable from
+   * outside the system: the interface externalises all of its copy, and a string baked in here
+   * would be one that can never be translated.
+   */
+  labels?: {
+    search?: string;
+    sidebar?: string;
+    upload?: string;
+    account?: string;
+  };
   /** Rendered inside the search wrapper -- pass `SearchResults` here so it anchors to the field. */
   children?: ReactNode;
 }
@@ -43,6 +57,7 @@ export function TopNav({
   onToggleSidebar,
   onUpload,
   onProfile,
+  labels,
   children,
   style,
   ...rest
@@ -66,7 +81,7 @@ export function TopNav({
     >
       <IconButton
         icon="panel-left"
-        label="Toggle sidebar"
+        label={labels?.sidebar ?? 'Toggle sidebar'}
         onClick={onToggleSidebar}
         style={{ borderRadius: 'var(--radius-control)' }}
       />
@@ -75,6 +90,7 @@ export function TopNav({
         <div style={{ width: '100%', maxWidth: 540, position: 'relative' }}>
           <SearchField
             value={query}
+            {...(labels?.search === undefined ? {} : { placeholder: labels.search })}
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
               onQueryChange?.(event.target.value);
             }}
@@ -84,12 +100,12 @@ export function TopNav({
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <Button variant="primary" icon="upload" onClick={onUpload}>
-          Upload audio
+          {labels?.upload ?? 'Upload audio'}
         </Button>
         <button
           type="button"
           onClick={onProfile}
-          aria-label="Account"
+          aria-label={labels?.account ?? 'Account'}
           data-ds="avatar-button"
           data-hit-target=""
           style={{
