@@ -1,0 +1,20 @@
+{
+  "state": {
+    "buffering": "Loading",
+    "failed": "This recording will not play",
+    "fromOriginal": "Playing the original while this is being processed",
+    "noWaveform": "No waveform yet",
+    "onScreen": "The waveform above is the one that moves"
+  },
+  "action": {
+    "play": "Play",
+    "pause": "Pause",
+    "back": "Back 15 seconds",
+    "forward": "Forward 15 seconds",
+    "retry": "Try again",
+    "close": "Stop playing",
+    "expand": "Open the player",
+    "collapse": "Close the player",
+    "speed": "Playback speed"
+  }
+}

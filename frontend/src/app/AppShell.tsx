@@ -15,18 +15,25 @@
  * every view, which is exactly why they are given to the frame rather than rendered inside one.
  */
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 
 import { Shell, Sidebar, TopNav } from '@/design-system';
 
+import { MediaSession } from '@/player/MediaSession';
+import { PhonePlayer } from '@/player/PhonePlayer';
+import { Player } from '@/player/Player';
+import { connect } from '@/player/audio';
+import { usePlayback } from '@/player/store';
+
 import { PhoneShell } from './PhoneShell';
 import { destinationOf, destinationTo, initialsOf } from './destinations';
 import { useLibraries, useTrashCount } from './library-data';
 import { routes, toSearch } from './routes';
 import { useSession } from './session';
+import { SEEK_SECONDS, SKIP_SECONDS } from './keyboard';
 import { useIsPhone } from './use-is-phone';
 import { useKeyboard } from './useKeyboard';
 import { useSidebarCollapse } from './use-sidebar-collapse';
@@ -55,6 +62,10 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   const [uploading, setUploading] = useState(false);
   const search = useRef<HTMLInputElement>(null);
 
+  // The audio element is connected once, by the frame, and never by a view. It is outside React
+  // and outside the routes, which is what "survives every navigation" means in code (`UI-5b`).
+  useEffect(connect, []);
+
   // The shell owns the bindings that are about the shell. The player's are added by `UI-5`, and a
   // view's -- moving between transcript segments, opening a row -- by the view: `useKeyboard`
   // ignores a command nobody answers, so an unanswered key stays the browser's.
@@ -62,6 +73,21 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
     'focus-search': () => {
       search.current?.focus();
       search.current?.select();
+    },
+    'play-pause': () => {
+      usePlayback.getState().toggle();
+    },
+    'seek-back': () => {
+      usePlayback.getState().nudge(-SEEK_SECONDS);
+    },
+    'seek-forward': () => {
+      usePlayback.getState().nudge(SEEK_SECONDS);
+    },
+    'skip-back': () => {
+      usePlayback.getState().nudge(-SKIP_SECONDS);
+    },
+    'skip-forward': () => {
+      usePlayback.getState().nudge(SKIP_SECONDS);
     },
   });
 
@@ -71,7 +97,12 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
     return (
       <PhoneShell
         {...(header === undefined ? {} : { header })}
-        {...(player ? { player } : {})}
+        player={
+          <>
+            <MediaSession />
+            {player ?? <PhonePlayer />}
+          </>
+        }
         {...(tray ? { upload: tray } : {})}
         uploading={uploading}
         onUploadTab={setUploading}
@@ -115,7 +146,12 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
           }}
         />
       }
-      {...(player ? { player } : {})}
+      player={
+        <>
+          <MediaSession />
+          {player ?? <Player />}
+        </>
+      }
       {...(tray ? { tray } : {})}
     >
       {children}

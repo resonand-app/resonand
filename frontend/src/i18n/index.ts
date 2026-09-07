@@ -21,6 +21,7 @@ import type { i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import common from './en/common.json';
+import player from './en/player.json';
 import shell from './en/shell.json';
 import { pseudoBundle } from './pseudo';
 
@@ -35,9 +36,9 @@ export const BASE = 'en';
  */
 export const PSEUDO = 'pseudo';
 
-export const NAMESPACES = ['common', 'shell'] as const;
+export const NAMESPACES = ['common', 'player', 'shell'] as const;
 
-const english = { common, shell };
+const english = { common, player, shell };
 
 export const resources = {
   [BASE]: english,
