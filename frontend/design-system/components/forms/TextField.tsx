@@ -2,18 +2,10 @@ import type { InputHTMLAttributes } from 'react';
 
 import { Icon } from '../foundation/Icon';
 
-/* `--state-failed` is the decision UI-33a had to take. The `#C4574A` this replaces matched no
-   token in the system -- it was a fifth red, half a step darker than the one the state badge and
-   the error text already use, and nothing said why. One red for one meaning. */
-const ERROR_RING = '0 0 0 1px var(--state-failed)';
-const FOCUS_RING = '0 0 0 2px var(--accent)';
-
 export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string | undefined;
   /** Error message. Presence switches the field to its error treatment. */
   error?: string | undefined;
-  /** Renders the focus ring for specimen purposes; real focus comes from `:focus-visible`. */
-  focused?: boolean | undefined;
 }
 
 /**
@@ -29,9 +21,14 @@ export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
  *
  * The error message is rendered, not just coloured: an error a person can see the shape of but
  * not read is a field they cannot fix.
+ *
+ * **The `outline: none` is gone (`UI-32b`).** It sat on the input and gave nothing back, which is
+ * a field that is invisible when focused -- on the one control a keyboard user has no choice but
+ * to land on. The ring is drawn around the box by `components.css`, and the error ring is drawn
+ * there too, so a field that is both wrong and focused shows both.
  */
-export function TextField({ label, error, focused, style, ...rest }: TextFieldProps) {
-  const ring = error !== undefined ? ERROR_RING : focused ? FOCUS_RING : 'none';
+export function TextField({ label, error, style, ...rest }: TextFieldProps) {
+  const invalid = error !== undefined;
 
   return (
     <label style={{ display: 'flex', flexDirection: 'column', gap: 6, ...style }}>
@@ -47,11 +44,13 @@ export function TextField({ label, error, focused, style, ...rest }: TextFieldPr
         </span>
       )}
       <span
+        data-ds="field-box"
+        data-invalid={invalid ? 'true' : undefined}
+        data-hit-target=""
         style={{
           height: 'var(--field-height)',
           background: 'var(--surface-2)',
           borderRadius: 'var(--radius-control)',
-          boxShadow: ring,
           display: 'flex',
           alignItems: 'center',
           gap: 10,
@@ -60,11 +59,11 @@ export function TextField({ label, error, focused, style, ...rest }: TextFieldPr
         }}
       >
         <input
+          aria-invalid={invalid ? true : undefined}
           style={{
             flex: 1,
             minWidth: 0,
             border: 'none',
-            outline: 'none',
             background: 'transparent',
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size)',
@@ -72,9 +71,9 @@ export function TextField({ label, error, focused, style, ...rest }: TextFieldPr
           }}
           {...rest}
         />
-        {error !== undefined && <Icon name="alert-circle" size={15} color="var(--state-failed)" />}
+        {invalid && <Icon name="alert-circle" size={15} color="var(--state-failed)" />}
       </span>
-      {error !== undefined && (
+      {invalid && (
         <span
           style={{
             fontFamily: 'var(--font-sans)',

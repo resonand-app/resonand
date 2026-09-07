@@ -239,7 +239,9 @@ export function Waveform({
       aria-valuemin={seekable ? 0 : undefined}
       aria-valuemax={seekable ? 100 : undefined}
       aria-valuenow={seekable ? Math.round(played * 100) : undefined}
-      style={{ width: '100%', cursor: seekable ? 'pointer' : undefined, ...style }}
+      data-ds="waveform"
+      data-seekable={seekable ? 'true' : undefined}
+      style={{ width: '100%', ...style }}
     >
       <svg
         width="100%"

@@ -31,7 +31,12 @@ export default mergeConfig(
       // component's test sits beside the component rather than in a parallel folder under
       // `src/` that has to be kept in step with it by hand.
       include: ['src/**/*.{test,spec}.{ts,tsx}', 'design-system/**/*.{test,spec}.{ts,tsx}'],
-      css: false,
+      // No stylesheet is processed or injected -- a component test asserts what a component
+      // renders, not what a browser would paint it -- with one exception, added by `UI-32a`:
+      // `?raw`. `interaction-layer.test.tsx` reads `components.css` as text and holds every
+      // component to what the stylesheet claims to own, and a bare `css: false` answers a `?raw`
+      // request with an empty string, which is a check that passes because it read nothing.
+      css: { include: [/\?raw/] },
 
       coverage: {
         provider: 'v8',

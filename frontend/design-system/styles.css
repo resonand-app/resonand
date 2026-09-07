@@ -7,3 +7,7 @@
 @import "tokens/breakpoints.css";
 @import "tokens/motion.css";
 @import "tokens/semantic.css";
+
+/* The interaction layer, last: it reads the tokens above and adds the half of the system that
+   an inline style object cannot express -- hover, press, focus and the 44px floor (`UI-32a`). */
+@import "components.css";

@@ -49,6 +49,7 @@ export function Dialog({
       }}
       role="dialog"
       aria-label={title}
+      data-ds="dialog"
       {...rest}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -84,16 +85,15 @@ export function Dialog({
           type="button"
           onClick={onClose}
           aria-label="Close"
+          data-ds="dialog-close"
+          data-hit-target=""
           style={{
             width: 28,
             height: 28,
             border: 'none',
-            background: 'transparent',
-            color: 'var(--text-3)',
             borderRadius: 'var(--radius-circle)',
             display: 'grid',
             placeItems: 'center',
-            cursor: 'pointer',
             flex: '0 0 auto',
           }}
         >

@@ -2,33 +2,54 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 import {
+  AvatarStack,
   Button,
+  CardSkeleton,
+  Checkbox,
   Chip,
   ColorSwatchPicker,
   CreateLibraryCard,
   Dialog,
+  EgressNotice,
   Icon,
   IconButton,
+  KeyValueList,
+  InlineField,
+  LevelSelector,
   LibraryCard,
   Logo,
+  Menu,
+  PageHeader,
   PlayerBar,
   ProfileMenu,
+  Progress,
   RecordingCard,
   RecordingRow,
+  RowSkeleton,
   SearchField,
   SearchResults,
+  Select,
+  Sheet,
+  Shell,
   Sidebar,
+  StateCard,
   StateBadge,
+  Switch,
+  Tabs,
   TextField,
   THEME_CHOICES,
+  Toast,
+  ToastRegion,
+  Tooltip,
   TopNav,
   TranscriptLine,
   TRANSCRIPTION_STATE_NAMES,
+  TypedConfirm,
   useTheme,
   WAVE_SIZES,
   Waveform,
 } from '@/design-system';
-import type { IconName, LibraryColorName } from '@/design-system';
+import type { IconName, LibraryColorName, ToastEntry } from '@/design-system';
 
 import { HITS, LIBRARIES, PEAKS, SHARED, SHORT_PEAKS } from '@/dev/specimen-data';
 
@@ -69,10 +90,82 @@ const GLYPHS: IconName[] = [
   'tag',
   'x',
   'chevron-left',
+  'chevron-down',
+  'minus',
+  'pencil',
+  'hard-drive',
+  'cloud-upload',
   'circle-dashed',
   'loader',
   'check',
   'alert-circle',
+];
+
+/** Sort orders, which are what `V3`'s filter bar actually offers (§4). */
+const SORTS = [
+  { value: 'recorded', label: 'Recording date' },
+  { value: 'uploaded', label: 'Upload date' },
+  { value: 'duration', label: 'Duration' },
+  { value: 'title', label: 'Title' },
+];
+
+/** What a recording's overflow menu offers (§2.4). Nothing here is ever disabled: an action the
+ *  user cannot take is absent from the list. */
+const RECORDING_ACTIONS = [
+  { id: 'download', label: 'Download the original', icon: 'upload' as const },
+  { id: 'move', label: 'Move to another library', icon: 'library' as const },
+  { id: 'retranscribe', label: 'Re-transcribe', icon: 'align-left' as const },
+  {
+    id: 'trash',
+    label: 'Send to trash',
+    icon: 'trash-2' as const,
+    destructive: true,
+    separated: true,
+  },
+];
+
+/** `level_description` exactly as `GET /libraries/{uuid}/shares` returns it -- the wording lives
+ *  in `sonarium/core/levels.py` and the interface has no copy of it. Owner is here to prove it is
+ *  dropped rather than drawn. */
+const LEVELS = [
+  { level: 10, description: 'Can read: listen and read the transcript, and change nothing.' },
+  { level: 20, description: 'Can edit: change titles, categories and tags, but not share.' },
+  { level: 30, description: 'Can manage: everything above, plus sharing with other people.' },
+  { level: 40, description: 'Owner: the library belongs to them.' },
+];
+
+/** Who a library is shared with, for the avatar stack. */
+const PEOPLE = [
+  { id: 1, name: 'Martí Colom' },
+  { id: 2, name: 'Àvia Teresa' },
+  { id: 3, name: 'Joana' },
+  { id: 4, name: 'Pere Sala' },
+  { id: 5, name: 'Anna Vidal' },
+  { id: 6, name: 'Roc' },
+];
+
+/** The technical metadata section of V5, as `AudioSummary` reports it. */
+const TECHNICAL = [
+  { key: 'Sample rate', value: '48 000 Hz' },
+  { key: 'Channels', value: '2' },
+  { key: 'Codec', value: 'aac' },
+  { key: 'Size', value: '284 MB' },
+];
+
+/** `GET /transcription/destination` for an instance configured against OpenAI (`API-12`). */
+const OPENAI = {
+  provider: 'openai',
+  host: 'api.openai.com',
+  is_local: false,
+  configured: true,
+};
+
+/** Settings' four sections (§4, V10). */
+const SETTINGS_TABS = [
+  { value: 'account', label: 'Account' },
+  { value: 'sessions', label: 'Sessions' },
+  { value: 'appearance', label: 'Appearance' },
+  { value: 'administration', label: 'Administration' },
 ];
 
 /** The seventeen specimen cards in `guidelines/`, which are standalone HTML and stay that way. */
@@ -190,6 +283,15 @@ function ThemeControl() {
 export default function Specimens() {
   const [colour, setColour] = useState<LibraryColorName>('clay');
   const [query, setQuery] = useState('carrer nou');
+  const [sort, setSort] = useState('recorded');
+  const [section, setSection] = useState('appearance');
+  const [transcribe, setTranscribe] = useState(true);
+  const [picked, setPicked] = useState(true);
+  const [sheet, setSheet] = useState(false);
+  const [level, setLevel] = useState(20);
+  const [title, setTitle] = useState('Sopar de Nadal 1998');
+  const [confirm, setConfirm] = useState(false);
+  const [toasts, setToasts] = useState<ToastEntry[]>([]);
 
   return (
     <main
@@ -286,6 +388,54 @@ export default function Specimens() {
         <Panel label="ColorSwatchPicker">
           <ColorSwatchPicker value={colour} onChange={setColour} />
         </Panel>
+        <Panel label="Select">
+          <Select label="Sort" value={sort} onChange={setSort} options={SORTS} />
+        </Panel>
+        <Panel label="Select · disabled">
+          <Select label="Category" options={SORTS} placeholder="Any category" disabled />
+        </Panel>
+        <Panel label="Progress · determinate only" width={340}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Progress value={0.64} label="Entrevista àvia 03.m4a" detail="64% · 284 MB" />
+            <Progress value={0.1} label="Overall" detail="3 of 30 uploaded, 1 failed" />
+          </div>
+        </Panel>
+        <Panel label="Checkbox">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Checkbox checked={picked} onChange={setPicked} label="Select this recording" />
+            <Checkbox checked="mixed" onChange={() => undefined} label="Select all" />
+            <Checkbox checked={false} onChange={() => undefined} label="In a row" size="row" />
+            <Checkbox checked onChange={() => undefined} label="Unavailable" disabled />
+          </div>
+        </Panel>
+        <Panel label="Switch" width={320}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Switch
+              checked={transcribe}
+              onChange={setTranscribe}
+              label="Transcribe when the upload finishes"
+              description="Transcription is sent to api.openai.com. The audio leaves this instance."
+            />
+            <Switch
+              checked={false}
+              onChange={() => undefined}
+              label="Watch a folder for new files"
+              disabled
+            />
+          </div>
+        </Panel>
+        <Panel label="Select · open" width={240}>
+          {/* Held open, the way the components canvas draws it: a menu nobody can see is a menu
+              nobody can review, and the open state is where most of its geometry lives. */}
+          <Select
+            label="Speed"
+            value={sort}
+            onChange={setSort}
+            options={SORTS}
+            open
+            onOpenChange={() => undefined}
+          />
+        </Panel>
       </Section>
 
       <Section title="Media">
@@ -359,6 +509,50 @@ export default function Specimens() {
             <Chip active>1998</Chip>
           </div>
         </Panel>
+        <Panel label="EgressNotice · three cases, two registers" width={420}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <EgressNotice
+              destination={{
+                provider: 'whisper',
+                host: 'whisper.local:9000',
+                is_local: true,
+                configured: true,
+              }}
+            />
+            <EgressNotice destination={OPENAI} />
+            <EgressNotice
+              destination={OPENAI}
+              placement="retry"
+              action={
+                <Button variant="secondary" icon="align-left">
+                  Retry
+                </Button>
+              }
+            />
+            <EgressNotice
+              destination={{ provider: 'none', host: null, is_local: false, configured: false }}
+            />
+          </div>
+        </Panel>
+        <Panel label="InlineField · editable, and read-only by permission" width={320}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <InlineField label="Title" value={title} onSave={setTitle} />
+            <InlineField
+              label="Title"
+              value="Sopar de Nadal 1998"
+              onSave={() => undefined}
+              readOnly
+            />
+          </div>
+        </Panel>
+        <Panel label="LevelSelector · the API's wording, visible" width={360}>
+          <LevelSelector
+            label="What Marta can do"
+            levels={LEVELS}
+            value={level}
+            onChange={setLevel}
+          />
+        </Panel>
         <Panel label="LibraryCard · CreateLibraryCard" width={672}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--grid-gap)' }}>
             <LibraryCard
@@ -405,6 +599,27 @@ export default function Specimens() {
         <Panel label="Sidebar · collapsed" width={52}>
           <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} collapsed />
         </Panel>
+        <Panel label="Tabs" width={420}>
+          <Tabs
+            label="Settings sections"
+            tabs={SETTINGS_TABS}
+            value={section}
+            onChange={setSection}
+          />
+        </Panel>
+        <Panel label="Menu · open" width={236}>
+          {/* Held open for the same reason the Select above is: most of a menu's geometry only
+              exists while it is on screen. */}
+          <Menu
+            label="Recording options"
+            items={RECORDING_ACTIONS}
+            open
+            onOpenChange={() => undefined}
+          />
+        </Panel>
+        <Panel label="Menu · closed">
+          <Menu label="Library actions" items={RECORDING_ACTIONS} />
+        </Panel>
         <Panel label="ProfileMenu" width={236}>
           <ProfileMenu name="Martí Colom" email="marti@sonarium.app" initials="MC" theme="Dark" />
         </Panel>
@@ -424,6 +639,210 @@ export default function Specimens() {
           >
             <TextField label="Type the library name to confirm" placeholder="Àvia Teresa" />
           </Dialog>
+        </Panel>
+      </Section>
+
+      <Section title="Composites">
+        <Panel label="PageHeader · the one Chillax title per screen" width="100%">
+          <PageHeader
+            title="Àvia Teresa"
+            meta="37 recordings · 24 h 12 min"
+            before={
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 'var(--radius-circle)',
+                  background: 'var(--library-clay)',
+                }}
+              />
+            }
+            actions={
+              <>
+                <Button variant="secondary" icon="share-2">
+                  Share
+                </Button>
+                <Button variant="primary" icon="upload">
+                  Upload audio
+                </Button>
+              </>
+            }
+          />
+        </Panel>
+        <Panel label="StateCard · nothing yet, and a filter that matched nothing" width="100%">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--grid-gap)' }}>
+            <StateCard
+              icon="library"
+              title="No recordings yet"
+              body="Upload audio to get started. Everything you add here stays on this instance until you share it."
+              action={
+                <Button variant="primary" icon="upload">
+                  Upload audio
+                </Button>
+              }
+              dashed
+            />
+            <StateCard
+              icon="search"
+              title="No recordings match memòria"
+              body="Nothing in this library carries that tag."
+              action={<Button variant="secondary">Clear the filter</Button>}
+              footnote="37 recordings in the library"
+            />
+          </div>
+        </Panel>
+        <Panel label="Skeletons · the shape of the thing that is coming" width="100%">
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 'var(--grid-gap)' }}
+          >
+            <CardSkeleton />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <RowSkeleton />
+              <RowSkeleton />
+              <RowSkeleton />
+            </div>
+          </div>
+        </Panel>
+        <Panel label="AvatarStack">
+          <AvatarStack people={PEOPLE} />
+        </Panel>
+        <Panel label="KeyValueList · stacked, and inline" width={520}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-6)' }}>
+            <KeyValueList rows={TECHNICAL} />
+            <KeyValueList rows={TECHNICAL} layout="inline" />
+          </div>
+        </Panel>
+        <Panel label="Shell · nav, sidebar, content, player" width="100%">
+          <div style={{ height: 420, borderRadius: 'var(--radius-panel)', overflow: 'hidden' }}>
+            <Shell
+              nav={<TopNav initials="MC" query={query} onQueryChange={setQuery} />}
+              sidebar={<Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} activeId="avia" />}
+              player={
+                <PlayerBar
+                  title="Entrevista amb l’àvia Teresa"
+                  library="Àvia Teresa"
+                  peaks={PEAKS}
+                  position="18:04"
+                  duration="48:12"
+                  played={0.375}
+                  playing
+                />
+              }
+            >
+              <PageHeader title="Àvia Teresa" meta="37 recordings · 24 h 12 min" />
+              <RecordingRow
+                name="Entrevista amb l’àvia Teresa"
+                duration="48:12"
+                peaks={SHORT_PEAKS}
+              />
+            </Shell>
+          </div>
+        </Panel>
+      </Section>
+
+      <Section title="Overlays">
+        <Panel label="ToastRegion · above the player, announced politely">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setToasts([
+                {
+                  id: String(Date.now()),
+                  content: <Toast>12 recordings moved to Àvia Teresa</Toast>,
+                },
+              ]);
+            }}
+          >
+            Raise a toast
+          </Button>
+          <ToastRegion
+            toasts={toasts}
+            onDismiss={(id) => {
+              setToasts((current) => current.filter((entry) => entry.id !== id));
+            }}
+            playerVisible
+          />
+        </Panel>
+        <Panel label="Toast · done" width={420}>
+          <Toast onDismiss={() => undefined}>12 recordings moved to Àvia Teresa</Toast>
+        </Panel>
+        <Panel label="Toast · failed, and still selected" width={420}>
+          <Toast
+            tone="failed"
+            actions={
+              <>
+                <Button variant="secondary">Retry 3</Button>
+                <Button variant="ghost">Dismiss</Button>
+              </>
+            }
+          >
+            9 moved, 3 failed. The three that failed are still selected.
+          </Toast>
+        </Panel>
+        <Panel label="Tooltip · a truncated title, in full" width={260}>
+          <Tooltip content="Interview with grandma Teresa — the house on Carrer Nou">
+            <span
+              style={{
+                fontSize: 'var(--type-ui-size)',
+                color: 'var(--text-2)',
+                maxWidth: 200,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              Interview with grandma Teresa — the house…
+            </span>
+          </Tooltip>
+        </Panel>
+        <Panel label="Tooltip · an icon-only control's name">
+          <Tooltip content="Share this library">
+            <IconButton icon="share-2" variant="ghost" label="Share this library" />
+          </Tooltip>
+        </Panel>
+        <Panel label="TypedConfirm · permanent deletion only">
+          <Button
+            variant="danger"
+            icon="trash-2"
+            onClick={() => {
+              setConfirm(true);
+            }}
+          >
+            Delete Àvia Teresa
+          </Button>
+          <TypedConfirm
+            open={confirm}
+            name="Àvia Teresa"
+            consequence="84 recordings, 12 h 40 min of audio and their transcripts"
+            onConfirm={() => {
+              setConfirm(false);
+            }}
+            onCancel={() => {
+              setConfirm(false);
+            }}
+          />
+        </Panel>
+        <Panel label="Sheet · the phone's metadata panel">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setSheet(true);
+            }}
+          >
+            Open the sheet
+          </Button>
+          <Sheet
+            open={sheet}
+            onClose={() => {
+              setSheet(false);
+            }}
+            title="Metadata"
+          >
+            <div style={{ display: 'flex', gap: 6 }}>
+              <Chip>memòria</Chip>
+              <Chip>1998</Chip>
+            </div>
+          </Sheet>
         </Panel>
       </Section>
 

@@ -37,6 +37,11 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
  * bug a screenshot cannot catch. Empty is now visibly empty. The defaults that survive are the
  * ones that are decisions rather than content: the speed pill reads 1.0x because that is where
  * playback starts.
+ *
+ * The play control asks for `variant="accent"` rather than passing the accent through `style`,
+ * which is what it did until `UI-32a`: an inline background is a paint no hover rule can reach,
+ * so the most-pressed button in the product was one that did not respond to a pointer. The two
+ * skip controls still state their own colour, and can -- nothing needs to vary it.
  */
 export function PlayerBar({
   title = '',
@@ -53,6 +58,7 @@ export function PlayerBar({
 }: PlayerBarProps) {
   return (
     <div
+      data-ds="player-bar"
       style={{
         height: 'var(--player-height)',
         background: 'var(--surface)',
@@ -76,10 +82,10 @@ export function PlayerBar({
         />
         <IconButton
           icon={playing ? 'pause' : 'play'}
+          variant="accent"
           size={38}
           label={playing ? 'Pause' : 'Play'}
           onClick={onToggle}
-          style={{ background: 'var(--accent)', color: 'var(--accent-on)' }}
         />
         <IconButton
           icon="skip-forward"

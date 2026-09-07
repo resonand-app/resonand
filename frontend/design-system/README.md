@@ -45,9 +45,13 @@ Borders exist only as hairline dividers inside a panel and as the dashed edge of
 
 **Backgrounds and imagery.** None. There is no photography, no illustration, no pattern. The waveform is the only graphic the product owns, and it is real data.
 
-**Interaction.** Hover raises a surface one step (`transparent` → `--surface-2`) or moves the accent one step lighter on dark, one darker on light; press takes `--accent-pressed`. Disabled is 0.38 opacity, never a colour change. Focus is a single treatment everywhere: a 2px `--accent` ring at 2px offset. Hit targets never go under 44px even where the visual is 32px.
+**Interaction.** Hover raises a surface one step (`transparent` → `--surface-2`, `--surface-2` → `--border`) or moves the accent one step lighter on dark, one darker on light; press takes `--accent-pressed`. Disabled is 0.38 opacity, never a colour change. Focus is a single treatment everywhere: a 2px `--accent` ring at 2px offset. Hit targets never go under 44px even where the visual is 32px — grown with a pseudo-element rather than by growing the box, so a row of controls keeps its rhythm.
+
+All of it lives in `components.css` and none of it is a React state variable (`UI-32a`). **Until that file existed, every rule in this paragraph was documented and unimplemented** — the components are inline style objects, and `:hover`, `:focus-visible`, `:active` and `@media` cannot be written as a property on one. The specimen boards faked them with a prototyping harness that does not ship. The one hover that is not a surface step is the destructive button's: `--state-failed-bg` is the deepest red in the palette and filling with `--state-failed` itself has no on-colour that clears AA in both themes, so it answers with an inset `--border-control` edge instead.
 
 **Motion.** 120ms for state, 200ms for panels, `cubic-bezier(.2,0,.2,1)`. The transcript highlight following playback is the only thing that moves on its own, and it stops under `prefers-reduced-motion`. No bounce, no spring, no entrance animation.
+
+`prefers-reduced-motion` is honoured in three places and each is checked (`UI-32c`): both duration tokens zero themselves, **every transition in the system is written in terms of one of them** — which is what makes that zeroing sufficient rather than decorative — and a script that scrolls asks for itself, with `usePrefersReducedMotion`. That last one is not optional politeness: `scrollTo({ behavior: 'smooth' })` consults no token, no media query and no stylesheet, so the transcript's follow-scroll is the one movement in the product that can only be stopped in TypeScript.
 
 **Layout.** Fixed shell: nav 52, sidebar 224 (52 collapsed), player 64, all floating in a 12px gap. Cards 320×188, three up at 1280, 16px grid gap. Dense rows 36px — that is the floor. Page padding 28.
 
@@ -75,7 +79,7 @@ Plain, concrete, second person. The interface says what happened and what it wil
 
 ⚠️ **Substitution, flagged.** The sources supplied no icon set — no codebase, no Figma, no sprite. The glyphs in the signed-off specimen board were drawn for the exploration; Lucide is the closest published match to their weight and construction and replaces them, so the system ships a real, complete, maintained set rather than a partial hand-drawn one. If you have an icon set you would rather use, hand it over and `Icon` is the only file that changes.
 
-Use `Icon` for every glyph; do not inline SVG in a screen. **`name` is one of the twenty-four names the component registers, not any Lucide name**: `search`, `upload`, `panel-left`, `library`, `plus`, `play`, `pause`, `skip-back`, `skip-forward`, `share-2`, `more-vertical`, `trash-2`, `sliders-horizontal`, `moon`, `log-out`, `align-left`, `clock`, `tag`, `x`, `chevron-left`. Transcription states map to `circle-dashed`, `loader`, `check`, `alert-circle`.
+Use `Icon` for every glyph; do not inline SVG in a screen. **`name` is one of the twenty-four names the component registers, not any Lucide name**: `search`, `upload`, `panel-left`, `library`, `plus`, `play`, `pause`, `skip-back`, `skip-forward`, `share-2`, `more-vertical`, `trash-2`, `sliders-horizontal`, `moon`, `log-out`, `align-left`, `clock`, `tag`, `x`, `chevron-left`, `chevron-down`, `minus`, `pencil`, `hard-drive`, `cloud-upload`. Transcription states map to `circle-dashed`, `loader`, `check`, `alert-circle`.
 
 The registry is written out by hand in `Icon.tsx`, which is what keeps the other fourteen hundred icons out of the bundle — measured at 759 KB against 2.6 KB. Adding a glyph is two lines there; using one that is not registered is a compile error at the call site, and a thrown error in development if it arrives as a computed string. Four of the names above are deprecated aliases upstream and the registry absorbs that, so the system's vocabulary does not move when Lucide's does.
 
@@ -89,18 +93,21 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 |---|---|
 | `index.ts` | **The barrel. Everything is imported from `@/design-system` and nothing reaches past it into `components/**`** — a lint rule says so (`UI-1c`). |
 | `styles.css` | The stylesheet, linked once from the application entry and directly by the guideline cards. Imports only. |
+| `components.css` | **The interaction layer** (`UI-32a`): hover, press, focus-visible, the 44px floor and the disabled opacity, as real selectors on `data-*` attributes. A component owns its geometry and this owns everything that responds to a pointer, because an inline property beats every rule a stylesheet can write. |
 | `tokens/` | `fonts` · `colors` · `typography` · `spacing` · `shape` · `layers` · `breakpoints` · `motion` · `semantic` (theme aliases: `:root` = dark, `[data-theme="light"]` and `prefers-color-scheme` = light) |
 | `tokens.ts` | The 155 token names as a typed union, so `token('--surfce')` is a compile error. **Generated by `npm run tokens`; the CSS is the source of truth.** |
 | `library-colors.ts` | The seven library colours as names the API stores, and the tokens that draw them. |
 | `transcription-states.ts` | The four transcription states, their words and their glyphs. One list, so the badge and the filter cannot say different things. |
-| `theme/` | `ThemeProvider` and `useTheme`: light, dark, or follow the system — which writes no attribute at all (`UI-1j`). |
+| `theme/` | `ThemeProvider` and `useTheme`: light, dark, or follow the system — which writes no attribute at all (`UI-1j`). Plus `usePrefersReducedMotion` and `scrollBehaviour`, which is how a script opts in to the one preference a stylesheet cannot enforce for it (`UI-32c`). |
 | `tokens/layers.css` | The z-index scale. Six things overlap; before this they stacked by DOM order (`UI-33b`). |
 | `tokens/breakpoints.css` | 1280 / 1180 / 900 / 720, which existed only as prose (`UI-33b`). |
+| `components/layout/` | `Shell` `PageHeader` `StateCard` + `CardSkeleton` `RowSkeleton` — the frame, the one page title per screen, and §3.5's state family (`UI-35a`–`UI-35c`) |
 | `components/foundation/` | `Icon` `Logo` |
-| `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` |
+| `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` `Switch` `Checkbox` `Progress` |
 | `components/media/` | `Waveform` `PlayerBar` `TranscriptLine` |
-| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` |
-| `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Dialog` |
+| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` `LevelSelector` `InlineField` `TypedConfirm` `EgressNotice` `AvatarStack` `KeyValueList` |
+| `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Dialog` `Menu` `Tabs` `Sheet` `Toast` `ToastRegion` `Tooltip` |
+| `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |
 | `assets/` | The mark in three treatments, and the Chillax webfont |
 | [`.claude/skills/sonarium-design/`](../../.claude/skills/sonarium-design/SKILL.md) | Agent-Skills entry point, outside this folder |
@@ -109,17 +116,21 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 
 **To look at it: `npm run dev`, then `#/specimens`.** Every component, every glyph, the seventeen guideline cards, and a control that switches between light, dark and the system's answer (`UI-1k`). It is development-only and is not in a build.
 
-Component inventory note: no source defined a component list, so this is an authored set sized to the brief — every family here appears in a view the brief specifies. There are no speculative primitives (no Toast, Tooltip, Tabs, Switch, Select) because no view in the brief needed one at the time.
+Component inventory note: no source defined a component list, so the first twenty-one were an authored set sized to the brief. There were no speculative primitives, and there still are none — everything added since was named by a view that needed it.
 
-**The interface specification adds thirteen.** `Toast`, `Tooltip`, `Tabs`, `Switch`, `Select`, `Checkbox`, `Sheet`, `Menu` and `Progress` are required by views the system did not cover, plus four compositions — `LevelSelector`, `InlineField`, `TypedConfirm` and `EgressNotice`. See *Components the design system still owes* in the interface specification.
+**The specification's thirteen are built** (`UI-34`). `Select`, `Menu`, `Tabs`, `Switch`, `Checkbox`, `Sheet`, `Toast`, `Progress` and `Tooltip` are the nine primitives; `LevelSelector`, `InlineField`, `TypedConfirm` and `EgressNotice` are the four compositions. They extend this folder in place — same two files per component, same family folders, same rules — because there is one system and it is versioned with the code.
 
-They **extend this folder in place** rather than living in a design file: same two files per component (`.tsx` and `.prompt.md`), same family folders, a row added to the index above, an export added to `index.ts`, and the same rules — tokens only, no colour written in a component. There is one system, and it is versioned with the code. **None of the thirteen is built yet**; they are `UI-34`, and the ten composites the prototype invented are `UI-35`.
+Underneath five of them is `components/overlay/useAnchoredOverlay` (`UI-34a`), which settles placement, focus trapping, `Esc`, the outside click and the scroll lock once. It is **not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay.
+
+**Six of the ten composites the prototype invented are here too** (`UI-35`), in `components/layout/` and `components/data/`. The other four — `FilterBar`, `BulkBar`, `UploadTray` and `ResultGroup` — hold a query, a mutation or a store, so `DEC-22` puts them in `frontend/src/components/` instead. Without that line, "make it reusable" ends with the design system importing TanStack Query.
+
+Three of the components carry an absence that is part of the design, and each says so in its own file: `Progress` has **no indeterminate mode**, so transcription cannot borrow it; `MenuItem` has **no `disabled`**, so an action the user cannot take is absent; and `PageHeader` takes its title as a `string`, so nothing else can get inside the one piece of display type the product has.
 
 ## Caveats
 
 - ~~**Geist is loaded from Google Fonts**, not shipped.~~ **Closed by `UI-1a`.** Both faces ship as subset woff2 in `assets/fonts/`, Latin and Latin Extended, no italics — 84 KB for all four files. They come from `@fontsource-variable/geist` and its mono twin, and the version is written in `tokens/fonts.css`, which is the only place it exists. Nothing here reaches the network.
 - ~~**Icons are Lucide, loaded from a CDN.**~~ **Closed by `UI-1b`.** Bundled and tree-shaken — see ICONOGRAPHY. The substitution itself still stands: no icon set was supplied, and `Icon` is still the one file that changes if one arrives.
-- **The system is complete; the interface is not.** Twenty-one components, and the specification names thirteen more plus ten composites the prototype invented. See above.
+- **The system is complete; the interface is not.** Thirty-four components and six composites, drawn and built. What does not exist yet is a single view: `frontend/src/` holds the application's four composites, the specimen page and a hello. Phase D puts a router, a client and a shell around them.
 - **Sample content is invented**, written to be plausible for a Catalan family-archive user. It now lives in the application's `src/dev/specimen-data.ts` rather than in this folder — component defaults are deliberately empty, so a forgotten prop reads as missing rather than as somebody else's recording.
 
 ### The UI kit is provenance, not a starting point

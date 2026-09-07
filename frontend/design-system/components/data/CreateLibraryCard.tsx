@@ -7,27 +7,27 @@ export type CreateLibraryCardProps = ButtonHTMLAttributes<HTMLButtonElement>;
 /**
  * The first tile in the library grid: the same footprint as a library card, and no elevation.
  *
- * It does not float, because it is not a thing yet. The copy says what the next screen will ask
- * for rather than describing the button -- "Name it and pick a colour" is the whole of the create
- * dialog, stated before it opens.
+ * It does not float, because it is not a thing yet -- so its hover is a surface step and not an
+ * elevation one (`UI-32a`). The copy says what the next screen will ask for rather than describing
+ * the button: "Name it and pick a colour" is the whole of the create dialog, stated before it
+ * opens.
  */
 export function CreateLibraryCard({ onClick, style, ...rest }: CreateLibraryCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
+      data-ds="create-library-card"
       style={{
         width: '100%',
         height: 'var(--card-height)',
         border: 'none',
-        background: 'var(--empty-fill)',
         borderRadius: 'var(--radius-panel)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
-        cursor: 'pointer',
         fontFamily: 'var(--font-sans)',
         transition: 'background var(--transition-state)',
         ...style,

@@ -57,13 +57,14 @@ export function RecordingRow({
       onKeyDown={handleKeyDown}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
+      data-ds="recording-row"
+      data-selected={selected ? 'true' : undefined}
       style={{
         height: 'var(--row-height)',
         display: 'flex',
         alignItems: 'center',
         gap: 11,
         padding: '0 12px',
-        background: selected ? 'var(--surface-2)' : 'transparent',
         cursor: interactive ? 'pointer' : 'default',
         transition: 'background var(--transition-state)',
         ...style,

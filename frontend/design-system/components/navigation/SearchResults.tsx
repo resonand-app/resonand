@@ -39,6 +39,7 @@ export function SearchResults({
 }: SearchResultsProps) {
   return (
     <div
+      data-ds="search-results"
       style={{
         background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
@@ -56,15 +57,14 @@ export function SearchResults({
           type="button"
           key={`${hit.title}-${hit.at ?? String(i)}`}
           onClick={() => onOpen?.(hit)}
+          data-ds="search-hit"
           style={{
             border: 'none',
-            background: 'transparent',
             borderRadius: 'var(--radius-control)',
             display: 'flex',
             alignItems: 'flex-start',
             gap: 10,
             padding: '8px 10px',
-            cursor: 'pointer',
             fontFamily: 'var(--font-sans)',
             textAlign: 'left',
             transition: 'background var(--transition-state)',
@@ -117,14 +117,14 @@ export function SearchResults({
       <button
         type="button"
         onClick={onSeeAll}
+        data-ds="search-see-all"
         style={{
           border: 'none',
-          background: 'transparent',
+          borderRadius: 'var(--radius-control)',
           display: 'flex',
           alignItems: 'center',
           gap: 8,
           padding: '6px 10px 4px',
-          cursor: 'pointer',
           fontFamily: 'var(--font-sans)',
         }}
       >

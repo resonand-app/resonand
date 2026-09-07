@@ -21,19 +21,18 @@ function Item({ icon, dot, label, count, active = false, collapsed = false, onCl
       type="button"
       onClick={onClick}
       title={collapsed ? label : undefined}
+      data-ds="sidebar-item"
+      data-active={active ? 'true' : undefined}
       style={{
         height: 32,
         width: '100%',
         border: 'none',
-        background: active ? 'var(--accent-soft)' : 'transparent',
-        color: active ? 'var(--accent-on-soft)' : 'var(--text-2)',
         borderRadius: 'var(--radius-control)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: collapsed ? 'center' : 'flex-start',
         gap: 10,
         padding: collapsed ? 0 : '0 11px',
-        cursor: 'pointer',
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--type-ui-size)',
         transition: 'background var(--transition-state), color var(--transition-state)',
@@ -133,6 +132,9 @@ export interface SidebarProps
  * **"Shared with you" disappears entirely rather than sitting empty** -- an empty group is a
  * standing reminder that nobody has shared anything with you, on every screen. Administration is
  * not a destination here; it lives inside Settings so that nobody wanders into it.
+ *
+ * A destination you are not at raises a surface step under the pointer; the one you are at does
+ * nothing, because arriving somewhere you already are is not an action (`UI-32a`).
  */
 export function Sidebar({
   own = [],
@@ -151,6 +153,7 @@ export function Sidebar({
 
   return (
     <nav
+      data-ds="sidebar"
       style={{
         width: collapsed ? 'var(--sidebar-width-collapsed)' : 'var(--sidebar-width)',
         flex: '0 0 auto',

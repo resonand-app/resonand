@@ -28,6 +28,7 @@ export function StateBadge({ state = 'none', variant = 'chip', style, ...rest }:
         size={15}
         color={meaning.color}
         title={meaning.label}
+        data-ds="state-badge"
         style={style}
         {...rest}
       />
@@ -43,6 +44,7 @@ export function StateBadge({ state = 'none', variant = 'chip', style, ...rest }:
 
   return (
     <span
+      data-ds="state-badge"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
