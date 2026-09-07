@@ -86,6 +86,9 @@ export type { RecordingCardProps } from './components/data/RecordingCard';
 export { RecordingRow } from './components/data/RecordingRow';
 export type { RecordingRowProps } from './components/data/RecordingRow';
 export { StateBadge } from './components/data/StateBadge';
+export { matchesName } from './components/data/name-match';
+export { TypedConfirm } from './components/data/TypedConfirm';
+export type { TypedConfirmProps } from './components/data/TypedConfirm';
 export type { StateBadgeProps } from './components/data/StateBadge';
 
 // --- components/navigation (`UI-1h`) ----------------------------------------

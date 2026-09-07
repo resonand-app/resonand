@@ -660,6 +660,12 @@
   color: var(--state-failed);
 }
 
+/* TypedConfirm. An overlay surface like every other, and the same scrim as a sheet -- the page
+   behind is not available, because this is the one dialog whose outcome cannot be undone. */
+[data-ds='typed-confirm'] {
+  background: var(--surface);
+}
+
 /* Sheet, and the scrim behind it. The scrim is the one element in the system whose whole job is a
    colour: `--scrim` is a translucent black on dark and a lighter one on light, and it is the
    signal that the page underneath is not available rather than merely behind something. */

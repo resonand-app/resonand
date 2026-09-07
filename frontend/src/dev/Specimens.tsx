@@ -35,6 +35,7 @@ import {
   TopNav,
   TranscriptLine,
   TRANSCRIPTION_STATE_NAMES,
+  TypedConfirm,
   useTheme,
   WAVE_SIZES,
   Waveform,
@@ -252,6 +253,7 @@ export default function Specimens() {
   const [sheet, setSheet] = useState(false);
   const [level, setLevel] = useState(20);
   const [title, setTitle] = useState('Sopar de Nadal 1998');
+  const [confirm, setConfirm] = useState(false);
 
   return (
     <main
@@ -614,6 +616,28 @@ export default function Specimens() {
           <Tooltip content="Share this library">
             <IconButton icon="share-2" variant="ghost" label="Share this library" />
           </Tooltip>
+        </Panel>
+        <Panel label="TypedConfirm · permanent deletion only">
+          <Button
+            variant="danger"
+            icon="trash-2"
+            onClick={() => {
+              setConfirm(true);
+            }}
+          >
+            Delete Àvia Teresa
+          </Button>
+          <TypedConfirm
+            open={confirm}
+            name="Àvia Teresa"
+            consequence="84 recordings, 12 h 40 min of audio and their transcripts"
+            onConfirm={() => {
+              setConfirm(false);
+            }}
+            onCancel={() => {
+              setConfirm(false);
+            }}
+          />
         </Panel>
         <Panel label="Sheet · the phone's metadata panel">
           <Button
