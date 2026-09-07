@@ -4,7 +4,8 @@
  * Still one line of text -- `INF-1`'s criterion for the frontend was that it "starts up empty,
  * with its own hello", and this is that hello, kept until `UI-4a` puts the router here and
  * `UI-4c` puts the shell inside it. It is styled with nothing, because a colour written here
- * would be the first value in the repository that is not a token.
+ * would be the first value in the repository that is not a token -- and the hello is the lockup
+ * rather than the word, because the product's name is not copy and has nothing to translate.
  *
  * The one branch is the specimen route (`UI-1k`), which exists because `UI-1`'s criterion --
  * every component renders in the app in both themes -- is otherwise an assertion nobody can
@@ -16,6 +17,8 @@
 
 import { lazy, Suspense } from 'react';
 
+import { Logo } from '@/design-system';
+
 const Specimens = import.meta.env.DEV ? lazy(() => import('@/dev/Specimens')) : null;
 
 export function App() {
@@ -26,5 +29,9 @@ export function App() {
       </Suspense>
     );
   }
-  return <main>Sonarium</main>;
+  return (
+    <main>
+      <Logo size={40} />
+    </main>
+  );
 }

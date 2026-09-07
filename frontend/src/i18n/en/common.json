@@ -1,0 +1,48 @@
+{
+  "action": {
+    "cancel": "Cancel",
+    "clear": "Clear",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "move": "Move",
+    "retry": "Try again",
+    "save": "Save",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "upload": "Upload"
+  },
+  "count": {
+    "recordings_one": "{{count}} recording",
+    "recordings_other": "{{count}} recordings"
+  },
+  "search": {
+    "more": "+{{count}} more in this recording"
+  },
+  "selection": {
+    "count": "{{count}} selected"
+  },
+  "state": {
+    "empty": "Nothing here yet",
+    "failed": "That did not work",
+    "loading": "Loading",
+    "offline": "The instance could not be reached. It may be offline."
+  },
+  "time": {
+    "notItsOwn": "Uploaded {{date}}. The recording's own date is not known.",
+    "source": {
+      "container": "From the file",
+      "filename": "From the file name",
+      "filesystem": "From the file date"
+    }
+  },
+  "transcription": {
+    "done": "Transcribed",
+    "failed": "Transcription failed",
+    "none": "Not transcribed",
+    "running": "Transcribing"
+  },
+  "upload": {
+    "region": "Uploads"
+  }
+}

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { Button, StateBadge, TranscriptLine } from '@/design-system';
 import type { TranscriptionState } from '@/design-system';
 
@@ -54,6 +56,7 @@ export function ResultGroup({
   onPlay,
   onShowAll,
 }: ResultGroupProps) {
+  const { t } = useTranslation();
   const visible = matches.slice(0, shown);
   const rest = (total ?? matches.length) - visible.length;
 
@@ -127,7 +130,7 @@ export function ResultGroup({
       {rest > 0 && (
         <div>
           <Button variant="ghost" onClick={onShowAll}>
-            +{rest} more in this recording
+            {t('search.more', { count: rest })}
           </Button>
         </div>
       )}
