@@ -41,6 +41,14 @@ export interface AnchoredOverlayOptions {
    * scrolling under a cover is a page nobody asked to move.
    */
   lockScroll?: boolean;
+  /**
+   * Whether the surface is placed against the anchor at all.
+   *
+   * True for everything with a control behind it. **False for `Sheet`**, which is anchored to the
+   * bottom of the viewport rather than to anything on the page -- it still wants the focus trap,
+   * the `Esc`, the outside click and the scroll lock, and it places itself.
+   */
+  anchored?: boolean;
 }
 
 export interface AnchoredOverlay<Anchor extends HTMLElement, Surface extends HTMLElement> {
@@ -70,6 +78,9 @@ const SURFACE_STYLE: CSSProperties = Object.freeze({
   left: 0,
   visibility: 'hidden',
 });
+
+/** What an unanchored surface gets instead: nothing, because it places itself. */
+const EMPTY_STYLE: CSSProperties = Object.freeze({});
 
 /** Everything a keyboard can land on inside an overlay, in the order it would land on them. */
 const FOCUSABLE =
@@ -223,6 +234,7 @@ export function useAnchoredOverlay<
   offset = 6,
   modal = true,
   lockScroll = false,
+  anchored = true,
 }: AnchoredOverlayOptions): AnchoredOverlay<Anchor, Surface> {
   const anchorRef = useRef<Anchor | null>(null);
   const surfaceRef = useRef<Surface | null>(null);
@@ -230,6 +242,7 @@ export function useAnchoredOverlay<
   const id = useId();
 
   const reposition = useCallback(() => {
+    if (!anchored) return;
     const anchor = anchorRef.current;
     const surface = surfaceRef.current;
     if (anchor === null || surface === null) return;
@@ -238,7 +251,7 @@ export function useAnchoredOverlay<
     surface.style.left = `${String(Math.round(left))}px`;
     surface.style.visibility = 'visible';
     surface.dataset.placement = placed;
-  }, [align, offset, placement]);
+  }, [align, anchored, offset, placement]);
 
   /* Before the browser paints, so the surface is never seen at the top left of the window on its
      way to its anchor. That is the whole reason this is a layout effect. */
@@ -330,5 +343,8 @@ export function useAnchoredOverlay<
     };
   }, [modal, onClose, open, reposition]);
 
-  return { anchorRef, surfaceRef, surfaceStyle: SURFACE_STYLE, id };
+  /* An unanchored surface gets no placement style at all, rather than one it would have to
+     override -- including the `visibility: hidden` that waits for a measurement that will never
+     be taken. */
+  return { anchorRef, surfaceRef, surfaceStyle: anchored ? SURFACE_STYLE : EMPTY_STYLE, id };
 }

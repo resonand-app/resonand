@@ -96,12 +96,22 @@ describe('the interaction layer', () => {
     for (const entry of KNOWN_INLINE) expect(entry.why.length).toBeGreaterThan(60);
   });
 
-  it('paints nothing that is not on a screen', () => {
-    // A rule for a component that no longer renders is a rule nobody will notice is wrong. The
-    // reverse direction is deliberately not asserted: `data-ds` doubles as the name a test finds
-    // a component by, so a component the stylesheet has no opinion about may still carry one.
-    const onScreen = new Set(painted().map((element) => element.dataset.ds));
-    expect([...componentsIn(CSS)].filter((name) => !onScreen.has(name))).toEqual([]);
+  it('paints nothing that no component renders', () => {
+    // A rule for a name nothing renders is a rule nobody will notice is wrong -- a typo in a
+    // selector is silent, and so is a component that was deleted.
+    //
+    // Checked against the sources rather than against the mounted page, and the difference
+    // matters: `Sheet`, `Tooltip` and `Toast` exist only while something is open, and requiring
+    // the specimen page to hold every overlay open would mean a page you have to dismiss three
+    // things to read. The reverse direction is deliberately not asserted -- `data-ds` doubles as
+    // the name a test finds a component by, so a component the stylesheet has no opinion about
+    // may still carry one.
+    const declared = new Set(
+      Object.values(SOURCES).flatMap((source) =>
+        [...source.matchAll(/data-ds="([a-z-]+)"/g)].map((match) => match[1] ?? ''),
+      ),
+    );
+    expect([...componentsIn(CSS)].filter((name) => !declared.has(name))).toEqual([]);
   });
 
   it('owns the properties the shipped components stopped owning', () => {

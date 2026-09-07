@@ -20,6 +20,7 @@ import {
   SearchField,
   SearchResults,
   Select,
+  Sheet,
   Sidebar,
   StateBadge,
   Switch,
@@ -232,6 +233,7 @@ export default function Specimens() {
   const [section, setSection] = useState('appearance');
   const [transcribe, setTranscribe] = useState(true);
   const [picked, setPicked] = useState(true);
+  const [sheet, setSheet] = useState(false);
 
   return (
     <main
@@ -529,6 +531,31 @@ export default function Specimens() {
           >
             <TextField label="Type the library name to confirm" placeholder="Àvia Teresa" />
           </Dialog>
+        </Panel>
+      </Section>
+
+      <Section title="Overlays">
+        <Panel label="Sheet · the phone's metadata panel">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setSheet(true);
+            }}
+          >
+            Open the sheet
+          </Button>
+          <Sheet
+            open={sheet}
+            onClose={() => {
+              setSheet(false);
+            }}
+            title="Metadata"
+          >
+            <div style={{ display: 'flex', gap: 6 }}>
+              <Chip>memòria</Chip>
+              <Chip>1998</Chip>
+            </div>
+          </Sheet>
         </Panel>
       </Section>
 

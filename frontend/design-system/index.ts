@@ -91,6 +91,8 @@ export { ProfileMenu } from './components/navigation/ProfileMenu';
 export type { ProfileMenuProps } from './components/navigation/ProfileMenu';
 export { SearchResults } from './components/navigation/SearchResults';
 export type { SearchHit, SearchResultsProps } from './components/navigation/SearchResults';
+export { Sheet } from './components/navigation/Sheet';
+export type { SheetProps } from './components/navigation/Sheet';
 export { Sidebar } from './components/navigation/Sidebar';
 export { Tabs } from './components/navigation/Tabs';
 export type { Tab, TabsProps } from './components/navigation/Tabs';
