@@ -9,7 +9,7 @@
     "node": ">=22.12.0"
   },
   "scripts": {
-    "api:types": "openapi-typescript src/api/openapi.json --output src/api/schema.ts",
+    "api:types": "node scripts/generate-api-types.mjs",
     "build": "vite build",
     "dev": "vite",
     "format": "prettier --write .",
