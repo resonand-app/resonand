@@ -61,15 +61,22 @@
  *
  * The input fills a wrapper that carries the background, the radius and -- in `TextField` -- the
  * error ring and the trailing glyph, so a ring on the input alone would sit inside its own
- * chrome. `:has()` moves it to the wrapper, and the input's own outline is then suppressed here
- * rather than inline: the two shipped fields set `outline: none` in their style objects and gave
- * nothing back, which is the exact failure this pair of rules replaces. */
-[data-ds='field-box']:has(:focus-visible) {
+ * chrome, at the wrong radius, around two thirds of the control. `:has()` moves it to the
+ * wrapper, and the input's own outline is then suppressed here rather than inline: the two
+ * shipped fields set `outline: none` in their style objects and gave nothing back, which is the
+ * exact failure this pair of rules replaces.
+ *
+ * Both fields, and it has to be both. `SearchField` is a pill and `TextField` is a 10px box, but
+ * a ring inside either is the same mistake, and the search field is the one control the ⌘K
+ * shortcut lands a keyboard on. */
+[data-ds='field-box']:has(:focus-visible),
+[data-ds='search-field']:has(:focus-visible) {
   outline: var(--focus-ring-width) solid var(--accent);
   outline-offset: var(--focus-ring-offset);
 }
 
-[data-ds='field-box'] :where(input, textarea):focus-visible {
+[data-ds='field-box'] :where(input, textarea):focus-visible,
+[data-ds='search-field'] input:focus-visible {
   outline: none;
 }
 

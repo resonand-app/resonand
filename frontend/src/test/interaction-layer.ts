@@ -27,6 +27,8 @@ export interface Rule {
   selector: string;
   /** The property names it sets, in source order. */
   properties: string[];
+  /** The declaration block, verbatim. `UI-32b` reads values out of it as well as names. */
+  declarations: string;
 }
 
 /** Every rule in the stylesheet. */
@@ -39,10 +41,11 @@ export function rulesIn(css: string): Rule[] {
   for (const match of flat.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
     const selector = (match[1] ?? '').trim().replace(/\s+/g, ' ');
     if (selector === '' || selector.startsWith('@')) continue;
-    const properties = [...(match[2] ?? '').matchAll(/(?:^|;)\s*([a-z-]+)\s*:/g)]
+    const declarations = match[2] ?? '';
+    const properties = [...declarations.matchAll(/(?:^|;)\s*([a-z-]+)\s*:/g)]
       .map((found) => found[1] ?? '')
       .filter((name) => name !== '');
-    if (properties.length > 0) rules.push({ selector, properties });
+    if (properties.length > 0) rules.push({ selector, properties, declarations });
   }
   return rules;
 }
