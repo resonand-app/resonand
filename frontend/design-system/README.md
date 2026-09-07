@@ -106,6 +106,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `components/media/` | `Waveform` `PlayerBar` `TranscriptLine` |
 | `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` |
 | `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Dialog` |
+| `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |
 | `assets/` | The mark in three treatments, and the Chillax webfont |
 | [`.claude/skills/sonarium-design/`](../../.claude/skills/sonarium-design/SKILL.md) | Agent-Skills entry point, outside this folder |
