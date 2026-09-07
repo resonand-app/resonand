@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import type { HTMLAttributes, Ref } from 'react';
 
 import { Icon } from '../foundation/Icon';
 import type { IconName } from '../foundation/Icon';
@@ -56,6 +56,19 @@ export interface ProfileMenuProps extends HTMLAttributes<HTMLDivElement> {
   theme?: string;
   onTheme?: () => void;
   onSettings?: () => void;
+  /**
+   * The copy, for an application that has its own (`UI-22a`).
+   *
+   * English defaults so a specimen renders labelled rows; replaceable, because three words baked
+   * in here are three words the interface can never translate.
+   */
+  labels?: {
+    theme?: string;
+    settings?: string;
+    signOut?: string;
+  };
+  /** The surface itself, for the overlay hook that places it (`UI-34a`, `UI-4e`). */
+  ref?: Ref<HTMLDivElement> | undefined;
   onSignOut?: () => void;
 }
 
@@ -76,12 +89,15 @@ export function ProfileMenu({
   theme,
   onTheme,
   onSettings,
+  labels,
+  ref,
   onSignOut,
   style,
   ...rest
 }: ProfileMenuProps) {
   return (
     <div
+      ref={ref}
       role="menu"
       data-ds="profile-menu"
       style={{
@@ -141,9 +157,13 @@ export function ProfileMenu({
         </div>
       </div>
       <div style={{ height: 1, background: 'var(--hairline)', margin: '2px 0 4px' }} />
-      <Row icon="moon" label="Theme" value={theme} onClick={onTheme} />
-      <Row icon="sliders-horizontal" label="Settings" onClick={onSettings} />
-      <Row icon="log-out" label="Sign out" onClick={onSignOut} />
+      <Row icon="moon" label={labels?.theme ?? 'Theme'} value={theme} onClick={onTheme} />
+      <Row
+        icon="sliders-horizontal"
+        label={labels?.settings ?? 'Settings'}
+        onClick={onSettings}
+      />
+      <Row icon="log-out" label={labels?.signOut ?? 'Sign out'} onClick={onSignOut} />
     </div>
   );
 }

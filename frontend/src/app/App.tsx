@@ -1,20 +1,30 @@
 /**
- * The application root (`INF-3a`).
+ * The application root: the providers, and §2.1's eight routes (`UI-4a`).
  *
- * Still one line of text -- `INF-1`'s criterion for the frontend was that it "starts up empty,
- * with its own hello", and this is that hello, kept until `UI-4a` puts the router here and
- * `UI-4c` puts the shell inside it. It is styled with nothing, because a colour written here
- * would be the first value in the repository that is not a token.
+ * Three providers, in an order that is a decision rather than an accident. The router is
+ * outermost, because leaving for the sign-in screen when a session ends is a routing act.
+ * The query client is inside it, so the component that answers the end of a session can
+ * navigate. Everything else is inside both.
  *
- * The one branch is the specimen route (`UI-1k`), which exists because `UI-1`'s criterion --
- * every component renders in the app in both themes -- is otherwise an assertion nobody can
- * check. It is reached at `#/specimens` and is **development only**: `import.meta.env.DEV` is a
- * literal `false` in a build, so the branch and the dynamic import inside it are dropped and the
- * production bundle contains neither the page nor its sample data. A real route replaces the hash
- * check at `UI-4a`, which is also when this file stops being a hello.
+ * The specimen page keeps its hash route (`UI-1k`). It is development only -- `import.meta.env.DEV`
+ * is a literal `false` in a build, so the branch, the page and its sample data are all dropped --
+ * and it is deliberately outside the router: it is a page about components, not a view of an
+ * archive, and it must render without a session or an instance to talk to.
  */
 
-import { lazy, Suspense } from 'react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { Suspense, lazy, useState } from 'react';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
+
+import { createQueryClient } from '@/api/query-client';
+
+import { AppShell } from './AppShell';
+import { NotBuiltYet } from './NotBuiltYet';
+import { NotFound } from './NotFound';
+import { RequireSession } from './RequireSession';
+import { SessionExpiry } from './SessionExpiry';
+import { routes } from './routes';
+import { useSessionExpiry } from './session-expiry';
 
 const Specimens = import.meta.env.DEV ? lazy(() => import('@/dev/Specimens')) : null;
 
@@ -26,5 +36,53 @@ export function App() {
       </Suspense>
     );
   }
-  return <main>Sonarium</main>;
+  return (
+    <BrowserRouter>
+      <Archive />
+    </BrowserRouter>
+  );
+}
+
+/** Everything that needs a router around it, which is everything that talks to the API. */
+function Archive() {
+  const expiry = useSessionExpiry();
+  const [client] = useState(() => createQueryClient(expiry.report));
+
+  return (
+    <QueryClientProvider client={client}>
+      <SessionExpiry expiry={expiry} />
+      <Routes>
+        <Route path={routes.signIn} element={<NotBuiltYet view="V1 - Sign in" />} />
+        <Route element={<RequireSession />}>
+          {/* Everything with a session is drawn inside the frame, and the frame is outside the
+              routes on purpose: the nav, the sidebar and the player must not remount when the
+              view changes, which is what makes the player persistent (`UI-5a`). */}
+          <Route element={<Framed />}>
+            <Route path={routes.libraries} element={<NotBuiltYet view="V2 - Libraries" />} />
+            <Route path={routes.library} element={<NotBuiltYet view="V3/V4 - A library" />} />
+            <Route
+              path={routes.librarySettings}
+              element={<NotBuiltYet view="V7 - Library settings" />}
+            />
+            <Route path={routes.recording} element={<NotBuiltYet view="V5 - Audio detail" />} />
+            <Route path={routes.search} element={<NotBuiltYet view="V6 - Search" />} />
+            <Route path={routes.trash} element={<NotBuiltYet view="V9 - Trash" />} />
+            <Route path={routes.settings} element={<NotBuiltYet view="V10 - Settings" />} />
+          </Route>
+        </Route>
+        {/* A trailing slash is the same place, not a different one. */}
+        <Route path="/index.html" element={<Navigate to={routes.libraries} replace />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </QueryClientProvider>
+  );
+}
+
+/** The shell, with whichever view the route resolved to inside it. */
+function Framed() {
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  );
 }

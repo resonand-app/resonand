@@ -1,0 +1,4941 @@
+{
+  "components": {
+    "schemas": {
+      "AudioDetail": {
+        "additionalProperties": false,
+        "description": "Everything the detail view shows, including the technical metadata it keeps collapsed.",
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "channels": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channels"
+          },
+          "codec": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Codec"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "has_waveform": {
+            "title": "Has Waveform",
+            "type": "boolean"
+          },
+          "is_shared_individually": {
+            "title": "Is Shared Individually",
+            "type": "boolean"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
+          "library_uuid": {
+            "title": "Library Uuid",
+            "type": "string"
+          },
+          "mime": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mime"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "original_filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Original Filename"
+          },
+          "recorded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At"
+          },
+          "recorded_at_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At Offset"
+          },
+          "recorded_at_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At Source"
+          },
+          "sample_rate": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Rate"
+          },
+          "sha256": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sha256"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagSummary"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "transcription_state": {
+            "title": "Transcription State",
+            "type": "string"
+          },
+          "uploaded_by": {
+            "$ref": "#/components/schemas/UserSummary"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "title",
+          "notes",
+          "recorded_at",
+          "recorded_at_offset",
+          "recorded_at_source",
+          "created_at",
+          "duration_ms",
+          "library_uuid",
+          "category_id",
+          "tags",
+          "level",
+          "transcription_state",
+          "has_waveform",
+          "is_shared_individually",
+          "deleted_at",
+          "original_filename",
+          "mime",
+          "size_bytes",
+          "sha256",
+          "sample_rate",
+          "channels",
+          "codec",
+          "uploaded_by"
+        ],
+        "title": "AudioDetail",
+        "type": "object"
+      },
+      "AudioSummary": {
+        "additionalProperties": false,
+        "description": "A recording as the grid and the list draw it (``UI-6``, ``UI-7``).",
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "duration_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Ms"
+          },
+          "has_waveform": {
+            "title": "Has Waveform",
+            "type": "boolean"
+          },
+          "is_shared_individually": {
+            "title": "Is Shared Individually",
+            "type": "boolean"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
+          "library_uuid": {
+            "title": "Library Uuid",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "recorded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At"
+          },
+          "recorded_at_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At Offset"
+          },
+          "recorded_at_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At Source"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagSummary"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "transcription_state": {
+            "title": "Transcription State",
+            "type": "string"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "title",
+          "notes",
+          "recorded_at",
+          "recorded_at_offset",
+          "recorded_at_source",
+          "created_at",
+          "duration_ms",
+          "library_uuid",
+          "category_id",
+          "tags",
+          "level",
+          "transcription_state",
+          "has_waveform",
+          "is_shared_individually",
+          "deleted_at"
+        ],
+        "title": "AudioSummary",
+        "type": "object"
+      },
+      "Body_upload_api_libraries__library_uuid__audio_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "description": "The recording, in any accepted format.",
+            "title": "File",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "transcribe": {
+            "default": false,
+            "title": "Transcribe",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_api_libraries__library_uuid__audio_post",
+        "type": "object"
+      },
+      "Bootstrap": {
+        "additionalProperties": false,
+        "description": "The first run: an account and its display name, in one step (``UI-21``).",
+        "properties": {
+          "display_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 320,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "display_name"
+        ],
+        "title": "Bootstrap",
+        "type": "object"
+      },
+      "CategorySummary": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "parent_id",
+          "name",
+          "position"
+        ],
+        "title": "CategorySummary",
+        "type": "object"
+      },
+      "ChangePassword": {
+        "additionalProperties": false,
+        "properties": {
+          "current_password": {
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "minLength": 10,
+            "title": "New Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "ChangePassword",
+        "type": "object"
+      },
+      "Colour": {
+        "description": "A library's identifying colour, chosen by whoever created it.",
+        "enum": [
+          "amber",
+          "clay",
+          "slate",
+          "moss",
+          "stone",
+          "plum",
+          "teal"
+        ],
+        "title": "Colour",
+        "type": "string"
+      },
+      "CreateAccount": {
+        "additionalProperties": false,
+        "description": "Registration is administrator-only in v0.",
+        "properties": {
+          "display_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "maxLength": 320,
+            "title": "Email",
+            "type": "string"
+          },
+          "is_admin": {
+            "default": false,
+            "title": "Is Admin",
+            "type": "boolean"
+          },
+          "password": {
+            "minLength": 10,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "display_name",
+          "password"
+        ],
+        "title": "CreateAccount",
+        "type": "object"
+      },
+      "CreateCategory": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateCategory",
+        "type": "object"
+      },
+      "CreateLibrary": {
+        "additionalProperties": false,
+        "properties": {
+          "colour": {
+            "$ref": "#/components/schemas/Colour",
+            "default": "stone"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "CreateLibrary",
+        "type": "object"
+      },
+      "CreateShare": {
+        "additionalProperties": false,
+        "properties": {
+          "grantee_id": {
+            "title": "Grantee Id",
+            "type": "integer"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          }
+        },
+        "required": [
+          "grantee_id",
+          "level"
+        ],
+        "title": "CreateShare",
+        "type": "object"
+      },
+      "DuplicateWarning": {
+        "additionalProperties": false,
+        "description": "A byte-identical file that is already here (``DEC-16``).",
+        "properties": {
+          "in_trash": {
+            "title": "In Trash",
+            "type": "boolean"
+          },
+          "library_uuid": {
+            "title": "Library Uuid",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "title",
+          "in_trash",
+          "library_uuid"
+        ],
+        "title": "DuplicateWarning",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "InstanceState": {
+        "additionalProperties": false,
+        "description": "What the interface needs to know about the instance itself (``UI-21``, ``API-14``).\n\nEverything here is a fact about the instance rather than about a person, which is why this\nis the one endpoint answered without a session. None of it is a secret: the version is\nalready published, and the rest is what somebody would find out by trying.",
+        "properties": {
+          "accepted_extensions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Accepted Extensions",
+            "type": "array"
+          },
+          "max_upload_bytes": {
+            "title": "Max Upload Bytes",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "needs_bootstrap": {
+            "title": "Needs Bootstrap",
+            "type": "boolean"
+          },
+          "trash_retention_days": {
+            "title": "Trash Retention Days",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          },
+          "video_extensions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Video Extensions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "needs_bootstrap",
+          "trash_retention_days",
+          "max_upload_bytes",
+          "accepted_extensions",
+          "video_extensions"
+        ],
+        "title": "InstanceState",
+        "type": "object"
+      },
+      "JobSummary": {
+        "additionalProperties": false,
+        "description": "One piece of background work, as the administration view lists it (``INT-3``).",
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "audio_uuid": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Uuid"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "ready_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ready At"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "state",
+          "attempts",
+          "audio_uuid",
+          "error",
+          "created_at",
+          "started_at",
+          "finished_at",
+          "ready_at"
+        ],
+        "title": "JobSummary",
+        "type": "object"
+      },
+      "Level": {
+        "description": "What somebody may do with a recording or a library.",
+        "enum": [
+          10,
+          20,
+          30,
+          40
+        ],
+        "title": "Level",
+        "type": "integer"
+      },
+      "LibrarySummary": {
+        "additionalProperties": false,
+        "properties": {
+          "audio_count": {
+            "title": "Audio Count",
+            "type": "integer"
+          },
+          "colour": {
+            "$ref": "#/components/schemas/Colour"
+          },
+          "deleted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deleted At"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "is_personal": {
+            "title": "Is Personal",
+            "type": "boolean"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/UserSummary"
+          },
+          "total_duration_ms": {
+            "title": "Total Duration Ms",
+            "type": "integer"
+          },
+          "uuid": {
+            "title": "Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "uuid",
+          "name",
+          "description",
+          "is_personal",
+          "owner",
+          "level",
+          "colour",
+          "audio_count",
+          "total_duration_ms",
+          "deleted_at"
+        ],
+        "title": "LibrarySummary",
+        "type": "object"
+      },
+      "Me": {
+        "additionalProperties": false,
+        "description": "The signed-in account.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_admin": {
+            "title": "Is Admin",
+            "type": "boolean"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "is_admin",
+          "language"
+        ],
+        "title": "Me",
+        "type": "object"
+      },
+      "MoveAudio": {
+        "additionalProperties": false,
+        "description": "Its own shape because it has consequences the caller has to have been told about.",
+        "properties": {
+          "library_uuid": {
+            "title": "Library Uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "library_uuid"
+        ],
+        "title": "MoveAudio",
+        "type": "object"
+      },
+      "Page_AudioSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AudioSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "How many rows match, ignoring limit and offset.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[AudioSummary]",
+        "type": "object"
+      },
+      "Page_JobSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/JobSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "How many rows match, ignoring limit and offset.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[JobSummary]",
+        "type": "object"
+      },
+      "Page_LibrarySummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LibrarySummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "How many rows match, ignoring limit and offset.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[LibrarySummary]",
+        "type": "object"
+      },
+      "Page_SearchResult_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SearchResult"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 200.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "description": "How many rows match, ignoring limit and offset.",
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "Page[SearchResult]",
+        "type": "object"
+      },
+      "ProviderStatus": {
+        "additionalProperties": false,
+        "description": "Whether transcription is configured and whether it answers.\n\nThe credential is never included, in any form. What an administrator needs to know is\nwhether one is set, not what it is.",
+        "properties": {
+          "base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Base Url"
+          },
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "default_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Language"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          },
+          "has_credential": {
+            "title": "Has Credential",
+            "type": "boolean"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "reachable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reachable"
+          }
+        },
+        "required": [
+          "provider",
+          "model",
+          "base_url",
+          "has_credential",
+          "default_language",
+          "configured",
+          "reachable",
+          "detail"
+        ],
+        "title": "ProviderStatus",
+        "type": "object"
+      },
+      "ReorderCategories": {
+        "additionalProperties": false,
+        "properties": {
+          "ordered_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Ordered Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ordered_ids"
+        ],
+        "title": "ReorderCategories",
+        "type": "object"
+      },
+      "SearchMatch": {
+        "additionalProperties": false,
+        "description": "One place a query matched inside one recording.",
+        "properties": {
+          "fragment": {
+            "title": "Fragment",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "start_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Ms"
+          }
+        },
+        "required": [
+          "kind",
+          "fragment",
+          "start_ms"
+        ],
+        "title": "SearchMatch",
+        "type": "object"
+      },
+      "SearchResult": {
+        "additionalProperties": false,
+        "description": "A recording, with the matches inside it grouped under it (``DEC-4``).",
+        "properties": {
+          "audio": {
+            "$ref": "#/components/schemas/AudioSummary"
+          },
+          "matches": {
+            "items": {
+              "$ref": "#/components/schemas/SearchMatch"
+            },
+            "title": "Matches",
+            "type": "array"
+          },
+          "total_matches": {
+            "title": "Total Matches",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "audio",
+          "matches",
+          "total_matches"
+        ],
+        "title": "SearchResult",
+        "type": "object"
+      },
+      "SegmentOut": {
+        "additionalProperties": false,
+        "properties": {
+          "end_ms": {
+            "title": "End Ms",
+            "type": "integer"
+          },
+          "idx": {
+            "title": "Idx",
+            "type": "integer"
+          },
+          "speaker": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speaker"
+          },
+          "start_ms": {
+            "title": "Start Ms",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "idx",
+          "start_ms",
+          "end_ms",
+          "speaker",
+          "text"
+        ],
+        "title": "SegmentOut",
+        "type": "object"
+      },
+      "SessionSummary": {
+        "additionalProperties": false,
+        "description": "One of the account's sign-ins (``UI-20``).",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "ip": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ip"
+          },
+          "is_current": {
+            "title": "Is Current",
+            "type": "boolean"
+          },
+          "last_seen_at": {
+            "title": "Last Seen At",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "user_agent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Agent"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "last_seen_at",
+          "expires_at",
+          "revoked_at",
+          "user_agent",
+          "ip",
+          "is_current"
+        ],
+        "title": "SessionSummary",
+        "type": "object"
+      },
+      "ShareSummary": {
+        "additionalProperties": false,
+        "description": "Who has access, at what level, granted by whom and when (``UI-17``).",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "granted_by": {
+            "title": "Granted By",
+            "type": "integer"
+          },
+          "grantee": {
+            "$ref": "#/components/schemas/UserSummary"
+          },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
+          "level_description": {
+            "title": "Level Description",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grantee",
+          "level",
+          "level_description",
+          "granted_by",
+          "created_at"
+        ],
+        "title": "ShareSummary",
+        "type": "object"
+      },
+      "SignIn": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "maxLength": 320,
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "SignIn",
+        "type": "object"
+      },
+      "SortDirection": {
+        "enum": [
+          "asc",
+          "desc"
+        ],
+        "title": "SortDirection",
+        "type": "string"
+      },
+      "SortField": {
+        "description": "What a list of recordings can be ordered by (``API-10``).\n\nFour, and deliberately not every column: these are the ones ``UI-7d`` offers, and a sort\nnobody can reach from the interface is a query somebody can make expensive for no benefit.",
+        "enum": [
+          "recorded_at",
+          "created_at",
+          "duration_ms",
+          "title"
+        ],
+        "title": "SortField",
+        "type": "string"
+      },
+      "StorageStatus": {
+        "additionalProperties": false,
+        "description": "What the archive is using.",
+        "properties": {
+          "database_bytes": {
+            "title": "Database Bytes",
+            "type": "integer"
+          },
+          "derived_bytes": {
+            "title": "Derived Bytes",
+            "type": "integer"
+          },
+          "free_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Free Bytes"
+          },
+          "libraries": {
+            "title": "Libraries",
+            "type": "integer"
+          },
+          "originals_bytes": {
+            "title": "Originals Bytes",
+            "type": "integer"
+          },
+          "recordings": {
+            "title": "Recordings",
+            "type": "integer"
+          },
+          "total_duration_ms": {
+            "title": "Total Duration Ms",
+            "type": "integer"
+          },
+          "trashed_recordings": {
+            "title": "Trashed Recordings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "recordings",
+          "trashed_recordings",
+          "libraries",
+          "total_duration_ms",
+          "originals_bytes",
+          "derived_bytes",
+          "database_bytes",
+          "free_bytes"
+        ],
+        "title": "StorageStatus",
+        "type": "object"
+      },
+      "SystemStatus": {
+        "additionalProperties": false,
+        "description": "Everything the administration view shows about the instance itself.",
+        "properties": {
+          "database_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Database Revision"
+          },
+          "expected_revision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Revision"
+          },
+          "jobs": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Jobs",
+            "type": "object"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/StorageStatus"
+          },
+          "transcription": {
+            "$ref": "#/components/schemas/ProviderStatus"
+          },
+          "trash_retention_days": {
+            "title": "Trash Retention Days",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "database_revision",
+          "expected_revision",
+          "storage",
+          "jobs",
+          "transcription",
+          "trash_retention_days"
+        ],
+        "title": "SystemStatus",
+        "type": "object"
+      },
+      "TagSuggestion": {
+        "additionalProperties": false,
+        "properties": {
+          "tag": {
+            "$ref": "#/components/schemas/TagSummary"
+          },
+          "uses": {
+            "title": "Uses",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "tag",
+          "uses"
+        ],
+        "title": "TagSuggestion",
+        "type": "object"
+      },
+      "TagSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ],
+        "title": "TagSummary",
+        "type": "object"
+      },
+      "TranscribeRequest": {
+        "additionalProperties": false,
+        "description": "Ask for a recording to be transcribed (``API-11``).",
+        "properties": {
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 35,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "title": "TranscribeRequest",
+        "type": "object"
+      },
+      "TranscriptDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "segment_count": {
+            "title": "Segment Count",
+            "type": "integer"
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/SegmentOut"
+            },
+            "title": "Segments",
+            "type": "array"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "is_active",
+          "source",
+          "provider",
+          "model",
+          "language",
+          "created_at",
+          "segment_count",
+          "segments"
+        ],
+        "title": "TranscriptDetail",
+        "type": "object"
+      },
+      "TranscriptSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "provider": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider"
+          },
+          "segment_count": {
+            "title": "Segment Count",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "is_active",
+          "source",
+          "provider",
+          "model",
+          "language",
+          "created_at",
+          "segment_count"
+        ],
+        "title": "TranscriptSummary",
+        "type": "object"
+      },
+      "TranscriptionDestination": {
+        "additionalProperties": false,
+        "description": "Where audio goes, readable by anybody who can ask for a transcription (``API-12``).\n\nDeliberately the narrowest thing that answers the question. The full ``ProviderStatus``\nstays administrator-only; this one is what ``UI-25``'s disclosure is drawn from, and a\ndisclosure only some people can read is not one.",
+        "properties": {
+          "configured": {
+            "title": "Configured",
+            "type": "boolean"
+          },
+          "host": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Host"
+          },
+          "is_local": {
+            "title": "Is Local",
+            "type": "boolean"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "host",
+          "is_local",
+          "configured"
+        ],
+        "title": "TranscriptionDestination",
+        "type": "object"
+      },
+      "TranscriptionState": {
+        "description": "What the badge says, and what the filter selects.",
+        "enum": [
+          "none",
+          "running",
+          "done",
+          "failed"
+        ],
+        "title": "TranscriptionState",
+        "type": "string"
+      },
+      "UpdateAudio": {
+        "additionalProperties": false,
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "clear_category": {
+            "default": false,
+            "title": "Clear Category",
+            "type": "boolean"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "recorded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At"
+          },
+          "recorded_at_offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At Offset"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "UpdateAudio",
+        "type": "object"
+      },
+      "UpdateCategory": {
+        "additionalProperties": false,
+        "properties": {
+          "clear_parent": {
+            "default": false,
+            "title": "Clear Parent",
+            "type": "boolean"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          }
+        },
+        "title": "UpdateCategory",
+        "type": "object"
+      },
+      "UpdateLibrary": {
+        "additionalProperties": false,
+        "properties": {
+          "colour": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Colour"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "UpdateLibrary",
+        "type": "object"
+      },
+      "UpdateMe": {
+        "additionalProperties": false,
+        "description": "What somebody may change about their own account (``API-13``).\n\nEvery field defaults to \"leave this alone\", so the interface can save one section of the\nsettings view without sending back the ones it is not editing. Password is not here: it needs\nthe current one and ends every other session, which is a different operation.",
+        "properties": {
+          "clear_language": {
+            "default": false,
+            "title": "Clear Language",
+            "type": "boolean"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "maxLength": 320,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "maxLength": 35,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          }
+        },
+        "title": "UpdateMe",
+        "type": "object"
+      },
+      "UserSummary": {
+        "additionalProperties": false,
+        "description": "Somebody the caller can see: themselves, or a person a library is shared with.",
+        "properties": {
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email"
+        ],
+        "title": "UserSummary",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "A self-hosted archive for the recordings that matter.\n\nPublic identifiers are `uuid`s; integer ids are internal. Anything you may not read answers\n**404**, never 403 -- a 403 would confirm the resource exists.\n",
+    "license": {
+      "name": "AGPL-3.0-only",
+      "url": "https://www.gnu.org/licenses/agpl-3.0.html"
+    },
+    "summary": "A self-hosted archive for the recordings that matter.",
+    "title": "Sonarium",
+    "version": "0.0.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/admin/jobs": {
+      "get": {
+        "description": "Pending, running, done, failed and cancelled work, newest first.\n\nNewest first rather than oldest, because the reason somebody opens this page is that\nsomething has just gone wrong.",
+        "operationId": "list_jobs_api_admin_jobs_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_JobSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The job queue",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/jobs/{job_id}/cancel": {
+      "post": {
+        "description": "Cancel work that has not finished. A job already in flight is not interrupted.",
+        "operationId": "cancel_job_api_admin_jobs__job_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Cancel Job Api Admin Jobs  Job Id  Cancel Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Give up on a job",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/jobs/{job_id}/retry": {
+      "post": {
+        "description": "Put a failed or cancelled job back on the queue, with its attempts reset.\n\nResetting is deliberate: somebody clicking retry has usually just fixed the thing that broke.",
+        "operationId": "retry_job_api_admin_jobs__job_id__retry_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Retry Job Api Admin Jobs  Job Id  Retry Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Try a failed job again",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/status": {
+      "get": {
+        "description": "Space, counts, queue, schema revision.\n\nThe pair of revisions is the load-bearing part: it says whether to roll the image back or the\ndatabase forward, which is the question an operator has at the worst possible moment.",
+        "operationId": "system_status_api_admin_status_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "The state of this instance",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/transcription": {
+      "get": {
+        "description": "Reported from configuration alone. Nothing is contacted.",
+        "operationId": "transcription_status_api_admin_transcription_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Transcription settings",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/transcription/test": {
+      "post": {
+        "description": "Ask the transcription service whether it is there.\n\nAn explicit action, on a button, because contacting a third party is not something a page\nshould do because it was opened. No audio is sent -- this asks for the model list, which is\nthe cheapest thing an OpenAI-compatible server will answer.",
+        "operationId": "test_transcription_api_admin_transcription_test_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProviderStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Test the connection",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "operationId": "list_users_api_admin_users_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserSummary"
+                  },
+                  "title": "Response List Users Api Admin Users Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Users",
+        "tags": [
+          "administration"
+        ]
+      },
+      "post": {
+        "description": "Registration is administrator-only in v0: accounts are made by hand, for people you know.",
+        "operationId": "create_user_api_admin_users_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAccount"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create User",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/users/{user_id}": {
+      "delete": {
+        "description": "Delete an account that has nothing in it. Anything else is refused, with the numbers.",
+        "operationId": "delete_user_api_admin_users__user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete User",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/users/{user_id}/disable": {
+      "post": {
+        "description": "Disable an account. It stops resolving in the ACL on its very next request.",
+        "operationId": "disable_user_api_admin_users__user_id__disable_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Disable User",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/users/{user_id}/enable": {
+      "post": {
+        "operationId": "enable_user_api_admin_users__user_id__enable_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enable User",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/audio": {
+      "get": {
+        "operationId": "list_audio_api_audio_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AudioSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Every recording you can see",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/duplicates/{sha256}": {
+      "get": {
+        "description": "Whether this exact file is already here, trash included (``DEC-16``).\n\nByte-identical only: a re-encoded copy of the same recording hashes differently, and the\ninterface must not imply otherwise.",
+        "operationId": "duplicates_api_audio_duplicates__sha256__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sha256",
+            "required": true,
+            "schema": {
+              "title": "Sha256",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DuplicateWarning"
+                  },
+                  "title": "Response Duplicates Api Audio Duplicates  Sha256  Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Duplicates",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}": {
+      "delete": {
+        "description": "Send a recording to the trash. There is no immediate hard delete anywhere.",
+        "operationId": "trash_api_audio__audio_uuid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Trash",
+        "tags": [
+          "recordings"
+        ]
+      },
+      "get": {
+        "operationId": "get_audio_api_audio__audio_uuid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Audio",
+        "tags": [
+          "recordings"
+        ]
+      },
+      "patch": {
+        "description": "Change what a person may change. Requires edit; a reader is told so rather than refused\nas though the recording did not exist.",
+        "operationId": "update_audio_api_audio__audio_uuid__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAudio"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Audio",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/duplicates": {
+      "get": {
+        "description": "Byte-identical copies of a stored recording, the trash included (``DEC-16``).",
+        "operationId": "check_duplicate_api_audio__audio_uuid__duplicates_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DuplicateWarning"
+                  },
+                  "title": "Response Check Duplicate Api Audio  Audio Uuid  Duplicates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Is this exact file already here",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/move": {
+      "post": {
+        "description": "Move a recording into another library.\n\nThree consequences, all of which ``UI-19`` has to state before confirming: who can see it\nchanges, the category is cleared, and grants made on the recording itself survive.",
+        "operationId": "move_api_audio__audio_uuid__move_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveAudio"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Move",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/original": {
+      "get": {
+        "description": "The file exactly as it arrived, under the name it arrived with.\n\nPrinciple 1 at its most literal: whatever else happens, the bytes you put in come back out.",
+        "operationId": "download_api_audio__audio_uuid__original_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download the original",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/playback-token": {
+      "post": {
+        "description": "Mint a token the ``<audio>`` element can carry in its URL.\n\nThe real permissions are checked here; the token only records that the check happened.",
+        "operationId": "playback_token_api_audio__audio_uuid__playback_token_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Playback Token Api Audio  Audio Uuid  Playback Token Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A short-lived link for the player",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/restore": {
+      "post": {
+        "operationId": "restore_api_audio__audio_uuid__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/stream": {
+      "get": {
+        "description": "Serve the Opus derivative, honouring ``Range`` so that seeking works.\n\nFalls back to the original when there is no derivative yet, so a recording is playable the\nmoment it is uploaded rather than only once the worker has caught up.",
+        "operationId": "stream_api_audio__audio_uuid__stream_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "A playback token, for <audio>.",
+            "in": "query",
+            "name": "token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "A playback token, for <audio>.",
+              "title": "Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Play a recording",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/transcribe": {
+      "post": {
+        "description": "Queue a transcription, or say that one is already on its way (``API-11``).\n\nThe call to action on a recording with no transcript, the retry after a failure and\nre-transcribing one that already has a good transcript are all this endpoint, which is why\n**a recording with a job already pending or running answers 409 rather than queueing a\nsecond one**. A double click must not cost two transcriptions, and the interface renders that\n409 as a state rather than as an error.\n\nRe-transcribing keeps what is there: ``JOB-7`` writes a new transcript and switches which one\nis active atomically, so nothing is lost while the new one is being made.",
+        "operationId": "transcribe_audio_api_audio__audio_uuid__transcribe_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscribeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ask for a transcription",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/transcript": {
+      "get": {
+        "description": "The active transcript with its segments, which is what the detail view highlights.",
+        "operationId": "get_active_transcript_api_audio__audio_uuid__transcript_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Active Transcript",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/transcripts": {
+      "get": {
+        "description": "Every transcript a recording has. Re-transcribing keeps the old ones (``UI-14``).",
+        "operationId": "list_transcripts_api_audio__audio_uuid__transcripts_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TranscriptSummary"
+                  },
+                  "title": "Response List Transcripts Api Audio  Audio Uuid  Transcripts Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Transcripts",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/transcripts/{transcript_id}/activate": {
+      "post": {
+        "description": "Switch which transcript is shown. Atomic, and it loses nothing.",
+        "operationId": "activate_transcript_api_audio__audio_uuid__transcripts__transcript_id__activate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "transcript_id",
+            "required": true,
+            "schema": {
+              "title": "Transcript Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate Transcript",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/waveform": {
+      "get": {
+        "description": "The stored peaks, as the compact binary they are stored as, optionally reduced.\n\nExpanded into JSON, a grid of eighty cards would pull tens of megabytes to draw eighty small\npictures. Sent whole, it still would: a 48-minute recording stores about 28,800 pairs and a\ndense row draws them into twenty pixels, so ``peaks`` is what makes ``UI-7c``'s waveform\ncolumn and ``UI-31b``'s per-card waveform affordable at all (``ING-14``).\n\nAsking for more than are stored returns what is stored, rather than inventing the difference.",
+        "operationId": "waveform_blob_api_audio__audio_uuid__waveform_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Reduce to this many pairs before sending.",
+            "in": "query",
+            "name": "peaks",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 2000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reduce to this many pairs before sending.",
+              "title": "Peaks"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The recording's peaks",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/api/auth/bootstrap": {
+      "post": {
+        "description": "Create the first account, which is an administrator (``API-7``).\n\nRefused the moment any account exists, so this is not a way in later. The first run is the\nonly moment an instance has nobody to authorise the request.",
+        "operationId": "bootstrap_api_auth_bootstrap_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Bootstrap"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bootstrap",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "The signed-in account",
+        "tags": [
+          "authentication"
+        ]
+      },
+      "patch": {
+        "description": "Display name, address and language (``API-13``).\n\nOnly the password could be changed before, which left V10's Account and Appearance sections\nwith nothing to save to. Changing an address re-derives ``email_normalised`` -- the key\nidentity is decided on -- and answers 409 on a collision, the same as creating an account.\n\nTheme is deliberately absent. It is a property of the screen rather than of the person, and\n\"follow the system\" is already a per-device idea, so it lives in browser storage.",
+        "operationId": "update_me_api_auth_me_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMe"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change your own account",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "description": "Change a password, ending every other session.\n\nSigning the other sessions out is the point of changing a password when you think somebody\nelse has it. Leaving them alive would make the change decorative.",
+        "operationId": "change_password_api_auth_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Password",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/auth/session": {
+      "delete": {
+        "operationId": "sign_out_api_auth_session_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Sign out",
+        "tags": [
+          "authentication"
+        ]
+      },
+      "post": {
+        "description": "Exchange an email and a password for a session cookie.",
+        "operationId": "sign_in_api_auth_session_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign in",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/auth/sessions": {
+      "delete": {
+        "description": "Sign out everywhere else. One UPDATE, which is why the session table exists.",
+        "operationId": "revoke_other_sessions_api_auth_sessions_delete",
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Revoke Other Sessions",
+        "tags": [
+          "authentication"
+        ]
+      },
+      "get": {
+        "description": "Every session this account has, so somebody can notice one they did not start.",
+        "operationId": "list_sessions_api_auth_sessions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SessionSummary"
+                  },
+                  "title": "Response List Sessions Api Auth Sessions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Sessions",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/auth/sessions/{session_id}": {
+      "delete": {
+        "description": "Sign one session out from another one.",
+        "operationId": "revoke_session_api_auth_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "title": "Session Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke Session",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/instance": {
+      "get": {
+        "description": "Answered without a session, because the sign-in screen needs it before there is one.\n\nIt is also where the facts every view needs live, so that nothing hard-codes them: how long\nthe trash keeps things (``INT-1``) and what an upload may be (``UI-18a``).",
+        "operationId": "instance_state_api_instance_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstanceState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "What this instance is",
+        "tags": [
+          "authentication"
+        ]
+      }
+    },
+    "/api/libraries": {
+      "get": {
+        "description": "Owned libraries first, then shared ones -- which is the sidebar's own order (``UI-4``).",
+        "operationId": "list_libraries_api_libraries_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LibrarySummary"
+                  },
+                  "title": "Response List Libraries Api Libraries Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Libraries you can see",
+        "tags": [
+          "libraries"
+        ]
+      },
+      "post": {
+        "operationId": "create_library_api_libraries_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLibrary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}": {
+      "delete": {
+        "description": "Send a library to the trash. Nothing is deleted until the retention period runs out.",
+        "operationId": "trash_library_api_libraries__library_uuid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Trash Library",
+        "tags": [
+          "libraries"
+        ]
+      },
+      "get": {
+        "operationId": "get_library_api_libraries__library_uuid__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Library",
+        "tags": [
+          "libraries"
+        ]
+      },
+      "patch": {
+        "operationId": "update_library_api_libraries__library_uuid__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLibrary"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}/audio": {
+      "get": {
+        "description": "What is in a library: filtered, sorted, newest recording first by default (``API-10``).\n\nThe filters are the same dependency search takes, and the sort fields are the ones the filter\nbar and the column headings both offer -- ``UI-7d`` calls those one sort expressed two ways,\nwhich is only true if there is one list of them.",
+        "operationId": "list_library_audio_api_libraries__library_uuid__audio_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "description": "Tag slugs, all of which must match.",
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Tag slugs, all of which must match.",
+              "title": "Tag"
+            }
+          },
+          {
+            "description": "Wall-clock, inclusive.",
+            "in": "query",
+            "name": "recorded_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wall-clock, inclusive.",
+              "title": "Recorded From"
+            }
+          },
+          {
+            "description": "Wall-clock, inclusive.",
+            "in": "query",
+            "name": "recorded_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wall-clock, inclusive.",
+              "title": "Recorded To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_duration_ms",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Duration Ms"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_duration_ms",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Duration Ms"
+            }
+          },
+          {
+            "description": "Any of the four states. Repeat it to mean either.",
+            "in": "query",
+            "name": "transcription_state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/TranscriptionState"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Any of the four states. Repeat it to mean either.",
+              "title": "Transcription State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortField",
+              "default": "recorded_at"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AudioSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Library Audio",
+        "tags": [
+          "libraries"
+        ]
+      },
+      "post": {
+        "description": "Store a recording and queue the work that turns it into an archived one.\n\nThe bytes are written and hashed in one pass -- an hours-long upload is not walked twice --\nand the original is never rewritten afterwards.\n\n**The database is not touched while they are arriving** (``REV-1``). The identifier is minted\nhere rather than by the insert, so the file can be written under its final name with nothing\nopen, and the row that describes it goes in afterwards in one short transaction. An upload\nthat held the write lock would stop every other writer in the instance -- the worker\nincluded -- for as long as the upload took, which for an hour of driving is an hour.\n\nThe permission is resolved twice deliberately: once before a byte is accepted, so a stranger\nis refused rather than served eight gigabytes of patience, and once inside the transaction\nthat writes, which is the one that decides.",
+        "operationId": "upload_api_libraries__library_uuid__audio_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_api_libraries__library_uuid__audio_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudioDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload a recording",
+        "tags": [
+          "ingestion"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}/categories": {
+      "get": {
+        "operationId": "list_categories_api_libraries__library_uuid__categories_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategorySummary"
+                  },
+                  "title": "Response List Categories Api Libraries  Library Uuid  Categories Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Categories",
+        "tags": [
+          "libraries"
+        ]
+      },
+      "post": {
+        "operationId": "create_category_api_libraries__library_uuid__categories_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategory"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Category",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}/categories/order": {
+      "post": {
+        "operationId": "reorder_categories_api_libraries__library_uuid__categories_order_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderCategories"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/CategorySummary"
+                  },
+                  "title": "Response Reorder Categories Api Libraries  Library Uuid  Categories Order Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reorder Categories",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}/categories/{category_id}": {
+      "delete": {
+        "description": "Remove a node, uncategorising anything that was in it rather than refusing.",
+        "operationId": "delete_category_api_libraries__library_uuid__categories__category_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "title": "Category Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Category",
+        "tags": [
+          "libraries"
+        ]
+      },
+      "patch": {
+        "description": "Rename or re-parent one node. Moving it into its own subtree is refused.",
+        "operationId": "update_category_api_libraries__library_uuid__categories__category_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "category_id",
+            "required": true,
+            "schema": {
+              "title": "Category Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategory"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Category",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}/restore": {
+      "post": {
+        "operationId": "restore_library_api_libraries__library_uuid__restore_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LibrarySummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Restore Library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}/shares": {
+      "get": {
+        "operationId": "list_shares_api_libraries__library_uuid__shares_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ShareSummary"
+                  },
+                  "title": "Response List Shares Api Libraries  Library Uuid  Shares Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Shares",
+        "tags": [
+          "libraries"
+        ]
+      },
+      "put": {
+        "description": "Grant access, or change the level somebody already has. Requires manage.",
+        "operationId": "share_library_api_libraries__library_uuid__shares_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShare"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Share Library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/libraries/{library_uuid}/shares/{grantee_id}": {
+      "delete": {
+        "operationId": "unshare_library_api_libraries__library_uuid__shares__grantee_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "grantee_id",
+            "required": true,
+            "schema": {
+              "title": "Grantee Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unshare Library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/search": {
+      "get": {
+        "description": "One ranked list over transcripts and metadata, grouped under the recording.",
+        "operationId": "run_search_api_search_get",
+        "parameters": [
+          {
+            "description": "What to look for, in words.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "description": "What to look for, in words.",
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Restrict to one library's uuid.",
+            "in": "query",
+            "name": "library",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Restrict to one library's uuid.",
+              "title": "Library"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "description": "Tag slugs, all of which must match.",
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Tag slugs, all of which must match.",
+              "title": "Tag"
+            }
+          },
+          {
+            "description": "Wall-clock, inclusive.",
+            "in": "query",
+            "name": "recorded_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wall-clock, inclusive.",
+              "title": "Recorded From"
+            }
+          },
+          {
+            "description": "Wall-clock, inclusive.",
+            "in": "query",
+            "name": "recorded_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wall-clock, inclusive.",
+              "title": "Recorded To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_duration_ms",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Duration Ms"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_duration_ms",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Duration Ms"
+            }
+          },
+          {
+            "description": "Any of the four states. Repeat it to mean either.",
+            "in": "query",
+            "name": "transcription_state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/TranscriptionState"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Any of the four states. Repeat it to mean either.",
+              "title": "Transcription State"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_SearchResult_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search the whole archive",
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/search/about": {
+      "get": {
+        "description": "``JOB-14``'s limitation, in words the interface can show.\n\nAn endpoint rather than a hard-coded string in the frontend, so that the day the index\nchanges the interface stops describing the old behaviour without anybody remembering to\nedit it.",
+        "operationId": "about_search_api_search_about_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response About Search Api Search About Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "What this search can and cannot do",
+        "tags": [
+          "search"
+        ]
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "description": "Tags on recordings you can read, and only those.\n\nAn unfiltered suggestion list over a global vocabulary would be a directory of what everybody\nelse on the instance records.",
+        "operationId": "suggest_tags_api_tags_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "prefix",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Prefix",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TagSuggestion"
+                  },
+                  "title": "Response Suggest Tags Api Tags Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Suggest Tags",
+        "tags": [
+          "recordings",
+          "tags"
+        ]
+      }
+    },
+    "/api/transcription/destination": {
+      "get": {
+        "description": "The provider, its host, and whether it is on this network.\n\nAny authenticated caller, deliberately: the answer is about their own recordings.",
+        "operationId": "transcription_destination_api_transcription_destination_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionDestination"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Where audio is sent to be transcribed",
+        "tags": [
+          "transcription"
+        ]
+      }
+    },
+    "/api/trash/audio": {
+      "get": {
+        "description": "What is in the trash, with the closest to being purged first (``INT-1``).",
+        "operationId": "list_trash_api_trash_audio_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_AudioSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Trash",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/trash/libraries": {
+      "get": {
+        "description": "Trashed libraries, closest to being purged first, mirroring ``/trash/audio``.\n\nIt takes level 30, the same as trashing one: somebody who could only read a library has no\nbusiness being told it is on its way out.",
+        "operationId": "list_trashed_libraries_api_trash_libraries_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_LibrarySummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Trashed Libraries",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/users/lookup": {
+      "get": {
+        "description": "At most one account, for somebody who manages at least one library.\n\nA disabled account is not returned: the ACL refuses one anyway, so offering it would offer a\nshare that could never work.",
+        "operationId": "lookup_user_api_users_lookup_get",
+        "parameters": [
+          {
+            "description": "A full address. Nothing shorter matches.",
+            "in": "query",
+            "name": "email",
+            "required": true,
+            "schema": {
+              "description": "A full address. Nothing shorter matches.",
+              "maxLength": 320,
+              "title": "Email",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserSummary"
+                  },
+                  "title": "Response Lookup User Api Users Lookup Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Find one person by address",
+        "tags": [
+          "accounts"
+        ]
+      }
+    }
+  }
+}

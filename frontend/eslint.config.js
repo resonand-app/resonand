@@ -55,6 +55,10 @@ export default defineConfig(
     // The click-through kit: React 18 and Babel in a browser, and provenance rather than a
     // starting point (`UI-1l`).
     'design-system/ui_kits/**',
+    // The typed API surface, written by `npm run api:types` out of the committed document
+    // (`UI-3a`). Linting a generated file reports the generator's style as the author's
+    // mistakes, and the only fix available is to stop generating it.
+    'src/api/schema.ts',
   ]),
 
   // --- Everything ---------------------------------------------------------
@@ -130,6 +134,39 @@ export default defineConfig(
                 'Import from `@/design-system`, not from a file inside it. The two exceptions are `@/design-system/styles.css` from the entry point and a `?raw` stylesheet from a test.',
             },
           ],
+        },
+      ],
+    },
+  },
+
+  // --- Every literal the product writes is externalised (`UI-22a`) --------
+  //
+  // §1.6's rule, as a rule rather than as a sentence. English is the base language and nothing
+  // ships in another one yet, but retrofitting externalised strings across thirty views is the
+  // one mistake in this plan that cannot be undone cheaply -- so the check exists before the
+  // views do, and a bare string in JSX fails the build.
+  //
+  // Text nodes and the four attributes a person actually reads. It is deliberately not every
+  // string attribute: `role`, `type` and a class name are not copy, and a rule that flagged them
+  // would be turned off within a week.
+  //
+  // Tests are exempt: a test asserting on a rendered string has to write the string, and running
+  // one through `t()` would be asserting that i18next works.
+  {
+    files: ['src/**/*.tsx'],
+    ignores: ['src/**/*.test.tsx', 'src/dev/**', 'src/test/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'JSXText[value=/[A-Za-z]{2,}/]',
+          message: "Copy belongs in `src/i18n/en/`, not in a component. Use `t('namespace:key')`.",
+        },
+        {
+          selector:
+            'JSXAttribute[name.name=/^(title|placeholder|alt|aria-label|aria-description)$/] > Literal[value=/[A-Za-z]{2,}/]',
+          message:
+            'This attribute is read by a person or by a screen reader, so it is copy: put it in `src/i18n/en/` and pass `t(...)`.',
         },
       ],
     },

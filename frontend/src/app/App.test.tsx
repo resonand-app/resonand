@@ -1,10 +1,11 @@
 /**
- * The trivial component test `INF-3c` is done by (`INF-3c`).
+ * The root mounts, with its providers and its routes (`UI-4a`).
  *
- * It asserts almost nothing, on purpose. What it proves is that the arrangement works: a `.tsx`
- * file compiles under the strict config, renders into jsdom, and is found and reported by the
- * same command CI runs. That is the thing that would otherwise only be discovered by the first
- * real test, at which point it is two problems instead of one.
+ * It was `INF-3c`'s trivial test -- proof that a `.tsx` compiles, renders into jsdom and is
+ * reported by the command CI runs. It still is, and now it also holds the one thing about the
+ * root that a per-route test cannot: that the providers are there and in an order that works,
+ * because a query made outside the client or a redirect issued outside the router fails at the
+ * moment somebody opens the page and nowhere earlier.
  */
 
 import { render, screen } from '@testing-library/react';
@@ -12,9 +13,16 @@ import { describe, expect, it } from 'vitest';
 
 import { App } from '@/app/App';
 
+import { mockApi } from '@/test/api/server';
+
+mockApi();
+
 describe('App', () => {
-  it('renders', () => {
+  it('mounts the interface at whatever address it was opened at', async () => {
+    window.history.pushState({}, '', '/');
     render(<App />);
-    expect(screen.getByRole('main')).toHaveTextContent('Sonarium');
+    // The landing view is Phase E; what is real here is the route, the session guard that let it
+    // through, and the providers around both.
+    expect(await screen.findByText('V2 - Libraries')).toBeInTheDocument();
   });
 });

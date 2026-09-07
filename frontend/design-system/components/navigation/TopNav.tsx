@@ -1,4 +1,4 @@
-import type { ChangeEvent, HTMLAttributes, ReactNode } from 'react';
+import type { ChangeEvent, HTMLAttributes, ReactNode, Ref } from 'react';
 
 import { Logo } from '../foundation/Logo';
 import { Button } from '../forms/Button';
@@ -15,8 +15,38 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
   onToggleSidebar?: () => void;
   onUpload?: () => void;
   onProfile?: () => void;
+  /**
+   * The copy, for an application that has its own (`UI-22a`).
+   *
+   * The defaults are English, because a component with no label at all is a component that draws
+   * an empty button in a specimen. But every literal a person reads has to be replaceable from
+   * outside the system: the interface externalises all of its copy, and a string baked in here
+   * would be one that can never be translated.
+   */
+  labels?: {
+    search?: string;
+    sidebar?: string;
+    upload?: string;
+    account?: string;
+  };
+  /**
+   * The search input itself, for whoever owns the keyboard.
+   *
+   * `⌘K` and `/` focus this field from anywhere on the page (§1.8), and the handler that answers
+   * them is global (`UI-4g`). Reaching the input through the DOM would be the alternative, and a
+   * global handler that queries for a selector is one that breaks silently when the markup moves.
+   */
+  searchRef?: Ref<HTMLInputElement>;
+  /** The avatar button, for an overlay that has to be anchored to it (`UI-4e`). */
+  avatarRef?: Ref<HTMLButtonElement>;
   /** Rendered inside the search wrapper -- pass `SearchResults` here so it anchors to the field. */
   children?: ReactNode;
+  /**
+   * Rendered beside the avatar -- pass `ProfileMenu` here so it anchors to the button that opens
+   * it (`UI-4e`). The search slot above is the wrong one for it: a menu about the account
+   * hanging under the search field is a menu about the search.
+   */
+  accountMenu?: ReactNode;
 }
 
 /**
@@ -43,7 +73,11 @@ export function TopNav({
   onToggleSidebar,
   onUpload,
   onProfile,
+  labels,
+  searchRef,
+  avatarRef,
   children,
+  accountMenu,
   style,
   ...rest
 }: TopNavProps) {
@@ -66,7 +100,7 @@ export function TopNav({
     >
       <IconButton
         icon="panel-left"
-        label="Toggle sidebar"
+        label={labels?.sidebar ?? 'Toggle sidebar'}
         onClick={onToggleSidebar}
         style={{ borderRadius: 'var(--radius-control)' }}
       />
@@ -74,7 +108,9 @@ export function TopNav({
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
         <div style={{ width: '100%', maxWidth: 540, position: 'relative' }}>
           <SearchField
+            ref={searchRef}
             value={query}
+            {...(labels?.search === undefined ? {} : { placeholder: labels.search })}
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
               onQueryChange?.(event.target.value);
             }}
@@ -82,14 +118,15 @@ export function TopNav({
           {children}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
         <Button variant="primary" icon="upload" onClick={onUpload}>
-          Upload audio
+          {labels?.upload ?? 'Upload audio'}
         </Button>
         <button
+          ref={avatarRef}
           type="button"
           onClick={onProfile}
-          aria-label="Account"
+          aria-label={labels?.account ?? 'Account'}
           data-ds="avatar-button"
           data-hit-target=""
           style={{
@@ -104,6 +141,7 @@ export function TopNav({
         >
           {initials}
         </button>
+        {accountMenu}
       </div>
     </header>
   );

@@ -25,6 +25,27 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   /** Playback rate label, e.g. 1.0x, 1.25x. */
   speed?: string;
   onToggle?: () => void;
+  /**
+   * The two skips, which were drawn and not wired (`UI-5c`).
+   *
+   * They existed as controls with no callback, so the bar rendered two buttons that did nothing
+   * -- which is worse than not having them. §1.8 binds the same movement to `⇧←` and `⇧→`, so
+   * the amount is fifteen seconds in both places or the product has two opinions.
+   */
+  onBack?: () => void;
+  onForward?: () => void;
+  /**
+   * The copy, for an application that has its own (`UI-22a`).
+   *
+   * English defaults, so a specimen renders labelled controls; replaceable, because a string
+   * baked into the system is one the interface can never translate.
+   */
+  labels?: {
+    play?: string;
+    pause?: string;
+    back?: string;
+    forward?: string;
+  };
 }
 
 /**
@@ -53,6 +74,9 @@ export function PlayerBar({
   playing = false,
   speed = '1.0×',
   onToggle,
+  onBack,
+  onForward,
+  labels,
   style,
   ...rest
 }: PlayerBarProps) {
@@ -77,21 +101,23 @@ export function PlayerBar({
           icon="skip-back"
           variant="ghost"
           size={30}
-          label="Back 15 seconds"
+          label={labels?.back ?? 'Back 15 seconds'}
+          onClick={onBack}
           style={{ color: 'var(--text-2)' }}
         />
         <IconButton
           icon={playing ? 'pause' : 'play'}
           variant="accent"
           size={38}
-          label={playing ? 'Pause' : 'Play'}
+          label={playing ? (labels?.pause ?? 'Pause') : (labels?.play ?? 'Play')}
           onClick={onToggle}
         />
         <IconButton
           icon="skip-forward"
           variant="ghost"
           size={30}
-          label="Forward 15 seconds"
+          label={labels?.forward ?? 'Forward 15 seconds'}
+          onClick={onForward}
           style={{ color: 'var(--text-2)' }}
         />
       </div>

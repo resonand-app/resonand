@@ -1,9 +1,9 @@
 """Serving the built interface (``INF-3e``).
 
 The image ships the API and the web interface together, so the one thing these tests hold is the
-boundary between them: the API keeps every path it already had, the interface gets everything
-left over that a browser asked for, and a client that did not ask for HTML gets the ordinary 404
-in the ordinary envelope rather than a 200 with a page in it.
+boundary between them: the API keeps every path it already had under ``/api`` (``API-16``), the
+interface gets everything left over that a browser asked for, and a client that did not ask for
+HTML gets the ordinary 404 in the ordinary envelope rather than a 200 with a page in it.
 
 The bundle is written by hand here rather than built. What is under test is the routing, and a
 test that needed ``npm run build`` first would be a test nobody runs.
@@ -83,22 +83,47 @@ def test_a_client_route_the_server_never_heard_of_serves_the_shell(serving: Fast
     assert response.text == SHELL
 
 
-def test_a_client_route_that_collides_with_an_endpoint_gets_the_endpoint(serving: FastAPI) -> None:
-    """The one thing UI-4a has to settle before it names a route.
+@pytest.mark.parametrize(
+    "route",
+    [
+        "/sign-in",
+        "/library/8e29d6b4-0000-0000-0000-000000000000",
+        "/library/8e29d6b4-0000-0000-0000-000000000000/settings",
+        "/recording/8e29d6b4-0000-0000-0000-000000000000",
+        "/search?q=vermut",
+        "/trash",
+        "/settings",
+    ],
+)
+def test_every_route_the_interface_declares_can_be_hard_refreshed_into(
+    serving: FastAPI, route: str
+) -> None:
+    """What API-16 bought, asserted route by route (DEC-24, UI-4a).
 
-    The API is mounted at the root, so the interface's routes and the API's paths are one
-    namespace and the API was there first. A hard refresh on a client route spelled the same way
-    as an endpoint reaches the endpoint -- here, an unauthenticated 401 rather than the shell --
-    and no amount of ordering fixes that, because both are GET on the same path.
-
-    It is asserted rather than left to be discovered: the fallback works, and this is its edge.
-    UI-4a picks client routes that do not collide, or the collision becomes content negotiation
-    on paths the API already owns, which is a decision worth taking deliberately.
+    This is the test that used to assert the opposite. The API was mounted at the root, so
+    ``/search`` was an endpoint before it was a view and a hard refresh on it answered 401 rather
+    than the shell -- and no ordering fixes that, because both are GET on one path. The API moved
+    under ``/api`` instead of the routes being renamed around it, so this now enumerates §2.1 and
+    expects the shell every time. A future endpoint cannot take one of these names back without
+    turning this red.
     """
     with TestClient(serving, raise_server_exceptions=False) as client:
-        response = client.get("/libraries/8e29d6b4-0000-0000-0000-000000000000", headers=BROWSER)
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.text != SHELL
+        response = client.get(route, headers=BROWSER)
+    assert response.status_code == status.HTTP_200_OK
+    assert response.text == SHELL
+
+
+def test_a_mistyped_endpoint_is_a_404_even_for_a_browser(serving: FastAPI) -> None:
+    """The one place the Accept rule gives the wrong answer.
+
+    Under ``/api`` an unknown path is a mistyped endpoint, never a client route, so handing a
+    browser a 200 and a page for it would turn a wrong call into a silent success in exactly the
+    client most likely to make one.
+    """
+    with TestClient(serving, raise_server_exceptions=False) as client:
+        response = client.get("/api/libraaries", headers=BROWSER)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.headers["content-type"].startswith(PROBLEM_CONTENT_TYPE)
 
 
 def test_the_hashed_bundle_is_served_and_cached_hard(serving: FastAPI) -> None:
@@ -119,8 +144,8 @@ def test_the_shell_itself_is_revalidated(serving: FastAPI) -> None:
 def test_the_api_keeps_every_path_it_had(serving: FastAPI) -> None:
     """The shell is a fallback, so an endpoint stays an endpoint even asked for by a browser."""
     with TestClient(serving, raise_server_exceptions=False) as client:
-        instance = client.get("/instance", headers=BROWSER)
-        document = client.get("/openapi.json", headers=BROWSER)
+        instance = client.get("/api/instance", headers=BROWSER)
+        document = client.get("/api/openapi.json", headers=BROWSER)
         ready = client.get("/readyz", headers=BROWSER)
     assert instance.json()["version"]
     assert document.json()["info"]["title"] == "Sonarium"

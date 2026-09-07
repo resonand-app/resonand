@@ -29,7 +29,12 @@ from tests.api.conftest import PASSWORD, sign_in
 
 
 def _instance(
-    tmp_path: Path, database: Database, base_path: str, *, proxy_strips: bool = False
+    tmp_path: Path,
+    database: Database,
+    base_path: str,
+    *,
+    proxy_strips: bool = False,
+    at_origin: bool = False,
 ) -> TestClient:
     """An instance as a browser reaches it.
 
@@ -38,6 +43,9 @@ def _instance(
     that removes the prefix before forwarding, so the application sees an unprefixed path with
     ``root_path`` set. Both have to work, and the cookie path is the same in both, because it
     is scoped to what the browser requested rather than to what the application received.
+
+    ``at_origin`` drops the ``/api`` half of the base, for the probes and the shell, which sit
+    under the deployment prefix but outside the API (``API-16``).
     """
     settings = Settings(
         data_dir=tmp_path,
@@ -49,10 +57,11 @@ def _instance(
     app = create_app(settings)
     app.state.database = database
     prefix = "" if proxy_strips else settings.base_path
+    api = "" if at_origin else "/api"
     client = TestClient(
         app,
         root_path=settings.base_path,
-        base_url=f"http://testserver{prefix}",
+        base_url=f"http://testserver{prefix}{api}",
         raise_server_exceptions=False,
     )
     client.__enter__()
@@ -67,6 +76,12 @@ def on_a_subpath(tmp_path: Path, database: Database) -> TestClient:
 @pytest.fixture
 def on_a_subdomain(tmp_path: Path, database: Database) -> TestClient:
     return _instance(tmp_path, database, "")
+
+
+@pytest.fixture
+def origin_on_a_subpath(tmp_path: Path, database: Database) -> TestClient:
+    """The same instance, reached at the deployment root rather than at its API."""
+    return _instance(tmp_path, database, "/sonarium", at_origin=True)
 
 
 @pytest.mark.parametrize("given", ["/sonarium", "sonarium", "/sonarium/", "sonarium/"])
@@ -110,9 +125,9 @@ def test_the_document_names_no_server_on_a_subdomain(on_a_subdomain: TestClient)
 
 
 def test_the_api_answers_normally_under_a_subpath(
-    on_a_subpath: TestClient, accounts: dict[str, int]
+    on_a_subpath: TestClient, origin_on_a_subpath: TestClient, accounts: dict[str, int]
 ) -> None:
-    assert on_a_subpath.get("/").status_code == status.HTTP_200_OK
+    assert origin_on_a_subpath.get("/").status_code == status.HTTP_200_OK
     assert on_a_subpath.get("/instance").json()["name"] == "sonarium"
 
 
@@ -163,7 +178,11 @@ def test_a_problem_response_is_the_same_shape_under_a_subpath(on_a_subpath: Test
     assert refused.json()["type"] == "/errors/unauthenticated"
 
 
-def test_the_health_endpoints_answer_under_a_subpath(on_a_subpath: TestClient) -> None:
-    """Whatever restarts the container probes these, and it probes them through the proxy."""
-    assert on_a_subpath.get("/healthz").json()["status"] == "ok"
-    assert on_a_subpath.get("/readyz").json()["status"] == "ready"
+def test_the_health_endpoints_answer_under_a_subpath(origin_on_a_subpath: TestClient) -> None:
+    """Whatever restarts the container probes these, and it probes them through the proxy.
+
+    Under the deployment prefix and not under ``/api``: the probes stayed at the root when the
+    API moved (``API-16``), because the compose file and the image's own healthcheck name them.
+    """
+    assert origin_on_a_subpath.get("/healthz").json()["status"] == "ok"
+    assert origin_on_a_subpath.get("/readyz").json()["status"] == "ready"

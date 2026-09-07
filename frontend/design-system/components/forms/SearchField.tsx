@@ -1,10 +1,18 @@
-import type { InputHTMLAttributes } from 'react';
+import type { InputHTMLAttributes, Ref } from 'react';
 
 import { Icon } from '../foundation/Icon';
 
 export interface SearchFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   /** Keyboard hint shown at the right edge. Pass null to hide it. */
   shortcut?: string | null | undefined;
+  /**
+   * The input, for whoever has to focus it.
+   *
+   * Named rather than taken as the component's own `ref`: this component renders a wrapper
+   * around an input, and a caller writing `ref` means the thing that takes the caret. `UI-4g`
+   * focuses this field from a global handler, which is the only caller that needs it.
+   */
+  ref?: Ref<HTMLInputElement> | undefined;
 }
 
 /**
@@ -24,6 +32,7 @@ export function SearchField({
   placeholder = "Search everything you've recorded",
   shortcut = '⌘K',
   style,
+  ref,
   ...rest
 }: SearchFieldProps) {
   return (
@@ -44,6 +53,7 @@ export function SearchField({
     >
       <Icon name="search" size={17} />
       <input
+        ref={ref}
         // No `type="search"`: browsers give that one their own clear button and their own
         // Escape handling, and both are visual changes this task is not allowed to make.
         // `UI-4g` owns Escape, and the filter bar owns clearing.

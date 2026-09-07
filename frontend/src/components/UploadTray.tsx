@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { IconButton } from '@/design-system';
 
@@ -35,9 +36,10 @@ export interface UploadTrayProps {
  * upload's progress exists, and a close button beside a running upload is one somebody presses.
  */
 export function UploadTray({ summary, collapsed, onToggle, onClose, children }: UploadTrayProps) {
+  const { t } = useTranslation();
   return (
     <section
-      aria-label="Uploads"
+      aria-label={t('upload.region')}
       style={{
         flex: '0 0 auto',
         background: 'var(--surface)',

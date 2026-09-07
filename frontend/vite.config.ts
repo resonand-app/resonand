@@ -13,32 +13,17 @@ import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 
 /**
- * The API's own top-level paths.
+ * Where the API is, in development and everywhere else (`API-16`, `DEC-24`).
  *
- * The API is mounted at the root rather than under `/api`, so in development the SPA and the
- * backend share one namespace and the dev server has to be told which half of it is not the
- * SPA. Proxying rather than pointing the client at `http://127.0.0.1:8000` is what keeps the
- * session cookie same-origin in development, exactly as it is in the image.
+ * One prefix rather than the list of top-level names this used to hold. The API is mounted
+ * under `/api` and the interface owns everything else, so the dev server needs to know one
+ * thing about the backend instead of keeping a copy of its route table in step with it.
  *
- * In the image there is no proxy and no list: the SPA is a fallback route registered after every
- * router, so a path that is an endpoint is an endpoint (`INF-3e`).
+ * Proxying rather than pointing the client at `http://127.0.0.1:8000` is what keeps the session
+ * cookie same-origin in development, exactly as it is in the image -- where there is no proxy
+ * at all, because both halves come out of the same container (`INF-3e`).
  */
-const API_PATHS = [
-  '/admin',
-  '/audio',
-  '/auth',
-  '/docs',
-  '/healthz',
-  '/instance',
-  '/libraries',
-  '/openapi.json',
-  '/readyz',
-  '/search',
-  '/tags',
-  '/transcription',
-  '/trash',
-  '/users',
-];
+const API_PREFIX = '/api';
 
 const BACKEND = 'http://127.0.0.1:8000';
 
@@ -77,8 +62,6 @@ export default defineConfig({
 
   server: {
     port: 5173,
-    proxy: Object.fromEntries(
-      API_PATHS.map((path) => [path, { target: BACKEND, changeOrigin: true }]),
-    ),
+    proxy: { [API_PREFIX]: { target: BACKEND, changeOrigin: true } },
   },
 });

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button, Checkbox } from '@/design-system';
 
@@ -32,6 +33,7 @@ export interface BulkBarProps {
  * and not this component's.
  */
 export function BulkBar({ count, allSelected, onSelectAll, onClear, actions }: BulkBarProps) {
+  const { t } = useTranslation();
   return (
     <div
       style={{
@@ -60,7 +62,7 @@ export function BulkBar({ count, allSelected, onSelectAll, onClear, actions }: B
           color: 'var(--accent-on-soft)',
         }}
       >
-        {count} selected
+        {t('selection.count', { count })}
       </span>
       <div style={{ flex: 1, minWidth: 'var(--space-4)' }} />
       <div
@@ -68,7 +70,7 @@ export function BulkBar({ count, allSelected, onSelectAll, onClear, actions }: B
       >
         {actions}
         <Button variant="ghost" onClick={onClear}>
-          Clear
+          {t('action.clear')}
         </Button>
       </div>
     </div>

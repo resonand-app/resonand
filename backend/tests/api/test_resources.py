@@ -411,9 +411,10 @@ def test_an_administrator_cannot_disable_themselves(
 # --- Operations -----------------------------------------------------------
 
 
-def test_liveness_and_readiness_answer_without_a_session(client: TestClient) -> None:
-    assert client.get("/healthz").json()["status"] == "ok"
-    assert client.get("/readyz").json()["status"] == "ready"
+def test_liveness_and_readiness_answer_without_a_session(origin_client: TestClient) -> None:
+    """At the origin, not under ``/api``: the probes did not move with the API (``API-16``)."""
+    assert origin_client.get("/healthz").json()["status"] == "ok"
+    assert origin_client.get("/readyz").json()["status"] == "ready"
 
 
 # --- Search ---------------------------------------------------------------

@@ -16,7 +16,7 @@ from sonarium.api.app import create_app
 from sonarium.core.config import Settings
 from sonarium.db.engine import Database
 
-from tests.api.conftest import sign_in
+from tests.api.conftest import API_BASE, sign_in
 
 
 def test_a_non_admin_is_told_where_their_audio_goes(
@@ -82,7 +82,7 @@ def test_the_credential_is_never_reported_in_any_form(
     )
     app = create_app(settings)
     app.state.database = database
-    with TestClient(app, raise_server_exceptions=False) as keyed:
+    with TestClient(app, base_url=API_BASE, raise_server_exceptions=False) as keyed:
         sign_in(keyed, "friend")
         response = keyed.get("/transcription/destination")
     assert secret not in response.text
@@ -100,7 +100,7 @@ def test_no_provider_configured_is_a_state_and_not_an_error(
     )
     app = create_app(settings)
     app.state.database = database
-    with TestClient(app, raise_server_exceptions=False) as bare:
+    with TestClient(app, base_url=API_BASE, raise_server_exceptions=False) as bare:
         sign_in(bare, "friend")
         reported = bare.get("/transcription/destination")
     assert reported.status_code == status.HTTP_200_OK

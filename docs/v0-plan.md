@@ -398,6 +398,10 @@ Short and mechanical, but it conditions everything that comes after. No product 
 - [ ] **INF-8** · `docs/adr/` with the decisions already made, one per file, with the discarded
       alternatives and the rationale.
 
+- [ ] **INF-9** · The three identifier repairs `docs/ui-plan.md` is written against. Shipped in
+      `dda44b6`, which is what settles the number: `ROADMAP.md` used it for the community
+      scaffolding too, and that one is now **`INF-10`**.
+
 ---
 
 ## Phase 1 · Data and permissions core 🔒
@@ -519,6 +523,18 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       partial address finds nobody.
       *Sharing needs to confirm one address somebody was given out of band. It does not need a
       directory, and the difference is the whole design of the endpoint.*
+
+- [ ] **API-16** · **One namespace for the API, one for the interface.** Every router moves under
+      `/api`, and the published document and its viewer move with them. The API is mounted at the
+      root today, so the interface's routes and the API's paths are a single namespace that the API
+      already occupies — `/search` is the clearest case, but every top-level name the API takes is
+      a name a view can never be given. `/healthz` and `/readyz` stay where they are: whatever
+      restarts the container probes them, and they are not part of the documented surface.
+      *Done when:* a hard refresh on every route in §2.1 reaches the interface, and
+      `backend/tests/api/test_spa.py` asserts the two namespaces are disjoint rather than asserting
+      where they collide. ⇢ DEC-24 🧪
+      *It runs before `UI-3a`, because the snapshot `UI-3a` commits carries every path in it and a
+      rename afterwards is a second regeneration plus a second review of the diff.*
 
 ---
 
