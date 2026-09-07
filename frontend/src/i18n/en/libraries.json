@@ -1,0 +1,7 @@
+{
+  "title": "Libraries",
+  "create": {
+    "action": "Create a library",
+    "hint": "Name it and pick a colour"
+  }
+}

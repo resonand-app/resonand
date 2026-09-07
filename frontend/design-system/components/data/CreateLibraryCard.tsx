@@ -2,7 +2,20 @@ import type { ButtonHTMLAttributes } from 'react';
 
 import { Icon } from '../foundation/Icon';
 
-export type CreateLibraryCardProps = ButtonHTMLAttributes<HTMLButtonElement>;
+export interface CreateLibraryCardProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /**
+   * The copy, for an application that has its own (`UI-22a`).
+   *
+   * The defaults are English, because a tile with no words in it is a tile that draws an empty
+   * box in a specimen. But every literal a person reads has to be replaceable from outside the
+   * system -- the interface externalises all of its copy, and a string baked in here would be one
+   * that can never be translated.
+   */
+  labels?: {
+    action?: string;
+    hint?: string;
+  };
+}
 
 /**
  * The first tile in the library grid: the same footprint as a library card, and no elevation.
@@ -12,7 +25,7 @@ export type CreateLibraryCardProps = ButtonHTMLAttributes<HTMLButtonElement>;
  * the button: "Name it and pick a colour" is the whole of the create dialog, stated before it
  * opens.
  */
-export function CreateLibraryCard({ onClick, style, ...rest }: CreateLibraryCardProps) {
+export function CreateLibraryCard({ labels, onClick, style, ...rest }: CreateLibraryCardProps) {
   return (
     <button
       type="button"
@@ -54,10 +67,10 @@ export function CreateLibraryCard({ onClick, style, ...rest }: CreateLibraryCard
           color: 'var(--accent)',
         }}
       >
-        Create a library
+        {labels?.action ?? 'Create a library'}
       </span>
       <span style={{ fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
-        Name it and pick a colour
+        {labels?.hint ?? 'Name it and pick a colour'}
       </span>
     </button>
   );
