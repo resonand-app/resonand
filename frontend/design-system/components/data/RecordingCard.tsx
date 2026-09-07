@@ -4,20 +4,54 @@ import type { TranscriptionState } from '../../transcription-states';
 import { IconButton } from '../forms/IconButton';
 import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
+import { Icon } from '../foundation/Icon';
 import { Chip } from './Chip';
 import { StateBadge } from './StateBadge';
 
 export interface RecordingCardProps extends HTMLAttributes<HTMLElement> {
   name: string;
+  /**
+   * Where the title goes: the card's keyboard path into the recording (`UI-6b`).
+   *
+   * A link, for the reasons `LibraryCard`'s carries one -- opening a recording is a navigation,
+   * and the play button beside it is a different action that must not be the only control on a
+   * card somebody reached with a keyboard.
+   */
+  href?: string;
   /** Mono metadata: duration and date, e.g. "48:12 · 12 Mar 2026". */
   meta?: string;
   state?: TranscriptionState;
+  /**
+   * The category, resolved against the library's own tree by whoever renders the card.
+   *
+   * An id on the recording and a name here: the card does not know the library, and a component
+   * that fetched a tree to draw one word would fetch it once per card.
+   */
+  category?: string;
   /** User-entered tags, shown verbatim. */
   tags?: string[];
+  /**
+   * How many tags to draw before the rest become a count.
+   *
+   * A card is 320px and a recording can carry a dozen tags. Wrapping them all makes every card a
+   * different height, which is the one thing a grid of cards cannot survive.
+   */
+  maxTags?: number;
+  /** A discreet mark for a recording shared on its own, apart from its library. */
+  sharedIndividually?: boolean;
   peaks?: Peaks | undefined;
   played?: number;
   pending?: boolean;
   onPlay?: () => void;
+  /** The copy, for an application that has its own (`UI-22a`). */
+  labels?: {
+    play?: (name: string) => string;
+    /** The transcription state, in the interface's language. `StateBadge`'s own is English. */
+    state?: string;
+    /** "+3", or whatever a language makes of a count of tags not drawn. */
+    moreTags?: (count: number) => string;
+    sharedIndividually?: string;
+  };
 }
 
 /**
@@ -36,7 +70,12 @@ export function RecordingCard({
   name,
   meta,
   state = 'done',
+  category,
   tags = [],
+  maxTags = 3,
+  sharedIndividually = false,
+  href,
+  labels,
   peaks,
   played = 0,
   pending = false,
@@ -68,9 +107,19 @@ export function RecordingCard({
               fontSize: 'var(--type-body-size)',
               letterSpacing: '-0.005em',
               color: 'var(--text)',
+              // A title wraps rather than being cut: "Interview with grandma Teresa -- the house
+              // on Carrer Nou" is an ordinary title, and an ellipsis in the middle of it is a
+              // recording somebody cannot identify (§V3).
+              textWrap: 'pretty',
             }}
           >
-            {name}
+            {href === undefined ? (
+              name
+            ) : (
+              <a data-ds="recording-card-title" href={href}>
+                {name}
+              </a>
+            )}
           </span>
           <span
             style={{
@@ -83,7 +132,13 @@ export function RecordingCard({
             {meta}
           </span>
         </div>
-        <IconButton icon="play" variant="accent-soft" size={32} label={`Play ${name}`} onClick={onPlay} />
+        <IconButton
+          icon="play"
+          variant="accent-soft"
+          size={32}
+          label={labels?.play?.(name) ?? `Play ${name}`}
+          onClick={onPlay}
+        />
       </div>
       <Waveform
         peaks={peaks}
@@ -92,11 +147,22 @@ export function RecordingCard({
         playhead={played > 0}
         pending={pending}
       />
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        <StateBadge state={state} />
-        {tags.map((tag) => (
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        <StateBadge state={state} {...(labels?.state === undefined ? {} : { label: labels.state })} />
+        {sharedIndividually && (
+          <Chip data-kind="shared" title={labels?.sharedIndividually}>
+            <Icon name="share-2" size={13} />
+          </Chip>
+        )}
+        {category !== undefined && <Chip data-kind="category">{category}</Chip>}
+        {tags.slice(0, maxTags).map((tag) => (
           <Chip key={tag}>{tag}</Chip>
         ))}
+        {tags.length > maxTags && (
+          <Chip data-kind="overflow">
+            {labels?.moreTags?.(tags.length - maxTags) ?? `+${String(tags.length - maxTags)}`}
+          </Chip>
+        )}
       </div>
     </article>
   );

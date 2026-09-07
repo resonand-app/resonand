@@ -12,5 +12,10 @@
   },
   "unreachable": {
     "title": "The instance is not answering"
+  },
+  "card": {
+    "play": "Play {{name}}",
+    "moreTags": "+{{count}}",
+    "sharedIndividually": "Shared on its own, apart from this library"
   }
 }

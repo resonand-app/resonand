@@ -19,7 +19,10 @@
  * and anything else throws.
  */
 
+import { useQuery } from '@tanstack/react-query';
+
 import { DEPLOYMENT_BASE } from './client';
+import { keys } from './keys';
 import { ApiProblem, problemFrom, unreachable } from './problem';
 
 /** Interleaved `min, max` per bucket, each in -1…1 -- the shape `Waveform` takes. */
@@ -115,6 +118,38 @@ export async function fetchWaveform(
   }
   if (!response.ok) throw await problemFrom(response);
   return decodeWaveform(await response.arrayBuffer());
+}
+
+/**
+ * How many pairs each drawing has room for.
+ *
+ * Asking for the stored 28,800 pairs of a 48-minute recording to draw a picture 320 pixels wide
+ * would be a megabyte for a thumbnail, and 20 pixels of dense row is worse (`ING-14`). The server
+ * reduces on the way out and `resamplePeaks` reduces again to the pixels actually available, with
+ * the same arithmetic on both sides so one recording draws one shape everywhere.
+ */
+export const BUCKETS = { card: 160, row: 40, detail: 1200 } as const;
+
+/**
+ * A recording's peaks, cached for as long as the tab lives.
+ *
+ * `staleTime: Infinity` because peaks are derived from a file that does not change: a recording
+ * whose waveform has been computed has the same waveform for ever, and the one transition that
+ * matters -- not computed, then computed -- is a change to `has_waveform` on the recording, which
+ * is what `enabled` reads.
+ */
+export function useWaveform(
+  uuid: string,
+  buckets: number,
+  enabled: boolean,
+): { peaks: Peaks | undefined; pending: boolean } {
+  const query = useQuery({
+    queryKey: keys.waveform(uuid, buckets),
+    queryFn: ({ signal }) => fetchWaveform(uuid, buckets, signal),
+    enabled: enabled && uuid !== '',
+    staleTime: Infinity,
+  });
+  return { peaks: query.data?.peaks, pending: query.data === undefined };
 }
 
 export { ApiProblem };

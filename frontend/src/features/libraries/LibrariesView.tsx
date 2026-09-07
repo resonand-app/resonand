@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 
 import { isApiProblem } from '@/api/problem';
 import { toLibrary } from '@/app/routes';
+import { useAfterPaint } from '@/app/use-after-paint';
 import {
   Button,
   CardSkeleton,
@@ -37,7 +38,7 @@ import { colourOf } from '@/app/library-data';
 import { useLibraryList } from './data';
 import type { LibrarySummary } from './data';
 import { CreateLibraryDialog } from './CreateLibraryDialog';
-import { useAfterPaint, useLatestWaveform } from './use-latest-waveform';
+import { useLatestWaveform } from './use-latest-waveform';
 
 /**
  * The four levels, as the short name a byline has room for.

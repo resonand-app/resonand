@@ -7,22 +7,31 @@
  * changing the bar's control have to be indistinguishable in effect -- and the cheapest way to
  * keep that true is for there to be one component that owns both.
  *
- * What arrives in later tasks: the card grid (`UI-6b`), the dense list (`UI-7a`), the filter bar
- * (`UI-8a`), selection and the bulk bar (`UI-9a`), and the states (`UI-10a`).
+ * What arrives in later tasks: the dense list (`UI-7a`), the filter bar (`UI-8a`), selection and
+ * the bulk bar (`UI-9a`), and the states (`UI-10a`).
  */
 
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
+import { PAGE_SIZE, pageWindow } from '@/api/paged';
+import { useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
+import { useAfterPaint } from '@/app/use-after-paint';
 
 import { LibraryHeader } from './LibraryHeader';
+import { RecordingGrid } from './RecordingGrid';
 import { useLibrary } from './data';
+import { libraryQuery, useCategories, useRecordings } from './recordings';
 
 export function LibraryView() {
   const { uuid = '' } = useParams();
   const context = useLibrary(uuid);
+  const { filters } = useUrlState();
+  const categories = useCategories(uuid);
+  const painted = useAfterPaint();
+  const recordings = useRecordings(uuid, libraryQuery(filters, pageWindow(0, PAGE_SIZE)));
 
   if (context.error !== null && context.error !== undefined) {
     return <Unavailable error={context.error} onRetry={context.refetch} />;
@@ -31,6 +40,7 @@ export function LibraryView() {
   return (
     <section>
       <LibraryHeader context={context} />
+      <RecordingGrid recordings={recordings.items} categories={categories} waveforms={painted} />
     </section>
   );
 }

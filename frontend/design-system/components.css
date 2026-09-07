@@ -619,6 +619,17 @@
   text-decoration: underline;
 }
 
+/* A recording's title is a link into the recording, and looks like the title it is -- the same
+   arrangement as a library card's, for the same reason. */
+[data-ds='recording-card-title'] {
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-ds='recording-card-title']:hover {
+  text-decoration: underline;
+}
+
 /* CreateLibraryCard. It does not float, because it is not a thing yet -- so its hover is the
    surface step rather than an elevation one. */
 [data-ds='create-library-card'] {

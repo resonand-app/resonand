@@ -18,44 +18,16 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
-import { fetchWaveform } from '@/api/waveform';
+import { BUCKETS, useWaveform } from '@/api/waveform';
 import type { Peaks } from '@/api/waveform';
-
-/** How many pairs a 320px card can show. More is bytes nobody sees. */
-export const CARD_BUCKETS = 160;
 
 export interface LatestWaveform {
   peaks: Peaks | undefined;
   /** True until there is a shape to draw -- including for a recording whose peaks job has not run. */
   pending: boolean;
-}
-
-/**
- * Whether the deferred work may start: true once a frame has been drawn.
- *
- * A frame and not merely an effect. An effect runs before the browser has painted, so gating on
- * one would start eighty requests in the same tick as the layout they are meant to come after --
- * which is the thing §V2 asks this page not to do. `requestAnimationFrame` fires with the cards
- * genuinely on screen.
- *
- * One flag for the whole grid rather than one per card: they mount together, and a state update
- * per card would be one render of the grid per card.
- */
-export function useAfterPaint(): boolean {
-  const [painted, setPainted] = useState(false);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      setPainted(true);
-    });
-    return () => {
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-  return painted;
 }
 
 export function useLatestWaveform(
@@ -79,17 +51,7 @@ export function useLatestWaveform(
   const recording = latest.data?.items[0];
   const uuid = recording?.uuid;
 
-  const waveform = useQuery({
-    queryKey: keys.waveform(uuid ?? '', CARD_BUCKETS),
-    queryFn: ({ signal }) => fetchWaveform(uuid ?? '', CARD_BUCKETS, signal),
-    // A recording whose peaks job has not run says so on the summary, so the request that would
-    // 404 is never made (`ING-14`). The card stays `pending`, which is what it should say.
-    enabled: enabled && uuid !== undefined && recording?.has_waveform === true,
-    staleTime: Infinity,
-  });
-
-  return {
-    peaks: waveform.data?.peaks,
-    pending: waveform.data === undefined,
-  };
+  // A recording whose peaks job has not run says so on the summary, so the request that would
+  // 404 is never made (`ING-14`). The card stays `pending`, which is what it should say.
+  return useWaveform(uuid ?? '', BUCKETS.card, enabled && recording?.has_waveform === true);
 }
