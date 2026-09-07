@@ -16,6 +16,7 @@
  * one, and it is the one thing §V2's structure note asks this grid not to do.
  */
 
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -35,6 +36,7 @@ import { colourOf } from '@/app/library-data';
 
 import { useLibraryList } from './data';
 import type { LibrarySummary } from './data';
+import { CreateLibraryDialog } from './CreateLibraryDialog';
 import { useAfterPaint, useLatestWaveform } from './use-latest-waveform';
 
 /**
@@ -52,6 +54,7 @@ export function LibrariesView() {
   const { own, shared, recordings, durationMs, isPending, error, refetch } = useLibraryList();
   const painted = useAfterPaint();
   const newAccount = shared.length === 0 && own.length === 1 && own[0]?.audio_count === 0;
+  const [creating, setCreating] = useState(false);
 
   return (
     <section>
@@ -62,7 +65,12 @@ export function LibrariesView() {
       {error === null || error === undefined ? (
         <>
           <Grid>
-            <CreateLibraryCard labels={{ action: t('create.action'), hint: t('create.hint') }} />
+            <CreateLibraryCard
+              labels={{ action: t('create.action'), hint: t('create.hint') }}
+              onClick={() => {
+                setCreating(true);
+              }}
+            />
             {isPending ? (
               <Skeletons />
             ) : (
@@ -76,6 +84,12 @@ export function LibrariesView() {
       ) : (
         <Unavailable error={error} onRetry={refetch} />
       )}
+      <CreateLibraryDialog
+        open={creating}
+        onClose={() => {
+          setCreating(false);
+        }}
+      />
       {shared.length > 0 && (
         <section style={{ marginTop: 'var(--space-10)' }}>
           <h2

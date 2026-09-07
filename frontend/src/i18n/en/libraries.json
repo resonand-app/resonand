@@ -5,7 +5,12 @@
   },
   "create": {
     "action": "Create a library",
-    "hint": "Name it and pick a colour"
+    "hint": "Name it and pick a colour",
+    "title": "Create a library",
+    "name": "Name",
+    "colour": "Colour",
+    "privacy": "Nothing in a library is shared until you share it.",
+    "submit": "Create"
   },
   "shared": {
     "title": "Shared with you",

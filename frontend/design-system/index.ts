@@ -114,6 +114,8 @@ export type { StateCardProps } from './components/layout/StateSlot';
 // The positioning strategy itself, exported because the application anchors overlays of its own:
 // `UI-4e` hangs the account menu off the avatar, and an overlay placed by hand would be one that
 // does not flip when it runs out of room and does not close on Escape.
+export { Modal } from './components/overlay/Modal';
+export type { ModalProps } from './components/overlay/Modal';
 export { useAnchoredOverlay } from './components/overlay/useAnchoredOverlay';
 export type {
   Alignment,

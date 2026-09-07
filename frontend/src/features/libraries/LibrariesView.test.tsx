@@ -10,6 +10,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -241,5 +242,14 @@ describe('the states', () => {
     // for a bug in their archive when the machine is simply not answering.
     expect(await screen.findByText(/The instance is not answering/)).toBeInTheDocument();
     expect(screen.getByText(/could not be reached/)).toBeInTheDocument();
+  });
+});
+
+describe('creating a library', () => {
+  it('opens the dialog from the create tile', async () => {
+    const user = userEvent.setup();
+    renderView();
+    await user.click(screen.getByRole('button', { name: /Create a library/ }));
+    expect(await screen.findByRole('dialog', { name: 'Create a library' })).toBeInTheDocument();
   });
 });
