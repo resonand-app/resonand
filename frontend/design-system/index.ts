@@ -46,6 +46,8 @@ export { ColorSwatchPicker } from './components/forms/ColorSwatchPicker';
 export type { ColorSwatchPickerProps } from './components/forms/ColorSwatchPicker';
 export { IconButton } from './components/forms/IconButton';
 export type { IconButtonProps } from './components/forms/IconButton';
+export { Progress } from './components/forms/Progress';
+export type { ProgressProps } from './components/forms/Progress';
 export { SearchField } from './components/forms/SearchField';
 export { Select } from './components/forms/Select';
 export type { SelectOption, SelectProps } from './components/forms/Select';

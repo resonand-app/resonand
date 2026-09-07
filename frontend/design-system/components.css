@@ -347,6 +347,16 @@
   color: var(--accent);
 }
 
+/* Progress. A 4px track and an amber fill: the same accent as a played waveform, because both
+   mean "this much of it has happened". */
+[data-ds='progress'] {
+  background: var(--surface-2);
+}
+
+[data-ds='progress-fill'] {
+  background: var(--accent);
+}
+
 /* Checkbox. Empty is an edge and nothing else -- a filled box for "not selected" would read as a
    third state next to `mixed`. Checked and mixed are the same fill on purpose: they are both
    "this selection includes something", and the glyph is what tells them apart. */

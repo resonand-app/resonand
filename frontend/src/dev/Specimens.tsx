@@ -15,6 +15,7 @@ import {
   Menu,
   PlayerBar,
   ProfileMenu,
+  Progress,
   RecordingCard,
   RecordingRow,
   SearchField,
@@ -336,6 +337,12 @@ export default function Specimens() {
         </Panel>
         <Panel label="Select · disabled">
           <Select label="Category" options={SORTS} placeholder="Any category" disabled />
+        </Panel>
+        <Panel label="Progress · determinate only" width={340}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <Progress value={0.64} label="Entrevista àvia 03.m4a" detail="64% · 284 MB" />
+            <Progress value={0.1} label="Overall" detail="3 of 30 uploaded, 1 failed" />
+          </div>
         </Panel>
         <Panel label="Checkbox">
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
