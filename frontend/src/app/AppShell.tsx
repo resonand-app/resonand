@@ -20,7 +20,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 
-import { Shell, Sidebar, TopNav } from '@/design-system';
+import { Shell, Sidebar, TopNav, useAnchoredOverlay } from '@/design-system';
 
 import { MediaSession } from '@/player/MediaSession';
 import { PhonePlayer } from '@/player/PhonePlayer';
@@ -29,6 +29,7 @@ import { connect } from '@/player/audio';
 import { usePlayback } from '@/player/store';
 
 import { PhoneShell } from './PhoneShell';
+import { Profile } from './Profile';
 import { destinationOf, destinationTo, initialsOf } from './destinations';
 import { useLibraries, useTrashCount } from './library-data';
 import { routes, toSearch } from './routes';
@@ -60,6 +61,17 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   const { collapsed, toggle } = useSidebarCollapse();
   const isPhone = useIsPhone();
   const [uploading, setUploading] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  // The account menu hangs off the avatar, and the system's positioning is what makes it flip
+  // when it runs out of room, close on Escape and close on a pointer outside it (`UI-34a`).
+  const profile = useAnchoredOverlay<HTMLButtonElement>({
+    open: profileOpen,
+    onClose: () => {
+      setProfileOpen(false);
+    },
+    placement: 'bottom',
+    align: 'end',
+  });
   const search = useRef<HTMLInputElement>(null);
 
   // The audio element is connected once, by the frame, and never by a view. It is outside React
@@ -122,14 +134,28 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
             void navigate(toSearch(query), { replace: location.pathname === routes.search });
           }}
           {...(onUpload ? { onUpload } : {})}
-          {...(onProfile ? { onProfile } : {})}
+          onProfile={() => {
+            onProfile?.();
+            setProfileOpen((open) => !open);
+          }}
           searchRef={search}
+          avatarRef={profile.anchorRef}
           labels={{
             search: t('nav.search'),
             sidebar: t('nav.sidebar'),
             upload: t('nav.upload'),
             account: t('nav.account'),
           }}
+          accountMenu={
+            profileOpen ? (
+              <Profile
+                surface={profile}
+                onClose={() => {
+                  setProfileOpen(false);
+                }}
+              />
+            ) : null
+          }
         />
       }
       sidebar={

@@ -109,6 +109,19 @@ export type { ShellProps } from './components/layout/Shell';
 export { CardSkeleton, RowSkeleton, StateCard } from './components/layout/StateSlot';
 export type { StateCardProps } from './components/layout/StateSlot';
 
+// --- components/overlay (`UI-34a`) ------------------------------------------
+//
+// The positioning strategy itself, exported because the application anchors overlays of its own:
+// `UI-4e` hangs the account menu off the avatar, and an overlay placed by hand would be one that
+// does not flip when it runs out of room and does not close on Escape.
+export { useAnchoredOverlay } from './components/overlay/useAnchoredOverlay';
+export type {
+  Alignment,
+  AnchoredOverlay,
+  AnchoredOverlayOptions,
+  Placement,
+} from './components/overlay/useAnchoredOverlay';
+
 // --- components/navigation (`UI-1h`) ----------------------------------------
 export { Dialog } from './components/navigation/Dialog';
 export type { DialogProps } from './components/navigation/Dialog';

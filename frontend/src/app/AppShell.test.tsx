@@ -7,13 +7,14 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { ThemeProvider } from '@/design-system';
 import { ATENEU, AVIA, GABRIEL, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
@@ -45,19 +46,22 @@ function renderShell(at: string = routes.libraries) {
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={[at]}>
-        <Where />
-        <Routes>
-          <Route
-            path="*"
-            element={
-              <AppShell>
-                <div>the view</div>
-              </AppShell>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      {/* The account menu reads the theme, which the entry point provides in the application. */}
+      <ThemeProvider>
+        <MemoryRouter initialEntries={[at]}>
+          <Where />
+          <Routes>
+            <Route
+              path="*"
+              element={
+                <AppShell>
+                  <div>the view</div>
+                </AppShell>
+              }
+            />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
     </QueryClientProvider>,
   );
 }
@@ -166,5 +170,49 @@ describe('the keyboard', () => {
     field.blur();
     await userEvent.keyboard('/');
     expect(field).toHaveFocus();
+  });
+});
+
+describe('the account menu', () => {
+  it('opens from the avatar, and says who is signed in', async () => {
+    renderShell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
+    const menu = await screen.findByRole('menu');
+    expect(within(menu).getByText('Gabriel')).toBeInTheDocument();
+    expect(within(menu).getByText('gabriel@example.test')).toBeInTheDocument();
+  });
+
+  it('carries the theme, Settings and sign out, and nothing else', async () => {
+    // Everything else about an account is V10. A menu that grew a third of the settings view
+    // would be two places to change one thing.
+    renderShell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
+    const menu = await screen.findByRole('menu');
+    expect(within(menu).getByText('Theme')).toBeInTheDocument();
+    expect(within(menu).getByText('Settings')).toBeInTheDocument();
+    expect(within(menu).getByText('Sign out')).toBeInTheDocument();
+    expect(within(menu).getAllByRole('button')).toHaveLength(3);
+  });
+
+  it('goes to Settings and closes on the way', async () => {
+    renderShell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
+    // Scoped to the menu: "Settings" is a sidebar destination too, which is the point of both.
+    const menu = await screen.findByRole('menu');
+    await userEvent.click(within(menu).getByText('Settings'));
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent(routes.settings);
+    });
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('closes on Escape, like every other overlay in the product', async () => {
+    renderShell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
+    expect(await screen.findByRole('menu')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    });
   });
 });

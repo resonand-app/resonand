@@ -29,5 +29,13 @@
   "notBuilt": {
     "title": "Not built yet",
     "detail": "This view arrives in Phase E. The route, the shell and the session guard around it are real."
+  },
+  "profile": {
+    "theme": "Theme"
+  },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   }
 }

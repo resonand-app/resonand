@@ -37,8 +37,16 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
    * global handler that queries for a selector is one that breaks silently when the markup moves.
    */
   searchRef?: Ref<HTMLInputElement>;
+  /** The avatar button, for an overlay that has to be anchored to it (`UI-4e`). */
+  avatarRef?: Ref<HTMLButtonElement>;
   /** Rendered inside the search wrapper -- pass `SearchResults` here so it anchors to the field. */
   children?: ReactNode;
+  /**
+   * Rendered beside the avatar -- pass `ProfileMenu` here so it anchors to the button that opens
+   * it (`UI-4e`). The search slot above is the wrong one for it: a menu about the account
+   * hanging under the search field is a menu about the search.
+   */
+  accountMenu?: ReactNode;
 }
 
 /**
@@ -67,7 +75,9 @@ export function TopNav({
   onProfile,
   labels,
   searchRef,
+  avatarRef,
   children,
+  accountMenu,
   style,
   ...rest
 }: TopNavProps) {
@@ -108,11 +118,12 @@ export function TopNav({
           {children}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, position: 'relative' }}>
         <Button variant="primary" icon="upload" onClick={onUpload}>
           {labels?.upload ?? 'Upload audio'}
         </Button>
         <button
+          ref={avatarRef}
           type="button"
           onClick={onProfile}
           aria-label={labels?.account ?? 'Account'}
@@ -130,6 +141,7 @@ export function TopNav({
         >
           {initials}
         </button>
+        {accountMenu}
       </div>
     </header>
   );
