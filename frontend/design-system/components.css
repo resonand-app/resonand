@@ -606,6 +606,19 @@
   box-shadow: var(--elevation-overlay);
 }
 
+/* The title is the card's keyboard path into the library, so it is a link and looks like the
+   title it is: the card carries the affordance, and a blue underlined heading inside a surface
+   that is already obviously clickable is one signal too many. It underlines when the pointer is
+   on it, and the focus ring is the system's own. */
+[data-ds='library-card-title'] {
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-ds='library-card-title']:hover {
+  text-decoration: underline;
+}
+
 /* CreateLibraryCard. It does not float, because it is not a thing yet -- so its hover is the
    surface step rather than an elevation one. */
 [data-ds='create-library-card'] {

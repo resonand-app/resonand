@@ -59,6 +59,10 @@ function problem(status: number, detail: string, extra: Record<string, unknown> 
 /** What the API says about anything the caller may not read, or that is not there (`DEC-14`). */
 const NOT_FOUND = () => problem(404, 'There is no such thing here, or it is not yours.');
 
+/** The stored waveform's header: version, duration in milliseconds, bucket count (`ING-5`). */
+const WAVEFORM_FORMAT_VERSION = 2;
+const WAVEFORM_HEADER_BYTES = 9;
+
 /** Answer with a thing, or with the 404 that covers both "gone" and "not yours" (`DEC-14`). */
 function found(value: unknown): Response {
   return value === undefined ? NOT_FOUND() : HttpResponse.json(value);
@@ -331,13 +335,20 @@ export const handlers: HttpHandler[] = [
   http.get('/api/audio/:audio_uuid/original', () => new HttpResponse(new ArrayBuffer(8))),
   http.get('/api/audio/:audio_uuid/waveform', ({ request }) => {
     const peaks = Number(new URL(request.url).searchParams.get('peaks') ?? 200);
+    // The stored form, header and all (`ING-5`): version 2, the duration in milliseconds, the
+    // bucket count, then int8 pairs. A fixture that sent bare pairs would pass against a decoder
+    // that ignored the version byte, which is the one thing the version byte exists to catch.
+    const body = new Uint8Array(WAVEFORM_HEADER_BYTES + peaks * 2);
+    const header = new DataView(body.buffer);
+    header.setUint8(0, WAVEFORM_FORMAT_VERSION);
+    header.setUint32(1, peaks * 100, true);
+    header.setUint32(5, peaks, true);
     // A plausible shape rather than a flat line: a waveform test that passes on silence would
     // pass on a bug that drew silence.
-    const body = new Uint8Array(peaks * 2);
     for (let index = 0; index < peaks; index += 1) {
       const height = Math.round(40 + 50 * Math.abs(Math.sin(index / 7)));
-      body[index * 2] = 256 - height;
-      body[index * 2 + 1] = height;
+      header.setInt8(WAVEFORM_HEADER_BYTES + index * 2, -height);
+      header.setInt8(WAVEFORM_HEADER_BYTES + index * 2 + 1, height);
     }
     return new HttpResponse(body, { headers: { 'content-type': 'application/octet-stream' } });
   }),

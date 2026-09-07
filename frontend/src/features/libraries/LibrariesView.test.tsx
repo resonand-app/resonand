@@ -8,13 +8,14 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { mockApi } from '@/test/api/server';
+import { AVIA, NOTA, PERSONAL, archive } from '@/test/api/archive';
+import { mockApi, server } from '@/test/api/server';
 
 import { LibrariesView } from './LibrariesView';
 
@@ -32,6 +33,14 @@ function renderView() {
       </ThemeProvider>
     </QueryClientProvider>,
   );
+}
+
+/** One card, found by the library it is about. */
+async function cardFor(name: string): Promise<HTMLElement> {
+  const heading = await screen.findByRole('heading', { name });
+  const card = heading.closest('article');
+  if (card === null) throw new Error(`The card for ${name} is not an article.`);
+  return card;
 }
 
 /** The grid the create tile sits in, which is the half of the screen this task draws. */
@@ -83,5 +92,71 @@ describe('the grid', () => {
     await screen.findByRole('heading', { name: 'Personal' });
     // `Reunions Ateneu` is Marta's. It has a group of its own (`UI-31c`) and is not one of these.
     expect(within(gridOf()).queryByText('Reunions Ateneu')).toBeNull();
+  });
+});
+
+describe('a card', () => {
+  it('carries the name, the count and the total, all from one list request', async () => {
+    renderView();
+    const card = await cardFor('Àvia Teresa');
+    expect(within(card).getByText(/3 recordings/)).toBeInTheDocument();
+    expect(within(card).getByText(/2.h.04.min/u)).toBeInTheDocument();
+  });
+
+  it('opens the library from the title, by keyboard', async () => {
+    renderView();
+    const card = await cardFor('Àvia Teresa');
+    // A link, so it is in the tab order, announced as a link, and openable in a new tab. The
+    // click handler over the whole card is the mouse convenience, not the affordance.
+    expect(within(card).getByRole('link', { name: 'Àvia Teresa' })).toHaveAttribute(
+      'href',
+      `/library/${AVIA}`,
+    );
+  });
+
+  it('names the overflow control after the library it belongs to', async () => {
+    renderView();
+    const card = await cardFor('Àvia Teresa');
+    expect(within(card).getByRole('button', { name: 'Options for Àvia Teresa' })).toBeVisible();
+  });
+
+  it('draws no waveform until one has been fetched, and never an invented one', async () => {
+    renderView();
+    const card = await cardFor('Àvia Teresa');
+    // `pending` while the two deferred requests are in flight: a dashed rule, not a shape.
+    expect(card.querySelector('[data-ds="waveform"]')).toBeNull();
+    await waitFor(() => {
+      expect(card.querySelector('[data-ds="waveform"]')).not.toBeNull();
+    });
+  });
+
+  it('asks for nothing at all for a library with no recordings', async () => {
+    archive.libraries = archive.libraries.map((one) =>
+      one.uuid === AVIA ? { ...one, audio_count: 0, total_duration_ms: 0 } : one,
+    );
+    const asked: string[] = [];
+    server.events.on('request:start', ({ request }) => asked.push(request.url));
+    renderView();
+    await cardFor('Àvia Teresa');
+    // The personal library still asks, which is what makes the absence below a decision rather
+    // than a page that never got as far as fetching anything.
+    await waitFor(() => {
+      expect(asked.some((url) => url.includes(`/libraries/${PERSONAL}/audio`))).toBe(true);
+    });
+    // `audio_count` already answers "is there a most recent recording", so it is not asked.
+    expect(asked.some((url) => url.includes(`/libraries/${AVIA}/audio`))).toBe(false);
+  });
+
+  it('asks for no peaks for a recording whose waveform job has not run', async () => {
+    const asked: string[] = [];
+    server.events.on('request:start', ({ request }) => asked.push(request.url));
+    renderView();
+    await cardFor('Personal');
+    // The most recent thing in the personal library is a voice note still being processed, and
+    // `has_waveform` says so on the summary -- so the request that would 404 is never made.
+    await waitFor(() => {
+      expect(asked.some((url) => url.includes(`/libraries/${PERSONAL}/audio`))).toBe(true);
+    });
+    expect(asked.some((url) => url.includes(`/audio/${NOTA}/waveform`))).toBe(false);
   });
 });

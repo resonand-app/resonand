@@ -1,5 +1,8 @@
 {
   "title": "Libraries",
+  "card": {
+    "options": "Options for {{name}}"
+  },
   "create": {
     "action": "Create a library",
     "hint": "Name it and pick a colour"

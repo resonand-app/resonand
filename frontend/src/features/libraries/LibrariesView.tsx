@@ -19,14 +19,20 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { toLibrary } from '@/app/routes';
 import { CreateLibraryCard, LibraryCard, PageHeader } from '@/design-system';
 import * as format from '@/i18n/format';
 
+import { colourOf } from '@/app/library-data';
+
 import { useLibraryList } from './data';
+import type { LibrarySummary } from './data';
+import { useAfterPaint, useLatestWaveform } from './use-latest-waveform';
 
 export function LibrariesView() {
   const { t } = useTranslation('libraries');
   const { own, recordings, durationMs } = useLibraryList();
+  const painted = useAfterPaint();
 
   return (
     <section>
@@ -37,10 +43,36 @@ export function LibrariesView() {
       <Grid>
         <CreateLibraryCard labels={{ action: t('create.action'), hint: t('create.hint') }} />
         {own.map((library) => (
-          <LibraryCard key={library.uuid} name={library.name} />
+          <Card key={library.uuid} library={library} waveforms={painted} />
         ))}
       </Grid>
     </section>
+  );
+}
+
+/**
+ * One library, with everything the summary already carries and the one thing it does not.
+ *
+ * The counts and the colour come out of the list request that drew the grid; the waveform is a
+ * second and a third request per card, so it is deferred and the card renders `pending` until it
+ * lands (§V2). Nothing on the card waits for it.
+ */
+export function Card({ library, waveforms }: { library: LibrarySummary; waveforms: boolean }) {
+  const { t } = useTranslation('libraries');
+  const { peaks, pending } = useLatestWaveform(library, waveforms);
+
+  return (
+    <LibraryCard
+      name={library.name}
+      href={toLibrary(library.uuid)}
+      colour={colourOf(library.colour)}
+      meta={`${t('common:count.recordings', { count: library.audio_count })} · ${format.total(
+        library.total_duration_ms,
+      )}`}
+      peaks={peaks}
+      pending={pending}
+      labels={{ options: (name) => t('card.options', { name }) }}
+    />
   );
 }
 
