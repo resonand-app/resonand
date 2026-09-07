@@ -441,6 +441,38 @@
   color: var(--accent);
 }
 
+/* LevelSelector. The chosen row fills with `--accent-soft` and its dot fills with the accent; the
+   others carry the control edge and an empty middle. Sharing is where the product's first promise
+   is kept, so the current answer has to be readable at a glance and not only by finding the dot. */
+[data-ds='level-row'] {
+  background: transparent;
+  cursor: pointer;
+}
+
+[data-ds='level-row']:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+[data-ds='level-row'][data-selected='true'] {
+  background: var(--accent-soft);
+}
+
+[data-ds='level-dot'] {
+  box-shadow: inset 0 0 0 var(--border-control) var(--border);
+}
+
+[data-ds='level-row'][data-selected='true'] [data-ds='level-dot'] {
+  box-shadow: inset 0 0 0 var(--border-control) var(--accent);
+}
+
+[data-ds='level-dot-fill'] {
+  background: transparent;
+}
+
+[data-ds='level-row'][data-selected='true'] [data-ds='level-dot-fill'] {
+  background: var(--accent);
+}
+
 /* RecordingRow. `UI-32a`'s own criterion: hovering a row raises it one surface step, with no
    React state variable anywhere. A selected row is already at `--surface-2`, so its hover has to
    go one further or a pointer over the current selection would do nothing. */

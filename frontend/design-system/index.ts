@@ -75,6 +75,8 @@ export { Chip } from './components/data/Chip';
 export type { ChipProps } from './components/data/Chip';
 export { CreateLibraryCard } from './components/data/CreateLibraryCard';
 export type { CreateLibraryCardProps } from './components/data/CreateLibraryCard';
+export { LevelSelector, OWNER_LEVEL } from './components/data/LevelSelector';
+export type { LevelOption, LevelSelectorProps } from './components/data/LevelSelector';
 export { LibraryCard } from './components/data/LibraryCard';
 export type { LibraryCardProps } from './components/data/LibraryCard';
 export { RecordingCard } from './components/data/RecordingCard';

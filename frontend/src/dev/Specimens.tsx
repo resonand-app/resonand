@@ -10,6 +10,7 @@ import {
   Dialog,
   Icon,
   IconButton,
+  LevelSelector,
   LibraryCard,
   Logo,
   Menu,
@@ -107,6 +108,16 @@ const RECORDING_ACTIONS = [
     destructive: true,
     separated: true,
   },
+];
+
+/** `level_description` exactly as `GET /libraries/{uuid}/shares` returns it -- the wording lives
+ *  in `sonarium/core/levels.py` and the interface has no copy of it. Owner is here to prove it is
+ *  dropped rather than drawn. */
+const LEVELS = [
+  { level: 10, description: 'Can read: listen and read the transcript, and change nothing.' },
+  { level: 20, description: 'Can edit: change titles, categories and tags, but not share.' },
+  { level: 30, description: 'Can manage: everything above, plus sharing with other people.' },
+  { level: 40, description: 'Owner: the library belongs to them.' },
 ];
 
 /** Settings' four sections (§4, V10). */
@@ -237,6 +248,7 @@ export default function Specimens() {
   const [transcribe, setTranscribe] = useState(true);
   const [picked, setPicked] = useState(true);
   const [sheet, setSheet] = useState(false);
+  const [level, setLevel] = useState(20);
 
   return (
     <main
@@ -453,6 +465,14 @@ export default function Specimens() {
             <Chip>català</Chip>
             <Chip active>1998</Chip>
           </div>
+        </Panel>
+        <Panel label="LevelSelector · the API's wording, visible" width={360}>
+          <LevelSelector
+            label="What Marta can do"
+            levels={LEVELS}
+            value={level}
+            onChange={setLevel}
+          />
         </Panel>
         <Panel label="LibraryCard · CreateLibraryCard" width={672}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--grid-gap)' }}>
