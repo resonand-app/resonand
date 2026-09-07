@@ -303,6 +303,50 @@
     0 0 0 4px var(--border-strong);
 }
 
+/* Select. The trigger is a `--surface-2` control like a filled icon button, and raises the same
+   step. The menu is an overlay surface: `--surface`, the overlay elevation, and no border.
+   `data-active` is the keyboard's highlight and `data-selected` is the current value -- two
+   different facts, which is why hovering a menu does not make you lose track of what is chosen. */
+[data-ds='select-trigger'] {
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+
+[data-ds='select-trigger']:hover:not(:disabled) {
+  background: var(--border);
+}
+
+[data-ds='select-menu'] {
+  background: var(--surface);
+}
+
+[data-ds='select-option'] {
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+}
+
+[data-ds='select-option'][data-active='true'] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+[data-ds='select-option'][data-selected='true'] {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+}
+
+[data-ds='select-option']:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+[data-ds='select-option'][data-selected='true']:hover {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 /* ==========================================================================
    data
    ========================================================================== */

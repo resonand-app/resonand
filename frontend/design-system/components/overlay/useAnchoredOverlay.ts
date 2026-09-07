@@ -254,7 +254,10 @@ export function useAnchoredOverlay<
     const surface = surfaceRef.current;
     const anchor = anchorRef.current;
     returnTo.current = document.activeElement as HTMLElement | null;
-    (surface === null ? undefined : focusableIn(surface)[0])?.focus();
+    /* The first thing inside, or the surface itself when there is nothing -- a listbox whose
+       options are named by `aria-activedescendant` has no focusable children on purpose, and
+       leaving focus outside it would send its own arrow keys to whatever opened it. */
+    ((surface === null ? undefined : focusableIn(surface)[0]) ?? surface)?.focus();
     return () => {
       (returnTo.current ?? anchor)?.focus();
     };

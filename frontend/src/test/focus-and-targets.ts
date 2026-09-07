@@ -105,6 +105,10 @@ export const KNOWN_SMALL_TARGETS: TargetExemption[] = [
     why: 'Only the detail size takes an `onSeek`, and that size is 130px tall by token (`--wave-height-detail`). The four smaller ones are not interactive at all.',
   },
   {
+    component: 'select-menu',
+    why: 'The listbox itself is focusable only so that it can receive the arrow keys -- nobody clicks it. What is clicked are its options, which are 32px rows in a stacked list, and the row is the target for the reason every other row here is.',
+  },
+  {
     component: 'create-library-card',
     why: 'A card with the same footprint as a library card: 320x188 by token. Nothing here is small.',
   },

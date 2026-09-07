@@ -17,6 +17,7 @@ import {
   RecordingRow,
   SearchField,
   SearchResults,
+  Select,
   Sidebar,
   StateBadge,
   TextField,
@@ -73,6 +74,14 @@ const GLYPHS: IconName[] = [
   'loader',
   'check',
   'alert-circle',
+];
+
+/** Sort orders, which are what `V3`'s filter bar actually offers (§4). */
+const SORTS = [
+  { value: 'recorded', label: 'Recording date' },
+  { value: 'uploaded', label: 'Upload date' },
+  { value: 'duration', label: 'Duration' },
+  { value: 'title', label: 'Title' },
 ];
 
 /** The seventeen specimen cards in `guidelines/`, which are standalone HTML and stay that way. */
@@ -190,6 +199,7 @@ function ThemeControl() {
 export default function Specimens() {
   const [colour, setColour] = useState<LibraryColorName>('clay');
   const [query, setQuery] = useState('carrer nou');
+  const [sort, setSort] = useState('recorded');
 
   return (
     <main
@@ -285,6 +295,24 @@ export default function Specimens() {
         </Panel>
         <Panel label="ColorSwatchPicker">
           <ColorSwatchPicker value={colour} onChange={setColour} />
+        </Panel>
+        <Panel label="Select">
+          <Select label="Sort" value={sort} onChange={setSort} options={SORTS} />
+        </Panel>
+        <Panel label="Select · disabled">
+          <Select label="Category" options={SORTS} placeholder="Any category" disabled />
+        </Panel>
+        <Panel label="Select · open" width={240}>
+          {/* Held open, the way the components canvas draws it: a menu nobody can see is a menu
+              nobody can review, and the open state is where most of its geometry lives. */}
+          <Select
+            label="Speed"
+            value={sort}
+            onChange={setSort}
+            options={SORTS}
+            open
+            onOpenChange={() => undefined}
+          />
         </Panel>
       </Section>
 
