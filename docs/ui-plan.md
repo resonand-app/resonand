@@ -157,6 +157,34 @@ that, and `UI-4f`, `UI-5f`, `UI-8e`, `UI-13f` and `UI-24a` are where the phone l
 in code rather than in a picture. If any of them turns out to need a drawing first, stop and get
 one; a phone layout guessed at 375px is cheaper to draw than to rewrite.
 
+### DEC-24 · The API is mounted under `/api`
+
+`UI-4a` was told to settle the namespace before naming a route, and this is the settlement.
+
+The API is mounted at the root, so the interface's routes and the API's paths are one namespace
+and the API was there first. `/search?q=…` — §2.1's search route — *is* `GET /search`, and a hard
+refresh on it answers the endpoint rather than the shell. `backend/tests/api/test_spa.py` already
+asserts that, deliberately, so it could not be rediscovered later.
+
+`UI-4a` offered two ways out and preferred the cheaper: rename the colliding client route. **This
+plan takes the other one.** Every API path moves under `/api` (`API-16`), and §2.1's eight routes
+are built exactly as specified.
+
+The reason is that renaming `/search` fixes one collision and leaves the arrangement that produced
+it. `/libraries`, `/audio`, `/trash`, `/tags`, `/instance`, `/auth`, `/users`, `/admin` and
+`/transcription` are nine top-level names the interface can never be given, and every endpoint
+added after this one takes another. A view named after the thing it shows is the normal case, so a
+namespace where that is sometimes forbidden — for a reason nobody can see from the route table —
+costs more over the life of the project than one prefix costs now.
+
+It is also the last cheap moment. `UI-3a` commits an `openapi.json` snapshot carrying every path,
+and a build that fails when the backend renames a field is the point of it; renaming every path
+afterwards means regenerating the snapshot and reviewing a diff that touches every line of it.
+
+What does not move: `/healthz` and `/readyz`, which are probes rather than API surface and are
+already outside the document; and `/`, which is the interface when a bundle is present and the
+instance's own answer when it is not.
+
 ### Three repairs before anything cites them (INF-9)
 
 - **`UI-31` names two different things.** It is the libraries landing in `docs/v0-plan.md` and
@@ -556,6 +584,13 @@ presentational and join the system; four hold data and stay in the application, 
 
 Nothing on a screen yet. Everything a screen needs.
 
+### D.0 · The namespace (API-16)
+
+- [ ] **API-16** · Move every router under `/api`, and the published document and its viewer with
+      them. `/healthz` and `/readyz` stay at the root; so does `/`. The test that asserts where the
+      two namespaces collide becomes the test that asserts they cannot.
+      *Done when:* every route in §2.1 can be hard-refreshed into. ⇢ DEC-24 🧪
+
 ### D.1 · The API client (UI-3)
 
 - [ ] **UI-3a** · `openapi-typescript` against a committed `openapi.json` snapshot, with an
@@ -595,18 +630,12 @@ mistake here that cannot be undone cheaply.
 
 ### D.3 · Routing and the shell (UI-4)
 
-- [ ] **UI-4a** · The router and §2.1's eight routes, the session guard, and the not-found route.
-      Public identifiers are UUIDs; a sequential id never appears in a URL. `/sign-in` is the only
-      public route, and `GET /instance` is the only call made without a session.
-      **Settle the namespace before naming a route.** `INF-3e` serves the shell as a fallback
-      registered after every router, so the API keeps every path it already has — and the API is
-      mounted at the root, which means a client route spelled like an endpoint *is* the endpoint.
-      A hard refresh on `/libraries/<uuid>` reaches `GET /libraries/{uuid}` and answers 401, not
-      the shell; both are GET on one path and no ordering fixes it. Either the eight routes avoid
-      the API's top-level names, or `/` becomes content negotiation on paths the API owns. The
-      first is cheaper and is the one to take unless there is a reason not to.
-      `backend/tests/api/test_spa.py` asserts the collision so it cannot be rediscovered.
-      ⇢ UI-3b
+- [ ] **UI-4a** · The router and §2.1's eight routes **exactly as specified**, the session guard,
+      and the not-found route. Public identifiers are UUIDs; a sequential id never appears in a
+      URL. `/sign-in` is the only public route, and `GET /api/instance` is the only call made
+      without a session. The namespace question this task used to carry is settled by `DEC-24` and
+      closed by `API-16`: the API is under `/api`, the interface owns everything else, and
+      `backend/tests/api/test_spa.py` asserts the two cannot collide. ⇢ UI-3b, API-16
 - [ ] **UI-4b** · URL state, exactly as §2.1 divides it. **In the URL:** the search query and its
       filters; a library's `view=list`, category, tags, state toggles and sort; the recording being
       viewed. **Not in the URL:** what is playing and where it is, the tray's contents, whether a
@@ -969,7 +998,8 @@ Then C, which is most of the remaining work and pays for itself in every view af
 components authored against inline styles would all need redoing; and `UI-34a` before the five
 overlay components that consume it.
 
-Then D, in its own order — the client, then i18n (**before** the views, not after), then the shell,
+Then D, in its own order — the namespace (`API-16`, before the snapshot that would otherwise have
+to be regenerated), then the client, then i18n (**before** the views, not after), then the shell,
 then the player.
 
 Then E, in the specification's §7 order. Two things inside it can start early against `UI-3d`'s
