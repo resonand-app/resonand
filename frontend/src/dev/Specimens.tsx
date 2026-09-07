@@ -2,7 +2,9 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 
 import {
+  AvatarStack,
   Button,
+  CardSkeleton,
   Checkbox,
   Chip,
   ColorSwatchPicker,
@@ -11,27 +13,33 @@ import {
   EgressNotice,
   Icon,
   IconButton,
+  KeyValueList,
   InlineField,
   LevelSelector,
   LibraryCard,
   Logo,
   Menu,
+  PageHeader,
   PlayerBar,
   ProfileMenu,
   Progress,
   RecordingCard,
   RecordingRow,
+  RowSkeleton,
   SearchField,
   SearchResults,
   Select,
   Sheet,
+  Shell,
   Sidebar,
+  StateCard,
   StateBadge,
   Switch,
   Tabs,
   TextField,
   THEME_CHOICES,
   Toast,
+  ToastRegion,
   Tooltip,
   TopNav,
   TranscriptLine,
@@ -41,7 +49,7 @@ import {
   WAVE_SIZES,
   Waveform,
 } from '@/design-system';
-import type { IconName, LibraryColorName } from '@/design-system';
+import type { IconName, LibraryColorName, ToastEntry } from '@/design-system';
 
 import { HITS, LIBRARIES, PEAKS, SHARED, SHORT_PEAKS } from '@/dev/specimen-data';
 
@@ -124,6 +132,24 @@ const LEVELS = [
   { level: 20, description: 'Can edit: change titles, categories and tags, but not share.' },
   { level: 30, description: 'Can manage: everything above, plus sharing with other people.' },
   { level: 40, description: 'Owner: the library belongs to them.' },
+];
+
+/** Who a library is shared with, for the avatar stack. */
+const PEOPLE = [
+  { id: 1, name: 'Martí Colom' },
+  { id: 2, name: 'Àvia Teresa' },
+  { id: 3, name: 'Joana' },
+  { id: 4, name: 'Pere Sala' },
+  { id: 5, name: 'Anna Vidal' },
+  { id: 6, name: 'Roc' },
+];
+
+/** The technical metadata section of V5, as `AudioSummary` reports it. */
+const TECHNICAL = [
+  { key: 'Sample rate', value: '48 000 Hz' },
+  { key: 'Channels', value: '2' },
+  { key: 'Codec', value: 'aac' },
+  { key: 'Size', value: '284 MB' },
 ];
 
 /** `GET /transcription/destination` for an instance configured against OpenAI (`API-12`). */
@@ -265,6 +291,7 @@ export default function Specimens() {
   const [level, setLevel] = useState(20);
   const [title, setTitle] = useState('Sopar de Nadal 1998');
   const [confirm, setConfirm] = useState(false);
+  const [toasts, setToasts] = useState<ToastEntry[]>([]);
 
   return (
     <main
@@ -615,7 +642,127 @@ export default function Specimens() {
         </Panel>
       </Section>
 
+      <Section title="Composites">
+        <Panel label="PageHeader · the one Chillax title per screen" width="100%">
+          <PageHeader
+            title="Àvia Teresa"
+            meta="37 recordings · 24 h 12 min"
+            before={
+              <span
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: 'var(--radius-circle)',
+                  background: 'var(--library-clay)',
+                }}
+              />
+            }
+            actions={
+              <>
+                <Button variant="secondary" icon="share-2">
+                  Share
+                </Button>
+                <Button variant="primary" icon="upload">
+                  Upload audio
+                </Button>
+              </>
+            }
+          />
+        </Panel>
+        <Panel label="StateCard · nothing yet, and a filter that matched nothing" width="100%">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--grid-gap)' }}>
+            <StateCard
+              icon="library"
+              title="No recordings yet"
+              body="Upload audio to get started. Everything you add here stays on this instance until you share it."
+              action={
+                <Button variant="primary" icon="upload">
+                  Upload audio
+                </Button>
+              }
+              dashed
+            />
+            <StateCard
+              icon="search"
+              title="No recordings match memòria"
+              body="Nothing in this library carries that tag."
+              action={<Button variant="secondary">Clear the filter</Button>}
+              footnote="37 recordings in the library"
+            />
+          </div>
+        </Panel>
+        <Panel label="Skeletons · the shape of the thing that is coming" width="100%">
+          <div
+            style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 'var(--grid-gap)' }}
+          >
+            <CardSkeleton />
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <RowSkeleton />
+              <RowSkeleton />
+              <RowSkeleton />
+            </div>
+          </div>
+        </Panel>
+        <Panel label="AvatarStack">
+          <AvatarStack people={PEOPLE} />
+        </Panel>
+        <Panel label="KeyValueList · stacked, and inline" width={520}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-6)' }}>
+            <KeyValueList rows={TECHNICAL} />
+            <KeyValueList rows={TECHNICAL} layout="inline" />
+          </div>
+        </Panel>
+        <Panel label="Shell · nav, sidebar, content, player" width="100%">
+          <div style={{ height: 420, borderRadius: 'var(--radius-panel)', overflow: 'hidden' }}>
+            <Shell
+              nav={<TopNav initials="MC" query={query} onQueryChange={setQuery} />}
+              sidebar={<Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} activeId="avia" />}
+              player={
+                <PlayerBar
+                  title="Entrevista amb l’àvia Teresa"
+                  library="Àvia Teresa"
+                  peaks={PEAKS}
+                  position="18:04"
+                  duration="48:12"
+                  played={0.375}
+                  playing
+                />
+              }
+            >
+              <PageHeader title="Àvia Teresa" meta="37 recordings · 24 h 12 min" />
+              <RecordingRow
+                name="Entrevista amb l’àvia Teresa"
+                duration="48:12"
+                peaks={SHORT_PEAKS}
+              />
+            </Shell>
+          </div>
+        </Panel>
+      </Section>
+
       <Section title="Overlays">
+        <Panel label="ToastRegion · above the player, announced politely">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setToasts([
+                {
+                  id: String(Date.now()),
+                  content: <Toast>12 recordings moved to Àvia Teresa</Toast>,
+                },
+              ]);
+            }}
+          >
+            Raise a toast
+          </Button>
+          <ToastRegion
+            toasts={toasts}
+            onDismiss={(id) => {
+              setToasts((current) => current.filter((entry) => entry.id !== id));
+            }}
+            playerVisible
+          />
+        </Panel>
         <Panel label="Toast · done" width={420}>
           <Toast onDismiss={() => undefined}>12 recordings moved to Àvia Teresa</Toast>
         </Panel>

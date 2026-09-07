@@ -101,11 +101,12 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `theme/` | `ThemeProvider` and `useTheme`: light, dark, or follow the system — which writes no attribute at all (`UI-1j`). Plus `usePrefersReducedMotion` and `scrollBehaviour`, which is how a script opts in to the one preference a stylesheet cannot enforce for it (`UI-32c`). |
 | `tokens/layers.css` | The z-index scale. Six things overlap; before this they stacked by DOM order (`UI-33b`). |
 | `tokens/breakpoints.css` | 1280 / 1180 / 900 / 720, which existed only as prose (`UI-33b`). |
+| `components/layout/` | `Shell` `PageHeader` `StateCard` + `CardSkeleton` `RowSkeleton` — the frame, the one page title per screen, and §3.5's state family (`UI-35a`–`UI-35c`) |
 | `components/foundation/` | `Icon` `Logo` |
 | `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` `Switch` `Checkbox` `Progress` |
 | `components/media/` | `Waveform` `PlayerBar` `TranscriptLine` |
-| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` `LevelSelector` `InlineField` `TypedConfirm` `EgressNotice` |
-| `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Dialog` `Menu` `Tabs` `Sheet` `Toast` `Tooltip` |
+| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` `LevelSelector` `InlineField` `TypedConfirm` `EgressNotice` `AvatarStack` `KeyValueList` |
+| `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Dialog` `Menu` `Tabs` `Sheet` `Toast` `ToastRegion` `Tooltip` |
 | `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |
 | `assets/` | The mark in three treatments, and the Chillax webfont |

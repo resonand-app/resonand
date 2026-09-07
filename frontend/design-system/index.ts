@@ -71,6 +71,9 @@ export { Waveform } from './components/media/Waveform';
 export type { WaveformProps } from './components/media/Waveform';
 
 // --- components/data (`UI-1g`) ----------------------------------------------
+export { AvatarStack } from './components/data/AvatarStack';
+export type { AvatarStackProps } from './components/data/AvatarStack';
+export { initialsOf } from './components/data/initials';
 export { Chip } from './components/data/Chip';
 export type { ChipProps } from './components/data/Chip';
 export { CreateLibraryCard } from './components/data/CreateLibraryCard';
@@ -82,6 +85,8 @@ export type {
 } from './components/data/EgressNotice';
 export { InlineField } from './components/data/InlineField';
 export type { InlineFieldProps } from './components/data/InlineField';
+export { KeyValueList } from './components/data/KeyValueList';
+export type { KeyValueListProps, KeyValueRow } from './components/data/KeyValueList';
 export { LevelSelector, OWNER_LEVEL } from './components/data/LevelSelector';
 export type { LevelOption, LevelSelectorProps } from './components/data/LevelSelector';
 export { LibraryCard } from './components/data/LibraryCard';
@@ -95,6 +100,14 @@ export { matchesName } from './components/data/name-match';
 export { TypedConfirm } from './components/data/TypedConfirm';
 export type { TypedConfirmProps } from './components/data/TypedConfirm';
 export type { StateBadgeProps } from './components/data/StateBadge';
+
+// --- components/layout (`UI-35a`, `UI-35b`, `UI-35c`) -----------------------
+export { PageHeader } from './components/layout/PageHeader';
+export type { PageHeaderProps } from './components/layout/PageHeader';
+export { Shell } from './components/layout/Shell';
+export type { ShellProps } from './components/layout/Shell';
+export { CardSkeleton, RowSkeleton, StateCard } from './components/layout/StateSlot';
+export type { StateCardProps } from './components/layout/StateSlot';
 
 // --- components/navigation (`UI-1h`) ----------------------------------------
 export { Dialog } from './components/navigation/Dialog';
@@ -112,6 +125,8 @@ export { Tabs } from './components/navigation/Tabs';
 export type { Tab, TabsProps } from './components/navigation/Tabs';
 export type { SidebarLibrary, SidebarProps } from './components/navigation/Sidebar';
 export { Toast } from './components/navigation/Toast';
+export { ToastRegion } from './components/navigation/ToastRegion';
+export type { ToastEntry, ToastRegionProps } from './components/navigation/ToastRegion';
 export type { ToastProps } from './components/navigation/Toast';
 export { Tooltip } from './components/navigation/Tooltip';
 export type { TooltipProps } from './components/navigation/Tooltip';
