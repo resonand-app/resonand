@@ -88,7 +88,13 @@ export function SearchResults({
             >
               {hit.title}
             </span>
-            <span style={{ fontSize: '11.5px', lineHeight: 1.45, color: 'var(--text-3)' }}>
+            <span
+              style={{
+                fontSize: 'var(--type-ui-size-sm)',
+                lineHeight: 'var(--type-body-leading)',
+                color: 'var(--text-3)',
+              }}
+            >
               {hit.excerpt}
             </span>
           </span>
@@ -96,9 +102,9 @@ export function SearchResults({
             <span
               style={{
                 fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
+                fontSize: 'var(--type-numeric-size)',
                 color: 'var(--text-3)',
-                fontVariantNumeric: 'tabular-nums',
+                fontVariantNumeric: 'var(--type-numeric-variant)',
                 marginTop: 2,
               }}
             >
@@ -122,17 +128,24 @@ export function SearchResults({
           fontFamily: 'var(--font-sans)',
         }}
       >
-        <span style={{ fontSize: '12.5px', color: 'var(--text-3)', flex: 1, textAlign: 'left' }}>
+        <span
+          style={{
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+            flex: 1,
+            textAlign: 'left',
+          }}
+        >
           All {total} results for “{query}”
         </span>
         <span
           style={{
             fontFamily: 'var(--font-mono)',
-            fontWeight: 500,
-            fontSize: '10.5px',
+            fontWeight: 'var(--weight-medium)',
+            fontSize: 'var(--type-overline-size)',
             color: 'var(--text-3)',
             background: 'var(--surface-2)',
-            borderRadius: 5,
+            borderRadius: 'var(--radius-chip)',
             padding: '2px 6px',
           }}
         >

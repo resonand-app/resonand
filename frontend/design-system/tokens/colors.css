@@ -29,7 +29,7 @@
   --paper-900: #14171D;
   --paper-800: #4E545F;
   --paper-700: #616773;
-  --paper-600: #93938D;
+  --paper-600: #84847E;
   --paper-500: #C9C9C3;
   --paper-400: #D7D7D2;
   --paper-300: #DEDED9;
@@ -42,25 +42,40 @@
   --amber-soft-light: #F5E7CF;
   --amber-soft-light-on: #8A5410;
 
-  /* Transcription state. Each pairs with a glyph and a word — colour is never the only signal. */
-  --state-none: #8A8F9C;
-  --state-running: #6F9ECC;
-  --state-done: #6FAE8B;
-  --state-failed: #D2705F;
-  --state-done-bg: #0F2418;
-  --state-failed-bg: #3A1512;
-  --state-failed-fg: #E8917F;
+  /* Transcription state. Each pairs with a glyph and a word — colour is never the only signal.
+     Two ramps, like the neutrals, because these carry text: the dark values fail AA on a light
+     surface by a wide margin (`--state-done` was 2.35 against `--surface-2`), and the two chip
+     fills did not flip at all, which drew a near-black chip on a white card (`UI-33c`). The
+     semantic aliases in semantic.css are what components read. */
+  --state-none-dark: #8A8F9C;
+  --state-running-dark: #6F9ECC;
+  --state-done-dark: #6FAE8B;
+  --state-failed-dark: #D2705F;
+  --state-done-bg-dark: #0F2418;
+  --state-failed-bg-dark: #3A1512;
+  --state-failed-fg-dark: #E8917F;
 
-  /* Library identity — the user picks one. Muted, never carries meaning alone. */
-  --library-amber: #E8B45C;
-  --library-clay: #C97F5A;
-  --library-slate: #6F8FB0;
-  --library-moss: #7E9A6B;
-  --library-stone: #8A8F9C;
-  --library-plum: #9B7BA8;
-  --library-teal: #5F9E96;
+  --state-none-light: #5F6470;
+  --state-running-light: #39679A;
+  --state-done-light: #2F6B4C;
+  --state-failed-light: #A33F2C;
+  --state-done-bg-light: #E2EFE7;
+  --state-failed-bg-light: #F8E3DF;
+  --state-failed-fg-light: #8F3324;
 
-  --library-amber-light: #B8811F;
+  /* Library identity — the user picks one. Muted, never carries meaning alone.
+     The light ramp below was always here and was never reachable: nothing aliased it, so a light
+     interface drew the dark values and an amber library sat at 1.89 against a white card, well
+     under the 3:1 a 9px dot needs to be seen at all (`UI-33c`). */
+  --library-amber-dark: #E8B45C;
+  --library-clay-dark: #C97F5A;
+  --library-slate-dark: #6F8FB0;
+  --library-moss-dark: #7E9A6B;
+  --library-stone-dark: #8A8F9C;
+  --library-plum-dark: #9B7BA8;
+  --library-teal-dark: #5F9E96;
+
+  --library-amber-light: #AE781C;
   --library-clay-light: #A85F3C;
   --library-slate-light: #4E6E90;
   --library-moss-light: #5C7A49;

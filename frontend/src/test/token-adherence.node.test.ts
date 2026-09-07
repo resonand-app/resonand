@@ -11,11 +11,11 @@
  * in CI too, on a machine where nobody ran an editor. `UI-1i`'s criterion is that introducing
  * `#FF0000` into a component fails two checks, and these are the two.
  *
- * The exemption list is the interesting half. Two bypasses already exist and `UI-33a` is the task
- * that removes them, so the guard has to land against code that breaks it. Both directions are
- * asserted: an unlisted bypass fails, and **a listed one that no longer exists fails as well**.
- * That second half is what stops the list becoming a place to put things -- it can only shrink,
- * and the commit that fixes a bypass is forced to delete its own excuse.
+ * The exemption list is the interesting half, and it is **empty as of `UI-33a`**. It held the two
+ * colours that predated the guard, and both directions are asserted: an unlisted bypass fails, and
+ * **a listed one that no longer exists fails as well**. That second half is what emptied it -- the
+ * commit that fixed the two could not land while its own excuses were still here, which is what
+ * stops an exemption list becoming a place to put things.
  */
 
 import { readFileSync } from 'node:fs';
@@ -94,9 +94,10 @@ describe('the tokens-only guard', () => {
     expect(findBypasses('// Geist is the interface font.\nconst a = 1;')).toEqual([]);
   });
 
-  it('names the task that removes each remaining bypass', () => {
-    expect(KNOWN_BYPASSES.length).toBeGreaterThan(0);
-    for (const entry of KNOWN_BYPASSES) expect(entry.why).toContain('UI-33a');
+  it('names a task for any bypass still excused', () => {
+    // Empty since `UI-33a`. An entry added later is a promise that it will be removed again, and
+    // a promise with no identifier on it is one nobody can pick up.
+    for (const entry of KNOWN_BYPASSES) expect(entry.why).toMatch(/\bUI-\d/);
   });
 
   it('excuses only files that are there', () => {

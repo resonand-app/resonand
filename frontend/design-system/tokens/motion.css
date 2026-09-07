@@ -5,8 +5,13 @@
   --transition-state: var(--duration-state) var(--easing);
   --transition-panel: var(--duration-panel) var(--easing);
 
-  --focus-ring-width: 2px;
+  --focus-ring-width: var(--border-strong-width);
   --focus-ring-offset: 2px;
+
+  /* Disabled is 0.38 opacity and never a colour change (`UI-33b`). One number, because a control
+     that is unavailable should look the same kind of unavailable everywhere -- and because the
+     alternative, greying the text, produces a different contrast failure per surface. */
+  --opacity-disabled: 0.38;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -25,6 +25,7 @@ import {
   TranscriptLine,
   TRANSCRIPTION_STATE_NAMES,
   useTheme,
+  WAVE_SIZES,
   Waveform,
 } from '@/design-system';
 import type { IconName, LibraryColorName } from '@/design-system';
@@ -288,21 +289,27 @@ export default function Specimens() {
       </Section>
 
       <Section title="Media">
-        {(
-          [
-            ['dense row · 20', 20],
-            ['library card · 38', 38],
-            ['recording card · 52', 52],
-            ['player · 34', 34],
-            ['audio detail · 130', 130],
-          ] as const
-        ).map(([label, height]) => (
-          <Panel key={label} label={label} width={320}>
-            <Waveform peaks={PEAKS} height={height} played={0.375} playhead />
+        {WAVE_SIZES.map((size) => (
+          <Panel key={size} label={`Waveform · ${size}`} width={320}>
+            <Waveform peaks={PEAKS} size={size} played={0.375} playhead />
           </Panel>
         ))}
-        <Panel label="pending · no peaks job yet" width={320}>
-          <Waveform peaks={PEAKS} height={38} pending />
+        <Panel label="pending · the peaks job has not run" width={320}>
+          {/* `peaks` is passed and ignored, which is the whole point of the state. */}
+          <Waveform peaks={PEAKS} size="card" pending duration="48:12" />
+        </Panel>
+        <Panel label="silence · every peak zero" width={320}>
+          <Waveform peaks={new Array<number>(400).fill(0)} size="record" />
+        </Panel>
+        <Panel label="seekable · the detail size" width={520}>
+          <Waveform
+            peaks={PEAKS}
+            size="detail"
+            played={0.375}
+            playhead
+            onSeek={() => undefined}
+            label="Seek within Entrevista amb l’àvia Teresa"
+          />
         </Panel>
         <Panel label="PlayerBar" width={900}>
           <PlayerBar

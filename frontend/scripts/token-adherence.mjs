@@ -44,23 +44,18 @@ export const FONT_MESSAGE =
 /**
  * The bypasses that already exist, and the task that removes each one.
  *
- * **This list only ever shrinks.** `UI-33a` is the task that empties it, and the test asserts both
- * directions: an entry that stops matching is a stale exemption and fails, so removing the last
- * `#C4574A` from the tree forces the line below to go with it. That is what stops an exemption
- * list from becoming a place to put things.
+ * **Empty, as of `UI-33a`.** It held two: `TextField`'s `#C4574A` error ring, which matched no
+ * token in the system, and `Button`'s hard-coded amber glow, which was therefore the dark-mode
+ * glow underneath a light-mode button. The first is `--state-failed` now and the second is
+ * `--elevation-accent`, which flips.
+ *
+ * The list only ever shrinks, and the test asserts both directions -- an unlisted bypass fails,
+ * and a listed one that no longer exists fails too. That second half is what emptied this: the
+ * commit that fixed the two colours could not land while its own excuses were still here. Leave
+ * it empty. An entry added later is a promise to somebody that it will be removed again, so it
+ * needs a task identifier in `why` and the test checks for one.
  */
-export const KNOWN_BYPASSES = [
-  {
-    file: 'components/forms/TextField.tsx',
-    value: '#C4574A',
-    why: "UI-33a: the error ring matches no token. It is nearest to `--state-failed`, and that is a decision rather than a rename, so it is that task's to take.",
-  },
-  {
-    file: 'components/forms/Button.tsx',
-    value: 'rgba(232,180,92,.2)',
-    why: "UI-33a: the primary button's amber glow, hard-coded and therefore identical in light mode, where it should not be.",
-  },
-];
+export const KNOWN_BYPASSES = /** @type {{file: string, value: string, why: string}[]} */ ([]);
 
 /**
  * Every line of a source file that writes a colour or a font stack.

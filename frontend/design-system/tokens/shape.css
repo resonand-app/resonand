@@ -5,16 +5,28 @@
   --radius-pill: 999px;
   --radius-circle: 50%;
 
+  /* Hairlines (`UI-33b`). Three widths and no fourth: the divider inside a panel, the resting
+     edge of a control, and the focus ring. They were literal `1`s and `2`s in six components and
+     in `motion.css`, which is how a 1px rule and a 1.5px rule end up on the same screen. */
+  --border-hairline: 1px;
+  --border-control: 1.5px;
+  --border-strong-width: 2px;
+
   /* Elevation replaces borders. The shell floats; it does not draw boxes. */
   --elevation-raised-dark: 0 2px 8px rgba(0, 0, 0, 0.35);
   --elevation-panel-dark: 0 4px 18px rgba(0, 0, 0, 0.45);
   --elevation-card-dark: 0 2px 6px rgba(0, 0, 0, 0.34), 0 10px 26px rgba(0, 0, 0, 0.3);
   --elevation-overlay-dark: 0 8px 30px rgba(0, 0, 0, 0.55);
+  /* The primary button's amber glow. A fifth step, and the only one that is a colour rather than
+     a shadow -- which is exactly why it has to flip: hard-coded, it was the dark-mode amber
+     glowing underneath a light-mode button (`UI-33a`). */
+  --elevation-accent-dark: 0 2px 8px rgba(232, 180, 92, 0.2);
 
   --elevation-raised-light: 0 2px 8px rgba(20, 23, 29, 0.06);
   --elevation-panel-light: 0 2px 10px rgba(20, 23, 29, 0.07);
   --elevation-card-light: 0 2px 6px rgba(20, 23, 29, 0.07), 0 10px 26px rgba(20, 23, 29, 0.05);
   --elevation-overlay-light: 0 10px 34px rgba(20, 23, 29, 0.16);
+  --elevation-accent-light: 0 2px 8px rgba(143, 88, 16, 0.22);
 
   /* Waveform geometry. Minimum bar height equals bar width, so silence stays a row of dots. */
   --wave-bar-width: 3px;

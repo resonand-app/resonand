@@ -20,7 +20,7 @@ export function Chip({ children, active, style, ...rest }: ChipProps) {
         alignItems: 'center',
         height: 24,
         padding: '0 10px',
-        borderRadius: 'var(--radius-pill)',
+        borderRadius: 'var(--radius-chip)',
         background: active ? 'var(--accent-soft)' : 'var(--surface-2)',
         color: active ? 'var(--accent-on-soft)' : 'var(--text-2)',
         fontFamily: 'var(--font-sans)',

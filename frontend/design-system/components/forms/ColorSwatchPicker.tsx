@@ -33,7 +33,13 @@ export function ColorSwatchPicker({
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, ...style }} {...rest}>
       {label !== null && (
-        <span style={{ fontFamily: 'var(--font-sans)', fontSize: '12.5px', color: 'var(--text-3)' }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+          }}
+        >
           {label}
         </span>
       )}

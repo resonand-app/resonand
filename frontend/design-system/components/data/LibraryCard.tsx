@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from 'react';
 
 import { IconButton } from '../forms/IconButton';
+import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
 
 export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
@@ -10,8 +11,7 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
   /** The library colour the user picked, as a `var(--library-*)` reference. */
   colour?: string;
   /** Peaks of the library's most recent recording. */
-  peaks?: number[] | undefined;
-  seed?: number;
+  peaks?: Peaks | undefined;
   played?: number;
   /** True when the most recent recording has no peaks yet. */
   pending?: boolean;
@@ -39,7 +39,6 @@ export function LibraryCard({
   meta,
   colour = 'var(--library-clay)',
   peaks,
-  seed = 3,
   played = 0,
   pending = false,
   onOpen,
@@ -103,14 +102,14 @@ export function LibraryCard({
           marginTop: 4,
           fontFamily: 'var(--font-mono)',
           fontSize: 'var(--type-numeric-size)',
-          fontVariantNumeric: 'tabular-nums',
+          fontVariantNumeric: 'var(--type-numeric-variant)',
           color: 'var(--text-3)',
         }}
       >
         {meta}
       </span>
       <div style={{ marginTop: 'auto' }}>
-        <Waveform peaks={peaks} seed={seed} height={38} played={played} pending={pending} />
+        <Waveform peaks={peaks} size="card" played={played} pending={pending} />
       </div>
     </article>
   );

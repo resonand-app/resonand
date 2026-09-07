@@ -1,6 +1,7 @@
 import type { HTMLAttributes, KeyboardEvent } from 'react';
 
 import type { TranscriptionState } from '../../transcription-states';
+import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
 import { StateBadge } from './StateBadge';
 
@@ -9,8 +10,7 @@ export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
   /** Formatted duration, mono and tabular. */
   duration: string;
   state?: TranscriptionState;
-  peaks?: number[] | undefined;
-  seed?: number;
+  peaks?: Peaks | undefined;
   played?: number;
   pending?: boolean;
   /** Row is the current selection or the playing recording. */
@@ -32,7 +32,6 @@ export function RecordingRow({
   duration,
   state = 'done',
   peaks,
-  seed = 41,
   played = 0,
   pending = false,
   selected = false,
@@ -87,20 +86,13 @@ export function RecordingRow({
         {name}
       </span>
       <div style={{ width: 88, flex: '0 0 auto' }}>
-        <Waveform
-          peaks={peaks}
-          seed={seed}
-          height={20}
-          played={played}
-          pending={pending}
-          barWidth={2}
-        />
+        <Waveform peaks={peaks} size="dense" played={played} pending={pending} />
       </div>
       <span
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 'var(--type-numeric-size)',
-          fontVariantNumeric: 'tabular-nums',
+          fontVariantNumeric: 'var(--type-numeric-variant)',
           color: 'var(--text-3)',
           width: 46,
           textAlign: 'right',

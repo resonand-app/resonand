@@ -47,7 +47,15 @@ export function CreateLibraryCard({ onClick, style, ...rest }: CreateLibraryCard
       >
         <Icon name="plus" size={19} />
       </span>
-      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--accent)' }}>Create a library</span>
+      <span
+        style={{
+          fontSize: 'var(--type-body-size)',
+          fontWeight: 'var(--weight-semibold)',
+          color: 'var(--accent)',
+        }}
+      >
+        Create a library
+      </span>
       <span style={{ fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
         Name it and pick a colour
       </span>

@@ -70,8 +70,8 @@ function Item({ icon, dot, label, count, active = false, collapsed = false, onCl
             <span
               style={{
                 fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
-                fontVariantNumeric: 'tabular-nums',
+                fontSize: 'var(--type-numeric-size)',
+                fontVariantNumeric: 'var(--type-numeric-variant)',
                 color: 'var(--text-3)',
               }}
             >

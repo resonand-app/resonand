@@ -1,21 +1,21 @@
 import type { CSSProperties, HTMLAttributes } from 'react';
 
 import { IconButton } from '../forms/IconButton';
+import type { Peaks } from './peaks';
 import { Waveform } from './Waveform';
 
 const MONO: CSSProperties = {
   fontFamily: 'var(--font-mono)',
-  fontWeight: 500,
-  fontSize: '11.5px',
-  fontVariantNumeric: 'tabular-nums',
+  fontWeight: 'var(--weight-medium)',
+  fontSize: 'var(--type-numeric-size)',
+  fontVariantNumeric: 'var(--type-numeric-variant)',
 };
 
 export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   title?: string;
   /** Library name shown beneath the title. */
   library?: string;
-  peaks?: number[];
-  seed?: number;
+  peaks?: Peaks | undefined;
   /** Formatted elapsed time, mono and tabular. */
   position?: string;
   duration?: string;
@@ -42,7 +42,6 @@ export function PlayerBar({
   title = '',
   library = '',
   peaks,
-  seed = 11,
   position = '',
   duration = '',
   played = 0,
@@ -104,7 +103,7 @@ export function PlayerBar({
           style={{
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size)',
-            fontWeight: 600,
+            fontWeight: 'var(--weight-semibold)',
             color: 'var(--text)',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -114,7 +113,11 @@ export function PlayerBar({
           {title}
         </span>
         <span
-          style={{ fontFamily: 'var(--font-sans)', fontSize: '11.5px', color: 'var(--text-3)' }}
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+          }}
         >
           {library}
         </span>
@@ -122,7 +125,7 @@ export function PlayerBar({
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         <span style={{ ...MONO, color: 'var(--accent)' }}>{position}</span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Waveform peaks={peaks} seed={seed} height={34} played={played} playhead />
+          <Waveform peaks={peaks} size="player" played={played} playhead />
         </div>
         <span style={{ ...MONO, color: 'var(--text-3)' }}>{duration}</span>
       </div>

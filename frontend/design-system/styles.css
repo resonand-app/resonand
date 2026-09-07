@@ -3,5 +3,7 @@
 @import "tokens/typography.css";
 @import "tokens/spacing.css";
 @import "tokens/shape.css";
+@import "tokens/layers.css";
+@import "tokens/breakpoints.css";
 @import "tokens/motion.css";
 @import "tokens/semantic.css";

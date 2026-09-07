@@ -55,7 +55,7 @@ export function SearchField({
           outline: 'none',
           background: 'transparent',
           fontFamily: 'var(--font-sans)',
-          fontSize: '13.5px',
+          fontSize: 'var(--type-ui-size)',
           color: 'var(--text)',
         }}
         {...rest}
@@ -64,8 +64,8 @@ export function SearchField({
         <span
           style={{
             fontFamily: 'var(--font-mono)',
-            fontWeight: 500,
-            fontSize: '10.5px',
+            fontWeight: 'var(--weight-medium)',
+            fontSize: 'var(--type-overline-size)',
             color: 'var(--text-3)',
           }}
         >

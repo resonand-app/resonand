@@ -38,8 +38,8 @@ function Row({ icon, label, value, onClick }: RowProps) {
         <span
           style={{
             fontFamily: 'var(--font-mono)',
-            fontWeight: 500,
-            fontSize: '11px',
+            fontWeight: 'var(--weight-medium)',
+            fontSize: 'var(--type-numeric-size)',
             color: 'var(--text-3)',
           }}
         >
@@ -109,8 +109,8 @@ export function ProfileMenu({
             display: 'grid',
             placeItems: 'center',
             fontFamily: 'var(--font-mono)',
-            fontWeight: 500,
-            fontSize: '12px',
+            fontWeight: 'var(--weight-medium)',
+            fontSize: 'var(--type-ui-size-sm)',
             flex: '0 0 auto',
           }}
         >
@@ -120,8 +120,8 @@ export function ProfileMenu({
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: '13.5px',
-              fontWeight: 600,
+              fontSize: 'var(--type-ui-size)',
+              fontWeight: 'var(--weight-semibold)',
               color: 'var(--text)',
             }}
           >
@@ -130,7 +130,7 @@ export function ProfileMenu({
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontSize: '11.5px',
+              fontSize: 'var(--type-ui-size-sm)',
               color: 'var(--text-3)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',

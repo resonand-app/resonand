@@ -2,6 +2,7 @@ import type { HTMLAttributes } from 'react';
 
 import type { TranscriptionState } from '../../transcription-states';
 import { IconButton } from '../forms/IconButton';
+import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
 import { Chip } from './Chip';
 import { StateBadge } from './StateBadge';
@@ -13,8 +14,7 @@ export interface RecordingCardProps extends HTMLAttributes<HTMLElement> {
   state?: TranscriptionState;
   /** User-entered tags, shown verbatim. */
   tags?: string[];
-  peaks?: number[] | undefined;
-  seed?: number;
+  peaks?: Peaks | undefined;
   played?: number;
   pending?: boolean;
   onPlay?: () => void;
@@ -33,7 +33,6 @@ export function RecordingCard({
   state = 'done',
   tags = [],
   peaks,
-  seed = 21,
   played = 0,
   pending = false,
   onPlay,
@@ -59,8 +58,8 @@ export function RecordingCard({
           <span
             style={{
               fontFamily: 'var(--font-sans)',
-              fontWeight: 600,
-              fontSize: '15px',
+              fontWeight: 'var(--weight-semibold)',
+              fontSize: 'var(--type-body-size)',
               letterSpacing: '-0.005em',
               color: 'var(--text)',
             }}
@@ -71,7 +70,7 @@ export function RecordingCard({
             style={{
               fontFamily: 'var(--font-mono)',
               fontSize: 'var(--type-numeric-size)',
-              fontVariantNumeric: 'tabular-nums',
+              fontVariantNumeric: 'var(--type-numeric-variant)',
               color: 'var(--text-3)',
             }}
           >
@@ -88,8 +87,7 @@ export function RecordingCard({
       </div>
       <Waveform
         peaks={peaks}
-        seed={seed}
-        height={52}
+        size="record"
         played={played}
         playhead={played > 0}
         pending={pending}
