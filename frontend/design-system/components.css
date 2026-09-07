@@ -347,6 +347,29 @@
   color: var(--accent);
 }
 
+/* Checkbox. Empty is an edge and nothing else -- a filled box for "not selected" would read as a
+   third state next to `mixed`. Checked and mixed are the same fill on purpose: they are both
+   "this selection includes something", and the glyph is what tells them apart. */
+[data-ds='checkbox'] {
+  background: transparent;
+  color: var(--accent-on);
+  box-shadow: inset 0 0 0 var(--border-control) var(--border);
+  cursor: pointer;
+}
+
+[data-ds='checkbox']:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 var(--border-control) var(--border-strong);
+}
+
+[data-ds='checkbox'][data-checked] {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+[data-ds='checkbox'][data-checked]:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
 /* Switch. The track carries the state and the knob rides it. The focus ring goes on the row --
    the whole control is one button -- so a keyboard sees the label it is about to change and not
    a 34px rectangle with no words near it. */

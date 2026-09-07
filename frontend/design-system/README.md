@@ -79,7 +79,7 @@ Plain, concrete, second person. The interface says what happened and what it wil
 
 ⚠️ **Substitution, flagged.** The sources supplied no icon set — no codebase, no Figma, no sprite. The glyphs in the signed-off specimen board were drawn for the exploration; Lucide is the closest published match to their weight and construction and replaces them, so the system ships a real, complete, maintained set rather than a partial hand-drawn one. If you have an icon set you would rather use, hand it over and `Icon` is the only file that changes.
 
-Use `Icon` for every glyph; do not inline SVG in a screen. **`name` is one of the twenty-four names the component registers, not any Lucide name**: `search`, `upload`, `panel-left`, `library`, `plus`, `play`, `pause`, `skip-back`, `skip-forward`, `share-2`, `more-vertical`, `trash-2`, `sliders-horizontal`, `moon`, `log-out`, `align-left`, `clock`, `tag`, `x`, `chevron-left`, `chevron-down`. Transcription states map to `circle-dashed`, `loader`, `check`, `alert-circle`.
+Use `Icon` for every glyph; do not inline SVG in a screen. **`name` is one of the twenty-four names the component registers, not any Lucide name**: `search`, `upload`, `panel-left`, `library`, `plus`, `play`, `pause`, `skip-back`, `skip-forward`, `share-2`, `more-vertical`, `trash-2`, `sliders-horizontal`, `moon`, `log-out`, `align-left`, `clock`, `tag`, `x`, `chevron-left`, `chevron-down`, `minus`. Transcription states map to `circle-dashed`, `loader`, `check`, `alert-circle`.
 
 The registry is written out by hand in `Icon.tsx`, which is what keeps the other fourteen hundred icons out of the bundle — measured at 759 KB against 2.6 KB. Adding a glyph is two lines there; using one that is not registered is a compile error at the call site, and a thrown error in development if it arrives as a computed string. Four of the names above are deprecated aliases upstream and the registry absorbs that, so the system's vocabulary does not move when Lucide's does.
 
@@ -102,7 +102,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `tokens/layers.css` | The z-index scale. Six things overlap; before this they stacked by DOM order (`UI-33b`). |
 | `tokens/breakpoints.css` | 1280 / 1180 / 900 / 720, which existed only as prose (`UI-33b`). |
 | `components/foundation/` | `Icon` `Logo` |
-| `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` `Switch` |
+| `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` `Switch` `Checkbox` |
 | `components/media/` | `Waveform` `PlayerBar` `TranscriptLine` |
 | `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` |
 | `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Dialog` `Menu` `Tabs` |

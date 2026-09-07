@@ -40,6 +40,8 @@ export type { LogoProps } from './components/foundation/Logo';
 // --- components/forms (`UI-1e`) ---------------------------------------------
 export { Button } from './components/forms/Button';
 export type { ButtonProps } from './components/forms/Button';
+export { Checkbox } from './components/forms/Checkbox';
+export type { CheckboxProps, CheckedState } from './components/forms/Checkbox';
 export { ColorSwatchPicker } from './components/forms/ColorSwatchPicker';
 export type { ColorSwatchPickerProps } from './components/forms/ColorSwatchPicker';
 export { IconButton } from './components/forms/IconButton';

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import {
   Button,
+  Checkbox,
   Chip,
   ColorSwatchPicker,
   CreateLibraryCard,
@@ -73,6 +74,8 @@ const GLYPHS: IconName[] = [
   'tag',
   'x',
   'chevron-left',
+  'chevron-down',
+  'minus',
   'circle-dashed',
   'loader',
   'check',
@@ -228,6 +231,7 @@ export default function Specimens() {
   const [sort, setSort] = useState('recorded');
   const [section, setSection] = useState('appearance');
   const [transcribe, setTranscribe] = useState(true);
+  const [picked, setPicked] = useState(true);
 
   return (
     <main
@@ -329,6 +333,14 @@ export default function Specimens() {
         </Panel>
         <Panel label="Select · disabled">
           <Select label="Category" options={SORTS} placeholder="Any category" disabled />
+        </Panel>
+        <Panel label="Checkbox">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <Checkbox checked={picked} onChange={setPicked} label="Select this recording" />
+            <Checkbox checked="mixed" onChange={() => undefined} label="Select all" />
+            <Checkbox checked={false} onChange={() => undefined} label="In a row" size="row" />
+            <Checkbox checked onChange={() => undefined} label="Unavailable" disabled />
+          </div>
         </Panel>
         <Panel label="Switch" width={320}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
