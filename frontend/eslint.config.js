@@ -55,6 +55,10 @@ export default defineConfig(
     // The click-through kit: React 18 and Babel in a browser, and provenance rather than a
     // starting point (`UI-1l`).
     'design-system/ui_kits/**',
+    // The typed API surface, written by `npm run api:types` out of the committed document
+    // (`UI-3a`). Linting a generated file reports the generator's style as the author's
+    // mistakes, and the only fix available is to stop generating it.
+    'src/api/schema.ts',
   ]),
 
   // --- Everything ---------------------------------------------------------

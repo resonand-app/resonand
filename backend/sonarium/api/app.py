@@ -112,13 +112,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     if app.state.spa is None:
 
-        @app.get("/", tags=["meta"], summary="What this instance is")
+        @app.get("/", tags=["meta"], summary="What this instance is", include_in_schema=False)
         def instance() -> dict[str, Any]:
             """Enough for a client to know what it is talking to, without a session.
 
             The root belongs to whoever is being served there. With a bundle present it is the
             interface; without one it is this. ``GET /api/instance`` is the answer that never
             moves, which is why it is the one the interface is written against.
+
+            Out of the published document deliberately: whether this route exists at all depends
+            on whether the image being described carries a bundle, and a document that changes
+            shape with the filesystem is one ``UI-3a`` cannot commit a snapshot of.
             """
             return {"name": "sonarium", "version": __version__, "status": "ok"}
 

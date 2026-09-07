@@ -16,12 +16,14 @@ from pathlib import Path
 from typing import Annotated
 
 import typer
+from pydantic import SecretStr
 
 from sonarium import __version__
+from sonarium.api.app import create_app
 from sonarium.archive import apply_sidecar, export_recording, find_by_uuid, read_sidecar
 from sonarium.cli import integrity
 from sonarium.cli.backup import backup_database, storage_note, verify_backup
-from sonarium.core.config import Settings, get_settings
+from sonarium.core.config import MINIMUM_SECRET_LENGTH, Settings, get_settings
 from sonarium.core.errors import SonariumError
 from sonarium.core.formats import is_accepted
 from sonarium.db import search_index, users
@@ -34,6 +36,14 @@ from sonarium.jobs.queue import enqueue, enqueue_transcription
 from sonarium.jobs.worker import Worker, drain
 from sonarium.media import storage
 from sonarium.transcription.registry import build_provider
+
+SNAPSHOT = Path(__file__).resolve().parents[3] / "frontend" / "src" / "api" / "openapi.json"
+"""Where the interface keeps its copy of the document (``UI-3a``).
+
+Derived from this file's own location so the command works from either half of the repository,
+which is where it is run from. It is a default and not a constant: ``--output`` is how anybody
+outside a working tree points it somewhere real.
+"""
 
 app = typer.Typer(
     name="sonarium",
@@ -52,6 +62,45 @@ def main() -> None:
 def version() -> None:
     """Print the version and exit."""
     typer.echo(f"sonarium {__version__}")
+
+
+@app.command()
+def openapi(
+    output: Annotated[
+        Path,
+        typer.Option(help="Where to write the document."),
+    ] = SNAPSHOT,
+    check: Annotated[
+        bool,
+        typer.Option("--check", help="Do not write; fail if the file is not what this produces."),
+    ] = False,
+) -> None:
+    """Write the published API document, which the interface generates its client from.
+
+    ``UI-3a`` commits the snapshot rather than fetching it at build time, for the reason every
+    generated file here is committed: a reviewer sees it change. This command is what refreshes
+    it and, with ``--check``, what CI runs so a backend change that alters the API cannot land
+    with a stale snapshot beside it -- which would otherwise be discovered as a runtime surprise
+    in the interface rather than as a failing job.
+
+    The document is written from settings of its own and not from the environment: an instance
+    on a subpath publishes a ``servers`` entry, and a snapshot that carried one administrator's
+    subpath would make every generated URL wrong for everybody else.
+    """
+    document = json.dumps(_published_document(), indent=2, sort_keys=True) + "\n"
+    if check:
+        current = output.read_text(encoding="utf-8") if output.is_file() else ""
+        if current != document:
+            typer.echo(
+                f"{output} is not what the API publishes. Run `sonarium openapi` and commit it.",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        typer.echo(f"{output} matches the API.")
+        return
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(document, encoding="utf-8")
+    typer.echo(f"Wrote {output}.")
 
 
 @app.command("import")
@@ -273,6 +322,21 @@ def migrate() -> None:
 
 
 # --- Plumbing -------------------------------------------------------------
+
+
+def _published_document() -> dict[str, object]:
+    """The OpenAPI document, from an instance configured the way every instance is by default."""
+    return create_app(_snapshot_settings()).openapi()
+
+
+def _snapshot_settings() -> Settings:
+    """Settings that describe no particular deployment.
+
+    Explicit rather than ``get_settings()``: a ``SONARIUM_BASE_PATH`` in the shell that generated
+    the snapshot would be published in it as a ``servers`` entry, and every client generated from
+    it afterwards would prefix its calls with somebody else's subpath.
+    """
+    return Settings(secret_key=SecretStr("0" * MINIMUM_SECRET_LENGTH), base_path="")
 
 
 def _settings() -> Settings:
