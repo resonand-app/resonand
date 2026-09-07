@@ -9,6 +9,7 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import { HttpResponse, http } from 'msw';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -184,5 +185,61 @@ describe('the shared group', () => {
     // Absent, not empty: a group saying nobody has shared anything with you is a thing to read
     // every time somebody opens the home page.
     expect(screen.queryByRole('heading', { name: /Shared with you/i })).toBeNull();
+  });
+});
+
+describe('the states', () => {
+  it('draws skeletons that match the layout rather than a spinner', () => {
+    renderView();
+    // The page knows its own shape, so it says so while it waits: three card-shaped blocks, and
+    // the create tile already solid beside them.
+    expect(document.querySelectorAll('[data-ds="card-skeleton"]')).toHaveLength(3);
+    expect(screen.getByRole('button', { name: /Create a library/ })).toBeInTheDocument();
+  });
+
+  it('meets a brand-new account with an invitation rather than an empty grid', async () => {
+    archive.libraries = archive.libraries
+      .filter((one) => one.uuid === PERSONAL)
+      .map((one) => ({ ...one, audio_count: 0, total_duration_ms: 0 }));
+    renderView();
+    expect(await screen.findByText(/Nothing in here yet/)).toBeInTheDocument();
+    // The personal library is still there. It is where the audio will land.
+    expect(screen.getByRole('heading', { name: 'Personal' })).toBeInTheDocument();
+  });
+
+  it('leaves the invitation alone once there is anything at all', async () => {
+    renderView();
+    await screen.findByRole('heading', { name: 'Personal' });
+    expect(screen.queryByText(/Nothing in here yet/)).toBeNull();
+  });
+
+  it("shows the problem document's own words, because they were written to be read", async () => {
+    server.use(
+      http.get('/api/libraries', () =>
+        HttpResponse.json(
+          {
+            type: 'about:blank',
+            title: 'Internal Server Error',
+            detail: 'The database is locked. It usually clears within a minute.',
+            status: 500,
+          },
+          { status: 500, headers: { 'content-type': 'application/problem+json' } },
+        ),
+      ),
+    );
+    renderView();
+    expect(
+      await screen.findByText('The database is locked. It usually clears within a minute.'),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeInTheDocument();
+  });
+
+  it('says the instance is not there rather than that something did not work', async () => {
+    server.use(http.get('/api/libraries', () => HttpResponse.error()));
+    renderView();
+    // A different sentence from an error on purpose: "that did not work" sends somebody looking
+    // for a bug in their archive when the machine is simply not answering.
+    expect(await screen.findByText(/The instance is not answering/)).toBeInTheDocument();
+    expect(screen.getByText(/could not be reached/)).toBeInTheDocument();
   });
 });

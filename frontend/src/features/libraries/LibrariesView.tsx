@@ -19,8 +19,16 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { isApiProblem } from '@/api/problem';
 import { toLibrary } from '@/app/routes';
-import { CreateLibraryCard, LibraryCard, PageHeader } from '@/design-system';
+import {
+  Button,
+  CardSkeleton,
+  CreateLibraryCard,
+  LibraryCard,
+  PageHeader,
+  StateCard,
+} from '@/design-system';
 import * as format from '@/i18n/format';
 
 import { colourOf } from '@/app/library-data';
@@ -41,8 +49,9 @@ const LEVEL_NAMES: Record<number, string> = { 10: 'read', 20: 'edit', 30: 'manag
 
 export function LibrariesView() {
   const { t } = useTranslation('libraries');
-  const { own, shared, recordings, durationMs } = useLibraryList();
+  const { own, shared, recordings, durationMs, isPending, error, refetch } = useLibraryList();
   const painted = useAfterPaint();
+  const newAccount = shared.length === 0 && own.length === 1 && own[0]?.audio_count === 0;
 
   return (
     <section>
@@ -50,12 +59,23 @@ export function LibrariesView() {
         title={t('title')}
         meta={`${t('common:count.recordings', { count: recordings })} · ${format.total(durationMs)}`}
       />
-      <Grid>
-        <CreateLibraryCard labels={{ action: t('create.action'), hint: t('create.hint') }} />
-        {own.map((library) => (
-          <Card key={library.uuid} library={library} waveforms={painted} />
-        ))}
-      </Grid>
+      {error === null || error === undefined ? (
+        <>
+          <Grid>
+            <CreateLibraryCard labels={{ action: t('create.action'), hint: t('create.hint') }} />
+            {isPending ? (
+              <Skeletons />
+            ) : (
+              own.map((library) => (
+                <Card key={library.uuid} library={library} waveforms={painted} />
+              ))
+            )}
+          </Grid>
+          {newAccount && <FirstRun />}
+        </>
+      ) : (
+        <Unavailable error={error} onRetry={refetch} />
+      )}
       {shared.length > 0 && (
         <section style={{ marginTop: 'var(--space-10)' }}>
           <h2
@@ -121,6 +141,71 @@ export function Card({
       peaks={peaks}
       pending={pending}
       labels={{ options: (name) => t('card.options', { name }) }}
+    />
+  );
+}
+
+/**
+ * Three card skeletons, which is what a grid three columns wide looks like before it has data.
+ *
+ * Not a spinner: the page knows its own shape, and a skeleton that matches the real layout is
+ * what stops it jumping when the list arrives (§3.5). The create tile is beside them and is
+ * already solid, so there is something to act on while these are still grey.
+ */
+function Skeletons() {
+  return (
+    <>
+      <CardSkeleton />
+      <CardSkeleton />
+      <CardSkeleton />
+    </>
+  );
+}
+
+/**
+ * The first thing anybody ever sees (§V2).
+ *
+ * One library, nothing in it, and nobody sharing anything -- so this is a new account rather than
+ * an empty page, and §V2 is emphatic that it is an invitation to upload and not an empty grid.
+ * The personal library's card is still above it, because it is real and it is where the audio
+ * will land; what this adds is the reason to put something in it.
+ *
+ * **It has no action button yet, and that is deliberate.** The action is Upload, the upload
+ * dialog is `UI-18a`, and a button that opens nothing is worse than a sentence that names the
+ * thing to do. `UI-18a` puts the control here.
+ */
+function FirstRun() {
+  const { t } = useTranslation('libraries');
+  return (
+    <div style={{ marginTop: 'var(--space-8)' }}>
+      <StateCard icon="upload" title={t('firstRun.title')} body={t('firstRun.body')} dashed />
+    </div>
+  );
+}
+
+/**
+ * The instance answered with a problem, or did not answer at all.
+ *
+ * Two states and not one. An error carries the problem document's own `detail`, which §1.9 says
+ * is written to be read by a person and is therefore shown rather than replaced; an unreachable
+ * instance is a different sentence, because "that did not work" beside a retry, when the machine
+ * is simply not there, sends somebody looking for a bug in their archive.
+ */
+function Unavailable({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const { t } = useTranslation('libraries');
+  const problem = isApiProblem(error) ? error : undefined;
+  const offline = problem?.isUnreachable ?? false;
+
+  return (
+    <StateCard
+      icon="alert-circle"
+      title={offline ? t('unreachable.title') : t('error.title')}
+      body={offline ? t('common:state.offline') : (problem?.detail ?? t('error.body'))}
+      action={
+        <Button variant="secondary" onClick={onRetry}>
+          {t('common:action.retry')}
+        </Button>
+      }
     />
   );
 }
