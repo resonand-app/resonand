@@ -102,7 +102,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `tokens/layers.css` | The z-index scale. Six things overlap; before this they stacked by DOM order (`UI-33b`). |
 | `tokens/breakpoints.css` | 1280 / 1180 / 900 / 720, which existed only as prose (`UI-33b`). |
 | `components/foundation/` | `Icon` `Logo` |
-| `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` |
+| `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` `Switch` |
 | `components/media/` | `Waveform` `PlayerBar` `TranscriptLine` |
 | `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` |
 | `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Dialog` `Menu` `Tabs` |

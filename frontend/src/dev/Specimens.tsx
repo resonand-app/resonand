@@ -21,6 +21,7 @@ import {
   Select,
   Sidebar,
   StateBadge,
+  Switch,
   Tabs,
   TextField,
   THEME_CHOICES,
@@ -226,6 +227,7 @@ export default function Specimens() {
   const [query, setQuery] = useState('carrer nou');
   const [sort, setSort] = useState('recorded');
   const [section, setSection] = useState('appearance');
+  const [transcribe, setTranscribe] = useState(true);
 
   return (
     <main
@@ -327,6 +329,22 @@ export default function Specimens() {
         </Panel>
         <Panel label="Select · disabled">
           <Select label="Category" options={SORTS} placeholder="Any category" disabled />
+        </Panel>
+        <Panel label="Switch" width={320}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <Switch
+              checked={transcribe}
+              onChange={setTranscribe}
+              label="Transcribe when the upload finishes"
+              description="Transcription is sent to api.openai.com. The audio leaves this instance."
+            />
+            <Switch
+              checked={false}
+              onChange={() => undefined}
+              label="Watch a folder for new files"
+              disabled
+            />
+          </div>
         </Panel>
         <Panel label="Select · open" width={240}>
           {/* Held open, the way the components canvas draws it: a menu nobody can see is a menu

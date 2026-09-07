@@ -48,6 +48,8 @@ export { SearchField } from './components/forms/SearchField';
 export { Select } from './components/forms/Select';
 export type { SelectOption, SelectProps } from './components/forms/Select';
 export type { SearchFieldProps } from './components/forms/SearchField';
+export { Switch } from './components/forms/Switch';
+export type { SwitchProps } from './components/forms/Switch';
 export { TextField } from './components/forms/TextField';
 export type { TextFieldProps } from './components/forms/TextField';
 

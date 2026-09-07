@@ -347,6 +347,37 @@
   color: var(--accent);
 }
 
+/* Switch. The track carries the state and the knob rides it. The focus ring goes on the row --
+   the whole control is one button -- so a keyboard sees the label it is about to change and not
+   a 34px rectangle with no words near it. */
+[data-ds='switch'] {
+  cursor: pointer;
+}
+
+[data-ds='switch-track'] {
+  background: var(--border);
+}
+
+[data-ds='switch-knob'] {
+  background: var(--text-3);
+}
+
+[data-ds='switch'][aria-checked='true'] [data-ds='switch-track'] {
+  background: var(--accent);
+}
+
+[data-ds='switch'][aria-checked='true'] [data-ds='switch-knob'] {
+  background: var(--accent-on);
+}
+
+[data-ds='switch']:hover:not(:disabled) [data-ds='switch-track'] {
+  background: var(--border-strong);
+}
+
+[data-ds='switch'][aria-checked='true']:hover:not(:disabled) [data-ds='switch-track'] {
+  background: var(--accent-hover);
+}
+
 /* ==========================================================================
    data
    ========================================================================== */
