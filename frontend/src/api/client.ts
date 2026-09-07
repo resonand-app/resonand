@@ -87,15 +87,20 @@ export type ResultOf<P extends keyof paths, M extends Method> = JsonOf<
 >;
 
 /**
- * One option, required exactly when the operation has one.
+ * One option, required exactly when the operation requires it.
  *
- * `never` means the endpoint takes none, so passing one is an error; an optional parameter stays
- * optional; a required path parameter has to be given. Without this every call site could omit
- * the uuid it is about and find out in the browser.
+ * Three cases, and the middle one is worth writing down. `never` means the endpoint has none, so
+ * passing one is an error. A group whose members are all optional -- every list endpoint's
+ * filters -- is itself optional, or reading a library would mean passing an empty `query` to say
+ * nothing. Anything with a required member has to be given, which is what stops a call omitting
+ * the uuid it is about and finding out in the browser.
  */
 type Takes<Key extends string, Value> = [Value] extends [never]
   ? Partial<Record<Key, never>>
-  : Record<Key, Value>;
+  : // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    {} extends Value
+    ? Partial<Record<Key, Value>>
+    : Record<Key, Value>;
 
 interface Common {
   signal?: AbortSignal;
@@ -117,15 +122,15 @@ export type CallOptions<P extends keyof paths, M extends Method> = Common &
   Takes<'query', Unset<QueryParamsOf<P, M>>> &
   Takes<'body', BodyOf<P, M>>;
 
-/** Whether a call needs options at all, so the ones that do not can be called without `{}`. */
-type NeedsOptions<P extends keyof paths, M extends Method> = [
-  PathParamsOf<P, M> | BodyOf<P, M>,
-] extends [never]
-  ? false
-  : true;
-
+/**
+ * Whether a call needs options at all.
+ *
+ * Read off the assembled options rather than off the parts: when everything in them is optional,
+ * `{}` would say nothing, and `get('/api/instance')` should be the whole call.
+ */
 type Arguments<P extends keyof paths, M extends Method> =
-  NeedsOptions<P, M> extends true ? [options: CallOptions<P, M>] : [options?: CallOptions<P, M>];
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  {} extends CallOptions<P, M> ? [options?: CallOptions<P, M>] : [options: CallOptions<P, M>];
 
 /**
  * The options as this function reads them.
