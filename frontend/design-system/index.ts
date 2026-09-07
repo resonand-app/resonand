@@ -75,6 +75,11 @@ export { Chip } from './components/data/Chip';
 export type { ChipProps } from './components/data/Chip';
 export { CreateLibraryCard } from './components/data/CreateLibraryCard';
 export type { CreateLibraryCardProps } from './components/data/CreateLibraryCard';
+export { EgressNotice } from './components/data/EgressNotice';
+export type {
+  EgressNoticeProps,
+  TranscriptionDestination,
+} from './components/data/EgressNotice';
 export { InlineField } from './components/data/InlineField';
 export type { InlineFieldProps } from './components/data/InlineField';
 export { LevelSelector, OWNER_LEVEL } from './components/data/LevelSelector';

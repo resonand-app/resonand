@@ -465,6 +465,32 @@
   box-shadow: inset 0 calc(-1 * var(--border-hairline)) 0 var(--hairline);
 }
 
+/* EgressNotice. Information and never a warning: no red anywhere, in any of the three cases. The
+   local one is quiet -- the audio is going to a machine on your own network, and saying so in
+   alarm colours would teach people to ignore the notice that matters. The external one takes the
+   accent, which is the system's one chromatic family and here means "read this". Nothing
+   configured has no fill at all, because there is nothing happening to disclose. */
+[data-ds='egress-notice'] {
+  background: var(--surface-2);
+}
+
+[data-ds='egress-notice'][data-tone='local'] [data-ds='egress-glyph'] {
+  color: var(--text-3);
+}
+
+[data-ds='egress-notice'][data-tone='external'] [data-ds='egress-glyph'] {
+  color: var(--accent);
+}
+
+[data-ds='egress-notice'][data-tone='none'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--border-hairline) var(--border);
+}
+
+[data-ds='egress-notice'][data-tone='none'] [data-ds='egress-glyph'] {
+  color: var(--state-none);
+}
+
 /* LevelSelector. The chosen row fills with `--accent-soft` and its dot fills with the accent; the
    others carry the control edge and an empty middle. Sharing is where the product's first promise
    is kept, so the current answer has to be readable at a glance and not only by finding the dot. */

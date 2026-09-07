@@ -5,7 +5,9 @@ import {
   CircleAlert,
   CircleDashed,
   Clock,
+  CloudUpload,
   EllipsisVertical,
+  HardDrive,
   Library,
   Loader,
   Minus,
@@ -46,7 +48,8 @@ import type { HTMLAttributes } from 'react';
  * These are the glyphs the README documents plus the ones components ask for by computed name --
  * `StateBadge`'s four states, `SearchResults`' two kinds of hit. Adding one is two lines here,
  * and `UI-34` adds a handful: `chevron-down` for the control that opens a list of values, `minus` for a checkbox that is neither
- * on nor off, `pencil` for a field you can correct in place.
+ * on nor off, `pencil` for a field you can correct in place, and
+ * `hard-drive` and `cloud-upload` for the two registers of the egress disclosure.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -56,6 +59,8 @@ const GLYPHS = {
   'chevron-left': ChevronLeft,
   'circle-dashed': CircleDashed,
   clock: Clock,
+  'cloud-upload': CloudUpload,
+  'hard-drive': HardDrive,
   library: Library,
   loader: Loader,
   'log-out': LogOut,

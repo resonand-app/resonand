@@ -8,6 +8,7 @@ import {
   ColorSwatchPicker,
   CreateLibraryCard,
   Dialog,
+  EgressNotice,
   Icon,
   IconButton,
   InlineField,
@@ -84,6 +85,8 @@ const GLYPHS: IconName[] = [
   'chevron-down',
   'minus',
   'pencil',
+  'hard-drive',
+  'cloud-upload',
   'circle-dashed',
   'loader',
   'check',
@@ -122,6 +125,14 @@ const LEVELS = [
   { level: 30, description: 'Can manage: everything above, plus sharing with other people.' },
   { level: 40, description: 'Owner: the library belongs to them.' },
 ];
+
+/** `GET /transcription/destination` for an instance configured against OpenAI (`API-12`). */
+const OPENAI = {
+  provider: 'openai',
+  host: 'api.openai.com',
+  is_local: false,
+  configured: true,
+};
 
 /** Settings' four sections (§4, V10). */
 const SETTINGS_TABS = [
@@ -469,6 +480,31 @@ export default function Specimens() {
             <Chip>memòria</Chip>
             <Chip>català</Chip>
             <Chip active>1998</Chip>
+          </div>
+        </Panel>
+        <Panel label="EgressNotice · three cases, two registers" width={420}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <EgressNotice
+              destination={{
+                provider: 'whisper',
+                host: 'whisper.local:9000',
+                is_local: true,
+                configured: true,
+              }}
+            />
+            <EgressNotice destination={OPENAI} />
+            <EgressNotice
+              destination={OPENAI}
+              placement="retry"
+              action={
+                <Button variant="secondary" icon="align-left">
+                  Retry
+                </Button>
+              }
+            />
+            <EgressNotice
+              destination={{ provider: 'none', host: null, is_local: false, configured: false }}
+            />
           </div>
         </Panel>
         <Panel label="InlineField · editable, and read-only by permission" width={320}>
