@@ -149,3 +149,22 @@ describe('a library shared with you', () => {
     expect(destinationOf(toLibrary(ATENEU))).toBe(ATENEU);
   });
 });
+
+describe('the keyboard', () => {
+  it('focuses the search field from anywhere on the page', async () => {
+    // §1.8's one chord and its one-key alternative, answered by the shell because the field it
+    // focuses belongs to the shell.
+    renderShell();
+    const field = await screen.findByPlaceholderText('Search everything');
+    await userEvent.keyboard('{Meta>}k{/Meta}');
+    expect(field).toHaveFocus();
+  });
+
+  it('answers the slash too, from a page that is not a field', async () => {
+    renderShell();
+    const field = await screen.findByPlaceholderText('Search everything');
+    field.blur();
+    await userEvent.keyboard('/');
+    expect(field).toHaveFocus();
+  });
+});

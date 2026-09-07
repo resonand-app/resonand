@@ -1,4 +1,4 @@
-import type { ChangeEvent, HTMLAttributes, ReactNode } from 'react';
+import type { ChangeEvent, HTMLAttributes, ReactNode, Ref } from 'react';
 
 import { Logo } from '../foundation/Logo';
 import { Button } from '../forms/Button';
@@ -29,6 +29,14 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
     upload?: string;
     account?: string;
   };
+  /**
+   * The search input itself, for whoever owns the keyboard.
+   *
+   * `⌘K` and `/` focus this field from anywhere on the page (§1.8), and the handler that answers
+   * them is global (`UI-4g`). Reaching the input through the DOM would be the alternative, and a
+   * global handler that queries for a selector is one that breaks silently when the markup moves.
+   */
+  searchRef?: Ref<HTMLInputElement>;
   /** Rendered inside the search wrapper -- pass `SearchResults` here so it anchors to the field. */
   children?: ReactNode;
 }
@@ -58,6 +66,7 @@ export function TopNav({
   onUpload,
   onProfile,
   labels,
+  searchRef,
   children,
   style,
   ...rest
@@ -89,6 +98,7 @@ export function TopNav({
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
         <div style={{ width: '100%', maxWidth: 540, position: 'relative' }}>
           <SearchField
+            ref={searchRef}
             value={query}
             {...(labels?.search === undefined ? {} : { placeholder: labels.search })}
             onChange={(event: ChangeEvent<HTMLInputElement>) => {

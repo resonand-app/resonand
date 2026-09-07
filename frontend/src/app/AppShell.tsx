@@ -15,7 +15,7 @@
  * every view, which is exactly why they are given to the frame rather than rendered inside one.
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
@@ -28,6 +28,7 @@ import { useLibraries, useTrashCount } from './library-data';
 import { routes, toSearch } from './routes';
 import { useSession } from './session';
 import { useIsPhone } from './use-is-phone';
+import { useKeyboard } from './useKeyboard';
 import { useSidebarCollapse } from './use-sidebar-collapse';
 
 export interface AppShellProps {
@@ -52,6 +53,17 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   const { collapsed, toggle } = useSidebarCollapse();
   const isPhone = useIsPhone();
   const [uploading, setUploading] = useState(false);
+  const search = useRef<HTMLInputElement>(null);
+
+  // The shell owns the bindings that are about the shell. The player's are added by `UI-5`, and a
+  // view's -- moving between transcript segments, opening a row -- by the view: `useKeyboard`
+  // ignores a command nobody answers, so an unanswered key stays the browser's.
+  useKeyboard({
+    'focus-search': () => {
+      search.current?.focus();
+      search.current?.select();
+    },
+  });
 
   // Replaced rather than narrowed (`DEC-23`). Below 720 the desktop frame is not rendered at all,
   // so nothing in it is competing for a screen it was never drawn for.
@@ -80,6 +92,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
           }}
           {...(onUpload ? { onUpload } : {})}
           {...(onProfile ? { onProfile } : {})}
+          searchRef={search}
           labels={{
             search: t('nav.search'),
             sidebar: t('nav.sidebar'),
