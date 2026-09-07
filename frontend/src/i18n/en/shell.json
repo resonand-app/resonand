@@ -1,0 +1,32 @@
+{
+  "nav": {
+    "search": "Search everything",
+    "sidebar": "Show or hide the sidebar",
+    "upload": "Upload recordings",
+    "account": "Your account"
+  },
+  "sidebar": {
+    "libraries": "Libraries",
+    "shared": "Shared with you",
+    "trash": "Trash",
+    "settings": "Settings"
+  },
+  "tabs": {
+    "libraries": "Libraries",
+    "search": "Search",
+    "upload": "Upload",
+    "settings": "Settings"
+  },
+  "notFound": {
+    "title": "There is nothing at this address",
+    "detail": "The link may be old, or the recording may have been deleted.",
+    "action": "Go to your libraries"
+  },
+  "session": {
+    "checking": "Checking your session"
+  },
+  "notBuilt": {
+    "title": "Not built yet",
+    "detail": "This view arrives in Phase E. The route, the shell and the session guard around it are real."
+  }
+}

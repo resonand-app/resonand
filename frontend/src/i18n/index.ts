@@ -21,6 +21,7 @@ import type { i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import common from './en/common.json';
+import shell from './en/shell.json';
 import { pseudoBundle } from './pseudo';
 
 /** The language every string is written in, and the one every other one is checked against. */
@@ -34,9 +35,9 @@ export const BASE = 'en';
  */
 export const PSEUDO = 'pseudo';
 
-export const NAMESPACES = ['common'] as const;
+export const NAMESPACES = ['common', 'shell'] as const;
 
-const english = { common };
+const english = { common, shell };
 
 export const resources = {
   [BASE]: english,
