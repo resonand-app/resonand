@@ -11,6 +11,7 @@ import {
   IconButton,
   LibraryCard,
   Logo,
+  Menu,
   PlayerBar,
   ProfileMenu,
   RecordingCard,
@@ -82,6 +83,21 @@ const SORTS = [
   { value: 'uploaded', label: 'Upload date' },
   { value: 'duration', label: 'Duration' },
   { value: 'title', label: 'Title' },
+];
+
+/** What a recording's overflow menu offers (§2.4). Nothing here is ever disabled: an action the
+ *  user cannot take is absent from the list. */
+const RECORDING_ACTIONS = [
+  { id: 'download', label: 'Download the original', icon: 'upload' as const },
+  { id: 'move', label: 'Move to another library', icon: 'library' as const },
+  { id: 'retranscribe', label: 'Re-transcribe', icon: 'align-left' as const },
+  {
+    id: 'trash',
+    label: 'Send to trash',
+    icon: 'trash-2' as const,
+    destructive: true,
+    separated: true,
+  },
 ];
 
 /** The seventeen specimen cards in `guidelines/`, which are standalone HTML and stay that way. */
@@ -432,6 +448,19 @@ export default function Specimens() {
         </Panel>
         <Panel label="Sidebar · collapsed" width={52}>
           <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} collapsed />
+        </Panel>
+        <Panel label="Menu · open" width={236}>
+          {/* Held open for the same reason the Select above is: most of a menu's geometry only
+              exists while it is on screen. */}
+          <Menu
+            label="Recording options"
+            items={RECORDING_ACTIONS}
+            open
+            onOpenChange={() => undefined}
+          />
+        </Panel>
+        <Panel label="Menu · closed">
+          <Menu label="Library actions" items={RECORDING_ACTIONS} />
         </Panel>
         <Panel label="ProfileMenu" width={236}>
           <ProfileMenu name="Martí Colom" email="marti@sonarium.app" initials="MC" theme="Dark" />

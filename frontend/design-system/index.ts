@@ -81,6 +81,8 @@ export type { StateBadgeProps } from './components/data/StateBadge';
 // --- components/navigation (`UI-1h`) ----------------------------------------
 export { Dialog } from './components/navigation/Dialog';
 export type { DialogProps } from './components/navigation/Dialog';
+export { Menu } from './components/navigation/Menu';
+export type { MenuItem, MenuProps } from './components/navigation/Menu';
 export { ProfileMenu } from './components/navigation/ProfileMenu';
 export type { ProfileMenuProps } from './components/navigation/ProfileMenu';
 export { SearchResults } from './components/navigation/SearchResults';
