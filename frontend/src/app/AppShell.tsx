@@ -15,20 +15,25 @@
  * every view, which is exactly why they are given to the frame rather than rendered inside one.
  */
 
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 
 import { Shell, Sidebar, TopNav } from '@/design-system';
 
+import { PhoneShell } from './PhoneShell';
 import { destinationOf, destinationTo, initialsOf } from './destinations';
 import { useLibraries, useTrashCount } from './library-data';
 import { routes, toSearch } from './routes';
 import { useSession } from './session';
+import { useIsPhone } from './use-is-phone';
 import { useSidebarCollapse } from './use-sidebar-collapse';
 
 export interface AppShellProps {
   children: ReactNode;
+  /** The per-screen header, which is where the account avatar lives on a phone (§2.3). */
+  header?: ReactNode;
   player?: ReactNode;
   tray?: ReactNode;
   /** The account menu, opened by the avatar. `UI-4e` hands it in so the frame stays presentational. */
@@ -37,7 +42,7 @@ export interface AppShellProps {
   onProfile?: () => void;
 }
 
-export function AppShell({ children, player, tray, onUpload, onProfile }: AppShellProps) {
+export function AppShell({ children, player, tray, header, onUpload, onProfile }: AppShellProps) {
   const { t } = useTranslation('shell');
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,6 +50,24 @@ export function AppShell({ children, player, tray, onUpload, onProfile }: AppShe
   const { own, shared } = useLibraries();
   const trashCount = useTrashCount();
   const { collapsed, toggle } = useSidebarCollapse();
+  const isPhone = useIsPhone();
+  const [uploading, setUploading] = useState(false);
+
+  // Replaced rather than narrowed (`DEC-23`). Below 720 the desktop frame is not rendered at all,
+  // so nothing in it is competing for a screen it was never drawn for.
+  if (isPhone) {
+    return (
+      <PhoneShell
+        {...(header === undefined ? {} : { header })}
+        {...(player ? { player } : {})}
+        {...(tray ? { upload: tray } : {})}
+        uploading={uploading}
+        onUploadTab={setUploading}
+      >
+        {children}
+      </PhoneShell>
+    );
+  }
 
   return (
     <Shell

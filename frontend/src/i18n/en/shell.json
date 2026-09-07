@@ -15,7 +15,8 @@
     "libraries": "Libraries",
     "search": "Search",
     "upload": "Upload",
-    "settings": "Settings"
+    "settings": "Settings",
+    "label": "Main"
   },
   "notFound": {
     "title": "There is nothing at this address",
