@@ -1,0 +1,16 @@
+{
+  "header": {
+    "settings": "Settings",
+    "readOnly": "You can read this library."
+  },
+  "missing": {
+    "title": "There is no library at this address",
+    "body": "It may have been deleted, or it may never have been yours."
+  },
+  "error": {
+    "title": "This library could not be loaded"
+  },
+  "unreachable": {
+    "title": "The instance is not answering"
+  }
+}

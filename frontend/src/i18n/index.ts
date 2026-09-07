@@ -22,6 +22,7 @@ import { initReactI18next } from 'react-i18next';
 
 import common from './en/common.json';
 import libraries from './en/libraries.json';
+import library from './en/library.json';
 import player from './en/player.json';
 import shell from './en/shell.json';
 import { pseudoBundle } from './pseudo';
@@ -37,9 +38,9 @@ export const BASE = 'en';
  */
 export const PSEUDO = 'pseudo';
 
-export const NAMESPACES = ['common', 'libraries', 'player', 'shell'] as const;
+export const NAMESPACES = ['common', 'libraries', 'library', 'player', 'shell'] as const;
 
-const english = { common, libraries, player, shell };
+const english = { common, libraries, library, player, shell };
 
 export const resources = {
   [BASE]: english,
