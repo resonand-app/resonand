@@ -97,5 +97,7 @@ export { Sidebar } from './components/navigation/Sidebar';
 export { Tabs } from './components/navigation/Tabs';
 export type { Tab, TabsProps } from './components/navigation/Tabs';
 export type { SidebarLibrary, SidebarProps } from './components/navigation/Sidebar';
+export { Toast } from './components/navigation/Toast';
+export type { ToastProps } from './components/navigation/Toast';
 export { TopNav } from './components/navigation/TopNav';
 export type { TopNavProps } from './components/navigation/TopNav';

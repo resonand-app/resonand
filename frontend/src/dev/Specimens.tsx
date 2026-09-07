@@ -27,6 +27,7 @@ import {
   Tabs,
   TextField,
   THEME_CHOICES,
+  Toast,
   TopNav,
   TranscriptLine,
   TRANSCRIPTION_STATE_NAMES,
@@ -535,6 +536,22 @@ export default function Specimens() {
       </Section>
 
       <Section title="Overlays">
+        <Panel label="Toast · done" width={420}>
+          <Toast onDismiss={() => undefined}>12 recordings moved to Àvia Teresa</Toast>
+        </Panel>
+        <Panel label="Toast · failed, and still selected" width={420}>
+          <Toast
+            tone="failed"
+            actions={
+              <>
+                <Button variant="secondary">Retry 3</Button>
+                <Button variant="ghost">Dismiss</Button>
+              </>
+            }
+          >
+            9 moved, 3 failed. The three that failed are still selected.
+          </Toast>
+        </Panel>
         <Panel label="Sheet · the phone's metadata panel">
           <Button
             variant="secondary"
