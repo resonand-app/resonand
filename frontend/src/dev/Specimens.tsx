@@ -29,6 +29,7 @@ import {
   TextField,
   THEME_CHOICES,
   Toast,
+  Tooltip,
   TopNav,
   TranscriptLine,
   TRANSCRIPTION_STATE_NAMES,
@@ -558,6 +559,27 @@ export default function Specimens() {
           >
             9 moved, 3 failed. The three that failed are still selected.
           </Toast>
+        </Panel>
+        <Panel label="Tooltip · a truncated title, in full" width={260}>
+          <Tooltip content="Interview with grandma Teresa — the house on Carrer Nou">
+            <span
+              style={{
+                fontSize: 'var(--type-ui-size)',
+                color: 'var(--text-2)',
+                maxWidth: 200,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              Interview with grandma Teresa — the house…
+            </span>
+          </Tooltip>
+        </Panel>
+        <Panel label="Tooltip · an icon-only control's name">
+          <Tooltip content="Share this library">
+            <IconButton icon="share-2" variant="ghost" label="Share this library" />
+          </Tooltip>
         </Panel>
         <Panel label="Sheet · the phone's metadata panel">
           <Button

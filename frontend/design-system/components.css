@@ -581,6 +581,13 @@
   box-shadow: inset 0 calc(-1 * var(--border-strong-width)) 0 var(--accent);
 }
 
+/* Tooltip. `--surface-2` and the overlay elevation: it floats over a panel and has to be legible
+   against whatever it covers, which is why it is a step rather than the same surface. */
+[data-ds='tooltip'] {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
 /* Toast. `--surface-2` rather than `--surface`, because it floats above panels that are already
    `--surface` and two of the same step touching is the one thing this system's elevation model
    does not do. The glyph carries the tone and the text never does: a failure that is only red is

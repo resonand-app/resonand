@@ -101,5 +101,7 @@ export type { Tab, TabsProps } from './components/navigation/Tabs';
 export type { SidebarLibrary, SidebarProps } from './components/navigation/Sidebar';
 export { Toast } from './components/navigation/Toast';
 export type { ToastProps } from './components/navigation/Toast';
+export { Tooltip } from './components/navigation/Tooltip';
+export type { TooltipProps } from './components/navigation/Tooltip';
 export { TopNav } from './components/navigation/TopNav';
 export type { TopNavProps } from './components/navigation/TopNav';

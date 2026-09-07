@@ -147,10 +147,17 @@ describe('the interaction layer', () => {
   it('keeps interaction out of the components themselves', () => {
     // The other half of "stop trying to own state": a component that tracks the pointer in React
     // re-renders because a pointer moved, which is the cost this file exists to avoid.
+    //
+    // `Tooltip` is the one component allowed to know where a pointer is, and it is allowed
+    // because it is not painting: a tooltip's existence is the thing hovering decides, and no
+    // stylesheet can render an element that is not there. It uses the pointer events rather than
+    // the mouse ones, which is what this matcher permits and the rule below still forbids.
     const sources = Object.entries(SOURCES).filter(([path]) => !path.includes('.test.'));
     expect(sources.length).toBeGreaterThan(15);
     for (const [path, source] of sources) {
       expect(source, path).not.toMatch(/onMouseEnter|onMouseLeave|onMouseOver/);
+      if (path.endsWith('Tooltip.tsx')) continue;
+      expect(source, path).not.toMatch(/onPointerEnter|onPointerLeave/);
     }
   });
 });
