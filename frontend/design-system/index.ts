@@ -25,6 +25,7 @@ export { LIBRARY_COLORS } from './library-colors';
 export type { LibraryColorName } from './library-colors';
 export { TRANSCRIPTION_STATES, TRANSCRIPTION_STATE_NAMES } from './transcription-states';
 export type { TranscriptionState } from './transcription-states';
+export { prefersReducedMotion, scrollBehaviour, usePrefersReducedMotion } from './theme/reduced-motion';
 export { THEME_CHOICES, useTheme } from './theme/theme';
 export type { ResolvedTheme, ThemeChoice, ThemeState } from './theme/theme';
 export { ThemeProvider } from './theme/ThemeProvider';
