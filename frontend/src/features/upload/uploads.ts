@@ -24,11 +24,14 @@
 
 import { create } from 'zustand';
 
-import { patch } from '@/api/client';
+import { get, patch } from '@/api/client';
 import { ApiProblem, problemFrom, unreachable } from '@/api/problem';
 import type { components } from '@/api/schema';
 
+import { sha256Of } from './sha256';
+
 export type Recording = components['schemas']['AudioDetail'];
+export type DuplicateWarning = components['schemas']['DuplicateWarning'];
 
 /** Where a batch is going. Chosen once in the dialog and carried by every file in it. */
 export interface Destination {
@@ -47,7 +50,16 @@ export interface Destination {
 
 export type UploadStatus =
   /** Queued behind the ones before it. */
-  'waiting' | 'uploading' | 'done' | 'failed';
+  | 'waiting'
+  /** Being hashed, and asked about, before a byte goes (`UI-18d`). */
+  | 'checking'
+  /** This exact file is already here. Waiting for somebody to say what to do about it. */
+  | 'duplicate'
+  | 'uploading'
+  | 'done'
+  /** Deliberately not uploaded: the copy already here was restored, or the warning was heeded. */
+  | 'skipped'
+  | 'failed';
 
 export interface Upload {
   /** Stable for the life of the tray. The name is not: two files can be called the same thing. */
@@ -65,6 +77,8 @@ export interface Upload {
   error?: string;
   /** The recording it became, once it is one. */
   uuid?: string;
+  /** The recording that is already here, byte for byte, when there is one. */
+  duplicate?: DuplicateWarning;
 }
 
 export interface UploadsState {
@@ -73,6 +87,14 @@ export interface UploadsState {
   collapsed: boolean;
   /** Add files to the queue and start it if it is not already going. */
   add: (files: readonly File[], destination: Destination) => void;
+  /**
+   * Answer a duplicate warning: send it anyway, or leave it alone.
+   *
+   * Never a silent block (`DEC-16`): the warning names what is already here and this is how
+   * somebody overrules it. `skip` is also what the tray calls after restoring the copy that was
+   * in the trash, because at that point the file has been dealt with without being sent.
+   */
+  decide: (id: string, decision: 'upload' | 'skip') => void;
   /** Forget the finished ones. Refused while anything is still going. */
   clear: () => void;
   setCollapsed: (collapsed: boolean) => void;
@@ -105,6 +127,22 @@ export const useUploads = create<UploadsState>((set, get) => ({
     void drain();
   },
 
+  decide: (id, decision) => {
+    if (get().files.find((one) => one.id === id)?.status !== 'duplicate') return;
+    if (decision === 'skip') {
+      held.delete(id);
+      update(id, { status: 'skipped' });
+      return;
+    }
+    const file = held.get(id);
+    held.delete(id);
+    if (file === undefined) return;
+    update(id, { status: 'waiting' });
+    // Marked as decided, so the duplicate check does not stop it a second time on the way past.
+    pending.push({ file, id, anyway: true });
+    void drain();
+  },
+
   clear: () => {
     if (get().files.some((one) => one.status === 'waiting' || one.status === 'uploading')) return;
     set({ files: [] });
@@ -116,7 +154,15 @@ export const useUploads = create<UploadsState>((set, get) => ({
 }));
 
 /** The files themselves, beside the store rather than in it: a `File` is not state to render. */
-const pending: { file: File; id: string }[] = [];
+const pending: { file: File; id: string; anyway?: boolean }[] = [];
+
+/**
+ * Files waiting on a decision about a duplicate.
+ *
+ * Held here rather than left at the front of the queue: a warning nobody has answered must not
+ * stop the other twenty-nine files, and the `File` has to survive until somebody does answer.
+ */
+const held = new Map<string, File>();
 
 /** Change one file's row, by id, leaving the rest of the queue alone. */
 function update(id: string, change: Partial<Upload>): void {
@@ -135,8 +181,9 @@ async function drain(): Promise<void> {
       if (next === undefined) return;
       const row = useUploads.getState().files.find((one) => one.id === next.id);
       if (row === undefined) continue;
-      update(next.id, { status: 'uploading', sent: 0 });
       try {
+        if (next.anyway !== true && (await warn(next.id, next.file))) continue;
+        update(next.id, { status: 'uploading', sent: 0 });
         const recording = await send(row.library, next.file, row.transcribe, (sent) => {
           update(next.id, { sent });
         });
@@ -154,6 +201,38 @@ async function drain(): Promise<void> {
   } finally {
     running = false;
   }
+}
+
+/**
+ * Ask whether this exact file is already here, before a byte of it goes (`UI-18d`, `DEC-16`).
+ *
+ * **Before, and not after.** `GET /audio/{uuid}/duplicates` would answer the same question about a
+ * recording that has already been stored, and the offer this warning makes -- restore the copy
+ * that is in the trash instead -- would then produce the real duplicate the rule exists to
+ * prevent: a restored recording plus the one just uploaded.
+ *
+ * The hash is the price of asking first, and it is paid per file as its turn comes rather than for
+ * the whole batch up front, so the first file starts uploading while the thirtieth is still
+ * untouched.
+ *
+ * **A failure to check is not a failure to upload.** If the hash or the request goes wrong the
+ * file is sent: the duplicate warning is a courtesy the archive offers, and refusing somebody's
+ * recording because the courtesy failed would be the interface serving itself.
+ */
+async function warn(id: string, file: File): Promise<boolean> {
+  update(id, { status: 'checking' });
+  let found: DuplicateWarning[];
+  try {
+    const sha256 = await sha256Of(file);
+    found = await get('/api/audio/duplicates/{sha256}', { path: { sha256 } });
+  } catch {
+    return false;
+  }
+  const first = found[0];
+  if (first === undefined) return false;
+  held.set(id, file);
+  update(id, { status: 'duplicate', duplicate: first });
+  return true;
 }
 
 /**
