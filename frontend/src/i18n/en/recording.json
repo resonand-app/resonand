@@ -56,5 +56,21 @@
     "tagName": "Tag name",
     "tagSuggestions": "Tags already in use",
     "newTag": "Press Enter to make the tag {{tag}}."
+  },
+  "technical": {
+    "heading": "Technical",
+    "filename": "Original filename",
+    "mime": "Type",
+    "size": "Size",
+    "sampleRate": "Sample rate",
+    "hertz": "{{value}} Hz",
+    "channels": "Channels",
+    "channelCount_one": "{{count}} (mono)",
+    "channelCount_other": "{{count}}",
+    "codec": "Codec",
+    "hash": "SHA-256",
+    "copy": "Copy",
+    "copied": "Copied",
+    "unknown": "Not known yet"
   }
 }

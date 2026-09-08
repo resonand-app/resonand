@@ -13,6 +13,9 @@
  * library. `InlineField` draws that state itself, which is why it exists rather than being a
  * `TextField` with a flag.
  *
+ * **The technical fields are collapsed** (`UI-13d`), because a sample rate is a fact somebody
+ * looks up twice a year and everything above it is what they came for.
+ *
  * **A category is cleared with `clear_category`, never with a null** (`UI-13c`). In JSON a null
  * and "leave it alone" are the same value, and the endpoint reads them as such -- so the one flag
  * is what makes "no category" expressible at all.
@@ -35,6 +38,7 @@ import { CategoryPicker } from '@/features/library/CategoryPicker';
 import { recordedAt } from '@/i18n/time';
 
 import { TagEditor } from './TagEditor';
+import { TechnicalDetails } from './TechnicalDetails';
 import type { RecordingContext } from './data';
 import { useUpdateRecording } from './metadata';
 
@@ -108,6 +112,7 @@ export function MetadataPanel({ context }: { context: RecordingContext }) {
           update.mutate({ tags: names });
         }}
       />
+      <TechnicalDetails recording={recording} />
     </div>
   );
 }
