@@ -22,6 +22,13 @@
  * **Revoking says what the person loses, in numbers.** "Are you sure?" is not a consequence;
  * "Marta loses access to all 41 recordings" is.
  *
+ * **Adding somebody takes a whole address and nothing shorter** (`UI-17d`, `API-15`). The lookup
+ * matches the full normalised email and answers with at most one account, because a prefix or a
+ * name search would let any library manager enumerate the instance -- the same class of leak the
+ * ACL-filtered tag autocomplete exists to prevent. Sharing needs to confirm one address somebody
+ * was given out of band, and **the interface must not look like a directory**: no suggestions
+ * while typing, no list, and a field that says plainly it is not searching for people.
+ *
  * **`granted_by` is an id, and only some ids can be named.** The API sends the granter's user id
  * and no name, and the only people this screen can put a name to are the owner, the signed-in
  * account and the grantees themselves. When it cannot, the line says when rather than inventing a
@@ -32,11 +39,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useSession } from '@/app/session';
-import { Button, Dialog, LevelSelector, Modal } from '@/design-system';
+import { Button, Dialog, LevelSelector, Modal, TextField } from '@/design-system';
 import type { LevelOption } from '@/design-system';
 import { LEVEL } from '@/features/library/data';
 import { instant } from '@/i18n/time';
 
+import { useLookup } from './data';
 import type { Level, ShareEdits, ShareSummary, UserSummary } from './data';
 
 export interface SharePanelProps {
@@ -126,6 +134,8 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
         ))}
       </ul>
 
+      {canManage && <AddPerson levels={levels} shares={shares} edits={edits} />}
+
       {revoking !== null && (
         <Modal
           open
@@ -171,6 +181,86 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
         </Modal>
       )}
     </section>
+  );
+}
+
+/**
+ * The narrow lookup, and the grant it leads to.
+ *
+ * One address, one answer, and no list. The request is not made until what has been typed is a
+ * whole address, so somebody typing a colleague's name into it produces no requests at all rather
+ * than a request per keystroke about the people they work with.
+ */
+function AddPerson({
+  levels,
+  shares,
+  edits,
+}: {
+  levels: LevelOption[];
+  shares: readonly ShareSummary[];
+  edits: ShareEdits;
+}) {
+  const { t } = useTranslation('librarySettings');
+  const [email, setEmail] = useState('');
+  const [level, setLevel] = useState<Level>(LEVEL.read);
+  const { person, isPending } = useLookup(email);
+  const already = person !== undefined && shares.some((one) => one.grantee.id === person.id);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <h3 style={{ ...heading, fontWeight: 'var(--weight-medium)' }}>{t('add.title')}</h3>
+      <TextField
+        type="email"
+        label={t('add.email')}
+        value={email}
+        autoComplete="off"
+        maxLength={320}
+        onChange={(event) => {
+          setEmail(event.target.value);
+        }}
+      />
+      <span style={quiet}>{t('add.notADirectory')}</span>
+
+      {email.trim() !== '' && person === undefined && !isPending && (
+        <span style={quiet} role="status">
+          {t('add.nobody')}
+        </span>
+      )}
+
+      {person !== undefined && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+          <span style={{ fontSize: 'var(--type-ui-size)', color: 'var(--text)' }}>
+            {person.display_name}
+          </span>
+          {already ? (
+            <span style={quiet}>{t('add.already', { name: person.display_name })}</span>
+          ) : (
+            <>
+              <LevelSelector
+                levels={levels}
+                value={level}
+                label={t('add.whatTheyCanDo')}
+                onChange={(chosen) => {
+                  setLevel(chosen as Level);
+                }}
+              />
+              <div>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    edits.grant.mutate({ granteeId: person.id, level });
+                    setEmail('');
+                    setLevel(LEVEL.read);
+                  }}
+                >
+                  {t('add.share', { name: person.display_name })}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

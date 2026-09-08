@@ -45,5 +45,14 @@
     "revokeBody_one": "{{name}} loses access to the {{count}} recording in {{library}}.",
     "revokeBody_other": "{{name}} loses access to all {{count}} recordings in {{library}}.",
     "revokeConfirm": "Remove their access"
+  },
+  "add": {
+    "title": "Give somebody access",
+    "email": "Their email address",
+    "notADirectory": "The whole address, exactly. Sonarium does not search for people, and will not tell you who else has an account here.",
+    "nobody": "No account here has that address.",
+    "already": "{{name}} already has access. Change their level above.",
+    "whatTheyCanDo": "What they will be able to do",
+    "share": "Share with {{name}}"
   }
 }

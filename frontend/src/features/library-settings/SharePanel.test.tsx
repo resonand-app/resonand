@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toLibrarySettings } from '@/app/routes';
 import { AVIA, PERSONAL, archive } from '@/test/api/archive';
-import { mockApi } from '@/test/api/server';
+import { mockApi, server } from '@/test/api/server';
 
 import { LibrarySettingsView } from './LibrarySettingsView';
 
@@ -34,6 +34,63 @@ function show(uuid: string = AVIA) {
     </QueryClientProvider>,
   );
 }
+
+describe('giving somebody access', () => {
+  it('asks nothing until a whole address has been typed, so it cannot be a directory', async () => {
+    const asked: string[] = [];
+    server.events.on('request:start', ({ request }) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/api/users/lookup') asked.push(url.searchParams.get('email') ?? '');
+    });
+    show();
+    await userEvent.type(await screen.findByLabelText(/their email address/i), 'mar');
+    expect(asked).toEqual([]);
+    await userEvent.type(screen.getByLabelText(/their email address/i), 'ta@example.test');
+    await waitFor(() => {
+      expect(asked.at(-1)).toBe('marta@example.test');
+    });
+    // Only what is address-shaped is ever asked about. A name, or half of one, produces nothing:
+    // there is no request that could tell somebody whether an account exists for a prefix.
+    expect(asked.every((one) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(one))).toBe(true);
+  });
+
+  it('says it does not search for people, in as many words', async () => {
+    show();
+    expect(await screen.findByText(/does not search for people/i)).toBeVisible();
+  });
+
+  it('answers an address nobody has with a fact rather than with a list', async () => {
+    show();
+    await userEvent.type(
+      await screen.findByLabelText(/their email address/i),
+      'nobody@example.test',
+    );
+    expect(await screen.findByText('No account here has that address.')).toBeVisible();
+  });
+
+  it('grants at the level chosen, and only once the whole address matched', async () => {
+    show(PERSONAL);
+    await userEvent.type(
+      await screen.findByLabelText(/their email address/i),
+      'marta@example.test',
+    );
+    await userEvent.click(await screen.findByRole('button', { name: /Share with Marta/i }));
+    await waitFor(() => {
+      expect(archive.shares[PERSONAL]).toHaveLength(1);
+    });
+    expect(archive.shares[PERSONAL]?.[0]?.level).toBe(10);
+  });
+
+  it('does not offer to add somebody who is already there', async () => {
+    show();
+    await userEvent.type(
+      await screen.findByLabelText(/their email address/i),
+      'marta@example.test',
+    );
+    expect(await screen.findByText(/already has access/i)).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Share with Marta/i })).not.toBeInTheDocument();
+  });
+});
 
 describe('the sharing panel', () => {
   it('names the person, their address, and when it was shared', async () => {
