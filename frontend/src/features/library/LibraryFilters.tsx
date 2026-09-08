@@ -10,14 +10,15 @@
  * enough to use. `useUrlState` owns the shape; this row only decides which of its controls a
  * library needs.
  *
- * The controls arrive one task at a time: the category tree here, tags with `UI-8b`, the four
- * state toggles with `UI-8c`, and the sort and view switch with `UI-8d`.
+ * The controls arrive one task at a time: the category tree (`UI-8a`) and the tags (`UI-8b`) are
+ * here; the four state toggles come with `UI-8c`, and the sort and view switch with `UI-8d`.
  */
 
 import { useUrlState } from '@/app/url-state';
 import { FilterBar } from '@/components/FilterBar';
 
 import { CategoryPicker } from './CategoryPicker';
+import { TagPicker } from './TagPicker';
 import type { Category } from './recordings';
 
 export interface LibraryFiltersProps {
@@ -33,13 +34,21 @@ export function LibraryFilters({ categories, meta }: LibraryFiltersProps) {
     <FilterBar
       {...(meta === undefined ? {} : { meta })}
       filters={
-        <CategoryPicker
-          categories={categories}
-          value={filters.categoryId}
-          onChange={(categoryId) => {
-            set({ categoryId });
-          }}
-        />
+        <>
+          <CategoryPicker
+            categories={categories}
+            value={filters.categoryId}
+            onChange={(categoryId) => {
+              set({ categoryId });
+            }}
+          />
+          <TagPicker
+            value={filters.tags}
+            onChange={(tags) => {
+              set({ tags });
+            }}
+          />
+        </>
       }
     />
   );

@@ -33,6 +33,11 @@
   "filters": {
     "category": "Category",
     "anyCategory": "Any category",
-    "noCategories": "This library has no categories yet."
+    "noCategories": "This library has no categories yet.",
+    "addTag": "Tag",
+    "removeTag": "Stop filtering by {{tag}}",
+    "tagPrefix": "Tags starting with",
+    "tagSuggestions": "Tags",
+    "noTags": "No tags match that."
   }
 }

@@ -239,3 +239,39 @@ describe('the category filter', () => {
     expect(await screen.findByText(/no categories yet/)).toBeVisible();
   });
 });
+
+describe('the tag filter', () => {
+  it('suggests tags from the instance and puts the chosen one in the URL', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Tag' }));
+    // The suggestions are already ACL-filtered by the backend, so anything offered is a tag this
+    // account may see -- the interface does not filter them again.
+    await user.click(await screen.findByRole('button', { name: /memòria/ }));
+    expect(screen.getByTestId('where').textContent).toContain('tag=memoria');
+  });
+
+  it('shows what is on as a chip that can be taken off again', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Tag' }));
+    await user.click(await screen.findByRole('button', { name: /memòria/ }));
+    const remove = await screen.findByRole('button', { name: /Stop filtering by memoria/ });
+    await user.click(remove);
+    expect(screen.getByTestId('where').textContent).not.toContain('tag=');
+  });
+
+  it('does not offer a tag that is already narrowing the list', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Tag' }));
+    await user.click(await screen.findByRole('button', { name: /memòria/ }));
+    await user.click(screen.getByRole('button', { name: 'Tag' }));
+    const list = await screen.findByRole('list', { name: 'Tags' });
+    // A suggestion for a filter already applied is a row that does nothing.
+    expect(within(list).queryByRole('button', { name: /memòria/ })).toBeNull();
+  });
+});
