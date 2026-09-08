@@ -4,12 +4,25 @@ import type { TranscriptionState } from '../../transcription-states';
 import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
 import { IconButton } from '../forms/IconButton';
+import { Chip } from './Chip';
 import { StateBadge } from './StateBadge';
 
 export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
   name: string;
   /** Formatted duration, mono and tabular. */
   duration: string;
+  /**
+   * The recording's own date, formatted by the application (§1.3).
+   *
+   * A string, because the wall between a recording's wall-clock reading and an instant is the
+   * application's to hold: a row given a `Date` would be a row that could render the wrong
+   * evening.
+   */
+  date?: string;
+  /** The category's name, resolved against the library's tree by the caller. */
+  category?: string;
+  /** User-entered tags, shown verbatim. */
+  tags?: string[];
   state?: TranscriptionState;
   peaks?: Peaks | undefined;
   played?: number;
@@ -44,6 +57,9 @@ export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
 export function RecordingRow({
   name,
   duration,
+  date,
+  category,
+  tags = [],
   state = 'done',
   peaks,
   played = 0,
@@ -126,9 +142,27 @@ export function RecordingRow({
       >
         {name}
       </span>
-      <div style={{ width: 88, flex: '0 0 auto' }}>
+      <div data-column="waveform" style={{ width: 88, flex: '0 0 auto' }}>
         <Waveform peaks={peaks} size="dense" played={played} pending={pending} />
       </div>
+      {date !== undefined && (
+        <span
+          data-column="date"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--type-numeric-size)',
+            fontVariantNumeric: 'var(--type-numeric-variant)',
+            color: 'var(--text-3)',
+            width: 104,
+            flex: '0 0 auto',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {date}
+        </span>
+      )}
       <span
         style={{
           fontFamily: 'var(--font-mono)',
@@ -142,6 +176,42 @@ export function RecordingRow({
       >
         {duration}
       </span>
+      {category !== undefined && (
+        <span
+          data-column="category"
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+            width: 116,
+            flex: '0 0 auto',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {category}
+        </span>
+      )}
+      {tags.length > 0 && (
+        <span
+          data-column="tags"
+          style={{
+            display: 'flex',
+            gap: 4,
+            width: 148,
+            flex: '0 0 auto',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {/* One chip per tag, clipped rather than counted: a 36px row has no room for a `+N`
+              that would itself take the width of a tag, and the whole column goes at 900 anyway. */}
+          {tags.map((tag) => (
+            <Chip key={tag}>{tag}</Chip>
+          ))}
+        </span>
+      )}
     </div>
   );
 }

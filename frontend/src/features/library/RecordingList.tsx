@@ -29,10 +29,11 @@ import { BUCKETS, useWaveform } from '@/api/waveform';
 import { toRecording } from '@/app/routes';
 import { RecordingRow, RowSkeleton } from '@/design-system';
 import * as format from '@/i18n/format';
+import { recordedAt } from '@/i18n/time';
 import { playedFraction, usePlayback } from '@/player/store';
 
 import { transcriptionState } from './recordings';
-import type { Recording } from './recordings';
+import type { Categories, Recording } from './recordings';
 import { useRowCount, useRows } from './rows';
 
 /** `--row-height`. The virtualiser needs it as a number, and it is the token's value. */
@@ -43,6 +44,8 @@ const OVERSCAN = 8;
 
 export interface RecordingListProps {
   libraryUuid: string;
+  /** The library's category tree, for the column that names one. */
+  categories: Categories;
   /** The API query the rows are drawn from: the filters, without a window. */
   query: Record<string, unknown>;
   /** The library's name, which the player shows under the title (§3.1). */
@@ -51,7 +54,13 @@ export interface RecordingListProps {
   waveforms: boolean;
 }
 
-export function RecordingList({ libraryUuid, query, libraryName, waveforms }: RecordingListProps) {
+export function RecordingList({
+  libraryUuid,
+  categories,
+  query,
+  libraryName,
+  waveforms,
+}: RecordingListProps) {
   // The virtualiser measures a live DOM node and hands back functions whose results change
   // without its inputs changing, which is exactly what the React Compiler is entitled to assume
   // does not happen -- `react-hooks/incompatible-library` says so about this hook by name. The
@@ -114,7 +123,12 @@ export function RecordingList({ libraryUuid, query, libraryName, waveforms }: Re
                 {recording === undefined ? (
                   <RowSkeleton />
                 ) : (
-                  <Row recording={recording} libraryName={libraryName} waveforms={waveforms} />
+                  <Row
+                    recording={recording}
+                    category={categories.nameOf(recording.category_id)}
+                    libraryName={libraryName}
+                    waveforms={waveforms}
+                  />
                 )}
               </div>
             );
@@ -128,9 +142,9 @@ export function RecordingList({ libraryUuid, query, libraryName, waveforms }: Re
 /**
  * The column header.
  *
- * The columns are the four that never collapse plus the waveform; the ones that come and go with
- * the width -- tags, category, the date -- arrive with `UI-7b`, which is also where the collapse
- * order is decided. `UI-7d` makes these headings sort.
+ * Each heading over a column that can go carries the same `data-column` the cell does, so the two
+ * disappear together (`UI-7b`) -- a heading over a column that is not there names the wrong one.
+ * `UI-7d` makes these headings sort.
  */
 function Columns() {
   const { t } = useTranslation('library');
@@ -168,11 +182,20 @@ function Columns() {
       <span role="columnheader" style={{ flex: 1, minWidth: 0 }}>
         {t('list.title')}
       </span>
-      <span role="columnheader" style={{ width: 88, flex: '0 0 auto' }}>
+      <span role="columnheader" data-column="waveform" style={{ width: 88, flex: '0 0 auto' }}>
         {t('list.waveform')}
+      </span>
+      <span role="columnheader" data-column="date" style={{ width: 104, flex: '0 0 auto' }}>
+        {t('list.date')}
       </span>
       <span role="columnheader" style={{ width: 46, flex: '0 0 auto', textAlign: 'right' }}>
         {t('list.duration')}
+      </span>
+      <span role="columnheader" data-column="category" style={{ width: 116, flex: '0 0 auto' }}>
+        {t('list.category')}
+      </span>
+      <span role="columnheader" data-column="tags" style={{ width: 148, flex: '0 0 auto' }}>
+        {t('list.tags')}
       </span>
     </div>
   );
@@ -180,14 +203,16 @@ function Columns() {
 
 function Row({
   recording,
+  category,
   libraryName,
   waveforms,
 }: {
   recording: Recording;
+  category: string | undefined;
   libraryName: string;
   waveforms: boolean;
 }) {
-  const { t } = useTranslation('library');
+  const { t, i18n } = useTranslation('library');
   const navigate = useNavigate();
   const isCurrent = usePlayback((state) => state.recording?.uuid === recording.uuid);
   const isPlaying = usePlayback((state) => isCurrent && state.status === 'playing');
@@ -198,11 +223,15 @@ function Row({
     waveforms && recording.has_waveform,
   );
   const state = transcriptionState(recording.transcription_state);
+  const when = recordedAt(recording, i18n.language);
 
   return (
     <RecordingRow
       name={recording.title}
       duration={format.duration(recording.duration_ms)}
+      date={when.text}
+      {...(category === undefined ? {} : { category })}
+      tags={recording.tags.map((tag) => tag.name)}
       state={state}
       peaks={peaks}
       pending={pending}

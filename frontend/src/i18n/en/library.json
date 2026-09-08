@@ -25,6 +25,9 @@
     "state": "Transcript",
     "title": "Title",
     "waveform": "Shape",
-    "duration": "Length"
+    "duration": "Length",
+    "date": "Recorded",
+    "category": "Category",
+    "tags": "Tags"
   }
 }

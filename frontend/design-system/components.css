@@ -619,6 +619,47 @@
   text-decoration: underline;
 }
 
+/* The dense list's columns go one at a time as the width shrinks (`UI-7b`, §V4).
+ *
+ * Nine columns compressed together produce nine unreadable ones, so the list drops them in the
+ * order somebody needs them least: tags, then category, then the waveform, then the date. What
+ * survives every width is the irreducible row -- play, the transcription state, the title and the
+ * length -- and none of those has a rule here, which is how "never collapses" is written down.
+ *
+ * The thresholds are `--breakpoint-column-*` in `tokens/breakpoints.css`. A media query cannot
+ * read a custom property, so these numbers are repeated from there rather than declared here,
+ * exactly as that file's own note says they have to be.
+ *
+ * The rules cascade rather than each naming a band: below 700 the category and the tags are
+ * already gone, so the waveform's rule only has to say one thing. Bands would be four rules that
+ * each have to agree with the other three about the boundaries.
+ *
+ * The column header collapses with its column, because a heading over a column that is not there
+ * is worse than no heading -- it names the wrong one. */
+@media (max-width: 900px) {
+  [data-column='tags'] {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  [data-column='category'] {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  [data-column='waveform'] {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  [data-column='date'] {
+    display: none;
+  }
+}
+
 /* RecordingCard. Its elevation is here rather than inline because the playing variant below
    varies it, and `UI-32a`'s division of labour is not a preference: an inline box-shadow beats
    every stylesheet rule ever written, so a property this file needs to change has to leave the

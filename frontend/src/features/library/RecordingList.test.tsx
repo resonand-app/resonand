@@ -24,6 +24,9 @@ import { mockApi, server } from '@/test/api/server';
 import { LibraryView } from './LibraryView';
 import { pagesFor } from './rows';
 
+// The stylesheet as text: `vitest.config.ts` processes `?raw` for exactly this (`UI-32a`).
+import components from '@/design-system/components.css?raw';
+
 mockApi();
 
 afterEach(() => {
@@ -111,5 +114,45 @@ describe('the dense list', () => {
     const listing = asked.filter((url) => url.includes(`/libraries/${AVIA}/audio`));
     expect(listing.length).toBeGreaterThan(0);
     for (const url of listing) expect(url).toContain(`limit=${String(PAGE_SIZE)}`);
+  });
+});
+
+describe('which columns go, and in which order', () => {
+  /**
+   * Read off the stylesheet, because a media query is the one thing jsdom cannot answer: it
+   * reports every element as zero-width and matches no `@media` condition, so the collapse can
+   * only be checked as a claim the CSS makes. `interaction-layer.ts` reads the same file for the
+   * same reason.
+   */
+  const bands = [
+    ...components.matchAll(/@media \(max-width: (\d+)px\)\s*\{\s*\[data-column='([a-z]+)'\]/g),
+  ].map((found) => ({ width: Number(found[1]), column: found[2] }));
+
+  it('drops the four columns the specification names, and only those', () => {
+    expect(bands.map((band) => band.column)).toEqual(['tags', 'category', 'waveform', 'date']);
+  });
+
+  it('drops them at the four widths, widest first', () => {
+    expect(bands.map((band) => band.width)).toEqual([900, 800, 700, 620]);
+  });
+
+  it('leaves the irreducible row alone', () => {
+    // Title, length, transcription state and play never collapse, and the way that is written
+    // down is that no rule mentions them.
+    for (const column of ['title', 'duration', 'state', 'play']) {
+      expect(components).not.toContain(`[data-column='${column}']`);
+    }
+  });
+
+  it('collapses a heading with the column it names', async () => {
+    renderList();
+    await screen.findByRole('table');
+    // The heading carries the same marker as the cell, so the two go together -- a heading over a
+    // column that is not there names the wrong one.
+    for (const column of ['waveform', 'date', 'category', 'tags']) {
+      expect(
+        document.querySelector(`[role="columnheader"][data-column="${column}"]`),
+      ).not.toBeNull();
+    }
   });
 });

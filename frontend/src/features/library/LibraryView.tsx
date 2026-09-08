@@ -51,6 +51,7 @@ export function LibraryView() {
       {filters.view === 'list' ? (
         <RecordingList
           libraryUuid={uuid}
+          categories={categories}
           query={libraryQuery(filters)}
           libraryName={libraryName}
           waveforms={painted}
