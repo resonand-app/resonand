@@ -16,5 +16,21 @@
     "previous": "Previous",
     "next": "Next",
     "showing": "{{from}}-{{to}} of {{total}}"
+  },
+  "filters": {
+    "title": "Filters",
+    "open": "Filter",
+    "someOn_one": "{{count}} filter",
+    "someOn_other": "{{count}} filters",
+    "clear": "Clear the filters",
+    "library": "Which library",
+    "anyLibrary": "Any library",
+    "ranges": "When and how long",
+    "rangesOn_one": "When and how long ({{count}})",
+    "rangesOn_other": "When and how long ({{count}})",
+    "recordedFrom": "Recorded from",
+    "recordedTo": "Recorded to",
+    "longerThan": "Longer than (min)",
+    "shorterThan": "Shorter than (min)"
   }
 }

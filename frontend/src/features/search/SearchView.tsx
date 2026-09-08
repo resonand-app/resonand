@@ -32,6 +32,7 @@ import { Button, PageHeader, SearchField } from '@/design-system';
 import { count as formatCount } from '@/i18n/format';
 
 import { Results } from './Results';
+import { SearchFilters } from './SearchFilters';
 import { useSearch } from './data';
 
 export function SearchView() {
@@ -78,6 +79,7 @@ export function SearchView() {
           />
         </div>
       )}
+      <SearchFilters />
       <Results results={results.items} />
       {paginated && (
         <nav
