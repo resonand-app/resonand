@@ -17,14 +17,17 @@
  * news. That was a real bug and a test caught it.
  *
  * Move is the one action that opens a dialog, because it has consequences somebody has to have
- * been told about before it happens -- `UI-19` draws that. Until then it is not offered: an action
- * that silently loses a category is worse than one that is not there yet.
+ * been told about before it happens: it changes who can see the recordings, by name, and it loses
+ * their category. `MoveDialog` states all three and hands back a destination; the moving is done
+ * here, through the same `useBulk` run as the other three, so a selection where a third of the
+ * moves fail reports itself the way the rest of this bar does (`UI-19b`, `UI-9c`).
  */
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BulkBar } from '@/components/BulkBar';
+import { MoveDialog } from '@/components/MoveDialog';
 import { Button, Menu, StateCard, TextField } from '@/design-system';
 
 import { CategoryPicker } from './CategoryPicker';
@@ -58,6 +61,7 @@ export function LibraryBulkBar({
 }: LibraryBulkBarProps) {
   const { t } = useTranslation('library');
   const [tagging, setTagging] = useState(false);
+  const [moving, setMoving] = useState(false);
   const [tag, setTag] = useState('');
   const uuids = selected.map((one) => one.uuid);
 
@@ -98,9 +102,17 @@ export function LibraryBulkBar({
               <Menu
                 label={t('bulk.more')}
                 items={[
-                  { id: 'trash', label: t('bulk.trash'), icon: 'trash-2', destructive: true },
+                  { id: 'move', label: t('bulk.move') },
+                  {
+                    id: 'trash',
+                    label: t('bulk.trash'),
+                    icon: 'trash-2',
+                    destructive: true,
+                    separated: true,
+                  },
                 ]}
                 onSelect={(id) => {
+                  if (id === 'move') setMoving(true);
                   if (id === 'trash') void bulk.trash(uuids).then(after);
                 }}
               />
@@ -124,6 +136,19 @@ export function LibraryBulkBar({
           )
         }
       />
+      {moving && (
+        <MoveDialog
+          recordings={selected}
+          categoryName={(id) => categories.find((one) => one.id === id)?.name}
+          onClose={() => {
+            setMoving(false);
+          }}
+          onConfirm={(destination) => {
+            setMoving(false);
+            void bulk.move(uuids, destination).then(after);
+          }}
+        />
+      )}
       {tagging && (
         <div
           style={{

@@ -1,0 +1,26 @@
+{
+  "title_one": "Move this recording",
+  "title_other": "Move {{count}} recordings",
+  "destination": "Move to",
+  "choose": "Pick a library",
+  "confirm_one": "Move it",
+  "confirm_other": "Move them",
+  "nowhere": "There is nowhere to move this to. You can only add recordings to one library, and this is it.",
+  "access": {
+    "working": "Working out who this changes access for...",
+    "same": "The same people can see it. Both libraries are shared with exactly the same people.",
+    "gains_one": "{{names}} will be able to see it.",
+    "gains_other": "{{names}} will be able to see it.",
+    "loses_one": "{{names}} will no longer be able to see it.",
+    "loses_other": "{{names}} will no longer be able to see it."
+  },
+  "category": {
+    "lost_one": "It loses its category, {{names}}. Categories belong to the library they were made in.",
+    "lost_other": "They lose their categories ({{names}}). Categories belong to the library they were made in.",
+    "none_one": "It has no category to lose.",
+    "none_other": "None of them has a category to lose.",
+    "destinationHasNone": "The destination has no categories, so it arrives uncategorised."
+  },
+  "individual_one": "Anyone this recording was shared with individually keeps access, because that grant points at the recording rather than at the library.",
+  "individual_other": "Anyone these recordings were shared with individually keeps access, because those grants point at the recordings rather than at the library."
+}

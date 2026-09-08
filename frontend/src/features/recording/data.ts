@@ -38,6 +38,15 @@ export interface RecordingContext {
   categories: ReturnType<typeof useCategories>;
   /** Level 20 or above: the title, the notes, the category, the tags, and every action but one. */
   canEdit: boolean;
+  /**
+   * Level 30 or above **on the library**, which is what sharing needs.
+   *
+   * Access to a recording is granted on the library it is in (`UI-17`); sharing one recording on
+   * its own is not in v0. So the control that leads there is offered at the level that screen
+   * requires rather than at the level this one does -- offering it at 20 would be offering a
+   * screen the API refuses.
+   */
+  canShare: boolean;
   /** Level 10 exactly. The screen says so once and drops what it cannot offer (§3.5). */
   isReadOnly: boolean;
   /** In the trash: playable and restorable, never editable (`UI-11d`). */
@@ -62,15 +71,17 @@ export function useRecording(uuid: string): RecordingContext {
 
   const level = recording.data?.level ?? LEVEL.read;
   const trashed = recording.data?.deleted_at !== null && recording.data !== undefined;
+  const library = (libraries.data ?? []).find((one) => one.uuid === libraryUuid);
 
   return {
     recording: recording.data,
-    library: (libraries.data ?? []).find((one) => one.uuid === libraryUuid),
+    library,
     categoryName: categories.nameOf(recording.data?.category_id ?? null),
     categories,
     // A recording in the trash is not editable at any level: it can be played and put back, and
     // that is the whole of what the trashed band offers (§V5).
     canEdit: level >= LEVEL.edit && !trashed,
+    canShare: (library?.level ?? LEVEL.read) >= LEVEL.manage && !trashed,
     isReadOnly: recording.data !== undefined && level < LEVEL.edit,
     isTrashed: trashed,
     isPending: recording.isPending,
