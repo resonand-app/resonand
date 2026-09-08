@@ -61,6 +61,7 @@ export function Results({ results }: ResultsProps) {
           at: match.start_ms === null ? '' : timestamp(match.start_ms),
           text: marked(match.fragment),
           startMs: match.start_ms,
+          kind: match.kind === 'metadata' ? 'metadata' : 'transcript',
         }));
 
         return (

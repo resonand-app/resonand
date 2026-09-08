@@ -96,6 +96,39 @@ describe('playing from a match', () => {
   });
 });
 
+describe("a match in the recording's details", () => {
+  it('says what it is instead of offering a play it cannot perform (`UI-16f`)', () => {
+    // A title has no moment in a recording. A disabled play button would read as the interface
+    // failing to load something; saying where the match is reads as an answer.
+    show([
+      result({
+        matches: [
+          { kind: 'metadata', fragment: 'Sopar de <mark>Nadal</mark> 1998', start_ms: null },
+        ],
+      }),
+    ]);
+    const row = screen.getByText('In the details').parentElement;
+    expect(row).toBeInTheDocument();
+    // Nothing to press: not a button, not a transcript line, and no tab stop to land on.
+    expect(row?.closest('[role="button"]')).toBeNull();
+    expect(row?.closest('[data-ds="transcript-line"]')).toBeNull();
+  });
+
+  it('is in the same ranked list as the transcript matches, not a section of its own', () => {
+    show([
+      result({
+        total_matches: 2,
+        matches: [
+          { kind: 'transcript', fragment: 'la <mark>casa</mark> del carrer', start_ms: 61_000 },
+          { kind: 'metadata', fragment: 'Sopar de <mark>Nadal</mark>', start_ms: null },
+        ],
+      }),
+    ]);
+    expect(screen.getByText('01:01')).toBeInTheDocument();
+    expect(screen.getByText('In the details')).toBeInTheDocument();
+  });
+});
+
 describe('a result', () => {
   it('says where the recording lives, because results span libraries', async () => {
     show([result()]);

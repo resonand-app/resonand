@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button, StateBadge, TranscriptLine } from '@/design-system';
+import { Button, Icon, StateBadge, TranscriptLine } from '@/design-system';
 import type { TranscriptionState } from '@/design-system';
 
 export interface ResultMatch {
@@ -24,6 +24,13 @@ export interface ResultMatch {
    * interface deriving data from its own presentation.
    */
   startMs?: number | null;
+  /**
+   * Where it matched: inside the transcript, or in the recording's own details.
+   *
+   * The two arrive in one ranked list and are genuinely different things -- a title has no moment
+   * in a recording -- so the difference is carried rather than inferred from a missing timestamp.
+   */
+  kind?: 'transcript' | 'metadata';
 }
 
 export interface ResultGroupProps {
@@ -62,6 +69,12 @@ export interface ResultGroupProps {
  * The matched lines are `TranscriptLine`s, the same component the audio detail view uses, so a
  * line reads identically in the two places somebody meets it -- and clicking one seeks, here as
  * there.
+ *
+ * **A match in the recording's details is drawn as a different thing, not as a broken line**
+ * (`UI-16f`). Transcript and metadata matches come back in one ranked list, and a title has no
+ * moment in a recording to play from. Given a timestamp column it cannot fill and a play it cannot
+ * offer, the honest form is one that says what it is -- a match in the details -- rather than a
+ * greyed-out control that looks like the interface failing to load something.
  */
 export function ResultGroup({
   title,
@@ -129,21 +142,25 @@ export function ResultGroup({
         <StateBadge state={state} variant="glyph" />
       </header>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {visible.map((match) => (
-          <TranscriptLine
-            key={match.id}
-            at={match.at}
-            onClick={
-              onPlay === undefined
-                ? undefined
-                : () => {
-                    onPlay(match);
-                  }
-            }
-          >
-            {match.text}
-          </TranscriptLine>
-        ))}
+        {visible.map((match) =>
+          match.kind === 'metadata' || match.startMs === null ? (
+            <MetadataMatch key={match.id} match={match} />
+          ) : (
+            <TranscriptLine
+              key={match.id}
+              at={match.at}
+              onClick={
+                onPlay === undefined
+                  ? undefined
+                  : () => {
+                      onPlay(match);
+                    }
+              }
+            >
+              {match.text}
+            </TranscriptLine>
+          ),
+        )}
       </div>
       {rest > 0 && (
         <div>
@@ -153,5 +170,49 @@ export function ResultGroup({
         </div>
       )}
     </article>
+  );
+}
+
+/**
+ * A match in the title, the notes or a tag.
+ *
+ * No timestamp and nothing to press. It keeps the row shape of a transcript line so the ranked
+ * list reads as one list, and replaces the timestamp with what it is instead: a label, in the
+ * same mono column, saying the match is in the recording's details.
+ */
+function MetadataMatch({ match }: { match: ResultMatch }) {
+  const { t } = useTranslation();
+  return (
+    <div
+      data-app="metadata-match"
+      style={{ display: 'flex', gap: 12, padding: '7px 9px', alignItems: 'flex-start' }}
+    >
+      <span
+        style={{
+          flex: '0 0 auto',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 4,
+          fontFamily: 'var(--font-mono)',
+          fontSize: 'var(--type-numeric-size)',
+          color: 'var(--text-3)',
+        }}
+      >
+        <Icon name="tag" size={13} />
+        {t('search.inDetails')}
+      </span>
+      <span
+        style={{
+          flex: 1,
+          minWidth: 0,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'var(--type-ui-size)',
+          lineHeight: 'var(--type-body-leading)',
+          color: 'var(--text-2)',
+        }}
+      >
+        {match.text}
+      </span>
+    </div>
   );
 }
