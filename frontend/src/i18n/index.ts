@@ -28,6 +28,7 @@ import player from './en/player.json';
 import recording from './en/recording.json';
 import search from './en/search.json';
 import shell from './en/shell.json';
+import upload from './en/upload.json';
 import { pseudoBundle } from './pseudo';
 
 /** The language every string is written in, and the one every other one is checked against. */
@@ -50,9 +51,20 @@ export const NAMESPACES = [
   'recording',
   'search',
   'shell',
+  'upload',
 ] as const;
 
-const english = { common, libraries, library, move, player, recording, search, shell };
+const english = {
+  common,
+  libraries,
+  library,
+  move,
+  player,
+  recording,
+  search,
+  shell,
+  upload,
+};
 
 export const resources = {
   [BASE]: english,

@@ -1,0 +1,16 @@
+{
+  "dialog": {
+    "title": "Upload audio",
+    "drop": "Drop files here, or choose them",
+    "limit": "Up to {{size}} each.",
+    "formats": "Accepted: {{formats}}",
+    "video": "Video files are kept whole and played as audio, never as video.",
+    "chosen": "Files to upload",
+    "asAudio": "video, played as audio",
+    "refused_one": "{{names}} is not a format this archive ingests.",
+    "refused_other": "{{names}} are not formats this archive ingests.",
+    "submit_zero": "Upload",
+    "submit_one": "Upload {{count}} file",
+    "submit_other": "Upload {{count}} files"
+  }
+}

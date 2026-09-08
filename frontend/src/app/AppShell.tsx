@@ -23,6 +23,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { Shell, Sidebar, TopNav, useAnchoredOverlay } from '@/design-system';
 
 import { QuickHits } from '@/features/search/QuickHits';
+import { UploadDialog } from '@/features/upload/UploadDialog';
 import { MediaSession } from '@/player/MediaSession';
 import { PhonePlayer } from '@/player/PhonePlayer';
 import { Player } from '@/player/Player';
@@ -31,7 +32,7 @@ import { usePlayback } from '@/player/store';
 
 import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
-import { destinationOf, destinationTo, initialsOf } from './destinations';
+import { destinationOf, destinationTo, initialsOf, libraryIn } from './destinations';
 import { useLibraries, useTrashCount } from './library-data';
 import { queryIn, recordingIn, routes, toRecording, toSearch } from './routes';
 import { useSession } from './session';
@@ -62,6 +63,10 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   const { collapsed, toggle } = useSidebarCollapse();
   const isPhone = useIsPhone();
   const [uploading, setUploading] = useState(false);
+  // The upload dialog belongs to the frame, like the player and the tray: it is opened from the
+  // nav on any screen, and what it starts has to outlive the screen it was started from
+  // (`UI-18`, §3.3).
+  const [uploadOpen, setUploadOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   // What is in the field, which is not what is in the URL (`UI-16a`, §3.2). Typing opens the
   // quick hits; only `Enter` and the see-all row navigate. It is seeded from the address so that
@@ -166,7 +171,10 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
             setHitsFor(null);
             void navigate(toSearch(query), { replace: onSearch });
           }}
-          {...(onUpload ? { onUpload } : {})}
+          onUpload={() => {
+            onUpload?.();
+            setUploadOpen(true);
+          }}
           onProfile={() => {
             onProfile?.();
             setProfileOpen((open) => !open);
@@ -230,6 +238,15 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
       {...(tray ? { tray } : {})}
     >
       {children}
+      {/* Inside the frame rather than inside a view: closing it must not be able to stop what it
+          started, and neither must navigating away from wherever it was opened. */}
+      <UploadDialog
+        open={uploadOpen}
+        onClose={() => {
+          setUploadOpen(false);
+        }}
+        library={libraryIn(location.pathname)}
+      />
     </Shell>
   );
 }
