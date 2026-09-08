@@ -7,21 +7,25 @@
  * changing the bar's control have to be indistinguishable in effect -- and the cheapest way to
  * keep that true is for there to be one component that owns both.
  *
- * What arrives in later tasks: the dense list (`UI-7a`), the filter bar (`UI-8a`), selection and
- * the bulk bar (`UI-9a`), and the states (`UI-10a`).
+ * **Which density is in the URL** (`UI-4b`), so a dense list is a thing somebody can link to and
+ * reload into. The grid is the default, so only `?view=list` is ever written.
+ *
+ * What arrives in later tasks: the filter bar (`UI-8a`), selection and the bulk bar (`UI-9a`),
+ * and the states (`UI-10a`).
  */
 
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
-import { PAGE_SIZE, pageWindow } from '@/api/paged';
+import { PAGE_SIZE } from '@/api/paged';
 import { useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
 import { useAfterPaint } from '@/app/use-after-paint';
 
 import { LibraryHeader } from './LibraryHeader';
 import { RecordingGrid } from './RecordingGrid';
+import { RecordingList } from './RecordingList';
 import { useLibrary } from './data';
 import { libraryQuery, useCategories, useRecordings } from './recordings';
 
@@ -31,21 +35,34 @@ export function LibraryView() {
   const { filters } = useUrlState();
   const categories = useCategories(uuid);
   const painted = useAfterPaint();
-  const recordings = useRecordings(uuid, libraryQuery(filters, pageWindow(0, PAGE_SIZE)));
+  // The grid takes one page; the dense list windows over the whole library and so is handed the
+  // filters without a window of their own.
+  const recordings = useRecordings(uuid, libraryQuery(filters, { limit: PAGE_SIZE, offset: 0 }));
 
   if (context.error !== null && context.error !== undefined) {
     return <Unavailable error={context.error} onRetry={context.refetch} />;
   }
 
+  const libraryName = context.library?.name ?? '';
+
   return (
     <section>
       <LibraryHeader context={context} />
-      <RecordingGrid
-        recordings={recordings.items}
-        categories={categories}
-        libraryName={context.library?.name ?? ''}
-        waveforms={painted}
-      />
+      {filters.view === 'list' ? (
+        <RecordingList
+          libraryUuid={uuid}
+          query={libraryQuery(filters)}
+          libraryName={libraryName}
+          waveforms={painted}
+        />
+      ) : (
+        <RecordingGrid
+          recordings={recordings.items}
+          categories={categories}
+          libraryName={libraryName}
+          waveforms={painted}
+        />
+      )}
     </section>
   );
 }

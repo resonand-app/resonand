@@ -21,6 +21,8 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { WHOLE_SYSTEM } from './timeouts';
+
 import { ThemeProvider } from '@/design-system';
 /* The stylesheets as text. `?raw` rather than `readFileSync`: a test that renders belongs to the
    browser half of the codebase, and that half deliberately cannot see `node:fs`. */
@@ -66,7 +68,7 @@ function inlineClashes(): Set<string> {
   return clashes;
 }
 
-describe('the interaction layer', () => {
+describe('the interaction layer', WHOLE_SYSTEM, () => {
   it('ships, rather than sitting beside the stylesheet that ships', () => {
     // A stylesheet nothing imports is a stylesheet that is right and absent.
     expect(STYLES).toContain('components.css');

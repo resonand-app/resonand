@@ -3,6 +3,7 @@ import type { HTMLAttributes, KeyboardEvent } from 'react';
 import type { TranscriptionState } from '../../transcription-states';
 import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
+import { IconButton } from '../forms/IconButton';
 import { StateBadge } from './StateBadge';
 
 export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
@@ -15,7 +16,20 @@ export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
   pending?: boolean;
   /** Row is the current selection or the playing recording. */
   selected?: boolean;
+  /** Whether this is the recording the player is playing (`UI-7a`). */
+  playing?: boolean;
   onOpen?: () => void;
+  /**
+   * Play this recording. Present in the dense list, where play is one of the four columns that
+   * never collapse (§V4), and absent in a specimen that is only showing the row's shape.
+   */
+  onPlay?: () => void;
+  /** The copy, for an application that has its own (`UI-22a`). */
+  labels?: {
+    play?: (name: string) => string;
+    pause?: (name: string) => string;
+    state?: string;
+  };
 }
 
 /**
@@ -35,7 +49,10 @@ export function RecordingRow({
   played = 0,
   pending = false,
   selected = false,
+  playing = false,
   onOpen,
+  onPlay,
+  labels,
   onKeyDown,
   style,
   ...rest
@@ -59,6 +76,7 @@ export function RecordingRow({
       tabIndex={interactive ? 0 : undefined}
       data-ds="recording-row"
       data-selected={selected ? 'true' : undefined}
+      data-playing={playing ? 'true' : undefined}
       style={{
         height: 'var(--row-height)',
         display: 'flex',
@@ -71,7 +89,29 @@ export function RecordingRow({
       }}
       {...rest}
     >
-      <StateBadge state={state} variant="glyph" />
+      {onPlay !== undefined && (
+        <IconButton
+          icon={playing ? 'pause' : 'play'}
+          variant="ghost"
+          size={26}
+          label={
+            playing
+              ? (labels?.pause?.(name) ?? `Pause ${name}`)
+              : (labels?.play?.(name) ?? `Play ${name}`)
+          }
+          onClick={(event) => {
+            // The row opens the recording and the button plays it. Without this the button would
+            // do both, and a click on play would leave the list it was meant to keep you in.
+            event.stopPropagation();
+            onPlay();
+          }}
+        />
+      )}
+      <StateBadge
+        state={state}
+        variant="glyph"
+        {...(labels?.state === undefined ? {} : { label: labels.state })}
+      />
       <span
         style={{
           fontFamily: 'var(--font-sans)',

@@ -36,7 +36,7 @@ export type Category = components['schemas']['CategorySummary'];
  */
 export function libraryQuery(
   filters: UrlFilters,
-  window: { limit: number; offset: number },
+  window?: { limit: number; offset: number },
 ): Record<string, unknown> {
   return {
     ...(filters.categoryId === undefined ? {} : { category_id: filters.categoryId }),
@@ -44,7 +44,9 @@ export function libraryQuery(
     ...(filters.states.length > 0 ? { transcription_state: filters.states } : {}),
     sort: filters.sort,
     direction: filters.direction,
-    ...window,
+    // The window is the caller's: the grid asks for one page, and the dense list windows over the
+    // whole library itself and so passes none.
+    ...(window ?? {}),
   };
 }
 

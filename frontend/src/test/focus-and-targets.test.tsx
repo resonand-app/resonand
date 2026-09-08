@@ -22,6 +22,8 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { WHOLE_SYSTEM } from './timeouts';
+
 import { ThemeProvider } from '@/design-system';
 import CSS from '@/design-system/components.css?raw';
 import Specimens from '@/dev/Specimens';
@@ -71,16 +73,6 @@ function describeElement(element: HTMLElement): string {
   const name = label ?? element.textContent.slice(0, 30);
   return `${element.tagName.toLowerCase()} in ${owner} (${name.trim()})`;
 }
-
-/**
- * These render the whole system at once, so they are given more than the default 5 s.
- *
- * The rest of the suite is component-sized and 5 s is a generous ceiling for it -- a raise across
- * the board would stop a genuinely hung test from being reported as one. These three mount every
- * component in `design-system/` in one tree, which takes a couple of seconds on its own and more
- * than five when sixty test files are competing for the machine.
- */
-const WHOLE_SYSTEM = { timeout: 30_000 };
 
 describe('the focus treatment', WHOLE_SYSTEM, () => {
   it('is one treatment, and it is the one the specification names', () => {

@@ -18,5 +18,13 @@
     "moreTags": "+{{count}}",
     "sharedIndividually": "Shared on its own, apart from this library",
     "pause": "Pause {{name}}"
+  },
+  "list": {
+    "label": "Recordings",
+    "play": "Play",
+    "state": "Transcript",
+    "title": "Title",
+    "waveform": "Shape",
+    "duration": "Length"
   }
 }
