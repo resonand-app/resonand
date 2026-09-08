@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 import { Icon } from '../foundation/Icon';
 
@@ -6,8 +6,13 @@ export interface SearchHit {
   /** "recording" shows a transcript excerpt; "library" shows a library. */
   kind?: 'recording' | 'library';
   title: string;
-  /** Matching transcript line, or the library's own metadata. */
-  excerpt?: string;
+  /**
+   * Matching transcript line, or the library's own metadata.
+   *
+   * A node rather than a string, because the fragment arrives from the database with the matched
+   * term already marked and §V6 asks for that marking to be rendered rather than re-derived.
+   */
+  excerpt?: ReactNode;
   /** Timestamp of the match inside the recording, e.g. "18:04". */
   at?: string;
 }
@@ -19,6 +24,14 @@ export interface SearchResultsProps extends HTMLAttributes<HTMLDivElement> {
   query?: string;
   onOpen?: (hit: SearchHit) => void;
   onSeeAll?: () => void;
+  /**
+   * The copy, for an application that has its own (`UI-22a`).
+   *
+   * The see-all row is the one sentence in this component a person reads, and it carries two
+   * numbers and the query -- so it is a finished string the caller formats, not a template with
+   * holes for the system to fill in an order some other language does not use.
+   */
+  labels?: { seeAll?: string };
 }
 
 /**
@@ -34,6 +47,7 @@ export function SearchResults({
   query = '',
   onOpen,
   onSeeAll,
+  labels,
   style,
   ...rest
 }: SearchResultsProps) {
@@ -136,7 +150,7 @@ export function SearchResults({
             textAlign: 'left',
           }}
         >
-          All {total} results for “{query}”
+          {labels?.seeAll ?? `All ${String(total ?? 0)} results for “${query}”`}
         </span>
         <span
           style={{

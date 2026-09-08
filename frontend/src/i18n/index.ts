@@ -26,6 +26,7 @@ import library from './en/library.json';
 import move from './en/move.json';
 import player from './en/player.json';
 import recording from './en/recording.json';
+import search from './en/search.json';
 import shell from './en/shell.json';
 import { pseudoBundle } from './pseudo';
 
@@ -47,10 +48,11 @@ export const NAMESPACES = [
   'move',
   'player',
   'recording',
+  'search',
   'shell',
 ] as const;
 
-const english = { common, libraries, library, move, player, recording, shell };
+const english = { common, libraries, library, move, player, recording, search, shell };
 
 export const resources = {
   [BASE]: english,

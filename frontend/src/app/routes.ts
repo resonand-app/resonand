@@ -39,6 +39,11 @@ export function toSearch(query: string, filters?: URLSearchParams): string {
   return rendered ? `${routes.search}?${rendered}` : routes.search;
 }
 
+/** What a query string is asking for, so the nav field can say what the screen is showing. */
+export function queryIn(search: string): string {
+  return new URLSearchParams(search).get('q') ?? '';
+}
+
 /**
  * The recording a path is showing, if it is showing one (`UI-11b`, §3.1).
  *

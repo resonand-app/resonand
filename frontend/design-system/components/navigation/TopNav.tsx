@@ -1,4 +1,4 @@
-import type { ChangeEvent, HTMLAttributes, ReactNode, Ref } from 'react';
+import type { ChangeEvent, HTMLAttributes, KeyboardEvent, ReactNode, Ref } from 'react';
 
 import { Logo } from '../foundation/Logo';
 import { Button } from '../forms/Button';
@@ -12,6 +12,15 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
   query?: string;
   /** Called as the search field is typed into. */
   onQueryChange?: (query: string) => void;
+  /**
+   * `Enter` in the search field.
+   *
+   * The one key this component answers itself, because §3.2 gives it a meaning that belongs to
+   * the field rather than to the page: the dropdown is the three-second case and `Enter` is how
+   * somebody leaves it for the full results. The global handler cannot have it -- a binding that
+   * fired while somebody was typing would be a binding that fired on every other field too.
+   */
+  onQuerySubmit?: () => void;
   onToggleSidebar?: () => void;
   onUpload?: () => void;
   onProfile?: () => void;
@@ -70,6 +79,7 @@ export function TopNav({
   initials = '',
   query,
   onQueryChange,
+  onQuerySubmit,
   onToggleSidebar,
   onUpload,
   onProfile,
@@ -113,6 +123,11 @@ export function TopNav({
             {...(labels?.search === undefined ? {} : { placeholder: labels.search })}
             onChange={(event: ChangeEvent<HTMLInputElement>) => {
               onQueryChange?.(event.target.value);
+            }}
+            onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+              if (event.key !== 'Enter') return;
+              event.preventDefault();
+              onQuerySubmit?.();
             }}
           />
           {children}

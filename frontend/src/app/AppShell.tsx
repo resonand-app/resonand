@@ -22,6 +22,7 @@ import { useLocation, useNavigate } from 'react-router';
 
 import { Shell, Sidebar, TopNav, useAnchoredOverlay } from '@/design-system';
 
+import { QuickHits } from '@/features/search/QuickHits';
 import { MediaSession } from '@/player/MediaSession';
 import { PhonePlayer } from '@/player/PhonePlayer';
 import { Player } from '@/player/Player';
@@ -32,7 +33,7 @@ import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
 import { destinationOf, destinationTo, initialsOf } from './destinations';
 import { useLibraries, useTrashCount } from './library-data';
-import { recordingIn, routes, toSearch } from './routes';
+import { queryIn, recordingIn, routes, toRecording, toSearch } from './routes';
 import { useSession } from './session';
 import { SEEK_SECONDS, SKIP_SECONDS } from './keyboard';
 import { useIsPhone } from './use-is-phone';
@@ -62,6 +63,15 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   const isPhone = useIsPhone();
   const [uploading, setUploading] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  // What is in the field, which is not what is in the URL (`UI-16a`, §3.2). Typing opens the
+  // quick hits; only `Enter` and the see-all row navigate. It is seeded from the address so that
+  // arriving at `/search?q=avia` -- from a link, a reload, or the phone's Search tab -- leaves
+  // the field saying what is on the screen.
+  const [query, setQuery] = useState(() => queryIn(location.search));
+  // Where the dropdown was opened rather than whether it is: a navigation is what closes it, and
+  // remembering the path it belongs to is what makes that a fact about the render instead of an
+  // effect that fires after the next screen has already been drawn under it.
+  const [hitsFor, setHitsFor] = useState<string | null>(null);
   // The account menu hangs off the avatar, and the system's positioning is what makes it flip
   // when it runs out of room, close on Escape and close on a pointer outside it (`UI-34a`).
   const profile = useAnchoredOverlay<HTMLButtonElement>({
@@ -73,6 +83,9 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
     align: 'end',
   });
   const search = useRef<HTMLInputElement>(null);
+  // Whether the full results are already the screen. The field means something different there.
+  const onSearch = location.pathname === routes.search;
+  const hitsOpen = hitsFor === location.pathname;
 
   // The audio element is connected once, by the frame, and never by a view. It is outside React
   // and outside the routes, which is what "survives every navigation" means in code (`UI-5b`).
@@ -86,6 +99,15 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
       search.current?.focus();
       search.current?.select();
     },
+    // Only while there is a dropdown to close. `useKeyboard` ignores a command nobody answers,
+    // so `Escape` stays whatever the view under it makes of it the rest of the time.
+    ...(hitsOpen
+      ? {
+          dismiss: () => {
+            setHitsFor(null);
+          },
+        }
+      : {}),
     'play-pause': () => {
       usePlayback.getState().toggle();
     },
@@ -129,9 +151,20 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
       nav={
         <TopNav
           initials={initialsOf(account?.display_name)}
+          query={query}
           onToggleSidebar={toggle}
-          onQueryChange={(query) => {
-            void navigate(toSearch(query), { replace: location.pathname === routes.search });
+          onQueryChange={(typed) => {
+            setQuery(typed);
+            // On the search screen the field drives the results directly and there is no
+            // dropdown: a box of five hits drawn over the page that already lists them is one
+            // surface hiding another. Anywhere else, typing opens the quick hits and changes no
+            // address until somebody asks it to.
+            if (onSearch) void navigate(toSearch(typed), { replace: true });
+            else setHitsFor(typed.trim() === '' ? null : location.pathname);
+          }}
+          onQuerySubmit={() => {
+            setHitsFor(null);
+            void navigate(toSearch(query), { replace: onSearch });
           }}
           {...(onUpload ? { onUpload } : {})}
           onProfile={() => {
@@ -156,7 +189,21 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
               />
             ) : null
           }
-        />
+        >
+          {hitsOpen && !onSearch && (
+            <QuickHits
+              query={query}
+              onOpen={(uuid) => {
+                setHitsFor(null);
+                void navigate(toRecording(uuid));
+              }}
+              onSeeAll={() => {
+                setHitsFor(null);
+                void navigate(toSearch(query));
+              }}
+            />
+          )}
+        </TopNav>
       }
       sidebar={
         <Sidebar

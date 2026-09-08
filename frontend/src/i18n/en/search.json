@@ -1,0 +1,6 @@
+{
+  "quick": {
+    "seeAll_one": "All {{count}} result for \"{{query}}\"",
+    "seeAll_other": "All {{count}} results for \"{{query}}\""
+  }
+}
