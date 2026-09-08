@@ -15,7 +15,8 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PAGE_SIZE } from '@/api/paged';
@@ -68,13 +69,20 @@ function measured(height = 720) {
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(height);
 }
 
-function renderList(uuid: string = AVIA) {
+/** The address, so a test can assert what a control put in it (`UI-4b`). */
+function Where() {
+  const location = useLocation();
+  return <div data-testid="where">{location.pathname + location.search}</div>;
+}
+
+function renderList(uuid: string = AVIA, search = '?view=list') {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
     <QueryClientProvider client={client}>
       <ThemeProvider>
-        <MemoryRouter initialEntries={[`${toLibrary(uuid)}?view=list`]}>
+        <MemoryRouter initialEntries={[`${toLibrary(uuid)}${search}`]}>
+          <Where />
           <Routes>
             <Route path="/library/:uuid" element={<LibraryView />} />
           </Routes>
@@ -246,5 +254,75 @@ describe('the waveform column', () => {
     // and the token's value lives in `tokens/shape.css` -- where `design-system-tokens.node.test`
     // is what holds it to 20px. Nothing in the row or the list repeats the number.
     expect(HEIGHT_TOKEN.dense).toBe('--wave-height-dense');
+  });
+});
+
+describe('sorting from a column heading', () => {
+  it('is the same sort as the bar, written to the same place', async () => {
+    const user = userEvent.setup();
+    renderList();
+    await screen.findByRole('table');
+    await user.click(screen.getByRole('button', { name: /^Title/ }));
+    // Neither the heading nor the bar's control holds a sort of its own: both write these two
+    // parameters, which is what makes them indistinguishable in effect (§V4).
+    const where = screen.getByTestId('where').textContent;
+    expect(where).toContain('sort=title');
+    expect(where).toContain('direction=asc');
+  });
+
+  it('flips a column that is already sorted rather than starting over', async () => {
+    const user = userEvent.setup();
+    renderList();
+    await screen.findByRole('table');
+    await user.click(screen.getByRole('button', { name: /^Title/ }));
+    await user.click(screen.getByRole('button', { name: /^Title/ }));
+    // Descending is the API's default, so the address stops mentioning the direction rather than
+    // spelling it out -- the sort is still title, the other way round.
+    expect(screen.getByRole('columnheader', { name: /Title/ })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    );
+    expect(screen.getByTestId('where').textContent).toContain('sort=title');
+    expect(screen.getByTestId('where').textContent).not.toContain('direction=');
+  });
+
+  it('says which column is sorted, and which way, to a screen reader too', async () => {
+    const user = userEvent.setup();
+    renderList();
+    await screen.findByRole('table');
+    // Recorded, newest first, is the default -- so that heading is already sorted before anything
+    // has been clicked, and the arrow and `aria-sort` are the same fact for two readers.
+    expect(screen.getByRole('columnheader', { name: /Recorded/ })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    );
+    await user.click(screen.getByRole('button', { name: /^Length/ }));
+    expect(screen.getByRole('columnheader', { name: /Length/ })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    );
+    expect(screen.getByRole('columnheader', { name: /Recorded/ })).toHaveAttribute(
+      'aria-sort',
+      'none',
+    );
+  });
+
+  it('shows the sort the bar set, without having been clicked itself', async () => {
+    renderList(AVIA, '?view=list&sort=title&direction=asc');
+    await screen.findByRole('table');
+    expect(screen.getByRole('columnheader', { name: /Title/ })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    );
+  });
+
+  it('leaves the columns the API cannot sort by as labels', async () => {
+    renderList();
+    await screen.findByRole('table');
+    // A heading that looks pressable and does nothing is worse than one that plainly is not.
+    for (const column of ['Shape', 'Category', 'Tags']) {
+      const heading = screen.getByRole('columnheader', { name: column });
+      expect(heading.querySelector('button')).toBeNull();
+    }
   });
 });

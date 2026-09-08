@@ -18,16 +18,25 @@
  * screen reader reads the list as a table rather than as eight hundred buttons -- and it stays on
  * screen, because a column somebody has scrolled two hundred rows past is a column they can no
  * longer name.
+ *
+ * **A sortable heading and the filter bar's control are one sort** (`UI-7d`, §V4). Neither holds
+ * a sort of its own: both write `sort` and `direction` to the URL and read them back, so clicking
+ * a heading and choosing in the bar are indistinguishable in effect, and the arrow on the heading
+ * is right even when the bar was what changed it. `aria-sort` says the same thing to a screen
+ * reader that the arrow says to everybody else.
  */
 
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
 import { toRecording } from '@/app/routes';
-import { RecordingRow, RowSkeleton } from '@/design-system';
+import { useUrlState } from '@/app/url-state';
+import type { SortDirection, SortField } from '@/app/url-state';
+import { Icon, RecordingRow, RowSkeleton } from '@/design-system';
 import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 import { playedFraction, usePlayback } from '@/player/store';
@@ -147,10 +156,35 @@ export function RecordingList({
  *
  * Each heading over a column that can go carries the same `data-column` the cell does, so the two
  * disappear together (`UI-7b`) -- a heading over a column that is not there names the wrong one.
- * `UI-7d` makes these headings sort.
+ * The four headings the API can sort by are buttons (`UI-7d`); the rest are labels, because a
+ * heading that looks pressable and does nothing is worse than one that plainly is not.
  */
 function Columns() {
   const { t } = useTranslation('library');
+  const { filters, set } = useUrlState();
+
+  const sortBy = (field: SortField) => {
+    // A heading already sorted flips its direction; a new one starts in the direction that reads
+    // as "most interesting first" for what it holds -- newest, longest, and A to Z.
+    const direction: SortDirection =
+      filters.sort === field
+        ? filters.direction === 'desc'
+          ? 'asc'
+          : 'desc'
+        : field === 'title'
+          ? 'asc'
+          : 'desc';
+    set({ sort: field, direction });
+  };
+
+  const sortable = (field: SortField) => ({
+    sort: filters.sort === field ? filters.direction : undefined,
+    onSort: () => {
+      sortBy(field);
+    },
+    hint: t(directionHint(field, filters.sort === field ? filters.direction : undefined)),
+  });
+
   return (
     <div
       role="row"
@@ -182,18 +216,21 @@ function Columns() {
         style={{ width: 15, flex: '0 0 auto' }}
         aria-label={t('list.state')}
       />
-      <span role="columnheader" style={{ flex: 1, minWidth: 0 }}>
-        {t('list.title')}
-      </span>
+      <Heading label={t('list.title')} style={{ flex: 1, minWidth: 0 }} {...sortable('title')} />
       <span role="columnheader" data-column="waveform" style={{ width: 88, flex: '0 0 auto' }}>
         {t('list.waveform')}
       </span>
-      <span role="columnheader" data-column="date" style={{ width: 104, flex: '0 0 auto' }}>
-        {t('list.date')}
-      </span>
-      <span role="columnheader" style={{ width: 46, flex: '0 0 auto', textAlign: 'right' }}>
-        {t('list.duration')}
-      </span>
+      <Heading
+        label={t('list.date')}
+        column="date"
+        style={{ width: 104, flex: '0 0 auto' }}
+        {...sortable('recorded_at')}
+      />
+      <Heading
+        label={t('list.duration')}
+        style={{ width: 46, flex: '0 0 auto', justifyContent: 'flex-end' }}
+        {...sortable('duration_ms')}
+      />
       <span role="columnheader" data-column="category" style={{ width: 116, flex: '0 0 auto' }}>
         {t('list.category')}
       </span>
@@ -201,6 +238,71 @@ function Columns() {
         {t('list.tags')}
       </span>
     </div>
+  );
+}
+
+/** What pressing a heading will do, which is what its accessible name has to say (`UI-8d`). */
+function directionHint(field: SortField, current: SortDirection | undefined): string {
+  if (current === undefined) return field === 'title' ? 'sort.toAscending' : 'sort.toDescending';
+  return current === 'desc' ? 'sort.toAscending' : 'sort.toDescending';
+}
+
+/**
+ * One sortable column heading.
+ *
+ * `aria-sort` on the cell and the arrow inside it are the same fact twice, for two different
+ * readers. The button carries what pressing it will do rather than what the column currently is,
+ * for the reason the bar's direction control does.
+ */
+function Heading({
+  label,
+  column,
+  sort,
+  hint,
+  onSort,
+  style,
+}: {
+  label: string;
+  column?: string;
+  sort: SortDirection | undefined;
+  hint: string;
+  onSort: () => void;
+  style?: CSSProperties;
+}) {
+  return (
+    <span
+      role="columnheader"
+      aria-sort={sort === undefined ? 'none' : sort === 'asc' ? 'ascending' : 'descending'}
+      {...(column === undefined ? {} : { 'data-column': column })}
+      style={style}
+    >
+      <button
+        type="button"
+        data-ds="column-heading"
+        onClick={onSort}
+        aria-label={`${label}: ${hint}`}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+          width: '100%',
+          border: 'none',
+          background: 'transparent',
+          padding: 0,
+          font: 'inherit',
+          letterSpacing: 'inherit',
+          textTransform: 'inherit',
+          color: sort === undefined ? 'inherit' : 'var(--text-2)',
+          cursor: 'pointer',
+          justifyContent: style?.justifyContent,
+        }}
+      >
+        {label}
+        {sort !== undefined && (
+          <Icon name={sort === 'desc' ? 'chevron-down' : 'chevron-up'} size={13} />
+        )}
+      </button>
+    </span>
   );
 }
 
