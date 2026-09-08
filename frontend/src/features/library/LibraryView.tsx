@@ -15,13 +15,17 @@
  * is a mode: while one exists, the question on screen is what to do with these, not which others
  * to find.
  *
- * **Selection is offered only where something can be done with it.** A read-only library has no
- * checkboxes at all rather than checkboxes that lead to a disabled bar (§3.5): what somebody
- * cannot do is absent, because a disabled row of actions reads as a bug and its absence reads as
- * a decision. `UI-10c` finishes that thought for the rest of the screen.
+ * **A library you can only read is a different screen, and it has to look intentional** (`UI-10c`,
+ * §3.5). No checkboxes, so no bulk bar; no Settings; no invitation to upload. Every one of those
+ * is absent rather than disabled, because a disabled row of controls reads as a bug and their
+ * absence reads as a decision -- and one quiet line at the top says why, once. What stays is
+ * everything the screen is for: the recordings, the filters, the sort, the two densities, and
+ * play.
  *
- * What arrives in later tasks: the bulk actions themselves (`UI-9b`), partial failure (`UI-9c`),
- * the keyboard (`UI-9d`), and the states (`UI-10a`).
+ * **The states are the work, not the happy path** (`UI-10a`, `UI-10b`, `UI-10c`). Two empty states
+ * that have to stay different, skeletons at whichever density is on screen, an error that leaves
+ * the player alone, and a read-only version of the screen that has to look intentional rather
+ * than broken.
  */
 
 import { useState } from 'react';
@@ -31,11 +35,12 @@ import { useParams } from 'react-router';
 import { isApiProblem } from '@/api/problem';
 import { PAGE_SIZE } from '@/api/paged';
 import { useKeyboard } from '@/app/useKeyboard';
-import { useUrlState } from '@/app/url-state';
+import { isFiltered, useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
 import { useAfterPaint } from '@/app/use-after-paint';
 
 import { LibraryFilters } from './LibraryFilters';
+import { ListFailed, Loading, NothingMatched, NothingYet } from './LibraryStates';
 import { LibraryHeader } from './LibraryHeader';
 import { BulkReport, LibraryBulkBar } from './LibraryBulkBar';
 import { RecordingGrid } from './RecordingGrid';
@@ -48,7 +53,7 @@ import { useBulk } from './use-bulk';
 export function LibraryView() {
   const { uuid = '' } = useParams();
   const context = useLibrary(uuid);
-  const { filters } = useUrlState();
+  const { filters, clear } = useUrlState();
   const categories = useCategories(uuid);
   const painted = useAfterPaint();
   // The grid takes one page; the dense list windows over the whole library and so is handed the
@@ -89,6 +94,56 @@ export function LibraryView() {
       }
     : undefined;
 
+  /**
+   * Which of the six things this screen can be.
+   *
+   * The order is the one that keeps the two empty states apart: a library with nothing in it is
+   * asked about before the filter is, because `total` is zero either way and only the filter
+   * tells them apart (§3.5).
+   */
+  function body() {
+    if (recordings.error !== null) {
+      return (
+        <ListFailed
+          error={recordings.error}
+          onRetry={() => {
+            void recordings.refetch();
+          }}
+        />
+      );
+    }
+    if (recordings.isPending) return <Loading dense={filters.view === 'list'} />;
+    if (recordings.items.length === 0) {
+      return isFiltered(filters) ? (
+        <NothingMatched
+          total={context.library?.audio_count ?? 0}
+          filters={filters}
+          onClear={clear}
+        />
+      ) : (
+        <NothingYet canEdit={context.canEdit} />
+      );
+    }
+    return filters.view === 'list' ? (
+      <RecordingList
+        libraryUuid={uuid}
+        categories={categories}
+        query={libraryQuery(filters)}
+        libraryName={libraryName}
+        waveforms={painted}
+        {...(selectable === undefined ? {} : { selection: selectable })}
+      />
+    ) : (
+      <RecordingGrid
+        recordings={recordings.items}
+        categories={categories}
+        libraryName={libraryName}
+        waveforms={painted}
+        {...(selectable === undefined ? {} : { selection: selectable })}
+      />
+    );
+  }
+
   return (
     <section>
       <LibraryHeader context={context} />
@@ -122,24 +177,7 @@ export function LibraryView() {
       {/* Outside the swap above: a run that succeeded entirely leaves nothing selected, and a
           report inside the bulk bar would disappear at the moment it had something to say. */}
       {bulk.outcome !== null && <BulkReport bulk={bulk} />}
-      {filters.view === 'list' ? (
-        <RecordingList
-          libraryUuid={uuid}
-          categories={categories}
-          query={libraryQuery(filters)}
-          libraryName={libraryName}
-          waveforms={painted}
-          {...(selectable === undefined ? {} : { selection: selectable })}
-        />
-      ) : (
-        <RecordingGrid
-          recordings={recordings.items}
-          categories={categories}
-          libraryName={libraryName}
-          waveforms={painted}
-          {...(selectable === undefined ? {} : { selection: selectable })}
-        />
-      )}
+      {body()}
     </section>
   );
 }

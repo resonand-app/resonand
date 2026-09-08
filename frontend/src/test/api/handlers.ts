@@ -477,13 +477,21 @@ function providerStatus(): Schemas['ProviderStatus'] {
  * piece of filter behaviour a view can get wrong in a way that looks right: taking the last
  * value instead of all of them filters for one state and shows a plausible list.
  */
-function applyFilters<Item extends { transcription_state: string; category_id: number | null }>(
-  items: Item[],
-  url: URL,
-): Item[] {
+function applyFilters<
+  Item extends {
+    transcription_state: string;
+    category_id: number | null;
+    tags?: { slug: string }[];
+  },
+>(items: Item[], url: URL): Item[] {
   const states = url.searchParams.getAll('transcription_state');
   const category = url.searchParams.get('category_id');
+  // All of them must match, which is what the API's own parameter says: `tag` is repeatable and
+  // narrows rather than widens. Without this the mock answered a tag filter with the whole
+  // library, so `UI-8b`'s filter and `UI-10a`'s "nothing matched" state were untestable.
+  const tags = url.searchParams.getAll('tag');
   return items
     .filter((one) => states.length === 0 || states.includes(one.transcription_state))
-    .filter((one) => category === null || String(one.category_id) === category);
+    .filter((one) => category === null || String(one.category_id) === category)
+    .filter((one) => tags.every((slug) => (one.tags ?? []).some((tag) => tag.slug === slug)));
 }

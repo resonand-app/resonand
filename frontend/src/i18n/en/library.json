@@ -85,5 +85,22 @@
     "stillSelected_other": "The {{count}} that failed are still selected, so you can try them again.",
     "dismiss": "Dismiss",
     "category": "Assign a category"
+  },
+  "empty": {
+    "nothing": {
+      "title": "Nothing in this library yet",
+      "body": "Upload a recording and it will be here, with its transcript, for as long as you keep it.",
+      "readOnly": "Whoever owns this library has not put anything in it yet."
+    },
+    "matched": {
+      "title": "Nothing matches that",
+      "body": "Nothing here is narrowed by {{filters}}.",
+      "clear": "Clear the filters",
+      "total_one": "There is one recording in this library.",
+      "total_other": "There are {{count}} recordings in this library."
+    },
+    "failed": {
+      "title": "These recordings could not be listed"
+    }
   }
 }

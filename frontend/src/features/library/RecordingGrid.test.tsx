@@ -511,3 +511,87 @@ describe('a bulk action where some fail', () => {
     expect(await screen.findByRole('button', { name: /Any category/ })).toBeVisible();
   });
 });
+
+describe('the two empty states', () => {
+  it('meets an empty library with an invitation', async () => {
+    archive.recordings = [];
+    renderLibrary();
+    // A new library, and the way out is to add something.
+    expect(await screen.findByText(/Nothing in this library yet/)).toBeVisible();
+    expect(screen.getByText(/Upload a recording and it will be here/)).toBeVisible();
+  });
+
+  it('says something different when a filter matched nothing', async () => {
+    // A tag nothing in this library carries: the suggestions come from the whole archive, so a
+    // tag that matches nothing here is an ordinary thing to pick.
+    archive.recordings = archive.recordings.map((one) =>
+      one.library_uuid === AVIA ? { ...one, tags: [] } : one,
+    );
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Tag' }));
+    // `música` is on a recording in another library, so this filter matches nothing here.
+    await user.click(await screen.findByRole('button', { name: /música/ }));
+    // Confusing these two is the classic mistake: one is a new library, the other a mistyped tag.
+    expect(await screen.findByText(/Nothing matches that/)).toBeVisible();
+    expect(screen.queryByText(/Nothing in this library yet/)).toBeNull();
+  });
+
+  it('names the filter, offers to clear it, and says how many are really there', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.library_uuid === AVIA ? { ...one, tags: [] } : one,
+    );
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Tag' }));
+    await user.click(await screen.findByRole('button', { name: /música/ }));
+    await screen.findByText(/Nothing matches that/);
+    // The useful fact is that the library is not empty, only hidden -- and which filter hid it.
+    expect(screen.getByText(/#musica/)).toBeVisible();
+    expect(screen.getByText(/There are 3 recordings in this library/)).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Clear the filters' }));
+    expect(await cardFor('The house on Carrer Nou')).toBeInTheDocument();
+  });
+
+  it('tells somebody who cannot upload why it is empty, without offering them an action', async () => {
+    archive.recordings = [];
+    archive.libraries = archive.libraries.map((one) =>
+      one.uuid === AVIA ? { ...one, level: 10 } : one,
+    );
+    renderLibrary();
+    expect(await screen.findByText(/has not put anything in it yet/)).toBeVisible();
+  });
+});
+
+describe('a library you can only read', () => {
+  function readOnly() {
+    archive.libraries = archive.libraries.map((one) =>
+      one.uuid === AVIA ? { ...one, level: 10 } : one,
+    );
+  }
+
+  it('says so once, quietly, and keeps everything the screen is for', async () => {
+    readOnly();
+    renderLibrary();
+    expect(await screen.findByText('You can read this library.')).toBeVisible();
+    // The filters, the sort, the densities and play all stay: what changes is what you can alter.
+    expect(screen.getByRole('button', { name: /Any category/ })).toBeVisible();
+    expect(screen.getByRole('group', { name: 'How to show them' })).toBeVisible();
+    const card = await cardFor('The house on Carrer Nou');
+    expect(within(card).getByRole('button', { name: /^Play/ })).toBeVisible();
+  });
+
+  it('drops what cannot be done rather than disabling it', async () => {
+    readOnly();
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    // Absent, not disabled -- a disabled row of controls reads as a bug (§3.5).
+    expect(within(card).queryByRole('checkbox')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Settings/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Send to trash/ })).toBeNull();
+    // And nothing on screen is disabled at all, which is the stronger version of the same claim.
+    expect(document.querySelectorAll('[disabled]')).toHaveLength(0);
+  });
+});
