@@ -30,6 +30,7 @@ import { useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { PAGE_SIZE } from '@/api/paged';
+import { useKeyboard } from '@/app/useKeyboard';
 import { useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
 import { useAfterPaint } from '@/app/use-after-paint';
@@ -55,6 +56,19 @@ export function LibraryView() {
   const recordings = useRecordings(uuid, libraryQuery(filters, { limit: PAGE_SIZE, offset: 0 }));
   const [selection, setSelection] = useState(EMPTY);
   const bulk = useBulk(uuid);
+
+  // `Esc` clears the selection (§1.8). The shell answers the same command for a dialog, a sheet
+  // and a popover; a view answers it for the thing a view owns, and `useKeyboard` ignores a
+  // command nobody has claimed -- so this is only bound while there is a selection to clear.
+  useKeyboard(
+    selection.selected.size > 0
+      ? {
+          dismiss: () => {
+            setSelection(EMPTY);
+          },
+        }
+      : {},
+  );
 
   // The order a range is measured in is the order on screen (`UI-9d`). The grid has its page; the
   // dense list windows over the whole library, so a range there spans what has been fetched.

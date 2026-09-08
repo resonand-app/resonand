@@ -326,3 +326,72 @@ describe('sorting from a column heading', () => {
     }
   });
 });
+
+describe('the keyboard, on a selection', () => {
+  it('opens with Enter and picks with Space, which are two different acts', async () => {
+    measured(720);
+    const user = userEvent.setup();
+    renderList();
+    await screen.findByRole('table');
+    const rows = await waitFor(() => {
+      const found = document.querySelectorAll<HTMLElement>('[data-ds="recording-row"]');
+      expect(found.length).toBeGreaterThan(0);
+      return found;
+    });
+    const row = rows[0];
+    if (row === undefined) throw new Error('no rows were drawn');
+    row.focus();
+    await user.keyboard(' ');
+    // Space picked it and did not open it: the address is unchanged.
+    expect(await screen.findByText('1 selected')).toBeVisible();
+    expect(screen.getByTestId('where').textContent).toContain('/library/');
+  });
+
+  it('clears the selection with Escape', async () => {
+    measured(720);
+    const user = userEvent.setup();
+    renderList();
+    await screen.findByRole('table');
+    const row = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>('[data-ds="recording-row"]');
+      if (found === null) throw new Error('no rows yet');
+      return found;
+    });
+    row.focus();
+    await user.keyboard(' ');
+    await screen.findByText('1 selected');
+    await user.keyboard('{Escape}');
+    // The way out of a selection without reaching for a mouse (§1.8).
+    await waitFor(() => {
+      expect(screen.queryByText('1 selected')).toBeNull();
+    });
+  });
+
+  it('selects the range between two clicks when shift is held', async () => {
+    measured(720);
+    // Six recordings, so a range is more than two rows.
+    archive.recordings = Array.from({ length: 6 }, (_, index) => ({
+      ...archive.recordings[0],
+      uuid: `dddddddd-0000-4000-8000-${String(index).padStart(12, '0')}`,
+      library_uuid: AVIA,
+      title: `Recording ${String(index)}`,
+    })) as typeof archive.recordings;
+    const user = userEvent.setup();
+    renderList();
+    await screen.findByRole('table');
+    const boxes = await waitFor(() => {
+      const found = screen.getAllByRole('checkbox', { name: /^Select Recording/ });
+      expect(found.length).toBeGreaterThan(3);
+      return found;
+    });
+    const first = boxes[0];
+    const fourth = boxes[3];
+    if (first === undefined || fourth === undefined) throw new Error('not enough rows');
+    await user.click(first);
+    await user.keyboard('{Shift>}');
+    await user.click(fourth);
+    await user.keyboard('{/Shift}');
+    // Everything between, in the order on screen -- not just the two that were clicked.
+    expect(await screen.findByText('4 selected')).toBeVisible();
+  });
+});

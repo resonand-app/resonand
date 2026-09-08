@@ -99,12 +99,26 @@ export function RecordingRow({
     onOpen?.();
   };
 
+  /**
+   * `Enter` opens and `Space` toggles the selection (`UI-9d`, §1.8).
+   *
+   * Two keys and two different acts, which is the model the specification writes down: a row is
+   * a thing you open and a thing you pick, and one key doing both makes the other unreachable
+   * from a keyboard. `Space` falls through to the global handler when this row offers no
+   * selection, because there it means play or pause and a row that swallowed it would be a row
+   * that broke the player.
+   */
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
-    if (!interactive || event.defaultPrevented) return;
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.defaultPrevented) return;
+    if (event.key === 'Enter' && interactive) {
       event.preventDefault();
       onOpen();
+      return;
+    }
+    if (event.key === ' ' && onSelect !== undefined) {
+      event.preventDefault();
+      onSelect(!selected);
     }
   };
 
