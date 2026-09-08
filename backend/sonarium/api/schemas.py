@@ -20,6 +20,7 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 from sonarium.core import colours
 from sonarium.core.colours import Colour
 from sonarium.core.levels import Level
+from sonarium.core.states import TranscriptionState
 
 _EMAIL_SHAPE = re.compile(r"^[^@\s]+@[^@\s]+$")
 
@@ -378,6 +379,40 @@ class TranscribeRequest(Api):
 
     language: str | None = Field(default=None, max_length=35)
     """A BCP 47 tag, or ``None`` to let the provider detect it -- ``JOB-2``'s contract."""
+
+
+class TranscriptionStatus(Api):
+    """What is happening to a recording's transcription, for whoever can read the recording
+    (``API-17``, ``UI-15``).
+
+    ``transcription_state`` on the recording says which of the four states it is in and nothing
+    more, which is enough for a badge and not enough for a screen: ``UI-15b`` says how long it has
+    been running and which attempt this is, and ``UI-15c`` shows **the real error text**. Those
+    three facts live on the job, and the job was only readable through the administrator-only
+    queue -- so on a shared instance the person whose recording had failed was the one person who
+    could not be told why.
+
+    It reports the newest transcribe job and nothing about any other kind of work: the probe that
+    could not read a file is a different failure with a different remedy, and ``INT-3d``'s queue is
+    where an operator sees all four.
+    """
+
+    state: TranscriptionState
+    """The recording's state, from :mod:`sonarium.core.states`, so this endpoint and the badge
+    cannot disagree."""
+
+    attempts: int
+    """How many times it has been tried. ``0`` before the first attempt starts, and what
+    ``UI-15b`` shows only once it is above one."""
+
+    started_at: str | None
+    """When the current attempt began, which is what "started 4 minutes ago" is counted from.
+    ``None`` for a job that is queued and has not run yet -- including one waiting out its
+    backoff, which is a wait rather than an elapsed time."""
+
+    error: str | None
+    """Why the last attempt failed, as the provider said it. Shown rather than replaced: an error
+    that explains is worth more than one that apologises (§1.9)."""
 
 
 class TranscriptionDestination(Api):

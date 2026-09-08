@@ -536,6 +536,22 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *It runs before `UI-3a`, because the snapshot `UI-3a` commits carries every path in it and a
       rename afterwards is a second regeneration plus a second review of the diff.*
 
+- [ ] **API-17** · **How a transcription is going, readable by whoever can read the recording.**
+      `transcription_state` says which of the four states a recording is in and nothing more, but
+      `UI-15b` says how long it has been running and which attempt this is, and `UI-15c` shows
+      **the real error text**. All three live on the job, and the only way to read a job was the
+      administrator-only `GET /admin/jobs` — which takes no recording to filter by — so on a
+      family instance the person whose recording had failed was the one person who could not be
+      told why. `GET /audio/{uuid}/transcribe` is the request; this is the answer:
+      `GET /audio/{uuid}/transcription` at read level, returning the state, `attempts`,
+      `started_at` for the attempt that is actually running, and the last failure's message.
+      It reports and reaches out to nothing.
+      *Done when:* the three states `UI-15` draws can each be rendered from one request, and a
+      reader of somebody else's shared library can ask about a recording they can hear. ⇢ JOB-1,
+      API-11 🧪
+      *Found while building `UI-15`: §6 assumed the job was readable and no task made it so, which
+      is why the identifier comes after `API-16` rather than beside `API-11`.*
+
 ---
 
 ## Phase 3 · Four parallel tracks

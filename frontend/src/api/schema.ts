@@ -458,6 +458,35 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audio/{audio_uuid}/transcription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What is happening to this recording's transcription
+         * @description The state, and the three facts about it that only exist on the job (``API-17``).
+         *
+         *     Read level, the same as the recording itself: how a transcription of your own recording is
+         *     going is not privileged information, and until this endpoint the only way to ask was the
+         *     administrator-only queue -- so on a family instance the person whose recording had failed
+         *     was the one person who could not find out why (``UI-15b``, ``UI-15c``).
+         *
+         *     It reports and reaches out to nothing. Whether the provider is answering is ``INT-3c``'s
+         *     explicit test, and a status endpoint that contacted it would make opening a recording an
+         *     egress.
+         */
+        get: operations["get_transcription_status_api_audio__audio_uuid__transcription_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audio/{audio_uuid}/transcripts": {
         parameters: {
             query?: never;
@@ -1650,6 +1679,31 @@ export interface components {
          * @enum {string}
          */
         TranscriptionState: "none" | "running" | "done" | "failed";
+        /**
+         * TranscriptionStatus
+         * @description What is happening to a recording's transcription, for whoever can read the recording
+         *     (``API-17``, ``UI-15``).
+         *
+         *     ``transcription_state`` on the recording says which of the four states it is in and nothing
+         *     more, which is enough for a badge and not enough for a screen: ``UI-15b`` says how long it has
+         *     been running and which attempt this is, and ``UI-15c`` shows **the real error text**. Those
+         *     three facts live on the job, and the job was only readable through the administrator-only
+         *     queue -- so on a shared instance the person whose recording had failed was the one person who
+         *     could not be told why.
+         *
+         *     It reports the newest transcribe job and nothing about any other kind of work: the probe that
+         *     could not read a file is a different failure with a different remedy, and ``INT-3d``'s queue is
+         *     where an operator sees all four.
+         */
+        TranscriptionStatus: {
+            /** Attempts */
+            attempts: number;
+            /** Error */
+            error: string | null;
+            /** Started At */
+            started_at: string | null;
+            state: components["schemas"]["TranscriptionState"];
+        };
         /** UpdateAudio */
         UpdateAudio: {
             /** Category Id */
@@ -2454,6 +2508,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TranscriptDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_transcription_status_api_audio__audio_uuid__transcription_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TranscriptionStatus"];
                 };
             };
             /** @description Validation Error */

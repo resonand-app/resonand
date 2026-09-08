@@ -21,6 +21,7 @@ from sonarium.api.presenters import (
     job_summary,
     transcript_detail,
     transcript_summary,
+    transcription_status,
 )
 from sonarium.api.schemas import (
     AudioDetail,
@@ -32,6 +33,7 @@ from sonarium.api.schemas import (
     TagSummary,
     TranscribeRequest,
     TranscriptDetail,
+    TranscriptionStatus,
     TranscriptSummary,
     UpdateAudio,
 )
@@ -198,6 +200,29 @@ def activate_transcript(
     if transcript is None or transcript.audio_id != audio.id:
         raise NotFoundError("No such transcript.")
     return transcript_summary(session, transcript_repo.activate(session, transcript_id))
+
+
+@router.get(
+    "/audio/{audio_uuid}/transcription",
+    response_model=TranscriptionStatus,
+    summary="What is happening to this recording's transcription",
+)
+def get_transcription_status(
+    audio_uuid: str, caller: CurrentCaller, session: ReadSession
+) -> TranscriptionStatus:
+    """The state, and the three facts about it that only exist on the job (``API-17``).
+
+    Read level, the same as the recording itself: how a transcription of your own recording is
+    going is not privileged information, and until this endpoint the only way to ask was the
+    administrator-only queue -- so on a family instance the person whose recording had failed
+    was the one person who could not find out why (``UI-15b``, ``UI-15c``).
+
+    It reports and reaches out to nothing. Whether the provider is answering is ``INT-3c``'s
+    explicit test, and a status endpoint that contacted it would make opening a recording an
+    egress.
+    """
+    audio, _ = require_audio(session, caller.id, audio_uuid)
+    return transcription_status(session, audio.id)
 
 
 @router.post(

@@ -130,6 +130,25 @@ def transcription_in_flight(session: Session, audio_id: int) -> Job | None:
     )
 
 
+def latest_transcription(session: Session, audio_id: int) -> Job | None:
+    """The most recent transcribe job for a recording, whatever became of it (``API-17``).
+
+    Different question from :func:`transcription_in_flight`, which answers "would a second
+    request queue a duplicate". This one answers "what is there to say about the transcription
+    on this screen": the running job while it runs, and the failure once it has failed, because
+    ``UI-15c`` shows the real error and there is nowhere else it exists.
+    """
+    return (
+        session.execute(
+            select(Job)
+            .where(Job.audio_id == audio_id, Job.kind == KIND_TRANSCRIBE)
+            .order_by(Job.id.desc())
+        )
+        .scalars()
+        .first()
+    )
+
+
 def enqueue_transcription(
     session: Session, *, audio_id: int, audio_uuid: str, language: str | None = None
 ) -> Job | None:

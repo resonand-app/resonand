@@ -314,6 +314,21 @@ export const handlers: HttpHandler[] = [
     );
     return HttpResponse.json(archive.jobs[0], { status: 202 });
   }),
+  http.get('/api/audio/:audio_uuid/transcription', ({ params }) => {
+    const uuid = String(params.audio_uuid);
+    const existing = archive.recordings.find((one) => one.uuid === uuid);
+    if (!existing) return NOT_FOUND();
+    // Derived from the jobs the way the API derives it, rather than stored beside the recording:
+    // a fixture that carried both would let a test pass with a state and an error that could not
+    // have happened together (`API-17`).
+    const job = archive.jobs.find((one) => one.audio_uuid === uuid);
+    return HttpResponse.json({
+      state: existing.transcription_state,
+      attempts: job?.attempts ?? 0,
+      started_at: job?.state === 'running' ? (job.started_at ?? null) : null,
+      error: job?.error ?? null,
+    });
+  }),
   http.get('/api/audio/:audio_uuid/transcript', ({ params }) =>
     found(archive.transcripts[String(params.audio_uuid)]),
   ),
