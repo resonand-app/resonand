@@ -19,6 +19,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
 import { createQueryClient } from '@/api/query-client';
 import { LibrariesView } from '@/features/libraries/LibrariesView';
 import { LibraryView } from '@/features/library/LibraryView';
+import { RecordingView } from '@/features/recording/RecordingView';
 
 import { AppShell } from './AppShell';
 import { NotBuiltYet } from './NotBuiltYet';
@@ -66,7 +67,7 @@ function Archive() {
               path={routes.librarySettings}
               element={<NotBuiltYet view="V7 - Library settings" />}
             />
-            <Route path={routes.recording} element={<NotBuiltYet view="V5 - Audio detail" />} />
+            <Route path={routes.recording} element={<RecordingView />} />
             <Route path={routes.search} element={<NotBuiltYet view="V6 - Search" />} />
             <Route path={routes.trash} element={<NotBuiltYet view="V9 - Trash" />} />
             <Route path={routes.settings} element={<NotBuiltYet view="V10 - Settings" />} />

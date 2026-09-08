@@ -24,6 +24,7 @@ import common from './en/common.json';
 import libraries from './en/libraries.json';
 import library from './en/library.json';
 import player from './en/player.json';
+import recording from './en/recording.json';
 import shell from './en/shell.json';
 import { pseudoBundle } from './pseudo';
 
@@ -38,9 +39,16 @@ export const BASE = 'en';
  */
 export const PSEUDO = 'pseudo';
 
-export const NAMESPACES = ['common', 'libraries', 'library', 'player', 'shell'] as const;
+export const NAMESPACES = [
+  'common',
+  'libraries',
+  'library',
+  'player',
+  'recording',
+  'shell',
+] as const;
 
-const english = { common, libraries, library, player, shell };
+const english = { common, libraries, library, player, recording, shell };
 
 export const resources = {
   [BASE]: english,

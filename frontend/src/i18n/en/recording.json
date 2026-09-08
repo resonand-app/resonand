@@ -1,0 +1,21 @@
+{
+  "breadcrumb": {
+    "label": "Where this recording is",
+    "back": "Back to {{library}}"
+  },
+  "essentials": {
+    "uploadedBy": "Uploaded by {{name}}",
+    "version": "Transcript v{{version}}"
+  },
+  "missing": {
+    "title": "This recording is not here",
+    "body": "It may have been deleted, or it may never have been yours.",
+    "footnote": "The instance does not say which of the two it is."
+  },
+  "unreachable": {
+    "title": "The instance is not answering"
+  },
+  "failed": {
+    "title": "This recording could not be opened"
+  }
+}
