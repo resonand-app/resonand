@@ -9,10 +9,10 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
@@ -28,6 +28,7 @@ afterEach(() => {
   // The panel remembers whether it is folded away, per device. Left behind, that is the next
   // test starting on a screen somebody else configured.
   window.localStorage.clear();
+  vi.unstubAllGlobals();
 });
 
 function renderRecording(uuid: string = CARRER_NOU) {
@@ -291,5 +292,33 @@ describe('the tags', () => {
     expect(screen.getByText('memòria')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add a tag' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Remove the tag/ })).toBeNull();
+  });
+});
+
+describe('on a phone', () => {
+  /** Below `--breakpoint-phone` the layout is replaced rather than narrowed (`DEC-23`). */
+  function phone() {
+    vi.stubGlobal('innerWidth', 500);
+    vi.stubGlobal('matchMedia', undefined);
+  }
+
+  it('puts the details in a sheet opened from the essentials line, not in a column', async () => {
+    const user = userEvent.setup();
+    phone();
+    renderRecording();
+    // No column at all: the transcript needs the full width and it is the reason the screen
+    // exists (§V5).
+    await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Details' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Details' });
+    expect(within(sheet).getByText('Recorded')).toBeInTheDocument();
+  });
+
+  it('offers no fold-away control, because there is no column to fold', async () => {
+    phone();
+    renderRecording();
+    await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    expect(screen.queryByRole('button', { name: 'Hide the details' })).toBeNull();
   });
 });

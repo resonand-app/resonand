@@ -14,6 +14,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import type { components } from '@/api/schema';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { AVIA, CARRER_NOU, PERSONAL, archive } from '@/test/api/archive';
@@ -49,7 +50,7 @@ function renderRecording(uuid: string = CARRER_NOU) {
 }
 
 /** Level and library level, for the four combinations the actions depend on. */
-function at(level: number, libraryLevel = level) {
+function at(level: components['schemas']['Level'], libraryLevel = level) {
   archive.recordings = archive.recordings.map((one) =>
     one.uuid === CARRER_NOU ? { ...one, level } : one,
   );

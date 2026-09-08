@@ -24,6 +24,11 @@
  * screen where 320px of metadata is 320px of transcript -- and what somebody folds away stays
  * folded, per device, since it is a property of the screen and not of the account.
  *
+ * **On a phone the panel is a bottom sheet** (`UI-13f`), opened from the essentials line. Not a
+ * narrowed column and not a section under the transcript: the transcript needs the full width and
+ * it is the reason the screen exists, so the details come up over it when they are asked for and
+ * are out of the way the rest of the time (`DEC-23`: the phone layout is a different screen).
+ *
  * **Read-only says so once, quietly** (§3.5). One line under the essentials, not a banner and not
  * a lock on every field: the fields draw their own non-editable state and the actions that cannot
  * be taken are absent, so the screen reads as intentional rather than as broken.
@@ -35,13 +40,15 @@
  * not have permission", which is the one sentence that gives away what the 404 withholds.
  */
 
+import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { toLibrary } from '@/app/routes';
-import { Button, Icon, IconButton, PageHeader, StateCard } from '@/design-system';
+import { Button, Icon, IconButton, PageHeader, Sheet, StateCard } from '@/design-system';
+import { useIsPhone } from '@/app/use-is-phone';
 import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 
@@ -58,6 +65,8 @@ export function RecordingView() {
   const context = useRecording(uuid);
   const transcripts = useTranscripts(uuid);
   const panel = usePanel();
+  const isPhone = useIsPhone();
+  const [sheetOpen, setSheetOpen] = useState(false);
   const { t } = useTranslation('recording');
 
   if (context.error !== null && context.error !== undefined) {
@@ -72,14 +81,28 @@ export function RecordingView() {
         context={context}
         version={transcripts.activeVersion}
         actions={
-          <IconButton
-            icon="panel-left"
-            variant="ghost"
-            label={panel.collapsed ? t('panel.show') : t('panel.hide')}
-            active={!panel.collapsed}
-            aria-expanded={!panel.collapsed}
-            onClick={panel.toggle}
-          />
+          isPhone ? (
+            // Opened from the essentials line, which is where somebody reading the four facts
+            // above it is already looking (§V5).
+            <Button
+              variant="secondary"
+              aria-expanded={sheetOpen}
+              onClick={() => {
+                setSheetOpen(true);
+              }}
+            >
+              {t('panel.label')}
+            </Button>
+          ) : (
+            <IconButton
+              icon="panel-left"
+              variant="ghost"
+              label={panel.collapsed ? t('panel.show') : t('panel.hide')}
+              active={!panel.collapsed}
+              aria-expanded={!panel.collapsed}
+              onClick={panel.toggle}
+            />
+          )
         }
       />
       {context.isReadOnly && (
@@ -99,9 +122,10 @@ export function RecordingView() {
           display: 'grid',
           // `minmax(0, 1fr)` and not `1fr`: a virtualised transcript in a `1fr` track can be
           // pushed wider by its own content, and the column that gives way is the panel.
-          gridTemplateColumns: panel.collapsed
-            ? 'minmax(0, 1fr)'
-            : `minmax(0, 1fr) ${String(PANEL_WIDTH)}px`,
+          gridTemplateColumns:
+            isPhone || panel.collapsed
+              ? 'minmax(0, 1fr)'
+              : `minmax(0, 1fr) ${String(PANEL_WIDTH)}px`,
           gap: 'var(--space-6)',
           alignItems: 'start',
         }}
@@ -110,12 +134,23 @@ export function RecordingView() {
           <RecordingPlayer context={context} />
           <Transcript context={context} transcripts={transcripts} />
         </div>
-        {!panel.collapsed && (
+        {!isPhone && !panel.collapsed && (
           <aside aria-label={t('panel.label')}>
             <MetadataPanel context={context} />
           </aside>
         )}
       </div>
+      {isPhone && (
+        <Sheet
+          open={sheetOpen}
+          title={t('panel.label')}
+          onClose={() => {
+            setSheetOpen(false);
+          }}
+        >
+          <MetadataPanel context={context} />
+        </Sheet>
+      )}
     </article>
   );
 }
