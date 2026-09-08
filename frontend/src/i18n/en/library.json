@@ -29,5 +29,10 @@
     "date": "Recorded",
     "category": "Category",
     "tags": "Tags"
+  },
+  "filters": {
+    "category": "Category",
+    "anyCategory": "Any category",
+    "noCategories": "This library has no categories yet."
   }
 }

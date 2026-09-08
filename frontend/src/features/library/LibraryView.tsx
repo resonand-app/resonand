@@ -23,6 +23,7 @@ import { useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
 import { useAfterPaint } from '@/app/use-after-paint';
 
+import { LibraryFilters } from './LibraryFilters';
 import { LibraryHeader } from './LibraryHeader';
 import { RecordingGrid } from './RecordingGrid';
 import { RecordingList } from './RecordingList';
@@ -48,6 +49,7 @@ export function LibraryView() {
   return (
     <section>
       <LibraryHeader context={context} />
+      <LibraryFilters categories={categories.all} />
       {filters.view === 'list' ? (
         <RecordingList
           libraryUuid={uuid}

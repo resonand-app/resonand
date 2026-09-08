@@ -9,7 +9,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter, Route, Routes } from 'react-router';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
@@ -29,6 +29,12 @@ afterEach(() => {
   usePlayback.getState().stop();
 });
 
+/** The address, so a test can assert what a control put in it (`UI-4b`). */
+function Where() {
+  const location = useLocation();
+  return <div data-testid="where">{location.pathname + location.search}</div>;
+}
+
 function renderLibrary(uuid: string = AVIA) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
@@ -36,6 +42,7 @@ function renderLibrary(uuid: string = AVIA) {
     <QueryClientProvider client={client}>
       <ThemeProvider>
         <MemoryRouter initialEntries={[toLibrary(uuid)]}>
+          <Where />
           <Routes>
             <Route path="/library/:uuid" element={<LibraryView />} />
           </Routes>
@@ -192,5 +199,43 @@ describe('playing from a card', () => {
     const pause = await within(card).findByRole('button', { name: /^Pause/ });
     await user.click(pause);
     expect(usePlayback.getState().status).not.toBe('playing');
+  });
+});
+
+describe('the category filter', () => {
+  it('holds the tree, indented, with one selectable at a time', async () => {
+    archive.categories[AVIA] = [
+      { id: 1, parent_id: null, name: 'Entrevistes', position: 0 },
+      { id: 2, parent_id: 1, name: 'Àvia', position: 0 },
+    ];
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: /Any category/ }));
+    const group = await screen.findByRole('radiogroup', { name: 'Category' });
+    // Radios and not checkboxes: a recording has at most one category.
+    expect(within(group).getAllByRole('radio')).toHaveLength(3);
+    expect(within(group).getByRole('radio', { name: /Any category/ })).toBeChecked();
+  });
+
+  it('puts the chosen category in the URL, so a filtered library can be linked to', async () => {
+    archive.categories[AVIA] = [{ id: 7, parent_id: null, name: 'Entrevistes', position: 0 }];
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: /Any category/ }));
+    await user.click(await screen.findByRole('radio', { name: 'Entrevistes' }));
+    // The control now names the filter, and the address carries it.
+    expect(await screen.findByRole('button', { name: /Entrevistes/ })).toBeVisible();
+    expect(screen.getByTestId('where').textContent).toContain('category_id=7');
+  });
+
+  it('says so when a library has no categories rather than showing an empty popover', async () => {
+    archive.categories[AVIA] = [];
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: /Any category/ }));
+    expect(await screen.findByText(/no categories yet/)).toBeVisible();
   });
 });
