@@ -394,7 +394,10 @@ export const handlers: HttpHandler[] = [
     }),
   ),
   http.get('/api/tags', ({ request }) => {
-    const prefix = (new URL(request.url).searchParams.get('q') ?? '').toLowerCase();
+    // `prefix`, which is what the endpoint documents and what `TagPicker` sends. It read `q`,
+    // so every prefix was answered with every tag -- and a mock that ignores a filter makes the
+    // feature that uses it untestable.
+    const prefix = (new URL(request.url).searchParams.get('prefix') ?? '').toLowerCase();
     return HttpResponse.json(
       archive.tags.filter((one) => one.tag.name.toLowerCase().startsWith(prefix)),
     );
