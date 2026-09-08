@@ -17,5 +17,16 @@
   },
   "failed": {
     "title": "This recording could not be opened"
+  },
+  "player": {
+    "label": "Playback",
+    "seek": "Seek in {{title}}",
+    "play": "Play",
+    "pause": "Pause",
+    "back": "Back {{seconds}} seconds",
+    "forward": "Forward {{seconds}} seconds",
+    "speed": "Playback speed",
+    "speedNow": "Playback speed, now {{speed}}",
+    "noWaveform": "The waveform is still being made. The recording plays; the picture is not there yet."
   }
 }

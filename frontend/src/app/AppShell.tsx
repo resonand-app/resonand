@@ -32,7 +32,7 @@ import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
 import { destinationOf, destinationTo, initialsOf } from './destinations';
 import { useLibraries, useTrashCount } from './library-data';
-import { routes, toSearch } from './routes';
+import { recordingIn, routes, toSearch } from './routes';
 import { useSession } from './session';
 import { SEEK_SECONDS, SKIP_SECONDS } from './keyboard';
 import { useIsPhone } from './use-is-phone';
@@ -175,7 +175,9 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
       player={
         <>
           <MediaSession />
-          {player ?? <Player />}
+          {/* Which recording the view is showing, so the bar can drop its waveform while the
+              detail view's own one is on screen (`UI-11b`, §3.1). */}
+          {player ?? <Player onScreen={recordingIn(location.pathname)} />}
         </>
       }
       {...(tray ? { tray } : {})}

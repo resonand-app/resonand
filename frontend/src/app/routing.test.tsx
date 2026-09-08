@@ -19,7 +19,7 @@ import { mockApi, server } from '@/test/api/server';
 import { NotBuiltYet } from './NotBuiltYet';
 import { NotFound } from './NotFound';
 import { RequireSession } from './RequireSession';
-import { routes, toLibrary, toLibrarySettings, toRecording, toSearch } from './routes';
+import { recordingIn, routes, toLibrary, toLibrarySettings, toRecording, toSearch } from './routes';
 
 mockApi();
 
@@ -149,5 +149,25 @@ describe('the guard', () => {
     // flashes reads as something going wrong.
     expect(screen.queryByText('V2')).not.toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
+describe('which recording a path is showing', () => {
+  it('answers the uuid, so the player bar can drop its waveform', () => {
+    // The shell asks this and hands it to the bar: two waveforms at two scales drifting a frame
+    // apart is what makes people believe there are two players (§3.1).
+    expect(recordingIn(toRecording(CARRER_NOU))).toBe(CARRER_NOU);
+  });
+
+  it('answers nothing anywhere else, including the library it came from', () => {
+    expect(recordingIn(toLibrary(AVIA))).toBeUndefined();
+    expect(recordingIn(routes.libraries)).toBeUndefined();
+    expect(recordingIn(routes.search)).toBeUndefined();
+  });
+
+  it('reads a uuid back out of the path exactly as `toRecording` wrote it', () => {
+    // The builder encodes, so the reader decodes. A uuid needs neither, and the pair is what
+    // keeps that true of anything that is not one.
+    expect(recordingIn(toRecording('a recording/with a slash'))).toBe('a recording/with a slash');
   });
 });
