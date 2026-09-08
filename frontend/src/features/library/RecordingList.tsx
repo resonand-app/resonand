@@ -42,6 +42,9 @@ const ROW_HEIGHT = 36;
 /** How many rows to draw beyond the viewport, so a fast scroll does not show empty space. */
 const OVERSCAN = 8;
 
+/** How tall the scroll container gets. The virtualiser measures the element, not this. */
+const MAX_HEIGHT = 720;
+
 export interface RecordingListProps {
   libraryUuid: string;
   /** The library's category tree, for the column that names one. */
@@ -97,7 +100,7 @@ export function RecordingList({
       <div
         ref={scroller}
         style={{
-          height: 'min(70vh, 720px)',
+          height: `min(70vh, ${String(MAX_HEIGHT)}px)`,
           overflowY: 'auto',
           // The scroll container is the thing the virtualiser measures, so it owns the height.
           contain: 'strict',

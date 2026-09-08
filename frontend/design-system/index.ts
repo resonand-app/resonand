@@ -65,7 +65,7 @@ export { PlayerBar } from './components/media/PlayerBar';
 export type { PlayerBarProps } from './components/media/PlayerBar';
 export { TranscriptLine } from './components/media/TranscriptLine';
 export type { TranscriptLineProps } from './components/media/TranscriptLine';
-export { WAVE_SIZES } from './components/media/wave-sizes';
+export { HEIGHT_TOKEN, WAVE_SIZES } from './components/media/wave-sizes';
 export type { WaveSize } from './components/media/wave-sizes';
 export { Waveform } from './components/media/Waveform';
 export type { WaveformProps } from './components/media/Waveform';
