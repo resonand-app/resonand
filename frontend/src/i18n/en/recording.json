@@ -114,5 +114,11 @@
     "again": "Transcribe again",
     "unknownModel": "Unknown model",
     "unknownLanguage": "Language not recorded"
+  },
+  "trashed": {
+    "body": "This recording is in the trash. It can be played and put back, and nothing about it can be changed while it is in there.",
+    "left_one": "{{count}} day left before it is deleted for good.",
+    "left_other": "{{count}} days left before it is deleted for good.",
+    "restore": "Put it back"
   }
 }

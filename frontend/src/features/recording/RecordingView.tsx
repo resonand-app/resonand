@@ -34,6 +34,10 @@
  * action in the place the thing is missing from reads as a screen that knows what it has, and the
  * same words in a corner of the panel read as an aside.
  *
+ * **A recording in the trash says so in a band that stays** (`UI-11d`), and that band replaces
+ * the read-only line rather than sitting above it: both would be true and only one of them is
+ * the reason nothing on the screen can be changed.
+ *
  * **Read-only says so once, quietly** (§3.5). One line under the essentials, not a banner and not
  * a lock on every field: the fields draw their own non-editable state and the actions that cannot
  * be taken are absent, so the screen reads as intentional rather than as broken.
@@ -69,6 +73,7 @@ import { recordedAt } from '@/i18n/time';
 import { MetadataPanel, PANEL_WIDTH } from './MetadataPanel';
 import { RecordingPlayer } from './RecordingPlayer';
 import { Transcript } from './Transcript';
+import { TrashedBand } from './TrashedBand';
 import { TranscriptionState } from './TranscriptionState';
 import { useRecording } from './data';
 import type { RecordingContext } from './data';
@@ -121,7 +126,8 @@ export function RecordingView() {
           )
         }
       />
-      {context.isReadOnly && (
+      {context.isTrashed && <TrashedBand context={context} />}
+      {context.isReadOnly && !context.isTrashed && (
         <p
           style={{
             margin: '0 0 var(--space-6)',

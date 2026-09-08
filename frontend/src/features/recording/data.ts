@@ -51,6 +51,15 @@ export interface RecordingContext {
   isReadOnly: boolean;
   /** In the trash: playable and restorable, never editable (`UI-11d`). */
   isTrashed: boolean;
+  /**
+   * Level 20 or above, whether or not it is in the trash.
+   *
+   * `canEdit` is false for a trashed recording because nothing about it may be changed while it
+   * is in there -- but putting it back is exactly what somebody at level 20 is allowed to do, and
+   * being in the trash is not a permission (`REV-7`). So restoring asks the level rather than
+   * `canEdit`.
+   */
+  canRestore: boolean;
   isPending: boolean;
   error: unknown;
   refetch: () => void;
@@ -82,6 +91,7 @@ export function useRecording(uuid: string): RecordingContext {
     // that is the whole of what the trashed band offers (§V5).
     canEdit: level >= LEVEL.edit && !trashed,
     canShare: (library?.level ?? LEVEL.read) >= LEVEL.manage && !trashed,
+    canRestore: level >= LEVEL.edit,
     isReadOnly: recording.data !== undefined && level < LEVEL.edit,
     isTrashed: trashed,
     isPending: recording.isPending,
