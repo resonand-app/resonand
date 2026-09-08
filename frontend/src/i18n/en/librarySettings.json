@@ -1,0 +1,17 @@
+{
+  "title": "Library settings",
+  "identity": {
+    "name": "Name",
+    "description": "Description",
+    "noDescription": "No description",
+    "colour": "Colour",
+    "colourReaches": "The colour appears in the sidebar straight away."
+  },
+  "missing": {
+    "title": "This library is not here",
+    "body": "It may have been deleted, or it may never have been yours. This instance does not say which."
+  },
+  "error": {
+    "title": "That did not work"
+  }
+}

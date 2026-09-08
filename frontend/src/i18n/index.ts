@@ -23,6 +23,7 @@ import { initReactI18next } from 'react-i18next';
 import common from './en/common.json';
 import libraries from './en/libraries.json';
 import library from './en/library.json';
+import librarySettings from './en/librarySettings.json';
 import move from './en/move.json';
 import player from './en/player.json';
 import recording from './en/recording.json';
@@ -46,6 +47,7 @@ export const NAMESPACES = [
   'common',
   'libraries',
   'library',
+  'librarySettings',
   'move',
   'player',
   'recording',
@@ -58,6 +60,7 @@ const english = {
   common,
   libraries,
   library,
+  librarySettings,
   move,
   player,
   recording,
