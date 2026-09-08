@@ -152,7 +152,7 @@ export function RecordingView() {
         </div>
         {!isPhone && !panel.collapsed && (
           <aside aria-label={t('panel.label')}>
-            <MetadataPanel context={context} />
+            <MetadataPanel context={context} transcripts={transcripts} />
           </aside>
         )}
       </div>
@@ -164,7 +164,7 @@ export function RecordingView() {
             setSheetOpen(false);
           }}
         >
-          <MetadataPanel context={context} />
+          <MetadataPanel context={context} transcripts={transcripts} />
         </Sheet>
       )}
     </article>

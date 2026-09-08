@@ -105,5 +105,14 @@
       "whatToDo": "Trying again is usually enough. If it keeps failing, the provider is worth checking before the recording is."
     },
     "retry": "Try transcribing again"
+  },
+  "versions": {
+    "label": "Transcript",
+    "version": "v{{version}}",
+    "active": "Shown",
+    "show": "Show this one",
+    "again": "Transcribe again",
+    "unknownModel": "Unknown model",
+    "unknownLanguage": "Language not recorded"
   }
 }

@@ -13,6 +13,11 @@
  * library. `InlineField` draws that state itself, which is why it exists rather than being a
  * `TextField` with a flag.
  *
+ * **Which transcript is shown lives here too** (`UI-14a`), because it is a fact about the
+ * recording rather than a part of the transcript: the selector names each version by what
+ * distinguishes it, and re-transcribing is the same request as the call to action, with the same
+ * disclosure in front of it.
+ *
  * **The technical fields are collapsed** (`UI-13d`), because a sample rate is a fact somebody
  * looks up twice a year and everything above it is what they came for.
  *
@@ -39,14 +44,22 @@ import { recordedAt } from '@/i18n/time';
 
 import { TagEditor } from './TagEditor';
 import { RecordingActions } from './RecordingActions';
+import { TranscriptVersions } from './TranscriptVersions';
 import { TechnicalDetails } from './TechnicalDetails';
 import type { RecordingContext } from './data';
 import { useUpdateRecording } from './metadata';
+import type { Transcripts } from './transcripts';
 
 /** The panel's width, from §V5. The transcript takes everything else. */
 export const PANEL_WIDTH = 320;
 
-export function MetadataPanel({ context }: { context: RecordingContext }) {
+export function MetadataPanel({
+  context,
+  transcripts,
+}: {
+  context: RecordingContext;
+  transcripts: Transcripts;
+}) {
   const { t, i18n } = useTranslation('recording');
   const recording = context.recording;
   const update = useUpdateRecording(recording?.uuid ?? '', recording?.library_uuid ?? '');
@@ -113,6 +126,7 @@ export function MetadataPanel({ context }: { context: RecordingContext }) {
           update.mutate({ tags: names });
         }}
       />
+      <TranscriptVersions context={context} transcripts={transcripts} />
       <TechnicalDetails recording={recording} />
       <RecordingActions context={context} />
     </div>
