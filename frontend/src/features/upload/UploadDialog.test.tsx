@@ -3,25 +3,26 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse, http } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
-import { PERSONAL } from '@/test/api/archive';
-import { mockApi } from '@/test/api/server';
+import { ATENEU, AVIA, PERSONAL, archive } from '@/test/api/archive';
+import { mockApi, server } from '@/test/api/server';
 
 import { UploadDialog } from './UploadDialog';
 import { useUploads } from './uploads';
 
 mockApi();
 
-function show(onClose = vi.fn()) {
+function show(onClose = vi.fn(), library: string | undefined = PERSONAL) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   render(
     <QueryClientProvider client={client}>
-      <UploadDialog open onClose={onClose} library={PERSONAL} />
+      <UploadDialog open onClose={onClose} library={library} />
     </QueryClientProvider>,
   );
   return onClose;
@@ -31,6 +32,53 @@ function show(onClose = vi.fn()) {
 function file(name: string, size = 1024): File {
   return new File([new Uint8Array(size)], name);
 }
+
+describe('the destination', () => {
+  beforeEach(() => {
+    useUploads.setState({ files: [] });
+  });
+
+  it('defaults to the library somebody came from', async () => {
+    show(vi.fn(), AVIA);
+    const select = await screen.findByRole('combobox', { name: /into which library/i });
+    await waitFor(() => {
+      expect(select).toHaveTextContent('Àvia Teresa');
+    });
+  });
+
+  it('offers only libraries you can add to, since upload needs level 20', async () => {
+    // Absent rather than present and disabled: an option nobody can pick only raises a question.
+    server.use(
+      http.get('/api/libraries', () =>
+        HttpResponse.json(
+          archive.libraries.map((one) => (one.uuid === ATENEU ? { ...one, level: 10 } : one)),
+        ),
+      ),
+    );
+    show(vi.fn(), ATENEU);
+    await userEvent.click(await screen.findByRole('combobox', { name: /into which library/i }));
+    await screen.findByRole('option', { name: 'Personal' });
+    expect(screen.queryByRole('option', { name: 'Reunions Ateneu' })).not.toBeInTheDocument();
+  });
+
+  it('carries the chosen category to every file in the batch', async () => {
+    show(vi.fn(), AVIA);
+    await userEvent.click(await screen.findByRole('combobox', { name: /^category$/i }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Converses' }));
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('avia.m4a')]);
+    await userEvent.click(screen.getByRole('button', { name: 'Upload 1 file' }));
+    expect(useUploads.getState().files[0]?.categoryId).toBe(1);
+  });
+
+  it('drops the category when the library changes, since the id means nothing there', async () => {
+    show(vi.fn(), AVIA);
+    await userEvent.click(await screen.findByRole('combobox', { name: /^category$/i }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Converses' }));
+    await userEvent.click(screen.getByRole('combobox', { name: /into which library/i }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Personal' }));
+    expect(screen.getByRole('combobox', { name: /^category$/i })).toHaveTextContent('No category');
+  });
+});
 
 describe('the dialog', () => {
   beforeEach(() => {

@@ -17,13 +17,25 @@
  * A file the instance does not ingest is named and refused here rather than sent and refused
  * there. It is the same rule read from the same list -- `accepted_extensions` -- and not a second
  * one: the backend still decides, and this only saves somebody from watching thirty files fail.
+ *
+ * **The destination defaults to where somebody came from** (`UI-18b`). Opening this from a library
+ * means uploading into that library nine times out of ten, and a select that started blank would
+ * be a decision demanded every time for a question already answered by the screen underneath.
+ *
+ * **Only libraries you can add to are offered.** Upload needs level 20, so a library you can read
+ * is not a destination -- and it is absent from the list rather than present and disabled, because
+ * an option nobody can ever pick is an option that only raises a question (`UI-34c`).
  */
 
 import { useRef, useState } from 'react';
 import type { DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button, Dialog, Icon, Modal } from '@/design-system';
+import { useAllLibraries } from '@/app/library-data';
+import { LEVEL } from '@/features/library/data';
+import { useCategories } from '@/features/library/recordings';
+import { Button, Dialog, Icon, Modal, Select } from '@/design-system';
+import type { SelectOption } from '@/design-system';
 import { bytes } from '@/i18n/format';
 
 import { isAccepted, isVideo, useInstance } from './instance';
@@ -43,6 +55,15 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
   const picker = useRef<HTMLInputElement>(null);
   const [chosen, setChosen] = useState<File[]>([]);
   const [over, setOver] = useState(false);
+  // Level 20 or above: a library somebody can only read is not a destination.
+  const editable = useAllLibraries().filter((one) => one.level >= LEVEL.edit);
+  // Where they came from, when they may write there; otherwise the first one they may write to,
+  // which is the personal library unless it is gone.
+  const suggested = editable.find((one) => one.uuid === library)?.uuid ?? editable[0]?.uuid;
+  const [destination, setDestination] = useState<string | undefined>(undefined);
+  const into = destination ?? suggested;
+  const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
+  const categories = useCategories(into ?? '');
 
   const accepted = chosen.filter((file) => isAccepted(file.name, instance));
   const refused = chosen.filter((file) => !isAccepted(file.name, instance));
@@ -50,6 +71,8 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
   function close() {
     setChosen([]);
     setOver(false);
+    setDestination(undefined);
+    setCategoryId(undefined);
     onClose();
   }
 
@@ -81,10 +104,10 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
             <Button
               variant="primary"
               type="button"
-              disabled={accepted.length === 0 || library === undefined}
+              disabled={accepted.length === 0 || into === undefined}
               onClick={() => {
-                if (library === undefined) return;
-                add(accepted, { library });
+                if (into === undefined) return;
+                add(accepted, { library: into, categoryId });
                 close();
               }}
             >
@@ -143,6 +166,35 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
               style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
             />
           </label>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
+            <Select
+              value={into}
+              options={editable.map((one): SelectOption => ({ value: one.uuid, label: one.name }))}
+              label={t('dialog.library')}
+              placeholder={t('dialog.noLibrary')}
+              onChange={(uuid) => {
+                setDestination(uuid);
+                // A category id belongs to one library, so it does not survive a change of
+                // destination -- the same rule search's filter bar follows.
+                setCategoryId(undefined);
+              }}
+            />
+            <Select
+              value={categoryId === undefined ? '' : String(categoryId)}
+              options={[
+                { value: '', label: t('dialog.noCategory') },
+                ...categories.all.map((one): SelectOption => ({
+                  value: String(one.id),
+                  label: one.name,
+                })),
+              ]}
+              label={t('dialog.category')}
+              onChange={(id) => {
+                setCategoryId(id === '' ? undefined : Number(id));
+              }}
+            />
+          </div>
 
           <p style={{ margin: 0, fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
             {t('dialog.formats', { formats: (instance?.accepted_extensions ?? []).join(' ') })}

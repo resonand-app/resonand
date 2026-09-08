@@ -26,6 +26,7 @@
 
 import { useNavigate } from 'react-router';
 
+import { useAllLibraries } from '@/app/library-data';
 import { toRecording } from '@/app/routes';
 import { usePlayback } from '@/player/store';
 import { ResultGroup } from '@/components/ResultGroup';
@@ -34,7 +35,6 @@ import { transcriptionState } from '@/features/library/recordings';
 import { timestamp } from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 
-import { useReadableLibraries } from './data';
 import type { SearchResult } from './data';
 import { marked } from './fragment';
 
@@ -47,7 +47,7 @@ export function Results({ results }: ResultsProps) {
   // Results span libraries, which is the difference between this screen and a library's grid: a
   // recording has to say where it lives, because "Sopar de Nadal" means one thing in the family
   // archive and another in somebody's field recordings.
-  const libraries = useReadableLibraries();
+  const libraries = useAllLibraries();
   const names = new Map(libraries.map((library) => [library.uuid, library.name]));
 
   return (

@@ -26,6 +26,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { PAGE_SIZE } from '@/api/paged';
+import { useAllLibraries } from '@/app/library-data';
 import { useIsPhone } from '@/app/use-is-phone';
 import { useUrlState } from '@/app/url-state';
 import { Button, PageHeader, SearchField } from '@/design-system';
@@ -34,7 +35,7 @@ import { count as formatCount } from '@/i18n/format';
 import { Results } from './Results';
 import { SearchFilters } from './SearchFilters';
 import { NoResults, NothingTyped, RecallNote, SearchFailed, Searching } from './SearchStates';
-import { useReadableLibraries, useSearch } from './data';
+import { useSearch } from './data';
 
 export function SearchView() {
   const { t } = useTranslation('search');
@@ -56,7 +57,7 @@ export function SearchView() {
   const paginated = results.total > PAGE_SIZE;
   // How much there is to look through, for the resting state. Summed from the libraries the
   // sidebar has already fetched rather than asked for again: it is the same number.
-  const archiveSize = useReadableLibraries().reduce((sum, one) => sum + one.audio_count, 0);
+  const archiveSize = useAllLibraries().reduce((sum, one) => sum + one.audio_count, 0);
 
   /**
    * Which of the four this screen is (§3.5).

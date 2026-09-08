@@ -24,6 +24,7 @@
 
 import { create } from 'zustand';
 
+import { patch } from '@/api/client';
 import { ApiProblem, problemFrom, unreachable } from '@/api/problem';
 import type { components } from '@/api/schema';
 
@@ -32,6 +33,8 @@ export type Recording = components['schemas']['AudioDetail'];
 /** Where a batch is going. Chosen once in the dialog and carried by every file in it. */
 export interface Destination {
   library: string;
+  /** Optional, and applied after the upload -- see `file` below for why it is a second request. */
+  categoryId?: number | undefined;
 }
 
 export type UploadStatus =
@@ -45,6 +48,7 @@ export interface Upload {
   /** In bytes, for the progress detail and for the size limit. */
   size: number;
   library: string;
+  categoryId?: number | undefined;
   status: UploadStatus;
   /** How much has left this machine, in bytes. */
   sent: number;
@@ -81,6 +85,7 @@ export const useUploads = create<UploadsState>((set, get) => ({
         name: file.name,
         size: file.size,
         library: destination.library,
+        categoryId: destination.categoryId,
         status: 'waiting',
         sent: 0,
       };
@@ -125,6 +130,7 @@ async function drain(): Promise<void> {
         const recording = await send(row.library, next.file, (sent) => {
           update(next.id, { sent });
         });
+        await file(recording.uuid, row.categoryId);
         update(next.id, { status: 'done', sent: row.size, uuid: recording.uuid });
       } catch (cause) {
         // Partial failure is the normal case at thirty files, not an exception: the one that
@@ -137,6 +143,28 @@ async function drain(): Promise<void> {
     }
   } finally {
     running = false;
+  }
+}
+
+/**
+ * Put the recording in the category the batch chose.
+ *
+ * A second request, because `POST /libraries/{uuid}/audio` takes a file, a transcribe flag and a
+ * language and nothing else -- the category is a field on the recording, so it is set on the
+ * recording. **It is deliberately not allowed to fail the upload**: the bytes are stored and the
+ * recording exists, and reporting that as a failed upload would invite somebody to send an
+ * hours-long file again to fix a missing category they can set in one click.
+ */
+async function file(uuid: string, categoryId: number | undefined): Promise<void> {
+  if (categoryId === undefined) return;
+  try {
+    await patch('/api/audio/{audio_uuid}', {
+      path: { audio_uuid: uuid },
+      body: { category_id: categoryId },
+    });
+  } catch {
+    // Deliberately silent here. The recording is in the archive with no category, which is a
+    // state the interface already draws and somebody can correct in the detail view.
   }
 }
 

@@ -11,6 +11,10 @@
     "refused_other": "{{names}} are not formats this archive ingests.",
     "submit_zero": "Upload",
     "submit_one": "Upload {{count}} file",
-    "submit_other": "Upload {{count}} files"
+    "submit_other": "Upload {{count}} files",
+    "library": "Into which library",
+    "noLibrary": "No library you can add to",
+    "category": "Category",
+    "noCategory": "No category"
   }
 }

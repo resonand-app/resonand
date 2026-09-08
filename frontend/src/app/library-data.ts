@@ -13,14 +13,30 @@ import { useQuery } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
+import type { components } from '@/api/schema';
 import { LIBRARY_COLORS } from '@/design-system';
 import type { LibraryColorName, SidebarLibrary } from '@/design-system';
 
 import { useSession } from './session';
 
+export type LibrarySummary = components['schemas']['LibrarySummary'];
+
 export interface Libraries {
   own: SidebarLibrary[];
   shared: SidebarLibrary[];
+}
+
+/**
+ * Every library the caller can read, as the API sends them.
+ *
+ * `useLibraries` below reduces the same answer to what a sidebar row draws, which loses the level
+ * and the uuid's guarantee of being there -- and three views need both: search names the library a
+ * result came from, upload has to offer only the ones somebody may write to, and V7 is about one
+ * of them. One query key, so none of them costs a second request.
+ */
+export function useAllLibraries(): LibrarySummary[] {
+  const { data } = useQuery({ queryKey: keys.libraries(), queryFn: () => get('/api/libraries') });
+  return data ?? [];
 }
 
 export function useLibraries(): Libraries {

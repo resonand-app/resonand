@@ -24,7 +24,6 @@ import type { Filters } from '@/app/url-state';
 
 export type SearchResult = components['schemas']['SearchResult'];
 export type SearchMatch = components['schemas']['SearchMatch'];
-export type Library = components['schemas']['LibrarySummary'];
 
 /** How many recordings the dropdown offers before the see-all row (§3.2). */
 export const QUICK_HITS = 5;
@@ -69,18 +68,6 @@ export function useSearch(
   return usePaged<SearchResult>(keys.search(query), () => get('/api/search', { query }), {
     enabled: (filters.q ?? '').trim() !== '',
   });
-}
-
-/**
- * Every library the caller can read, for the filter that picks one and the byline that names one.
- *
- * The same query key the sidebar reads, so this costs no second request: results span libraries,
- * which is the difference between this screen and a library's grid -- a recording here has to say
- * where it lives, because the same title means different things in two archives.
- */
-export function useReadableLibraries(): Library[] {
-  const { data } = useQuery({ queryKey: keys.libraries(), queryFn: () => get('/api/libraries') });
-  return data ?? [];
 }
 
 /**

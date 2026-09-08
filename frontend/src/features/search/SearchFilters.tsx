@@ -27,6 +27,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useAllLibraries } from '@/app/library-data';
 import { useIsPhone } from '@/app/use-is-phone';
 import { isFiltered, useUrlState } from '@/app/url-state';
 import { FilterBar } from '@/components/FilterBar';
@@ -35,7 +36,6 @@ import { StateToggles } from '@/features/library/StateToggles';
 import { TagPicker } from '@/features/library/TagPicker';
 import { useCategories } from '@/features/library/recordings';
 
-import { useReadableLibraries } from './data';
 import { Button, Select, Sheet, TextField, useAnchoredOverlay } from '@/design-system';
 import type { SelectOption } from '@/design-system';
 
@@ -45,7 +45,7 @@ const MINUTE = 60_000;
 export function SearchFilters() {
   const { t } = useTranslation('search');
   const { filters, set, clear } = useUrlState();
-  const libraryList = useReadableLibraries();
+  const libraryList = useAllLibraries();
   const isPhone = useIsPhone();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rangesOpen, setRangesOpen] = useState(false);
