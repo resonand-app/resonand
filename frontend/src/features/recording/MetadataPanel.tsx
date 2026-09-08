@@ -38,6 +38,7 @@ import { CategoryPicker } from '@/features/library/CategoryPicker';
 import { recordedAt } from '@/i18n/time';
 
 import { TagEditor } from './TagEditor';
+import { RecordingActions } from './RecordingActions';
 import { TechnicalDetails } from './TechnicalDetails';
 import type { RecordingContext } from './data';
 import { useUpdateRecording } from './metadata';
@@ -113,6 +114,7 @@ export function MetadataPanel({ context }: { context: RecordingContext }) {
         }}
       />
       <TechnicalDetails recording={recording} />
+      <RecordingActions context={context} />
     </div>
   );
 }

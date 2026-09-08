@@ -72,5 +72,14 @@
     "copy": "Copy",
     "copied": "Copied",
     "unknown": "Not known yet"
+  },
+  "actions": {
+    "download": "Download the original",
+    "share": "Share this library",
+    "move": "Move to another library",
+    "trash": "Send to the trash",
+    "trashTitle": "Send this recording to the trash?",
+    "trashConsequence_one": "It can be restored for {{count}} day, and is then deleted for good.",
+    "trashConsequence_other": "It can be restored for {{count}} days, and is then deleted for good."
   }
 }
