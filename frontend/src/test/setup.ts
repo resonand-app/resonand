@@ -37,6 +37,19 @@ if (typeof Element.prototype.setPointerCapture !== 'function') {
   Element.prototype.hasPointerCapture = () => false;
 }
 
+/**
+ * Scrolling an element, which jsdom does not implement either.
+ *
+ * `UI-12b`'s follow moves the transcript by calling `scrollTo` on its scroller, and jsdom leaves
+ * `Element.prototype.scrollTo` undefined -- so the call throws inside an effect, which fails the
+ * run while every assertion still passes. A no-op is the honest stand-in: there is no layout for
+ * a scroll to change, and what the tests are about is what the interface asks for, which they
+ * read by spying on this.
+ */
+if (typeof Element.prototype.scrollTo !== 'function') {
+  Element.prototype.scrollTo = () => undefined;
+}
+
 afterEach(() => {
   cleanup();
 });

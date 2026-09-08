@@ -26,6 +26,13 @@
  * `use-follow.ts` -- and it is offered back through a band that stays until it is used, never a
  * toast that vanishes before it is read.
  *
+ * **`↑` and `↓` move between segments by seeking to them** (`UI-12c`, §1.8), which is the same act
+ * as clicking a line and not a second kind of navigation: the position is the only cursor on this
+ * screen, and a focus ring that moved independently of it would be a second one to keep track of.
+ * The bindings come from the shell's one handler, so the transcript answers a command rather than
+ * adding a listener -- and with no transcript on screen the arrows stay the browser's and scroll
+ * the page, which is what somebody pressing them on a long list means by it.
+ *
  * **There is no edit affordance anywhere on it** (`UI-12d`). Manual editing is a later milestone,
  * and a text cursor on a transcript line promises an editor that does not exist. `speaker` is
  * usually empty in v0 and is accommodated without being depended on: when it is there it prefixes
@@ -36,6 +43,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useKeyboard } from '@/app/useKeyboard';
 import { Button, TranscriptLine, usePrefersReducedMotion } from '@/design-system';
 import * as format from '@/i18n/format';
 import { usePlayback } from '@/player/store';
@@ -101,10 +109,9 @@ export function Transcript({ context, transcripts }: TranscriptProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, follow.following, centre]);
 
-  if (recording === undefined || segments.length === 0) return null;
-
   /** Jump to a moment, loading the recording first if it is not the one playing. */
   const seekTo = (segment: Segment) => {
+    if (recording === undefined) return;
     const playback = usePlayback.getState();
     // Choosing a line is somebody saying where they want to be, so it takes following back up.
     follow.resume();
@@ -119,6 +126,38 @@ export function Transcript({ context, transcripts }: TranscriptProps) {
     }
     playback.seek(segment.start_ms);
   };
+
+  /**
+   * The segment `↑` or `↓` means from here.
+   *
+   * With nothing active yet -- the position is before the first line, or another recording is
+   * playing -- `↓` means the first segment and `↑` means nothing, because there is nothing
+   * before the beginning. At either end it does nothing rather than wrapping: a transcript that
+   * jumped from its last line to its first would be a seek nobody asked for.
+   */
+  const step = (delta: number) => {
+    const target = active < 0 ? (delta > 0 ? 0 : -1) : active + delta;
+    const segment = segments[target];
+    if (target < 0 || segment === undefined) return;
+    seekTo(segment);
+  };
+
+  // Only while there is a transcript to move through. `useKeyboard` ignores a command nobody
+  // answers, so an unclaimed arrow key stays the browser's.
+  useKeyboard(
+    segments.length > 0
+      ? {
+          'previous-segment': () => {
+            step(-1);
+          },
+          'next-segment': () => {
+            step(1);
+          },
+        }
+      : {},
+  );
+
+  if (recording === undefined || segments.length === 0) return null;
 
   return (
     <section data-app="transcript" aria-label={t('transcript.label')}>
