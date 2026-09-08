@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button, StateBadge, TranscriptLine } from '@/design-system';
@@ -8,8 +9,13 @@ export interface ResultMatch {
   id: string | number;
   /** Timestamp inside the recording, formatted. "18:04". */
   at: string;
-  /** The matching line of transcript, verbatim. */
-  text: string;
+  /**
+   * The matching line, with the term the database marked already marked.
+   *
+   * A node rather than a string: the marking comes back inside the fragment and §V6 asks for it to
+   * be rendered rather than re-derived from what somebody typed.
+   */
+  text: ReactNode;
 }
 
 export interface ResultGroupProps {
@@ -38,8 +44,12 @@ export interface ResultGroupProps {
  *
  * **Three, and then a count.** The fourth match tells somebody almost nothing the third did not,
  * and the count tells them the thing they actually want to know -- whether this is the recording.
- * `+N more` opens the recording at its transcript rather than expanding here: past three matches
- * the question has stopped being "which recording" and started being "where in it".
+ *
+ * `+N more` opens the recording at its transcript rather than expanding here. That is what the API
+ * makes true as well as what reads best: `GET /search` groups the matches and sends the best three
+ * with `total_matches` beside them, so the fourth match is not on this screen to be revealed --
+ * there is nothing to expand into. And past three the question has stopped being "which recording"
+ * and started being "where in it", which is the transcript's screen and not this one.
  *
  * The matched lines are `TranscriptLine`s, the same component the audio detail view uses, so a
  * line reads identically in the two places somebody meets it -- and clicking one seeks, here as
