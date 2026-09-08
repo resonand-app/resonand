@@ -46,7 +46,8 @@
     "done": "Transcribed",
     "failed": "Transcription failed",
     "none": "Not transcribed",
-    "running": "Transcribing"
+    "running": "Transcribing",
+    "group": "Transcript state"
   },
   "upload": {
     "region": "Uploads"

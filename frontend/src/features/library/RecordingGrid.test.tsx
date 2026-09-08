@@ -275,3 +275,65 @@ describe('the tag filter', () => {
     expect(within(list).queryByRole('button', { name: /memòria/ })).toBeNull();
   });
 });
+
+describe('the transcription state toggles', () => {
+  it('says the same four words the badges do', async () => {
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    const group = screen.getByRole('group', { name: 'Transcript state' });
+    // The badge on a card and the toggle in the bar read the same vocabulary, so the filter and
+    // the thing it filters cannot describe the same state differently.
+    for (const word of ['Not transcribed', 'Transcribing', 'Transcribed', 'Transcription failed']) {
+      expect(within(group).getByRole('button', { name: word })).toBeInTheDocument();
+    }
+  });
+
+  it('are real toggles, and any of them means either', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Transcribed' }));
+    await user.click(screen.getByRole('button', { name: 'Transcribing' }));
+    // Repeated rather than joined: the API unions what it is given, so two states on is one
+    // request that asks for either.
+    const where = screen.getByTestId('where').textContent;
+    expect(where).toContain('transcription_state=done');
+    expect(where).toContain('transcription_state=running');
+    expect(screen.getByRole('button', { name: 'Transcribed' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('leaves the parameter out entirely when none is on', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Transcribed' }));
+    await user.click(screen.getByRole('button', { name: 'Transcribed' }));
+    // None on means every state, which is why there is no "all" toggle -- and why the parameter
+    // is absent rather than empty: `?transcription_state=` asks for the empty string.
+    expect(screen.getByTestId('where').textContent).not.toContain('transcription_state');
+  });
+});
+
+describe('the sort and the density', () => {
+  it('puts a changed sort in the URL and leaves the default out of it', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    // Recorded, newest first, is the API's own default: an unfiltered library has a clean address.
+    expect(screen.getByTestId('where').textContent).not.toContain('sort=');
+    await user.click(screen.getByRole('button', { name: 'Sort oldest and shortest first' }));
+    expect(screen.getByTestId('where').textContent).toContain('direction=asc');
+  });
+
+  it('switches to the dense list, and says so in the address', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'List' }));
+    expect(screen.getByTestId('where').textContent).toContain('view=list');
+    expect(await screen.findByRole('table', { name: 'Recordings' })).toBeInTheDocument();
+  });
+});

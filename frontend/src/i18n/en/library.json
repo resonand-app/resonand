@@ -39,5 +39,19 @@
     "tagPrefix": "Tags starting with",
     "tagSuggestions": "Tags",
     "noTags": "No tags match that."
+  },
+  "sort": {
+    "label": "Sort by",
+    "recorded_at": "Recorded",
+    "created_at": "Uploaded",
+    "duration_ms": "Length",
+    "title": "Title",
+    "toAscending": "Sort oldest and shortest first",
+    "toDescending": "Sort newest and longest first"
+  },
+  "view": {
+    "label": "How to show them",
+    "grid": "Cards",
+    "list": "List"
   }
 }

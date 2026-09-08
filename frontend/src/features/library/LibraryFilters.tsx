@@ -10,14 +10,17 @@
  * enough to use. `useUrlState` owns the shape; this row only decides which of its controls a
  * library needs.
  *
- * The controls arrive one task at a time: the category tree (`UI-8a`) and the tags (`UI-8b`) are
- * here; the four state toggles come with `UI-8c`, and the sort and view switch with `UI-8d`.
+ * Four controls: the category tree (`UI-8a`), the tags (`UI-8b`), the four transcription states
+ * (`UI-8c`), and the sort with the density switch at the other end of the row (`UI-8d`). The
+ * phone collapses the whole bar into a sheet (`UI-8e`).
  */
 
 import { useUrlState } from '@/app/url-state';
 import { FilterBar } from '@/components/FilterBar';
 
 import { CategoryPicker } from './CategoryPicker';
+import { SortControl, ViewSwitch } from './SortControl';
+import { StateToggles } from './StateToggles';
 import { TagPicker } from './TagPicker';
 import type { Category } from './recordings';
 
@@ -48,7 +51,30 @@ export function LibraryFilters({ categories, meta }: LibraryFiltersProps) {
               set({ tags });
             }}
           />
+          <StateToggles
+            value={filters.states}
+            onChange={(states) => {
+              set({ states });
+            }}
+          />
         </>
+      }
+      sort={
+        <SortControl
+          sort={filters.sort}
+          direction={filters.direction}
+          onSort={(sort, direction) => {
+            set({ sort, direction });
+          }}
+        />
+      }
+      view={
+        <ViewSwitch
+          value={filters.view}
+          onChange={(view) => {
+            set({ view });
+          }}
+        />
       }
     />
   );
