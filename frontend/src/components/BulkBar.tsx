@@ -51,7 +51,7 @@ export function BulkBar({ count, allSelected, onSelectAll, onClear, actions }: B
       <Checkbox
         checked={allSelected}
         onChange={onSelectAll}
-        label={allSelected === true ? 'Clear the selection' : 'Select everything here'}
+        label={t(allSelected === true ? 'selection.clearAll' : 'selection.all')}
         size="row"
       />
       <span

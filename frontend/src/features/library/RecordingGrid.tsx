@@ -22,6 +22,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
+import { shiftHeld } from '@/app/modifiers';
 import { toRecording } from '@/app/routes';
 import { RecordingCard } from '@/design-system';
 import * as format from '@/i18n/format';
@@ -38,6 +39,16 @@ export interface RecordingGridProps {
   libraryName: string;
   /** Whether the deferred per-card waveform fetches may start (`UI-31b`). */
   waveforms: boolean;
+  /**
+   * The selection, when this library offers one (`UI-9a`).
+   *
+   * Absent on a read-only library rather than disabled: what somebody cannot do is not drawn
+   * (§3.5), and a grid of ticked-off checkboxes reads as a bug.
+   */
+  selection?: {
+    selected: ReadonlySet<string>;
+    onToggle: (uuid: string, extend: boolean) => void;
+  };
 }
 
 export function RecordingGrid({
@@ -45,6 +56,7 @@ export function RecordingGrid({
   categories,
   libraryName,
   waveforms,
+  selection,
 }: RecordingGridProps) {
   return (
     <div
@@ -62,6 +74,7 @@ export function RecordingGrid({
           category={categories.nameOf(recording.category_id)}
           libraryName={libraryName}
           waveforms={waveforms}
+          {...(selection === undefined ? {} : { selection })}
         />
       ))}
     </div>
@@ -73,11 +86,13 @@ function Card({
   category,
   libraryName,
   waveforms,
+  selection,
 }: {
   recording: Recording;
   category: string | undefined;
   libraryName: string;
   waveforms: boolean;
+  selection?: RecordingGridProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
   // Subscribed narrowly: a card re-renders when it becomes the playing one, and the position is
@@ -110,6 +125,19 @@ function Card({
       pending={pending}
       played={played}
       playing={isPlaying}
+      {...(selection === undefined
+        ? {}
+        : {
+            selected: selection.selected.has(recording.uuid),
+            selecting: selection.selected.size > 0,
+            onSelect: () => {
+              // The event is read from the DOM rather than passed through the checkbox's own
+              // handler, because `⇧`-click is a property of the click and not of the checkbox
+              // (`UI-9d`). A checkbox that took a modifier as a prop would be a checkbox that
+              // knew about ranges.
+              selection.onToggle(recording.uuid, shiftHeld());
+            },
+          })}
       onPlay={() => {
         const state = usePlayback.getState();
         // The same control pauses what it started. Anything else is a new recording, which
@@ -127,6 +155,7 @@ function Card({
       labels={{
         play: (name) => t('card.play', { name }),
         pause: (name) => t('card.pause', { name }),
+        select: (name) => t('card.select', { name }),
         state: t(`common:transcription.${state}`),
         moreTags: (count) => t('card.moreTags', { count }),
         sharedIndividually: t('card.sharedIndividually'),

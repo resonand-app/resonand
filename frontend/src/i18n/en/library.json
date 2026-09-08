@@ -17,7 +17,8 @@
     "play": "Play {{name}}",
     "moreTags": "+{{count}}",
     "sharedIndividually": "Shared on its own, apart from this library",
-    "pause": "Pause {{name}}"
+    "pause": "Pause {{name}}",
+    "select": "Select {{name}}"
   },
   "list": {
     "label": "Recordings",
@@ -28,7 +29,8 @@
     "duration": "Length",
     "date": "Recorded",
     "category": "Category",
-    "tags": "Tags"
+    "tags": "Tags",
+    "select": "Selected"
   },
   "filters": {
     "category": "Category",

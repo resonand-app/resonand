@@ -26,7 +26,9 @@
     "more": "+{{count}} more in this recording"
   },
   "selection": {
-    "count": "{{count}} selected"
+    "count": "{{count}} selected",
+    "all": "Select everything here",
+    "clearAll": "Clear the selection"
   },
   "state": {
     "empty": "Nothing here yet",

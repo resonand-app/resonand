@@ -396,3 +396,59 @@ describe('the filter bar on a phone', () => {
     expect(screen.getByRole('group', { name: 'How to show them' })).toBeVisible();
   });
 });
+
+describe('selecting recordings', () => {
+  it('turns the filter bar into a bulk bar rather than showing both', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    // A selection is a mode: the question on screen becomes what to do with these, not which
+    // others to find. Both bars are the same height, so nothing moved.
+    expect(screen.getByText('1 selected')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Any category/ })).toBeNull();
+  });
+
+  it('counts a selection rather than naming it', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const first = await cardFor('The house on Carrer Nou');
+    const second = await cardFor('Sopar de Nadal 1998');
+    await user.click(within(first).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(within(second).getByRole('checkbox', { name: /^Select/ }));
+    // It has to survive a selection of two hundred, and two hundred titles is a paragraph where
+    // a number belongs.
+    expect(screen.getByText('2 selected')).toBeVisible();
+  });
+
+  it('offers a way out, and the way out clears it', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('button', { name: 'Clear' }));
+    expect(await screen.findByRole('button', { name: /Any category/ })).toBeVisible();
+  });
+
+  it('has no checkboxes at all on a library you can only read', async () => {
+    archive.libraries = archive.libraries.map((one) =>
+      one.uuid === AVIA ? { ...one, level: 10 } : one,
+    );
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    // Absent rather than disabled: a grid of ticked-off checkboxes leading to a dead bar reads as
+    // a bug, and their absence reads as a decision (§3.5).
+    expect(within(card).queryByRole('checkbox')).toBeNull();
+  });
+
+  it('says whether every card in view is selected, or only some', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    const all = screen.getByRole('checkbox', { name: 'Select everything here' });
+    expect(all).toHaveAttribute('aria-checked', 'mixed');
+    await user.click(all);
+    expect(screen.getByText('3 selected')).toBeVisible();
+  });
+});

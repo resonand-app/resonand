@@ -34,6 +34,7 @@ import { useNavigate } from 'react-router';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
 import { toRecording } from '@/app/routes';
+import { shiftHeld } from '@/app/modifiers';
 import { useUrlState } from '@/app/url-state';
 import type { SortDirection, SortField } from '@/app/url-state';
 import { Icon, RecordingRow, RowSkeleton } from '@/design-system';
@@ -56,6 +57,11 @@ const MAX_HEIGHT = 720;
 
 export interface RecordingListProps {
   libraryUuid: string;
+  /** The selection, when this library offers one (`UI-9a`). Absent where it does not. */
+  selection?: {
+    selected: ReadonlySet<string>;
+    onToggle: (uuid: string, extend: boolean) => void;
+  };
   /** The library's category tree, for the column that names one. */
   categories: Categories;
   /** The API query the rows are drawn from: the filters, without a window. */
@@ -72,6 +78,7 @@ export function RecordingList({
   query,
   libraryName,
   waveforms,
+  selection,
 }: RecordingListProps) {
   // The virtualiser measures a live DOM node and hands back functions whose results change
   // without its inputs changing, which is exactly what the React Compiler is entitled to assume
@@ -105,7 +112,7 @@ export function RecordingList({
 
   return (
     <div role="table" aria-label={t('list.label')} aria-rowcount={total}>
-      <Columns />
+      <Columns selecting={selection !== undefined} />
       <div
         ref={scroller}
         style={{
@@ -140,6 +147,7 @@ export function RecordingList({
                     category={categories.nameOf(recording.category_id)}
                     libraryName={libraryName}
                     waveforms={waveforms}
+                    {...(selection === undefined ? {} : { selection })}
                   />
                 )}
               </div>
@@ -159,7 +167,7 @@ export function RecordingList({
  * The four headings the API can sort by are buttons (`UI-7d`); the rest are labels, because a
  * heading that looks pressable and does nothing is worse than one that plainly is not.
  */
-function Columns() {
+function Columns({ selecting }: { selecting: boolean }) {
   const { t } = useTranslation('library');
   const { filters, set } = useUrlState();
 
@@ -206,6 +214,13 @@ function Columns() {
         color: 'var(--text-3)',
       }}
     >
+      {selecting && (
+        <span
+          role="columnheader"
+          style={{ width: 16, flex: '0 0 auto' }}
+          aria-label={t('list.select')}
+        />
+      )}
       <span
         role="columnheader"
         style={{ width: 26, flex: '0 0 auto' }}
@@ -311,11 +326,13 @@ function Row({
   category,
   libraryName,
   waveforms,
+  selection,
 }: {
   recording: Recording;
   category: string | undefined;
   libraryName: string;
   waveforms: boolean;
+  selection?: RecordingListProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
   const navigate = useNavigate();
@@ -342,6 +359,14 @@ function Row({
       pending={pending}
       played={played}
       playing={isPlaying}
+      {...(selection === undefined
+        ? {}
+        : {
+            selected: selection.selected.has(recording.uuid),
+            onSelect: () => {
+              selection.onToggle(recording.uuid, shiftHeld());
+            },
+          })}
       onOpen={() => {
         void navigate(toRecording(recording.uuid));
       }}
@@ -360,6 +385,7 @@ function Row({
       labels={{
         play: (name) => t('card.play', { name }),
         pause: (name) => t('card.pause', { name }),
+        select: (name) => t('card.select', { name }),
         state: t(`common:transcription.${state}`),
       }}
     />

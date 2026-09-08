@@ -669,6 +669,7 @@
    A ring survives beside a selected card, reads in both themes, and does not compete with the
    four transcription-state colours already on the card. */
 [data-ds='recording-card'] {
+  background: var(--surface);
   box-shadow: var(--elevation-card);
 }
 
@@ -677,6 +678,37 @@
     var(--elevation-card),
     inset 0 0 0 2px var(--accent);
 }
+
+/* Selection appears when it is wanted and not before (`UI-9a`).
+ *
+ * A grid at rest is a grid of recordings, not a form -- so the checkbox is hidden until a pointer
+ * is on the card or a selection already exists. `visibility` rather than `display`, because the
+ * box has to keep its space: a card whose title shifted 26px on hover would be a card nobody can
+ * click accurately.
+ *
+ * **A keyboard reaches it whatever the pointer is doing.** `:focus-within` is the half that makes
+ * the hover rule honest -- without it, tabbing into an invisible checkbox is a focus ring around
+ * nothing, which is the exact failure a hover-only affordance always produces. */
+[data-ds='card-select'] {
+  visibility: hidden;
+}
+
+[data-ds='recording-card']:hover [data-ds='card-select'],
+[data-ds='recording-card']:focus-within [data-ds='card-select'],
+[data-ds='recording-card'][data-selecting='true'] [data-ds='card-select'] {
+  visibility: visible;
+}
+
+/* A selected card takes the surface step, and keeps the accent ring if it is also playing --
+   selection and playback are two different facts about one recording and have to be legible at
+   the same time. Its resting background is declared above rather than inline for the reason the
+   elevation is: an inline value beats every rule this file could write. */
+[data-ds='recording-card'][data-selected='true'] {
+  background: var(--surface-2);
+}
+
+/* The dense list's checkbox is in a column of its own, so it is always there: a column that
+   appeared on hover would make every row 16px narrower than its neighbours. */
 
 /* A recording's title is a link into the recording, and looks like the title it is -- the same
    arrangement as a library card's, for the same reason. */

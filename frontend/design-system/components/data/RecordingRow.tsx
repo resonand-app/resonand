@@ -1,13 +1,18 @@
-import type { HTMLAttributes, KeyboardEvent } from 'react';
+import type { HTMLAttributes, KeyboardEvent, MouseEvent } from 'react';
 
 import type { TranscriptionState } from '../../transcription-states';
 import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
+import { Checkbox } from '../forms/Checkbox';
 import { IconButton } from '../forms/IconButton';
 import { Chip } from './Chip';
 import { StateBadge } from './StateBadge';
 
-export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
+// `onSelect` hands back whether it is now selected rather than a DOM event, and `HTMLAttributes`
+// already has one. Omitting it is what lets the narrower signature stand rather than silently
+// shadow a native handler -- the same arrangement `Sidebar` makes for the same reason.
+export interface RecordingRowProps
+  extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   name: string;
   /** Formatted duration, mono and tabular. */
   duration: string;
@@ -29,6 +34,8 @@ export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
   pending?: boolean;
   /** Row is the current selection or the playing recording. */
   selected?: boolean;
+  /** The selection control, in its own column (`UI-9a`). Absent where selection is not offered. */
+  onSelect?: (selected: boolean) => void;
   /** Whether this is the recording the player is playing (`UI-7a`). */
   playing?: boolean;
   onOpen?: () => void;
@@ -42,6 +49,7 @@ export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
     play?: (name: string) => string;
     pause?: (name: string) => string;
     state?: string;
+    select?: (name: string) => string;
   };
 }
 
@@ -67,6 +75,7 @@ export function RecordingRow({
   selected = false,
   playing = false,
   onOpen,
+  onSelect,
   onPlay,
   labels,
   onKeyDown,
@@ -74,6 +83,21 @@ export function RecordingRow({
   ...rest
 }: RecordingRowProps) {
   const interactive = onOpen !== undefined;
+
+  /**
+   * The row opens the recording; the controls inside it do their own thing.
+   *
+   * Decided here rather than by stopping propagation in a wrapper around each control: a `<span>`
+   * whose only job is to swallow clicks is a non-interactive element with a click handler, which
+   * is a thing a screen reader cannot make sense of and jsx-a11y is right to refuse. Asking where
+   * the click came from keeps the decision on the element that is actually interactive.
+   */
+  const open = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest('[data-ds="row-select"]') !== null) {
+      return;
+    }
+    onOpen?.();
+  };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
@@ -86,7 +110,7 @@ export function RecordingRow({
 
   return (
     <div
-      onClick={onOpen}
+      onClick={open}
       onKeyDown={handleKeyDown}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
@@ -105,6 +129,16 @@ export function RecordingRow({
       }}
       {...rest}
     >
+      {onSelect !== undefined && (
+        <span data-ds="row-select" style={{ flex: '0 0 auto', display: 'flex' }}>
+          <Checkbox
+            checked={selected}
+            onChange={onSelect}
+            size="row"
+            label={labels?.select?.(name) ?? `Select ${name}`}
+          />
+        </span>
+      )}
       {onPlay !== undefined && (
         <IconButton
           icon={playing ? 'pause' : 'play'}

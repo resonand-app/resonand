@@ -10,10 +10,21 @@
  * **Which density is in the URL** (`UI-4b`), so a dense list is a thing somebody can link to and
  * reload into. The grid is the default, so only `?view=list` is ever written.
  *
- * What arrives in later tasks: the filter bar (`UI-8a`), selection and the bulk bar (`UI-9a`),
- * and the states (`UI-10a`).
+ * **The bulk bar replaces the filter bar rather than sitting beside it** (`UI-9a`, §V3). Both are
+ * the same height, so the row does not move when the first checkbox is ticked -- and a selection
+ * is a mode: while one exists, the question on screen is what to do with these, not which others
+ * to find.
+ *
+ * **Selection is offered only where something can be done with it.** A read-only library has no
+ * checkboxes at all rather than checkboxes that lead to a disabled bar (§3.5): what somebody
+ * cannot do is absent, because a disabled row of actions reads as a bug and its absence reads as
+ * a decision. `UI-10c` finishes that thought for the rest of the screen.
+ *
+ * What arrives in later tasks: the bulk actions themselves (`UI-9b`), partial failure (`UI-9c`),
+ * the keyboard (`UI-9d`), and the states (`UI-10a`).
  */
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
@@ -25,10 +36,12 @@ import { useAfterPaint } from '@/app/use-after-paint';
 
 import { LibraryFilters } from './LibraryFilters';
 import { LibraryHeader } from './LibraryHeader';
+import { LibraryBulkBar } from './LibraryBulkBar';
 import { RecordingGrid } from './RecordingGrid';
 import { RecordingList } from './RecordingList';
 import { useLibrary } from './data';
 import { libraryQuery, useCategories, useRecordings } from './recordings';
+import { EMPTY, coverage, extendTo, selectAll, toggle } from './selection';
 
 export function LibraryView() {
   const { uuid = '' } = useParams();
@@ -39,17 +52,44 @@ export function LibraryView() {
   // The grid takes one page; the dense list windows over the whole library and so is handed the
   // filters without a window of their own.
   const recordings = useRecordings(uuid, libraryQuery(filters, { limit: PAGE_SIZE, offset: 0 }));
+  const [selection, setSelection] = useState(EMPTY);
+
+  // The order a range is measured in is the order on screen (`UI-9d`). The grid has its page; the
+  // dense list windows over the whole library, so a range there spans what has been fetched.
+  const order = recordings.items.map((recording) => recording.uuid);
 
   if (context.error !== null && context.error !== undefined) {
     return <Unavailable error={context.error} onRetry={context.refetch} />;
   }
 
   const libraryName = context.library?.name ?? '';
+  // Absent rather than disabled: a library you can only read has no checkboxes (§3.5).
+  const selectable = context.canEdit
+    ? {
+        selected: selection.selected,
+        onToggle: (one: string, extend: boolean) => {
+          setSelection((was) => (extend ? extendTo(was, one, order) : toggle(was, one)));
+        },
+      }
+    : undefined;
 
   return (
     <section>
       <LibraryHeader context={context} />
-      <LibraryFilters categories={categories.all} />
+      {selection.selected.size > 0 ? (
+        <LibraryBulkBar
+          count={selection.selected.size}
+          allSelected={coverage(selection, order)}
+          onSelectAll={(on) => {
+            setSelection((was) => selectAll(was, order, on));
+          }}
+          onClear={() => {
+            setSelection(EMPTY);
+          }}
+        />
+      ) : (
+        <LibraryFilters categories={categories.all} />
+      )}
       {filters.view === 'list' ? (
         <RecordingList
           libraryUuid={uuid}
@@ -57,6 +97,7 @@ export function LibraryView() {
           query={libraryQuery(filters)}
           libraryName={libraryName}
           waveforms={painted}
+          {...(selectable === undefined ? {} : { selection: selectable })}
         />
       ) : (
         <RecordingGrid
@@ -64,6 +105,7 @@ export function LibraryView() {
           categories={categories}
           libraryName={libraryName}
           waveforms={painted}
+          {...(selectable === undefined ? {} : { selection: selectable })}
         />
       )}
     </section>
