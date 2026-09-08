@@ -210,7 +210,17 @@ export const handlers: HttpHandler[] = [
       const existing = archive.categories[key] ?? [];
       const found_ = existing.find((one) => String(one.id) === params.category_id);
       if (!found_) return NOT_FOUND();
-      const updated = { ...found_, ...(body.name ? { name: body.name } : {}) };
+      // Re-parenting, and the flag that means the root. A null `parent_id` means "leave it
+      // alone" here as it does in the API, which is the whole reason `clear_parent` exists --
+      // a mock that treated the two the same would make `UI-17b`'s move-to-the-top untestable.
+      const updated = {
+        ...found_,
+        ...(body.name ? { name: body.name } : {}),
+        ...(body.clear_parent === true ? { parent_id: null } : {}),
+        ...(body.parent_id === undefined || body.parent_id === null
+          ? {}
+          : { parent_id: body.parent_id }),
+      };
       archive.categories = {
         ...archive.categories,
         [key]: existing.map((one) => (one === found_ ? updated : one)),
@@ -218,15 +228,39 @@ export const handlers: HttpHandler[] = [
       return HttpResponse.json(updated);
     },
   ),
-  http.post('/api/libraries/:library_uuid/categories/order', ({ params }) =>
-    HttpResponse.json(archive.categories[String(params.library_uuid)] ?? []),
-  ),
-  http.delete('/api/libraries/:library_uuid/categories/:category_id', ({ params }) => {
+  http.post('/api/libraries/:library_uuid/categories/order', async ({ params, request }) => {
+    // `ordered_ids` is applied, because a reorder that answered with the old order would make a
+    // view's move-up button look broken in a test and work in the product, or the reverse.
+    const body = (await request.json()) as Schemas['ReorderCategories'];
     const key = String(params.library_uuid);
+    const existing = archive.categories[key] ?? [];
+    const positions = new Map(body.ordered_ids.map((id, index) => [id, index]));
     archive.categories = {
       ...archive.categories,
-      [key]: (archive.categories[key] ?? []).filter((one) => String(one.id) !== params.category_id),
+      [key]: existing.map((one) =>
+        positions.has(one.id) ? { ...one, position: positions.get(one.id) ?? one.position } : one,
+      ),
     };
+    return HttpResponse.json(archive.categories[key]);
+  }),
+  http.delete('/api/libraries/:library_uuid/categories/:category_id', ({ params }) => {
+    const key = String(params.library_uuid);
+    const existing = archive.categories[key] ?? [];
+    // The sub-categories go with it and the recordings do not, which is what the API does: the
+    // foreign key is `ON DELETE SET NULL`, so a recording loses its category and stays.
+    const going = new Set<number>();
+    const collect = (id: number) => {
+      going.add(id);
+      for (const child of existing.filter((one) => one.parent_id === id)) collect(child.id);
+    };
+    collect(Number(params.category_id));
+    archive.categories = {
+      ...archive.categories,
+      [key]: existing.filter((one) => !going.has(one.id)),
+    };
+    archive.recordings = archive.recordings.map((one) =>
+      one.category_id !== null && going.has(one.category_id) ? { ...one, category_id: null } : one,
+    );
     return new HttpResponse(null, { status: 204 });
   }),
   http.get('/api/libraries/:library_uuid/shares', ({ params }) =>

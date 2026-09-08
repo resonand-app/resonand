@@ -27,14 +27,18 @@ import { isApiProblem } from '@/api/problem';
 import { colourOf } from '@/app/library-data';
 import { ColorSwatchPicker, InlineField, PageHeader, StateCard } from '@/design-system';
 import { useLibrary } from '@/features/library/data';
+import { useCategories } from '@/features/library/recordings';
 
-import { useUpdateLibrary } from './data';
+import { CategoryTree } from './CategoryTree';
+import { useCategoryEdits, useUpdateLibrary } from './data';
 
 export function LibrarySettingsView() {
   const { t } = useTranslation('librarySettings');
   const { uuid = '' } = useParams();
   const context = useLibrary(uuid);
   const update = useUpdateLibrary(uuid);
+  const categories = useCategories(uuid);
+  const categoryEdits = useCategoryEdits(uuid);
   const library = context.library;
 
   if (context.error !== null && context.error !== undefined) {
@@ -112,6 +116,13 @@ export function LibrarySettingsView() {
             </div>
           )}
         </section>
+
+        <CategoryTree
+          uuid={uuid}
+          categories={categories.all}
+          edits={categoryEdits}
+          canManage={context.canManage}
+        />
       </div>
     </section>
   );

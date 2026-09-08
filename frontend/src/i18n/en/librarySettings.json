@@ -13,5 +13,25 @@
   },
   "error": {
     "title": "That did not work"
+  },
+  "categories": {
+    "title": "Categories",
+    "none": "This library has no categories.",
+    "first": "No categories yet. The first one goes here.",
+    "add": "New category",
+    "create": "Add",
+    "atRoot": "At the top level",
+    "parentOf": "What {{name}} sits under",
+    "up": "Move {{name}} up",
+    "down": "Move {{name}} down",
+    "remove": "Delete {{name}}",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody_zero": "Nothing is in it. Deleting a category never deletes recordings.",
+    "deleteBody_one": "{{count}} recording loses its category. It is not deleted.",
+    "deleteBody_other": "{{count}} recordings lose their category. They are not deleted.",
+    "deleteWithChildren_zero": "Its {{children}} sub-categories go with it. Nothing is in them, and deleting a category never deletes recordings.",
+    "deleteWithChildren_one": "Its {{children}} sub-categories go with it, and {{count}} recording loses its category. No recording is deleted.",
+    "deleteWithChildren_other": "Its {{children}} sub-categories go with it, and {{count}} recordings lose their category. No recording is deleted.",
+    "deleteConfirm": "Delete the category"
   }
 }
