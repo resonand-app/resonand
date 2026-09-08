@@ -9,6 +9,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -34,6 +35,36 @@ function show(uuid: string = AVIA) {
     </QueryClientProvider>,
   );
 }
+
+describe('the three variants', () => {
+  it('keeps the panel and drops the controls when you can edit but not manage', async () => {
+    server.use(
+      http.get('/api/libraries/:library_uuid', ({ params }) =>
+        HttpResponse.json({
+          ...archive.libraries.find((one) => one.uuid === params.library_uuid),
+          level: 20,
+        }),
+      ),
+    );
+    show();
+    // Read-only rather than absent: seeing who else has access is part of knowing what you are
+    // working in.
+    expect(await screen.findByText('Marta')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Remove Marta/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/only somebody who can manage it/i)).toBeVisible();
+  });
+
+  it('cannot share the personal library away, and says why once', async () => {
+    show(PERSONAL);
+    expect(await screen.findByText(/personal library cannot be shared/i)).toBeVisible();
+    expect(screen.queryByLabelText(/their email address/i)).not.toBeInTheDocument();
+  });
+
+  it('says which half of the answer it is showing, since a moved recording carries its own', async () => {
+    show();
+    expect(await screen.findByText(/can carry access of its own/i)).toBeVisible();
+  });
+});
 
 describe('giving somebody access', () => {
   it('asks nothing until a whole address has been typed, so it cannot be a directory', async () => {
@@ -69,16 +100,19 @@ describe('giving somebody access', () => {
   });
 
   it('grants at the level chosen, and only once the whole address matched', async () => {
-    show(PERSONAL);
+    // A library nobody has been given access to yet, which is what the add form is for. The
+    // personal one has no form at all, and that is `UI-17e`'s business rather than this test's.
+    archive.shares = { ...archive.shares, [AVIA]: [] };
+    show();
     await userEvent.type(
       await screen.findByLabelText(/their email address/i),
       'marta@example.test',
     );
     await userEvent.click(await screen.findByRole('button', { name: /Share with Marta/i }));
     await waitFor(() => {
-      expect(archive.shares[PERSONAL]).toHaveLength(1);
+      expect(archive.shares[AVIA]).toHaveLength(1);
     });
-    expect(archive.shares[PERSONAL]?.[0]?.level).toBe(10);
+    expect(archive.shares[AVIA]?.[0]?.level).toBe(10);
   });
 
   it('does not offer to add somebody who is already there', async () => {

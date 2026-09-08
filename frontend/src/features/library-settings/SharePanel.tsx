@@ -29,6 +29,22 @@
  * was given out of band, and **the interface must not look like a directory**: no suggestions
  * while typing, no list, and a field that says plainly it is not searching for people.
  *
+ * **The three variants are one panel, not three** (`UI-17e`).
+ *
+ * *The personal library* cannot be shared away: there is no add form and one quiet line says why,
+ * because a library that exists so that a recording always has somewhere to go is not one you can
+ * hand to somebody else.
+ *
+ * *Shared with you at Can edit* keeps the panel and loses the controls. It is **read-only rather
+ * than absent**: seeing who else has access is part of knowing what you are working in, and
+ * hiding it would make a shared library feel like a private one.
+ *
+ * *Access granted on a single recording* is not something v0 creates, and the distinction is drawn
+ * anyway. §V7 asks for the panel to be shaped so that adding it later does not redesign the
+ * screen, and there is a more immediate reason: a recording **moved** into this library can arrive
+ * carrying an individual grant, so somebody reading "who has access" here is already reading only
+ * half the answer. The list says which half it is, and where the other half is shown.
+ *
  * **`granted_by` is an id, and only some ids can be named.** The API sends the granter's user id
  * and no name, and the only people this screen can put a name to are the owner, the signed-in
  * account and the grantees themselves. When it cannot, the line says when rather than inventing a
@@ -48,7 +64,13 @@ import { useLookup } from './data';
 import type { Level, ShareEdits, ShareSummary, UserSummary } from './data';
 
 export interface SharePanelProps {
-  library: { uuid: string; name: string; owner: UserSummary; audio_count: number };
+  library: {
+    uuid: string;
+    name: string;
+    owner: UserSummary;
+    audio_count: number;
+    is_personal: boolean;
+  };
   shares: readonly ShareSummary[];
   edits: ShareEdits;
   /** Level 30. Below it the panel is read-only rather than absent (`UI-17e`). */
@@ -80,6 +102,9 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <h2 style={heading}>{t('shares.title')}</h2>
+      {/* Which half of the answer this is. Individual grants are not made in v0, but a recording
+          moved into this library can arrive carrying one, and it is shown on the recording. */}
+      <p style={quiet}>{t('shares.throughThisLibrary')}</p>
       {shares.length === 0 && <p style={quiet}>{t('shares.none')}</p>}
       <ul aria-label={t('shares.title')} style={list}>
         {shares.map((share) => (
@@ -134,7 +159,15 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
         ))}
       </ul>
 
-      {canManage && <AddPerson levels={levels} shares={shares} edits={edits} />}
+      {/* The personal library cannot be shared away: it exists so that a recording always has
+          somewhere to go, and handing it to somebody else would take that away. Absent rather
+          than disabled, with the reason said once. */}
+      {library.is_personal ? (
+        <p style={quiet}>{t('shares.personal')}</p>
+      ) : (
+        canManage && <AddPerson levels={levels} shares={shares} edits={edits} />
+      )}
+      {!canManage && !library.is_personal && <p style={quiet}>{t('shares.readOnly')}</p>}
 
       {revoking !== null && (
         <Modal

@@ -44,7 +44,10 @@
     "revokeTitle": "Remove {{name}}?",
     "revokeBody_one": "{{name}} loses access to the {{count}} recording in {{library}}.",
     "revokeBody_other": "{{name}} loses access to all {{count}} recordings in {{library}}.",
-    "revokeConfirm": "Remove their access"
+    "revokeConfirm": "Remove their access",
+    "throughThisLibrary": "Access through this library. A recording moved here from somewhere else can carry access of its own, which is shown on the recording.",
+    "personal": "Your personal library cannot be shared. It is where a recording goes when nobody chose, so it stays yours.",
+    "readOnly": "You can add to this library but not share it onwards. Only somebody who can manage it can change who has access."
   },
   "add": {
     "title": "Give somebody access",
