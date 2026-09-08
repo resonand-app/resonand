@@ -28,5 +28,11 @@
     "speed": "Playback speed",
     "speedNow": "Playback speed, now {{speed}}",
     "noWaveform": "The waveform is still being made. The recording plays; the picture is not there yet."
+  },
+  "transcript": {
+    "label": "Transcript",
+    "heading_one": "{{count}} segment",
+    "heading_other": "{{count}} segments",
+    "hint": "Click a line to jump there."
   }
 }

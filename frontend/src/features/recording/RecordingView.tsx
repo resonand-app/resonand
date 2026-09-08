@@ -36,6 +36,7 @@ import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 
 import { RecordingPlayer } from './RecordingPlayer';
+import { Transcript } from './Transcript';
 import { useRecording } from './data';
 import type { RecordingContext } from './data';
 import { useTranscripts } from './transcripts';
@@ -55,6 +56,7 @@ export function RecordingView() {
       <Whereabouts context={context} />
       <Essentials context={context} version={transcripts.activeVersion} />
       <RecordingPlayer context={context} />
+      <Transcript context={context} transcripts={transcripts} />
     </article>
   );
 }
