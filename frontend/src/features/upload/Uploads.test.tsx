@@ -1,0 +1,128 @@
+/**
+ * The tray (`UI-18e`, §3.3).
+ *
+ * The requirement is that an upload is not lost when somebody navigates, so the test that matters
+ * is the one that navigates.
+ */
+
+import { QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { HttpResponse, delay, http } from 'msw';
+import { MemoryRouter, Route, Routes, useNavigate } from 'react-router';
+import { beforeEach, describe, expect, it } from 'vitest';
+
+import { createQueryClient } from '@/api/query-client';
+import { PERSONAL } from '@/test/api/archive';
+import { mockApi, server } from '@/test/api/server';
+
+import { UploadPanel, Uploads } from './Uploads';
+import { useUploads } from './uploads';
+
+mockApi();
+
+function file(name = 'avia.m4a'): File {
+  return new File([new Uint8Array(64)], name);
+}
+
+/** A page with a link to another one, and the tray outside the routes, as the shell has it. */
+function Elsewhere() {
+  const navigate = useNavigate();
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void navigate('/library/x');
+      }}
+    >
+      go elsewhere
+    </button>
+  );
+}
+
+function show(tray = <Uploads />) {
+  const client = createQueryClient();
+  client.setDefaultOptions({ queries: { retry: false } });
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<Elsewhere />} />
+          <Route path="/library/x" element={<p>another screen</p>} />
+        </Routes>
+        {tray}
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
+describe('the tray', () => {
+  beforeEach(() => {
+    useUploads.setState({ files: [], collapsed: false });
+  });
+
+  it('is absent when nothing is uploading, so the shell reflows', () => {
+    show();
+    expect(screen.queryByRole('region', { name: /uploads/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps uploading across a navigation, which is the whole reason it is not a modal', async () => {
+    server.use(
+      http.post('/api/libraries/:library_uuid/audio', async () => {
+        await delay(80);
+        return HttpResponse.json({ uuid: 'new-1' }, { status: 201 });
+      }),
+    );
+    show();
+    useUploads.getState().add([file()], { library: PERSONAL });
+    await screen.findByText('avia.m4a');
+    await userEvent.click(screen.getByRole('button', { name: /go elsewhere/i }));
+    expect(await screen.findByText('another screen')).toBeInTheDocument();
+    // Same file, still going, on a screen it was not started from.
+    expect(screen.getByText('avia.m4a')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(useUploads.getState().files[0]?.status).toBe('done');
+    });
+  });
+
+  it('collapses to one line without losing the answer', async () => {
+    show();
+    useUploads.getState().add([file(), file('nadal.mp3')], { library: PERSONAL });
+    await screen.findByText('avia.m4a');
+    await userEvent.click(screen.getByRole('button', { name: /hide the uploads/i }));
+    expect(screen.queryByText('avia.m4a')).not.toBeInTheDocument();
+    // The summary is the same sentence in both states.
+    expect(screen.getByText(/of 2 uploaded/)).toBeInTheDocument();
+  });
+
+  it('cannot be closed while anything is still going', async () => {
+    server.use(
+      http.post('/api/libraries/:library_uuid/audio', async () => {
+        await delay(200);
+        return HttpResponse.json({ uuid: 'new-1' }, { status: 201 });
+      }),
+    );
+    show();
+    useUploads.getState().add([file()], { library: PERSONAL });
+    await screen.findByText('avia.m4a');
+    expect(screen.queryByRole('button', { name: /close the tray/i })).not.toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(useUploads.getState().files[0]?.status).toBe('done');
+      },
+      { timeout: 3000 },
+    );
+    expect(await screen.findByRole('button', { name: /close the tray/i })).toBeInTheDocument();
+  });
+});
+
+describe('the phone tab', () => {
+  beforeEach(() => {
+    useUploads.setState({ files: [], collapsed: false });
+  });
+
+  it('says what it is for when nothing is going, rather than being blank', () => {
+    show(<UploadPanel onAdd={() => undefined} />);
+    expect(screen.getByText(/keeps going while you use the rest of the app/i)).toBeVisible();
+  });
+});

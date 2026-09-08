@@ -11,8 +11,10 @@
  * the grid drops to two columns rather than after. Below 720 this component is not rendered at
  * all -- the phone shell replaces it rather than narrowing it (`UI-4f`, `DEC-23`).
  *
- * The player and the tray are passed through. They belong to `UI-5` and `UI-18` and both outlive
- * every view, which is exactly why they are given to the frame rather than rendered inside one.
+ * The player and the tray belong to `UI-5` and `UI-18` and both outlive every view, which is
+ * exactly why they are drawn by the frame rather than inside one: an upload that died on a
+ * navigation is the one thing `UI-18` forbids. Both props stay, for a test that wants to put
+ * something else there.
  */
 
 import { useEffect, useRef, useState } from 'react';
@@ -24,6 +26,7 @@ import { Shell, Sidebar, TopNav, useAnchoredOverlay } from '@/design-system';
 
 import { QuickHits } from '@/features/search/QuickHits';
 import { UploadDialog } from '@/features/upload/UploadDialog';
+import { UploadPanel, Uploads } from '@/features/upload/Uploads';
 import { MediaSession } from '@/player/MediaSession';
 import { PhonePlayer } from '@/player/PhonePlayer';
 import { Player } from '@/player/Player';
@@ -142,11 +145,26 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
             {player ?? <PhonePlayer />}
           </>
         }
-        {...(tray ? { upload: tray } : {})}
+        upload={
+          tray ?? (
+            <UploadPanel
+              onAdd={() => {
+                setUploadOpen(true);
+              }}
+            />
+          )
+        }
         uploading={uploading}
         onUploadTab={setUploading}
       >
         {children}
+        <UploadDialog
+          open={uploadOpen}
+          onClose={() => {
+            setUploadOpen(false);
+          }}
+          library={libraryIn(location.pathname)}
+        />
       </PhoneShell>
     );
   }
@@ -235,7 +253,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
           {player ?? <Player onScreen={recordingIn(location.pathname)} />}
         </>
       }
-      {...(tray ? { tray } : {})}
+      tray={tray ?? <Uploads />}
     >
       {children}
       {/* Inside the frame rather than inside a view: closing it must not be able to stop what it

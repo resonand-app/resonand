@@ -24,5 +24,20 @@
     "restore": "Restore that one instead",
     "anyway": "Upload it anyway",
     "skip": "Leave it out"
+  },
+  "tray": {
+    "summary": "{{done}} of {{total}} uploaded",
+    "files": "Files being uploaded",
+    "add": "Choose files",
+    "nothing": "Nothing is uploading. What you start here keeps going while you use the rest of the app.",
+    "status": {
+      "waiting": "Waiting",
+      "checking": "Checking",
+      "duplicate": "Already here",
+      "uploading": "Uploading",
+      "done": "Uploaded",
+      "skipped": "Left out",
+      "failed": "Did not upload"
+    }
   }
 }
