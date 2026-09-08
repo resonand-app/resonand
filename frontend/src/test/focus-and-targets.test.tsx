@@ -72,7 +72,17 @@ function describeElement(element: HTMLElement): string {
   return `${element.tagName.toLowerCase()} in ${owner} (${name.trim()})`;
 }
 
-describe('the focus treatment', () => {
+/**
+ * These render the whole system at once, so they are given more than the default 5 s.
+ *
+ * The rest of the suite is component-sized and 5 s is a generous ceiling for it -- a raise across
+ * the board would stop a genuinely hung test from being reported as one. These three mount every
+ * component in `design-system/` in one tree, which takes a couple of seconds on its own and more
+ * than five when sixty test files are competing for the machine.
+ */
+const WHOLE_SYSTEM = { timeout: 30_000 };
+
+describe('the focus treatment', WHOLE_SYSTEM, () => {
   it('is one treatment, and it is the one the specification names', () => {
     // A 2px `--accent` ring at 2px offset (§1.7). Every rule that draws a ring draws this ring:
     // two treatments is the failure this is guarding against, not a missing one.
@@ -130,7 +140,7 @@ describe('the focus treatment', () => {
   });
 });
 
-describe('the 44px floor', () => {
+describe('the 44px floor', WHOLE_SYSTEM, () => {
   it('rests on a token, not on a number', () => {
     expect(SPACING).toMatch(/--hit-target:\s*44px/);
     const grower = rulesIn(CSS).find((rule) => rule.selector.includes('[data-hit-target]::after'));

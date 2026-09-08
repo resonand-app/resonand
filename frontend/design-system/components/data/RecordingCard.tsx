@@ -101,7 +101,6 @@ export function RecordingCard({
       style={{
         background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
-        boxShadow: 'var(--elevation-card)',
         padding: '14px var(--panel-padding)',
         display: 'flex',
         flexDirection: 'column',

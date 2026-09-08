@@ -29,7 +29,17 @@ function renderIn(theme: 'light' | 'dark') {
   );
 }
 
-describe('the specimen page', () => {
+/**
+ * These render the whole system at once, so they are given more than the default 5 s.
+ *
+ * The rest of the suite is component-sized and 5 s is a generous ceiling for it -- a raise across
+ * the board would stop a genuinely hung test from being reported as one. These three mount every
+ * component in `design-system/` in one tree, which takes a couple of seconds on its own and more
+ * than five when sixty test files are competing for the machine.
+ */
+const WHOLE_SYSTEM = { timeout: 30_000 };
+
+describe('the specimen page', WHOLE_SYSTEM, () => {
   it.each(['light', 'dark'] as const)('renders every family in %s', (theme) => {
     const { container } = renderIn(theme);
     expect(document.documentElement.getAttribute('data-theme')).toBe(theme);

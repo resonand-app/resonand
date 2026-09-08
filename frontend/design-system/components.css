@@ -619,9 +619,18 @@
   text-decoration: underline;
 }
 
-/* The recording being played is marked with the accent ring rather than with a colour of its own.
+/* RecordingCard. Its elevation is here rather than inline because the playing variant below
+   varies it, and `UI-32a`'s division of labour is not a preference: an inline box-shadow beats
+   every stylesheet rule ever written, so a property this file needs to change has to leave the
+   component. The card's own geometry stayed inline, as it should.
+
+   The recording being played is marked with the accent ring rather than with a colour of its own.
    A ring survives beside a selected card, reads in both themes, and does not compete with the
    four transcription-state colours already on the card. */
+[data-ds='recording-card'] {
+  box-shadow: var(--elevation-card);
+}
+
 [data-ds='recording-card'][data-playing='true'] {
   box-shadow:
     var(--elevation-card),
