@@ -251,7 +251,10 @@ function fresh(): Archive {
         {
           grantee: MARTA,
           level: 20,
-          level_description: 'Can add recordings and edit their details.',
+          // The wording `sonarium.core.levels.DESCRIPTIONS` sends, colon and all: `LevelSelector`
+          // splits on it to draw the name and the sentence, and a fixture worded differently
+          // would test a split that never happens.
+          level_description: 'Can edit: change titles, categories and tags, but not share.',
           granted_by: GABRIEL.id,
           created_at: '2026-02-01T12:00:00Z',
         },

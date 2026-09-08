@@ -1,0 +1,206 @@
+/**
+ * Who has access (`UI-17c`, §V7).
+ *
+ * **This is where the product's first promise is kept or broken** -- nothing is shared until you
+ * share it -- so it is a panel with names in it rather than a row of controls, and it answers the
+ * three questions somebody actually has: who, at what level, and since when.
+ *
+ * **The level wording is the API's, and is visible rather than behind a tooltip.** `LevelSelector`
+ * renders `level_description` verbatim (`UI-34k`): the sentences live beside the levels in
+ * `sonarium.core.levels` and are sent down with every share, so the interface has no copy of them
+ * to go stale. Somebody choosing what another person may do has to be able to read what it means
+ * at the moment they choose it.
+ *
+ * **A level nobody has been granted yet has no sentence to show.** `level_description` arrives
+ * attached to a grant, so the API describes the levels in use rather than the vocabulary -- and
+ * for the rest this falls back to the interface's own short name, which is a label rather than a
+ * second copy of the API's sentence. Every description the panel has seen is collected across the
+ * shares on screen, so in practice a library that uses a level explains it. Closing this properly
+ * means the API answering the vocabulary once; until it does, the panel is honest about showing a
+ * name where it has no sentence.
+ *
+ * **Revoking says what the person loses, in numbers.** "Are you sure?" is not a consequence;
+ * "Marta loses access to all 41 recordings" is.
+ *
+ * **`granted_by` is an id, and only some ids can be named.** The API sends the granter's user id
+ * and no name, and the only people this screen can put a name to are the owner, the signed-in
+ * account and the grantees themselves. When it cannot, the line says when rather than inventing a
+ * who -- a wrong name on a permission is worse than no name.
+ */
+
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { useSession } from '@/app/session';
+import { Button, Dialog, LevelSelector, Modal } from '@/design-system';
+import type { LevelOption } from '@/design-system';
+import { LEVEL } from '@/features/library/data';
+import { instant } from '@/i18n/time';
+
+import type { Level, ShareEdits, ShareSummary, UserSummary } from './data';
+
+export interface SharePanelProps {
+  library: { uuid: string; name: string; owner: UserSummary; audio_count: number };
+  shares: readonly ShareSummary[];
+  edits: ShareEdits;
+  /** Level 30. Below it the panel is read-only rather than absent (`UI-17e`). */
+  canManage: boolean;
+}
+
+/** The three a share may carry. Owner is held, never granted. */
+const GRANTABLE: readonly Level[] = [LEVEL.read, LEVEL.edit, LEVEL.manage];
+
+export function SharePanel({ library, shares, edits, canManage }: SharePanelProps) {
+  const { t, i18n } = useTranslation('librarySettings');
+  const { account } = useSession();
+  const [revoking, setRevoking] = useState<ShareSummary | null>(null);
+
+  // Everybody this screen can put a name to, which is not everybody the API might name.
+  const known = new Map<number, string>([
+    [library.owner.id, library.owner.display_name],
+    ...(account === undefined ? [] : ([[account.id, account.display_name]] as [number, string][])),
+    ...shares.map((share): [number, string] => [share.grantee.id, share.grantee.display_name]),
+  ]);
+
+  // Every sentence the API has sent on this screen, by the level it describes.
+  const described = new Map(shares.map((share) => [share.level, share.level_description]));
+  const levels: LevelOption[] = GRANTABLE.map((level) => ({
+    level,
+    description: described.get(level) ?? t(`common:level.${nameOf(level)}`),
+  }));
+
+  return (
+    <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+      <h2 style={heading}>{t('shares.title')}</h2>
+      {shares.length === 0 && <p style={quiet}>{t('shares.none')}</p>}
+      <ul aria-label={t('shares.title')} style={list}>
+        {shares.map((share) => (
+          <li
+            key={share.grantee.id}
+            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 'var(--space-2)',
+                flexWrap: 'wrap',
+              }}
+            >
+              <span style={{ fontSize: 'var(--type-ui-size)', color: 'var(--text)' }}>
+                {share.grantee.display_name}
+              </span>
+              <span style={{ ...quiet, fontFamily: 'var(--font-mono)' }}>
+                {share.grantee.email}
+              </span>
+              <span style={{ flex: 1 }} />
+              <span style={quiet}>
+                {t(known.has(share.granted_by) ? 'shares.grantedBy' : 'shares.grantedOn', {
+                  who: known.get(share.granted_by),
+                  when: instant(share.created_at, i18n.language),
+                })}
+              </span>
+            </div>
+            <LevelSelector
+              levels={levels}
+              value={share.level}
+              disabled={!canManage}
+              label={t('shares.whatTheyCanDo', { name: share.grantee.display_name })}
+              onChange={(level) => {
+                edits.grant.mutate({ granteeId: share.grantee.id, level: level as Level });
+              }}
+            />
+            {canManage && (
+              <div>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setRevoking(share);
+                  }}
+                >
+                  {t('shares.revoke', { name: share.grantee.display_name })}
+                </Button>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+
+      {revoking !== null && (
+        <Modal
+          open
+          onClose={() => {
+            setRevoking(null);
+          }}
+        >
+          <Dialog
+            title={t('shares.revokeTitle', { name: revoking.grantee.display_name })}
+            description={t('shares.revokeBody', {
+              name: revoking.grantee.display_name,
+              count: library.audio_count,
+              library: library.name,
+            })}
+            onClose={() => {
+              setRevoking(null);
+            }}
+            labels={{ close: t('common:action.close') }}
+            footer={
+              <>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => {
+                    setRevoking(null);
+                  }}
+                >
+                  {t('common:action.cancel')}
+                </Button>
+                <Button
+                  variant="danger"
+                  type="button"
+                  onClick={() => {
+                    edits.revoke.mutate(revoking.grantee.id);
+                    setRevoking(null);
+                  }}
+                >
+                  {t('shares.revokeConfirm')}
+                </Button>
+              </>
+            }
+          />
+        </Modal>
+      )}
+    </section>
+  );
+}
+
+/** The interface's own short name for a level, for one it has no sentence for. */
+function nameOf(level: Level): string {
+  if (level === LEVEL.read) return 'read';
+  if (level === LEVEL.edit) return 'edit';
+  return 'manage';
+}
+
+const heading = {
+  margin: 0,
+  fontFamily: 'var(--font-sans)',
+  fontSize: 'var(--type-ui-size)',
+  fontWeight: 'var(--weight-semibold)',
+  color: 'var(--text)',
+} as const;
+
+const quiet = {
+  margin: 0,
+  fontFamily: 'var(--font-sans)',
+  fontSize: 'var(--type-ui-size-sm)',
+  color: 'var(--text-3)',
+} as const;
+
+const list = {
+  margin: 0,
+  padding: 0,
+  listStyle: 'none',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 'var(--space-5)',
+} as const;

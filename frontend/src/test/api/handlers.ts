@@ -273,7 +273,7 @@ export const handlers: HttpHandler[] = [
     const made: Schemas['ShareSummary'] = {
       grantee: { id: body.grantee_id, display_name: 'Marta', email: 'marta@example.test' },
       level: body.level,
-      level_description: 'Can add recordings and edit their details.',
+      level_description: 'Can edit: change titles, categories and tags, but not share.',
       granted_by: archive.me.id,
       created_at: '2026-03-12T10:00:00Z',
     };

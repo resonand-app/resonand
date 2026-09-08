@@ -33,5 +33,17 @@
     "deleteWithChildren_one": "Its {{children}} sub-categories go with it, and {{count}} recording loses its category. No recording is deleted.",
     "deleteWithChildren_other": "Its {{children}} sub-categories go with it, and {{count}} recordings lose their category. No recording is deleted.",
     "deleteConfirm": "Delete the category"
+  },
+  "shares": {
+    "title": "Who has access",
+    "none": "Only you can see this library.",
+    "grantedBy": "Shared by {{who}}, {{when}}",
+    "grantedOn": "Shared {{when}}",
+    "whatTheyCanDo": "What {{name}} can do",
+    "revoke": "Remove {{name}}",
+    "revokeTitle": "Remove {{name}}?",
+    "revokeBody_one": "{{name}} loses access to the {{count}} recording in {{library}}.",
+    "revokeBody_other": "{{name}} loses access to all {{count}} recordings in {{library}}.",
+    "revokeConfirm": "Remove their access"
   }
 }

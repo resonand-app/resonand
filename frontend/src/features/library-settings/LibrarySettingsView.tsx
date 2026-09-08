@@ -30,7 +30,8 @@ import { useLibrary } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
 
 import { CategoryTree } from './CategoryTree';
-import { useCategoryEdits, useUpdateLibrary } from './data';
+import { SharePanel } from './SharePanel';
+import { useCategoryEdits, useShareEdits, useUpdateLibrary } from './data';
 
 export function LibrarySettingsView() {
   const { t } = useTranslation('librarySettings');
@@ -39,6 +40,7 @@ export function LibrarySettingsView() {
   const update = useUpdateLibrary(uuid);
   const categories = useCategories(uuid);
   const categoryEdits = useCategoryEdits(uuid);
+  const shareEdits = useShareEdits(uuid);
   const library = context.library;
 
   if (context.error !== null && context.error !== undefined) {
@@ -121,6 +123,13 @@ export function LibrarySettingsView() {
           uuid={uuid}
           categories={categories.all}
           edits={categoryEdits}
+          canManage={context.canManage}
+        />
+
+        <SharePanel
+          library={library}
+          shares={context.shares}
+          edits={shareEdits}
           canManage={context.canManage}
         />
       </div>
