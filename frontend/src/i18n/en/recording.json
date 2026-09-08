@@ -35,7 +35,8 @@
     "heading_other": "{{count}} segments",
     "hint": "Click a line to jump there.",
     "released": "You scrolled, so the transcript stopped following the audio.",
-    "resume": "Follow again"
+    "resume": "Follow again",
+    "failed": "The transcript could not be loaded"
   },
   "readOnly": "You can read this recording. Its details are somebody else's to change.",
   "panel": {
@@ -81,5 +82,28 @@
     "trashTitle": "Send this recording to the trash?",
     "trashConsequence_one": "It can be restored for {{count}} day, and is then deleted for good.",
     "trashConsequence_other": "It can be restored for {{count}} days, and is then deleted for good."
+  },
+  "transcription": {
+    "none": {
+      "title": "This recording has not been transcribed",
+      "body": "Transcribing it makes every word in it searchable, and lets the transcript follow the audio as it plays.",
+      "action": "Transcribe this recording",
+      "readOnly": "Only somebody who can edit this recording can ask for a transcription."
+    },
+    "running": {
+      "title": "Transcribing",
+      "working": "Finding out how it is going...",
+      "queued": "Waiting to start",
+      "since": "Started {{when}}",
+      "attempt_one": "attempt {{count}}",
+      "attempt_other": "attempt {{count}}",
+      "provider": "on {{provider}}"
+    },
+    "failed": {
+      "title": "The transcription did not finish",
+      "noReason": "The provider did not say what went wrong.",
+      "whatToDo": "Trying again is usually enough. If it keeps failing, the provider is worth checking before the recording is."
+    },
+    "retry": "Try transcribing again"
   }
 }

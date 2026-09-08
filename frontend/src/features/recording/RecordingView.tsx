@@ -29,6 +29,11 @@
  * it is the reason the screen exists, so the details come up over it when they are asked for and
  * are out of the way the rest of the time (`DEC-23`: the phone layout is a different screen).
  *
+ * **What stands where the transcript would be depends on the state** (`UI-15`). A recording with
+ * one gets the transcript; the other three states get the screen's middle, because a call to
+ * action in the place the thing is missing from reads as a screen that knows what it has, and the
+ * same words in a corner of the panel read as an aside.
+ *
  * **Read-only says so once, quietly** (§3.5). One line under the essentials, not a banner and not
  * a lock on every field: the fields draw their own non-editable state and the actions that cannot
  * be taken are absent, so the screen reads as intentional rather than as broken.
@@ -46,8 +51,17 @@ import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
+import { transcriptionState } from '@/features/library/recordings';
 import { toLibrary } from '@/app/routes';
-import { Button, Icon, IconButton, PageHeader, Sheet, StateCard } from '@/design-system';
+import {
+  Button,
+  Icon,
+  IconButton,
+  PageHeader,
+  RowSkeleton,
+  Sheet,
+  StateCard,
+} from '@/design-system';
 import { useIsPhone } from '@/app/use-is-phone';
 import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
@@ -55,9 +69,11 @@ import { recordedAt } from '@/i18n/time';
 import { MetadataPanel, PANEL_WIDTH } from './MetadataPanel';
 import { RecordingPlayer } from './RecordingPlayer';
 import { Transcript } from './Transcript';
+import { TranscriptionState } from './TranscriptionState';
 import { useRecording } from './data';
 import type { RecordingContext } from './data';
 import { useTranscripts } from './transcripts';
+import type { Transcripts } from './transcripts';
 import { usePanel } from './use-panel';
 
 export function RecordingView() {
@@ -132,7 +148,7 @@ export function RecordingView() {
       >
         <div style={{ minWidth: 0 }}>
           <RecordingPlayer context={context} />
-          <Transcript context={context} transcripts={transcripts} />
+          <Middle context={context} transcripts={transcripts} />
         </div>
         {!isPhone && !panel.collapsed && (
           <aside aria-label={t('panel.label')}>
@@ -153,6 +169,52 @@ export function RecordingView() {
       )}
     </article>
   );
+}
+
+/**
+ * The transcript, or the reason there is not one (`UI-15`, §V5).
+ *
+ * The state comes from the recording rather than from the transcript request, because those two
+ * answer different questions: a 404 from `GET /transcript` means there is no active transcript,
+ * and which of the three transcript-less states that is -- never asked for, running, failed -- is
+ * on the recording (`transcription_state`).
+ */
+function Middle({ context, transcripts }: { context: RecordingContext; transcripts: Transcripts }) {
+  const { t } = useTranslation('recording');
+  const recording = context.recording;
+  if (recording === undefined) return null;
+
+  const state = transcriptionState(recording.transcription_state);
+
+  if (state === 'done') {
+    if (transcripts.error !== null && transcripts.error !== undefined) {
+      return (
+        <StateCard
+          icon="alert-circle"
+          title={t('transcript.failed')}
+          body={isApiProblem(transcripts.error) ? transcripts.error.detail : undefined}
+          action={
+            <Button variant="secondary" onClick={transcripts.refetch}>
+              {t('common:action.retry')}
+            </Button>
+          }
+        />
+      );
+    }
+    // Skeleton lines at the transcript's own shape, so nothing jumps when they arrive (§3.5).
+    if (transcripts.isPending) {
+      return (
+        <div aria-hidden>
+          {Array.from({ length: 8 }, (_, index) => (
+            <RowSkeleton key={index} />
+          ))}
+        </div>
+      );
+    }
+    return <Transcript context={context} transcripts={transcripts} />;
+  }
+
+  return <TranscriptionState context={context} state={state} />;
 }
 
 /**
