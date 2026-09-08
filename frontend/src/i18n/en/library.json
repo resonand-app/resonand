@@ -38,7 +38,12 @@
     "removeTag": "Stop filtering by {{tag}}",
     "tagPrefix": "Tags starting with",
     "tagSuggestions": "Tags",
-    "noTags": "No tags match that."
+    "noTags": "No tags match that.",
+    "title": "Narrow this library",
+    "open": "Filter",
+    "someOn_one": "Filter · {{count}}",
+    "someOn_other": "Filter · {{count}}",
+    "clear": "Clear the filters"
   },
   "sort": {
     "label": "Sort by",

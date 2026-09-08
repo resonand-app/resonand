@@ -11,12 +11,22 @@
  * library needs.
  *
  * Four controls: the category tree (`UI-8a`), the tags (`UI-8b`), the four transcription states
- * (`UI-8c`), and the sort with the density switch at the other end of the row (`UI-8d`). The
- * phone collapses the whole bar into a sheet (`UI-8e`).
+ * (`UI-8c`), and the sort with the density switch at the other end of the row (`UI-8d`).
+ *
+ * **On a phone the whole bar collapses into one button and a sheet** (`UI-8e`, §V3). Not a
+ * narrowed row: four controls that wrap onto three lines would be most of a 375px screen before
+ * a recording is drawn. The button carries a count of what is on, because a filter somebody
+ * cannot see is a filter they will forget they set -- and it is the same controls inside, in the
+ * same order, so the phone and the desktop are one screen at two widths rather than two screens.
  */
 
-import { useUrlState } from '@/app/url-state';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { useIsPhone } from '@/app/use-is-phone';
+import { isFiltered, useUrlState } from '@/app/url-state';
 import { FilterBar } from '@/components/FilterBar';
+import { Button, Sheet } from '@/design-system';
 
 import { CategoryPicker } from './CategoryPicker';
 import { SortControl, ViewSwitch } from './SortControl';
@@ -31,51 +41,122 @@ export interface LibraryFiltersProps {
 }
 
 export function LibraryFilters({ categories, meta }: LibraryFiltersProps) {
+  const { t } = useTranslation('library');
   const { filters, set } = useUrlState();
+  const isPhone = useIsPhone();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const controls = (
+    <>
+      <CategoryPicker
+        categories={categories}
+        value={filters.categoryId}
+        onChange={(categoryId) => {
+          set({ categoryId });
+        }}
+      />
+      <TagPicker
+        value={filters.tags}
+        onChange={(tags) => {
+          set({ tags });
+        }}
+      />
+      <StateToggles
+        value={filters.states}
+        onChange={(states) => {
+          set({ states });
+        }}
+      />
+    </>
+  );
+
+  const sort = (
+    <SortControl
+      sort={filters.sort}
+      direction={filters.direction}
+      onSort={(field, direction) => {
+        set({ sort: field, direction });
+      }}
+    />
+  );
+
+  const view = (
+    <ViewSwitch
+      value={filters.view}
+      onChange={(next) => {
+        set({ view: next });
+      }}
+    />
+  );
+
+  if (isPhone) {
+    // How many things are narrowing the list. A category counts once, and so does each tag and
+    // each state -- it is a count of decisions somebody made, not of parameters in a URL.
+    const active =
+      (filters.categoryId === undefined ? 0 : 1) + filters.tags.length + filters.states.length;
+
+    return (
+      <>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            marginBottom: 'var(--space-4)',
+          }}
+        >
+          <Button
+            variant="secondary"
+            icon="sliders-horizontal"
+            onClick={() => {
+              setSheetOpen(true);
+            }}
+          >
+            {active > 0 ? t('filters.someOn', { count: active }) : t('filters.open')}
+          </Button>
+          <div style={{ flex: 1 }} />
+          {view}
+        </div>
+        <Sheet
+          open={sheetOpen}
+          onClose={() => {
+            setSheetOpen(false);
+          }}
+          title={t('filters.title')}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: 'var(--space-2)',
+            }}
+          >
+            {controls}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>{sort}</div>
+          {isFiltered(filters) && (
+            <Button
+              variant="ghost"
+              onClick={() => {
+                set({ categoryId: undefined, tags: [], states: [] });
+                setSheetOpen(false);
+              }}
+            >
+              {t('filters.clear')}
+            </Button>
+          )}
+        </Sheet>
+      </>
+    );
+  }
 
   return (
     <FilterBar
       {...(meta === undefined ? {} : { meta })}
-      filters={
-        <>
-          <CategoryPicker
-            categories={categories}
-            value={filters.categoryId}
-            onChange={(categoryId) => {
-              set({ categoryId });
-            }}
-          />
-          <TagPicker
-            value={filters.tags}
-            onChange={(tags) => {
-              set({ tags });
-            }}
-          />
-          <StateToggles
-            value={filters.states}
-            onChange={(states) => {
-              set({ states });
-            }}
-          />
-        </>
-      }
-      sort={
-        <SortControl
-          sort={filters.sort}
-          direction={filters.direction}
-          onSort={(sort, direction) => {
-            set({ sort, direction });
-          }}
-        />
-      }
-      view={
-        <ViewSwitch
-          value={filters.view}
-          onChange={(view) => {
-            set({ view });
-          }}
-        />
-      }
+      filters={controls}
+      sort={sort}
+      view={view}
     />
   );
 }

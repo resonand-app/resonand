@@ -337,3 +337,62 @@ describe('the sort and the density', () => {
     expect(await screen.findByRole('table', { name: 'Recordings' })).toBeInTheDocument();
   });
 });
+
+describe('the filter bar on a phone', () => {
+  /** Below `--breakpoint-phone`, where the desktop row is replaced rather than narrowed. */
+  function width(pixels: number) {
+    Object.defineProperty(window, 'innerWidth', {
+      value: pixels,
+      writable: true,
+      configurable: true,
+    });
+  }
+
+  const narrow = () => {
+    width(375);
+  };
+
+  // jsdom's own width, restored so a test added after these does not inherit a phone.
+  afterEach(() => {
+    width(1024);
+  });
+
+  it('collapses the whole bar into one button', async () => {
+    narrow();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    // Four controls wrapping onto three lines would be most of a 375px screen before a recording
+    // is drawn, so none of them is on the row.
+    expect(screen.getByRole('button', { name: 'Filter' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: /Any category/ })).toBeNull();
+  });
+
+  it('opens the same controls in a sheet, in the same order', async () => {
+    narrow();
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Narrow this library' });
+    expect(within(sheet).getByRole('button', { name: /Any category/ })).toBeVisible();
+    expect(within(sheet).getByRole('group', { name: 'Transcript state' })).toBeVisible();
+  });
+
+  it('says how many filters are on, because an unseen filter is a forgotten one', async () => {
+    narrow();
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    const sheet = await screen.findByRole('dialog');
+    await user.click(within(sheet).getByRole('button', { name: 'Transcribed' }));
+    expect(await screen.findByRole('button', { name: 'Filter · 1' })).toBeVisible();
+  });
+
+  it('keeps the density switch on the row, because it is not a filter', async () => {
+    narrow();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    expect(screen.getByRole('group', { name: 'How to show them' })).toBeVisible();
+  });
+});
