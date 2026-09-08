@@ -16,6 +16,14 @@ export interface ResultMatch {
    * be rendered rather than re-derived from what somebody typed.
    */
   text: ReactNode;
+  /**
+   * Where in the recording it is, in milliseconds, or `null` for a match with no moment.
+   *
+   * `at` is what a person reads and this is what a seek needs, which are two different things:
+   * formatting is the caller's and re-parsing "18:04" back into a number here would be the
+   * interface deriving data from its own presentation.
+   */
+  startMs?: number | null;
 }
 
 export interface ResultGroupProps {

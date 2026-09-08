@@ -15,11 +15,19 @@
  * arrives with `<mark>` around what matched and is rendered as marking rather than as markup
  * (`fragment.tsx`); the timestamp is the same `18:04` shape a transcript line uses, because it is
  * the same thing -- a place in a recording, not a length.
+ *
+ * **Pressing a match plays from that moment and stays here** (`UI-16e`). That is the behaviour the
+ * screen exists for: you found the moment, you heard it, you keep looking. Navigating to the
+ * detail view instead would defeat it -- three matches in three recordings would be three
+ * round trips through a screen nobody asked to be on, and the results you were comparing would be
+ * gone. The player is global and outlives every view (`UI-5a`), so nothing about playing here
+ * needs a route: the recording is handed to it and asked to start at `start_ms`.
  */
 
 import { useNavigate } from 'react-router';
 
 import { toRecording } from '@/app/routes';
+import { usePlayback } from '@/player/store';
 import { ResultGroup } from '@/components/ResultGroup';
 import type { ResultMatch } from '@/components/ResultGroup';
 import { transcriptionState } from '@/features/library/recordings';
@@ -39,7 +47,8 @@ export function Results({ results }: ResultsProps) {
   // Results span libraries, which is the difference between this screen and a library's grid: a
   // recording has to say where it lives, because "Sopar de Nadal" means one thing in the family
   // archive and another in somebody's field recordings.
-  const names = new Map(useReadableLibraries().map((library) => [library.uuid, library.name]));
+  const libraries = useReadableLibraries();
+  const names = new Map(libraries.map((library) => [library.uuid, library.name]));
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -51,6 +60,7 @@ export function Results({ results }: ResultsProps) {
           id: `${audio.uuid}-${String(index)}`,
           at: match.start_ms === null ? '' : timestamp(match.start_ms),
           text: marked(match.fragment),
+          startMs: match.start_ms,
         }));
 
         return (
@@ -65,6 +75,22 @@ export function Results({ results }: ResultsProps) {
             total={result.total_matches}
             onOpen={() => {
               void navigate(toRecording(audio.uuid));
+            }}
+            onPlay={(match) => {
+              if (match.startMs === null || match.startMs === undefined) return;
+              const playback = usePlayback.getState();
+              // The same recording already loaded is seeked rather than restarted: reloading it
+              // would drop the buffer and start the three hours again at the new position.
+              if (playback.recording?.uuid !== audio.uuid) {
+                playback.play({
+                  uuid: audio.uuid,
+                  title: audio.title,
+                  library: names.get(audio.library_uuid) ?? '',
+                  durationMs: audio.duration_ms,
+                  hasWaveform: audio.has_waveform,
+                });
+              }
+              playback.seek(match.startMs);
             }}
             onShowAll={() => {
               void navigate(toRecording(audio.uuid));

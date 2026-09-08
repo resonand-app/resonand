@@ -9,6 +9,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { usePlayback } from '@/player/store';
 import { AVIA } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
@@ -66,6 +67,34 @@ function show(results: SearchResult[]) {
     </QueryClientProvider>,
   );
 }
+
+describe('playing from a match', () => {
+  it('🧪 starts the recording at that moment and does not change the route (`UI-16e`)', async () => {
+    // The whole reason this screen exists: you found the moment, you heard it, you keep looking.
+    // Opening the detail view would defeat it, so the route is the assertion.
+    usePlayback.getState().stop();
+    show([result()]);
+    await userEvent.click(screen.getByText(/del carrer/));
+    expect(usePlayback.getState().recording?.uuid).toBe('audio-1');
+    expect(usePlayback.getState().positionMs).toBe(61_000);
+    expect(screen.getByTestId('where')).toHaveTextContent('/search');
+  });
+
+  it('seeks what is already playing rather than loading it again', async () => {
+    show([result()]);
+    usePlayback.getState().play({
+      uuid: 'audio-1',
+      title: 'Sopar de Nadal 1998',
+      library: 'Àvia Teresa',
+      durationMs: 180_000,
+      hasWaveform: true,
+    });
+    usePlayback.getState().report({ status: 'playing', positionMs: 5_000 });
+    await userEvent.click(screen.getByText(/del carrer/));
+    expect(usePlayback.getState().status).toBe('playing');
+    expect(usePlayback.getState().positionMs).toBe(61_000);
+  });
+});
 
 describe('a result', () => {
   it('says where the recording lives, because results span libraries', async () => {
