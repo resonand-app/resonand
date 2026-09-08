@@ -22,6 +22,10 @@
  * the sentence, and a fixed estimate would put the playhead's line in the wrong place halfway
  * down a long transcript.
  *
+ * **The scroll follows playback and releases the moment somebody scrolls** (`UI-12b`), which is
+ * `use-follow.ts` -- and it is offered back through a band that stays until it is used, never a
+ * toast that vanishes before it is read.
+ *
  * **There is no edit affordance anywhere on it** (`UI-12d`). Manual editing is a later milestone,
  * and a text cursor on a transcript line promises an editor that does not exist. `speaker` is
  * usually empty in v0 and is accommodated without being depended on: when it is there it prefixes
@@ -29,16 +33,17 @@
  */
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { TranscriptLine } from '@/design-system';
+import { Button, TranscriptLine, usePrefersReducedMotion } from '@/design-system';
 import * as format from '@/i18n/format';
 import { usePlayback } from '@/player/store';
 
 import type { RecordingContext } from './data';
 import { segmentAt } from './transcripts';
 import type { Segment, Transcripts } from './transcripts';
+import { useFollow } from './use-follow';
 
 /** How tall a line is before it has been measured. One row of body text plus its padding. */
 const ESTIMATED_LINE = 46;
@@ -62,6 +67,10 @@ export function Transcript({ context, transcripts }: TranscriptProps) {
 
   const { t } = useTranslation('recording');
   const scroller = useRef<HTMLDivElement>(null);
+  const reduced = usePrefersReducedMotion();
+  // The scroll is the one thing in the product that moves by itself, and no stylesheet can reach
+  // inside a `scrollTo` -- so the preference is read here and asked for by name (`UI-32c`).
+  const follow = useFollow(scroller, !reduced);
   const recording = context.recording;
   const segments = transcripts.active?.segments ?? [];
 
@@ -78,11 +87,27 @@ export function Transcript({ context, transcripts }: TranscriptProps) {
     overscan: OVERSCAN,
   });
 
+  // Keep the line being spoken in the middle of the scroller. The offset comes from the
+  // virtualiser, which knows where every index is whether or not it is drawn -- so a seek to the
+  // end of a three-hour recording lands on the right line rather than on the last one rendered.
+  const centre = follow.centreOn;
+  useEffect(() => {
+    if (!follow.following || active < 0) return;
+    const offset = virtualiser.getOffsetForIndex(active, 'center')?.[0];
+    if (offset === undefined) return;
+    centre(offset);
+    // `virtualiser` is deliberately not a dependency: it is a new object every render, and this
+    // has to run when the active line changes rather than on every frame of a scroll.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, follow.following, centre]);
+
   if (recording === undefined || segments.length === 0) return null;
 
   /** Jump to a moment, loading the recording first if it is not the one playing. */
   const seekTo = (segment: Segment) => {
     const playback = usePlayback.getState();
+    // Choosing a line is somebody saying where they want to be, so it takes following back up.
+    follow.resume();
     if (!isCurrent) {
       playback.play({
         uuid: recording.uuid,
@@ -98,9 +123,11 @@ export function Transcript({ context, transcripts }: TranscriptProps) {
   return (
     <section data-app="transcript" aria-label={t('transcript.label')}>
       <Heading count={transcripts.active?.segment_count ?? segments.length} />
+      {!follow.following && <Released onResume={follow.resume} />}
       <div
         ref={scroller}
         data-app="transcript-scroller"
+        onScroll={follow.onScroll}
         style={{
           height: `min(60vh, ${String(MAX_HEIGHT)}px)`,
           overflowY: 'auto',
@@ -150,6 +177,49 @@ export function Transcript({ context, transcripts }: TranscriptProps) {
         </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * The offer to start following again (`UI-12b`).
+ *
+ * **A band that stays, not a toast.** It sits between the heading and the lines and does not go
+ * away on a timer, because the person it is for is reading -- they will look up when they are
+ * ready, and a message that has already faded is a feature they never find. It says what
+ * happened rather than what to do, because what happened is the part that is surprising.
+ */
+function Released({ onResume }: { onResume: () => void }) {
+  const { t } = useTranslation('recording');
+  return (
+    <div
+      data-app="follow-released"
+      role="status"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 'var(--space-3)',
+        flexWrap: 'wrap',
+        padding: 'var(--space-2) var(--space-3)',
+        marginBottom: 'var(--space-2)',
+        background: 'var(--surface-2)',
+        borderRadius: 'var(--radius-control)',
+      }}
+    >
+      <span
+        style={{
+          flex: 1,
+          minWidth: 190,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'var(--type-ui-size-sm)',
+          color: 'var(--text-2)',
+        }}
+      >
+        {t('transcript.released')}
+      </span>
+      <Button variant="secondary" icon="align-left" onClick={onResume}>
+        {t('transcript.resume')}
+      </Button>
+    </div>
   );
 }
 

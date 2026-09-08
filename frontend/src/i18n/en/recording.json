@@ -33,6 +33,8 @@
     "label": "Transcript",
     "heading_one": "{{count}} segment",
     "heading_other": "{{count}} segments",
-    "hint": "Click a line to jump there."
+    "hint": "Click a line to jump there.",
+    "released": "You scrolled, so the transcript stopped following the audio.",
+    "resume": "Follow again"
   }
 }

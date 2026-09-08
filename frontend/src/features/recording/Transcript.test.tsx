@@ -11,7 +11,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -212,5 +212,46 @@ describe('clicking a line', () => {
     await user.keyboard('{Enter}');
     // The last of the six: 17:31 + 5 × 13 s.
     expect(usePlayback.getState().positionMs).toBe(1_116_000);
+  });
+});
+
+describe('following the audio', () => {
+  it('offers to follow again after somebody scrolls, in a band rather than a toast', async () => {
+    measured();
+    renderRecording();
+    await screen.findByText(/My mother was born in the village/);
+    const scroller = document.querySelector('[data-app="transcript-scroller"]');
+    if (scroller === null) throw new Error('The transcript has no scroller.');
+    expect(screen.queryByText(/stopped following the audio/)).toBeNull();
+    fireEvent.scroll(scroller);
+    // A band, and it stays: the person it is for is reading, and a message that has already
+    // faded is a feature they never find (`UI-12b`).
+    expect(await screen.findByText(/stopped following the audio/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Follow again' })).toBeInTheDocument();
+  });
+
+  it('puts the band away when following is taken up again', async () => {
+    const user = userEvent.setup();
+    measured();
+    renderRecording();
+    await screen.findByText(/My mother was born in the village/);
+    const scroller = document.querySelector('[data-app="transcript-scroller"]');
+    if (scroller === null) throw new Error('The transcript has no scroller.');
+    fireEvent.scroll(scroller);
+    await user.click(await screen.findByRole('button', { name: 'Follow again' }));
+    expect(screen.queryByText(/stopped following the audio/)).toBeNull();
+  });
+
+  it('takes following up again when a line is chosen, because that is where they want to be', async () => {
+    const user = userEvent.setup();
+    measured();
+    renderRecording();
+    await screen.findByText(/My mother was born in the village/);
+    const scroller = document.querySelector('[data-app="transcript-scroller"]');
+    if (scroller === null) throw new Error('The transcript has no scroller.');
+    fireEvent.scroll(scroller);
+    await screen.findByText(/stopped following the audio/);
+    await user.click(screen.getByText(/After that nobody wanted to go back/));
+    expect(screen.queryByText(/stopped following the audio/)).toBeNull();
   });
 });
