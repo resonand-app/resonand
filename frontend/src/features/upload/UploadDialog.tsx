@@ -25,6 +25,13 @@
  * **Only libraries you can add to are offered.** Upload needs level 20, so a library you can read
  * is not a destination -- and it is absent from the list rather than present and disabled, because
  * an option nobody can ever pick is an option that only raises a question (`UI-34c`).
+ *
+ * **The transcription disclosure is beside the switch, not behind it** (`UI-18c`, `UI-25`, §3.4).
+ * This is one of the three placements of `EgressNotice`, and it is the one where the decision is
+ * actually taken: a switch that sends somebody's recording to a provider has to say which provider
+ * and whether the audio leaves the instance *while it is being flipped*, because there is no
+ * confirm step afterwards to put it in. With no provider configured the notice says so and the
+ * switch is not offered -- an unavailable action is absent, not disabled.
  */
 
 import { useRef, useState } from 'react';
@@ -34,7 +41,8 @@ import { useTranslation } from 'react-i18next';
 import { useAllLibraries } from '@/app/library-data';
 import { LEVEL } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
-import { Button, Dialog, Icon, Modal, Select } from '@/design-system';
+import { useDestination } from '@/features/recording/transcription';
+import { Button, Dialog, EgressNotice, Icon, Modal, Select, Switch } from '@/design-system';
 import type { SelectOption } from '@/design-system';
 import { bytes } from '@/i18n/format';
 
@@ -64,6 +72,8 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
   const into = destination ?? suggested;
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const categories = useCategories(into ?? '');
+  const { data: goesTo } = useDestination();
+  const [transcribe, setTranscribe] = useState(false);
 
   const accepted = chosen.filter((file) => isAccepted(file.name, instance));
   const refused = chosen.filter((file) => !isAccepted(file.name, instance));
@@ -73,6 +83,7 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
     setOver(false);
     setDestination(undefined);
     setCategoryId(undefined);
+    setTranscribe(false);
     onClose();
   }
 
@@ -107,7 +118,7 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
               disabled={accepted.length === 0 || into === undefined}
               onClick={() => {
                 if (into === undefined) return;
-                add(accepted, { library: into, categoryId });
+                add(accepted, { library: into, categoryId, transcribe });
                 close();
               }}
             >
@@ -202,6 +213,19 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
           <p style={{ margin: 0, fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
             {t('dialog.video')}
           </p>
+
+          {goesTo !== undefined &&
+            (goesTo.configured ? (
+              <Switch
+                checked={transcribe}
+                onChange={setTranscribe}
+                label={t('dialog.transcribe')}
+                description={<EgressNotice destination={goesTo} placement="dialog" />}
+                ariaLabel={t('dialog.transcribe')}
+              />
+            ) : (
+              <EgressNotice destination={goesTo} placement="dialog" />
+            ))}
 
           {chosen.length > 0 && (
             <ul

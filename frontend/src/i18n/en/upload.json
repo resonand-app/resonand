@@ -15,6 +15,7 @@
     "library": "Into which library",
     "noLibrary": "No library you can add to",
     "category": "Category",
-    "noCategory": "No category"
+    "noCategory": "No category",
+    "transcribe": "Transcribe when the upload finishes"
   }
 }

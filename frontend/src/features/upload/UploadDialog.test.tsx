@@ -80,6 +80,53 @@ describe('the destination', () => {
   });
 });
 
+describe('asking for a transcription', () => {
+  beforeEach(() => {
+    useUploads.setState({ files: [] });
+  });
+
+  it('names the provider beside the switch, before the decision is taken', async () => {
+    // The disclosure is at the moment of the decision, because there is no confirm step after it.
+    show();
+    expect(await screen.findByText(/whisper/i)).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: /transcribe/i })).toBeInTheDocument();
+  });
+
+  it('says the audio leaves the instance when the provider is not on its own network', async () => {
+    server.use(
+      http.get('/api/transcription/destination', () =>
+        HttpResponse.json({
+          provider: 'openai',
+          host: 'api.openai.com',
+          is_local: false,
+          configured: true,
+        }),
+      ),
+    );
+    show();
+    expect(await screen.findByText(/leaves this instance/i)).toBeInTheDocument();
+  });
+
+  it('offers no switch at all when no provider is configured, and says why', async () => {
+    server.use(
+      http.get('/api/transcription/destination', () =>
+        HttpResponse.json({ provider: 'none', host: null, is_local: false, configured: false }),
+      ),
+    );
+    show();
+    expect(await screen.findByText(/no transcription provider/i)).toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+  });
+
+  it('carries the answer to the queue, and only when it was asked for', async () => {
+    show();
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('avia.m4a')]);
+    await userEvent.click(await screen.findByRole('switch', { name: /transcribe/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Upload 1 file' }));
+    expect(useUploads.getState().files[0]?.transcribe).toBe(true);
+  });
+});
+
 describe('the dialog', () => {
   beforeEach(() => {
     useUploads.setState({ files: [] });

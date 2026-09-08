@@ -35,6 +35,14 @@ export interface Destination {
   library: string;
   /** Optional, and applied after the upload -- see `file` below for why it is a second request. */
   categoryId?: number | undefined;
+  /**
+   * Whether to ask for a transcription as the recording arrives.
+   *
+   * The flag the upload endpoint takes. **Nothing sets it without having said where the audio
+   * goes first** (`UI-25`, §3.4): the disclosure is beside the switch in the dialog, which is the
+   * moment the decision is made rather than the moment the request is sent.
+   */
+  transcribe?: boolean;
 }
 
 export type UploadStatus =
@@ -49,6 +57,7 @@ export interface Upload {
   size: number;
   library: string;
   categoryId?: number | undefined;
+  transcribe: boolean;
   status: UploadStatus;
   /** How much has left this machine, in bytes. */
   sent: number;
@@ -86,6 +95,7 @@ export const useUploads = create<UploadsState>((set, get) => ({
         size: file.size,
         library: destination.library,
         categoryId: destination.categoryId,
+        transcribe: destination.transcribe ?? false,
         status: 'waiting',
         sent: 0,
       };
@@ -127,10 +137,10 @@ async function drain(): Promise<void> {
       if (row === undefined) continue;
       update(next.id, { status: 'uploading', sent: 0 });
       try {
-        const recording = await send(row.library, next.file, (sent) => {
+        const recording = await send(row.library, next.file, row.transcribe, (sent) => {
           update(next.id, { sent });
         });
-        await file(recording.uuid, row.categoryId);
+        await categorise(recording.uuid, row.categoryId);
         update(next.id, { status: 'done', sent: row.size, uuid: recording.uuid });
       } catch (cause) {
         // Partial failure is the normal case at thirty files, not an exception: the one that
@@ -155,7 +165,7 @@ async function drain(): Promise<void> {
  * recording exists, and reporting that as a failed upload would invite somebody to send an
  * hours-long file again to fix a missing category they can set in one click.
  */
-async function file(uuid: string, categoryId: number | undefined): Promise<void> {
+async function categorise(uuid: string, categoryId: number | undefined): Promise<void> {
   if (categoryId === undefined) return;
   try {
     await patch('/api/audio/{audio_uuid}', {
@@ -175,10 +185,18 @@ async function file(uuid: string, categoryId: number | undefined): Promise<void>
  * same here as anywhere else -- §1.9's `detail` is written to be shown to a person, and an upload
  * that reported "Error 413" instead would be the one place in the product that does not.
  */
-function send(library: string, file: File, onProgress: (sent: number) => void): Promise<Recording> {
+function send(
+  library: string,
+  file: File,
+  transcribe: boolean,
+  onProgress: (sent: number) => void,
+): Promise<Recording> {
   return new Promise<Recording>((resolve, reject) => {
     const body = new FormData();
     body.append('file', file);
+    // Only when it was asked for. Sending `false` would be the same request, and leaving it out
+    // is what makes the flag readable in a network log as a decision somebody took.
+    if (transcribe) body.append('transcribe', 'true');
 
     const request = new XMLHttpRequest();
     request.open('POST', `/api/libraries/${encodeURIComponent(library)}/audio`);
