@@ -19,6 +19,15 @@
  * who uploaded it, and which transcript version is active. §V5 lists exactly those, and a field a
  * design promises that the API cannot fill is a promise somebody has to break.
  *
+ * **Two columns, and the transcript gets the remaining width** (`UI-11c`). The panel is a fixed
+ * 320px and can be folded away, because a 1280px screen reading a three-hour interview is a
+ * screen where 320px of metadata is 320px of transcript -- and what somebody folds away stays
+ * folded, per device, since it is a property of the screen and not of the account.
+ *
+ * **Read-only says so once, quietly** (§3.5). One line under the essentials, not a banner and not
+ * a lock on every field: the fields draw their own non-editable state and the actions that cannot
+ * be taken are absent, so the screen reads as intentional rather than as broken.
+ *
  * **Not found says what it knows and no more** (`UI-11e`). The ACL answers 404 for a recording
  * that is not there and for one that was never yours, deliberately, because a 403 would confirm
  * it exists (`DEC-14`). So this screen can say it may have been deleted or may never have been
@@ -26,25 +35,30 @@
  * not have permission", which is the one sentence that gives away what the 404 withholds.
  */
 
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { toLibrary } from '@/app/routes';
-import { Button, Icon, PageHeader, StateCard } from '@/design-system';
+import { Button, Icon, IconButton, PageHeader, StateCard } from '@/design-system';
 import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 
+import { MetadataPanel, PANEL_WIDTH } from './MetadataPanel';
 import { RecordingPlayer } from './RecordingPlayer';
 import { Transcript } from './Transcript';
 import { useRecording } from './data';
 import type { RecordingContext } from './data';
 import { useTranscripts } from './transcripts';
+import { usePanel } from './use-panel';
 
 export function RecordingView() {
   const { uuid = '' } = useParams();
   const context = useRecording(uuid);
   const transcripts = useTranscripts(uuid);
+  const panel = usePanel();
+  const { t } = useTranslation('recording');
 
   if (context.error !== null && context.error !== undefined) {
     return <Unavailable error={context.error} onRetry={context.refetch} />;
@@ -54,9 +68,54 @@ export function RecordingView() {
   return (
     <article>
       <Whereabouts context={context} />
-      <Essentials context={context} version={transcripts.activeVersion} />
-      <RecordingPlayer context={context} />
-      <Transcript context={context} transcripts={transcripts} />
+      <Essentials
+        context={context}
+        version={transcripts.activeVersion}
+        actions={
+          <IconButton
+            icon="panel-left"
+            variant="ghost"
+            label={panel.collapsed ? t('panel.show') : t('panel.hide')}
+            active={!panel.collapsed}
+            aria-expanded={!panel.collapsed}
+            onClick={panel.toggle}
+          />
+        }
+      />
+      {context.isReadOnly && (
+        <p
+          style={{
+            margin: '0 0 var(--space-6)',
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+          }}
+        >
+          {t('readOnly')}
+        </p>
+      )}
+      <div
+        style={{
+          display: 'grid',
+          // `minmax(0, 1fr)` and not `1fr`: a virtualised transcript in a `1fr` track can be
+          // pushed wider by its own content, and the column that gives way is the panel.
+          gridTemplateColumns: panel.collapsed
+            ? 'minmax(0, 1fr)'
+            : `minmax(0, 1fr) ${String(PANEL_WIDTH)}px`,
+          gap: 'var(--space-6)',
+          alignItems: 'start',
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <RecordingPlayer context={context} />
+          <Transcript context={context} transcripts={transcripts} />
+        </div>
+        {!panel.collapsed && (
+          <aside aria-label={t('panel.label')}>
+            <MetadataPanel context={context} />
+          </aside>
+        )}
+      </div>
     </article>
   );
 }
@@ -123,9 +182,11 @@ function Whereabouts({ context }: { context: RecordingContext }) {
 function Essentials({
   context,
   version,
+  actions,
 }: {
   context: RecordingContext;
   version: number | undefined;
+  actions?: ReactNode;
 }) {
   const { t, i18n } = useTranslation('recording');
   const recording = context.recording;
@@ -139,7 +200,7 @@ function Essentials({
     version === undefined ? undefined : t('essentials.version', { version }),
   ].filter((part): part is string => part !== undefined);
 
-  return <PageHeader title={recording.title} meta={meta.join(' · ')} />;
+  return <PageHeader title={recording.title} meta={meta.join(' · ')} actions={actions} />;
 }
 
 /** The page knows its own shape, so it says so while it waits (§3.5). */

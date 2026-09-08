@@ -75,6 +75,11 @@ function lines(): HTMLElement[] {
   return [...document.querySelectorAll<HTMLElement>('[data-ds="transcript-line"]')];
 }
 
+/** The lines marked as being spoken. Scoped to lines: other controls carry `data-active` too. */
+function activeLines(): HTMLElement[] {
+  return lines().filter((line) => line.dataset.active === 'true');
+}
+
 describe('the lines', () => {
   it('draws the segments with the moment each one starts at', async () => {
     measured();
@@ -147,7 +152,7 @@ describe('the active line', () => {
     usePlayback.getState().report({ status: 'playing', positionMs: 1_066_000 });
     const active = await screen.findByText(/I remember the stairs were always cold/);
     expect(active.closest('[data-ds="transcript-line"]')).toHaveAttribute('data-active', 'true');
-    expect(document.querySelectorAll('[data-active="true"]')).toHaveLength(1);
+    expect(activeLines()).toHaveLength(1);
   });
 
   it('is nowhere before the first segment starts', async () => {
@@ -163,7 +168,7 @@ describe('the active line', () => {
     });
     usePlayback.getState().report({ status: 'playing', positionMs: 4_000 });
     // Two minutes of room noise before anybody speaks is not the first line being spoken.
-    expect(document.querySelectorAll('[data-active="true"]')).toHaveLength(0);
+    expect(activeLines()).toHaveLength(0);
   });
 
   it('is nowhere at all while another recording is the one playing', async () => {
@@ -178,7 +183,7 @@ describe('the active line', () => {
       hasWaveform: true,
     });
     usePlayback.getState().report({ status: 'playing', positionMs: 1_066_000 });
-    expect(document.querySelectorAll('[data-active="true"]')).toHaveLength(0);
+    expect(activeLines()).toHaveLength(0);
   });
 });
 

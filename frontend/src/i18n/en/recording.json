@@ -36,5 +36,16 @@
     "hint": "Click a line to jump there.",
     "released": "You scrolled, so the transcript stopped following the audio.",
     "resume": "Follow again"
+  },
+  "readOnly": "You can read this recording. Its details are somebody else's to change.",
+  "panel": {
+    "label": "Details",
+    "show": "Show the details",
+    "hide": "Hide the details",
+    "title": "Title",
+    "notes": "Notes",
+    "noNotes": "No notes",
+    "recorded": "Recorded",
+    "dateNotItsOwn": "From the upload, not the recording"
   }
 }

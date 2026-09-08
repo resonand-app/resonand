@@ -71,9 +71,11 @@ describe('the essentials line', () => {
 
   it('renders the recording own time as written, never in the reader timezone', async () => {
     renderRecording();
+    const title = await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
     // `2026-03-12T18:22:00` with a +01:00 offset. Half six in the evening wherever the test
     // runs -- the numbers in the string, in the reader's language but not their timezone (§1.3).
-    expect(await screen.findByText(/Mar 12, 2026, 6:22.PM/u)).toBeInTheDocument();
+    // Read off the essentials line rather than the document: the panel says it too (`UI-13b`).
+    expect(title.parentElement?.parentElement?.textContent).toMatch(/Mar 12, 2026, 6:22.PM/u);
   });
 
   it('says the date is the upload when the recording has none of its own', async () => {
