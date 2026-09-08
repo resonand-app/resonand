@@ -1,0 +1,30 @@
+{
+  "title": "Libraries",
+  "card": {
+    "options": "Options for {{name}}"
+  },
+  "create": {
+    "action": "Create a library",
+    "hint": "Name it and pick a colour",
+    "title": "Create a library",
+    "name": "Name",
+    "colour": "Colour",
+    "privacy": "Nothing in a library is shared until you share it.",
+    "submit": "Create"
+  },
+  "shared": {
+    "title": "Shared with you",
+    "byline": "{{owner}} · {{level}}"
+  },
+  "firstRun": {
+    "title": "Nothing in here yet",
+    "body": "Upload a recording and it will be here, with its transcript, for as long as you keep it."
+  },
+  "error": {
+    "title": "Your libraries could not be loaded",
+    "body": "The instance answered, but not with the list. Try again."
+  },
+  "unreachable": {
+    "title": "The instance is not answering"
+  }
+}

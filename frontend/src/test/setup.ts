@@ -19,6 +19,24 @@ import { createI18n } from '@/i18n';
 // needs another language switches this instance; nothing needs a provider.
 createI18n('en');
 
+/**
+ * Pointer capture, which jsdom does not implement.
+ *
+ * `Sheet` claims the pointer so a drag that leaves the element still reaches it -- that is what
+ * makes swipe-to-dismiss work on a phone, and it is correct. jsdom has no pointer capture at all,
+ * so the call throws, and a throw inside an event handler is an unhandled error: every test still
+ * passes and the run still fails, which is exactly how it reached CI.
+ *
+ * Stubbed here rather than guarded in the component, for the reason `ResizeObserver` and
+ * `offsetHeight` are stubbed in the tests that need them: this is a gap in the test environment,
+ * not a thing the product should be defending against.
+ */
+if (typeof Element.prototype.setPointerCapture !== 'function') {
+  Element.prototype.setPointerCapture = () => undefined;
+  Element.prototype.releasePointerCapture = () => undefined;
+  Element.prototype.hasPointerCapture = () => false;
+}
+
 afterEach(() => {
   cleanup();
 });

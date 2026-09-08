@@ -1,9 +1,17 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 
 import { Icon } from '../foundation/Icon';
 import type { IconName } from '../foundation/Icon';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /**
+   * The button itself, for an overlay that has to be anchored to it (`UI-8a`).
+   *
+   * A plain prop rather than a `forwardRef`, which React 19 makes unnecessary -- and declared here
+   * because `ButtonHTMLAttributes` does not carry it, so without this line a caller passing one
+   * is a type error rather than a working anchor.
+   */
+  ref?: Ref<HTMLButtonElement>;
   /** primary for the one main action per view; ghost for Cancel; danger for destructive confirms. */
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** Glyph rendered before the label. */

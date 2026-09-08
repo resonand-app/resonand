@@ -14,6 +14,8 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { WHOLE_SYSTEM } from '@/test/timeouts';
+
 import { ThemeProvider } from '@/design-system';
 
 import Specimens from '@/dev/Specimens';
@@ -29,7 +31,7 @@ function renderIn(theme: 'light' | 'dark') {
   );
 }
 
-describe('the specimen page', () => {
+describe('the specimen page', WHOLE_SYSTEM, () => {
   it.each(['light', 'dark'] as const)('renders every family in %s', (theme) => {
     const { container } = renderIn(theme);
     expect(document.documentElement.getAttribute('data-theme')).toBe(theme);

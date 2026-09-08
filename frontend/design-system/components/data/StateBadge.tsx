@@ -9,6 +9,14 @@ export interface StateBadgeProps extends HTMLAttributes<HTMLElement> {
   state?: TranscriptionState;
   /** `chip` in cards and detail views; `glyph` in 36px dense rows where there is no room for a word. */
   variant?: 'chip' | 'glyph';
+  /**
+   * The state's name, for an application that has its own (`UI-22a`).
+   *
+   * The vocabulary in `transcription-states.ts` is English, and it is one vocabulary on purpose:
+   * `UI-8c` puts the same four words on the filter bar so a toggle and a badge cannot disagree.
+   * Translating it is the application's job, and this is where the translation arrives.
+   */
+  label?: string;
 }
 
 /**
@@ -18,8 +26,15 @@ export interface StateBadgeProps extends HTMLAttributes<HTMLElement> {
  * difference between the green and the red. In the `glyph` variant the word survives as the
  * title, because a 36px dense row has no space for it and no excuse for dropping it.
  */
-export function StateBadge({ state = 'none', variant = 'chip', style, ...rest }: StateBadgeProps) {
+export function StateBadge({
+  state = 'none',
+  variant = 'chip',
+  label,
+  style,
+  ...rest
+}: StateBadgeProps) {
   const meaning = TRANSCRIPTION_STATES[state];
+  const word = label ?? meaning.label;
 
   if (variant === 'glyph') {
     return (
@@ -27,7 +42,7 @@ export function StateBadge({ state = 'none', variant = 'chip', style, ...rest }:
         name={meaning.icon}
         size={15}
         color={meaning.color}
-        title={meaning.label}
+        title={word}
         data-ds="state-badge"
         style={style}
         {...rest}
@@ -61,7 +76,7 @@ export function StateBadge({ state = 'none', variant = 'chip', style, ...rest }:
       {...rest}
     >
       <Icon name={meaning.icon} size={13} />
-      {meaning.label}
+      {word}
     </span>
   );
 }

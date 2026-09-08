@@ -13,13 +13,39 @@ import { describe, expect, it, vi } from 'vitest';
 import { RecordingRow } from './RecordingRow';
 
 describe('RecordingRow', () => {
-  it('opens on Enter and on Space', async () => {
+  it('opens on Enter', async () => {
     const onOpen = vi.fn();
     render(<RecordingRow name="A recording" duration="48:12" onOpen={onOpen} />);
     screen.getByRole('button').focus();
     await userEvent.keyboard('{Enter}');
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('picks on Space rather than opening, because those are two different acts', async () => {
+    // §1.8's model, which `UI-9d` implements: a row is a thing you open and a thing you pick, and
+    // one key doing both leaves the other unreachable from a keyboard. This row used to open on
+    // Space, which is what that test asserted.
+    const onOpen = vi.fn();
+    const onSelect = vi.fn();
+    render(
+      <RecordingRow name="A recording" duration="48:12" onOpen={onOpen} onSelect={onSelect} />,
+    );
+    screen.getByRole('button').focus();
     await userEvent.keyboard(' ');
-    expect(onOpen).toHaveBeenCalledTimes(2);
+    expect(onSelect).toHaveBeenCalledWith(true);
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
+  it('lets Space through when the row offers no selection', () => {
+    // There it means play or pause, and a row that swallowed it would break the player.
+    const onOpen = vi.fn();
+    render(<RecordingRow name="A recording" duration="48:12" onOpen={onOpen} />);
+    const row = screen.getByRole('button');
+    row.focus();
+    const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+    row.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+    expect(onOpen).not.toHaveBeenCalled();
   });
 
   it('is not a control when there is nothing to open', () => {

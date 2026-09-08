@@ -1,0 +1,106 @@
+{
+  "header": {
+    "settings": "Settings",
+    "readOnly": "You can read this library."
+  },
+  "missing": {
+    "title": "There is no library at this address",
+    "body": "It may have been deleted, or it may never have been yours."
+  },
+  "error": {
+    "title": "This library could not be loaded"
+  },
+  "unreachable": {
+    "title": "The instance is not answering"
+  },
+  "card": {
+    "play": "Play {{name}}",
+    "moreTags": "+{{count}}",
+    "sharedIndividually": "Shared on its own, apart from this library",
+    "pause": "Pause {{name}}",
+    "select": "Select {{name}}"
+  },
+  "list": {
+    "label": "Recordings",
+    "play": "Play",
+    "state": "Transcript",
+    "title": "Title",
+    "waveform": "Shape",
+    "duration": "Length",
+    "date": "Recorded",
+    "category": "Category",
+    "tags": "Tags",
+    "select": "Selected"
+  },
+  "filters": {
+    "category": "Category",
+    "anyCategory": "Any category",
+    "noCategories": "This library has no categories yet.",
+    "addTag": "Tag",
+    "removeTag": "Stop filtering by {{tag}}",
+    "tagPrefix": "Tags starting with",
+    "tagSuggestions": "Tags",
+    "noTags": "No tags match that.",
+    "title": "Narrow this library",
+    "open": "Filter",
+    "someOn_one": "Filter · {{count}}",
+    "someOn_other": "Filter · {{count}}",
+    "clear": "Clear the filters"
+  },
+  "sort": {
+    "label": "Sort by",
+    "recorded_at": "Recorded",
+    "created_at": "Uploaded",
+    "duration_ms": "Length",
+    "title": "Title",
+    "toAscending": "Sort oldest and shortest first",
+    "toDescending": "Sort newest and longest first"
+  },
+  "view": {
+    "label": "How to show them",
+    "grid": "Cards",
+    "list": "List"
+  },
+  "bulk": {
+    "addTag": "Add a tag",
+    "tagName": "Tag",
+    "apply": "Add it",
+    "more": "More for the selection",
+    "trash": "Send to trash",
+    "running": "{{done}} of {{total}}",
+    "allDone": {
+      "category_one": "One recording moved to that category",
+      "category_other": "{{count}} recordings moved to that category",
+      "tag_one": "One recording tagged",
+      "tag_other": "{{count}} recordings tagged",
+      "move_one": "One recording moved",
+      "move_other": "{{count}} recordings moved",
+      "trash_one": "One recording sent to the trash",
+      "trash_other": "{{count}} recordings sent to the trash"
+    },
+    "partial": "{{done}} done, {{failed}} not",
+    "reason_one": "One: {{detail}}",
+    "reason_other": "{{count}}: {{detail}}",
+    "stillSelected_one": "The one that failed is still selected, so you can try it again.",
+    "stillSelected_other": "The {{count}} that failed are still selected, so you can try them again.",
+    "dismiss": "Dismiss",
+    "category": "Assign a category"
+  },
+  "empty": {
+    "nothing": {
+      "title": "Nothing in this library yet",
+      "body": "Upload a recording and it will be here, with its transcript, for as long as you keep it.",
+      "readOnly": "Whoever owns this library has not put anything in it yet."
+    },
+    "matched": {
+      "title": "Nothing matches that",
+      "body": "Nothing here is narrowed by {{filters}}.",
+      "clear": "Clear the filters",
+      "total_one": "There is one recording in this library.",
+      "total_other": "There are {{count}} recordings in this library."
+    },
+    "failed": {
+      "title": "These recordings could not be listed"
+    }
+  }
+}

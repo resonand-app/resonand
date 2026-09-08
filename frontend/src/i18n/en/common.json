@@ -16,11 +16,19 @@
     "recordings_one": "{{count}} recording",
     "recordings_other": "{{count}} recordings"
   },
+  "level": {
+    "read": "Can read",
+    "edit": "Can edit",
+    "manage": "Can manage",
+    "owner": "Owner"
+  },
   "search": {
     "more": "+{{count}} more in this recording"
   },
   "selection": {
-    "count": "{{count}} selected"
+    "count": "{{count}} selected",
+    "all": "Select everything here",
+    "clearAll": "Clear the selection"
   },
   "state": {
     "empty": "Nothing here yet",
@@ -40,7 +48,8 @@
     "done": "Transcribed",
     "failed": "Transcription failed",
     "none": "Not transcribed",
-    "running": "Transcribing"
+    "running": "Transcribing",
+    "group": "Transcript state"
   },
   "upload": {
     "region": "Uploads"

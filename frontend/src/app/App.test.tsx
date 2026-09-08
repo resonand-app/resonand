@@ -21,8 +21,9 @@ describe('App', () => {
   it('mounts the interface at whatever address it was opened at', async () => {
     window.history.pushState({}, '', '/');
     render(<App />);
-    // The landing view is Phase E; what is real here is the route, the session guard that let it
-    // through, and the providers around both.
-    expect(await screen.findByText('V2 - Libraries')).toBeInTheDocument();
+    // What is real here is the route, the session guard that let it through, and the providers
+    // around both: the landing page reads the account and the library list, so its title block
+    // arriving is proof that a query made inside the client reached a router that had resolved.
+    expect(await screen.findByRole('heading', { name: 'Libraries', level: 1 })).toBeInTheDocument();
   });
 });

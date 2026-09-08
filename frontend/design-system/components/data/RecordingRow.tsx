@@ -1,21 +1,56 @@
-import type { HTMLAttributes, KeyboardEvent } from 'react';
+import type { HTMLAttributes, KeyboardEvent, MouseEvent } from 'react';
 
 import type { TranscriptionState } from '../../transcription-states';
 import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
+import { Checkbox } from '../forms/Checkbox';
+import { IconButton } from '../forms/IconButton';
+import { Chip } from './Chip';
 import { StateBadge } from './StateBadge';
 
-export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
+// `onSelect` hands back whether it is now selected rather than a DOM event, and `HTMLAttributes`
+// already has one. Omitting it is what lets the narrower signature stand rather than silently
+// shadow a native handler -- the same arrangement `Sidebar` makes for the same reason.
+export interface RecordingRowProps
+  extends Omit<HTMLAttributes<HTMLDivElement>, 'onSelect'> {
   name: string;
   /** Formatted duration, mono and tabular. */
   duration: string;
+  /**
+   * The recording's own date, formatted by the application (§1.3).
+   *
+   * A string, because the wall between a recording's wall-clock reading and an instant is the
+   * application's to hold: a row given a `Date` would be a row that could render the wrong
+   * evening.
+   */
+  date?: string;
+  /** The category's name, resolved against the library's tree by the caller. */
+  category?: string;
+  /** User-entered tags, shown verbatim. */
+  tags?: string[];
   state?: TranscriptionState;
   peaks?: Peaks | undefined;
   played?: number;
   pending?: boolean;
   /** Row is the current selection or the playing recording. */
   selected?: boolean;
+  /** The selection control, in its own column (`UI-9a`). Absent where selection is not offered. */
+  onSelect?: (selected: boolean) => void;
+  /** Whether this is the recording the player is playing (`UI-7a`). */
+  playing?: boolean;
   onOpen?: () => void;
+  /**
+   * Play this recording. Present in the dense list, where play is one of the four columns that
+   * never collapse (§V4), and absent in a specimen that is only showing the row's shape.
+   */
+  onPlay?: () => void;
+  /** The copy, for an application that has its own (`UI-22a`). */
+  labels?: {
+    play?: (name: string) => string;
+    pause?: (name: string) => string;
+    state?: string;
+    select?: (name: string) => string;
+  };
 }
 
 /**
@@ -30,35 +65,72 @@ export interface RecordingRowProps extends HTMLAttributes<HTMLDivElement> {
 export function RecordingRow({
   name,
   duration,
+  date,
+  category,
+  tags = [],
   state = 'done',
   peaks,
   played = 0,
   pending = false,
   selected = false,
+  playing = false,
   onOpen,
+  onSelect,
+  onPlay,
+  labels,
   onKeyDown,
   style,
   ...rest
 }: RecordingRowProps) {
   const interactive = onOpen !== undefined;
 
+  /**
+   * The row opens the recording; the controls inside it do their own thing.
+   *
+   * Decided here rather than by stopping propagation in a wrapper around each control: a `<span>`
+   * whose only job is to swallow clicks is a non-interactive element with a click handler, which
+   * is a thing a screen reader cannot make sense of and jsx-a11y is right to refuse. Asking where
+   * the click came from keeps the decision on the element that is actually interactive.
+   */
+  const open = (event: MouseEvent<HTMLDivElement>) => {
+    if (event.target instanceof Element && event.target.closest('[data-ds="row-select"]') !== null) {
+      return;
+    }
+    onOpen?.();
+  };
+
+  /**
+   * `Enter` opens and `Space` toggles the selection (`UI-9d`, §1.8).
+   *
+   * Two keys and two different acts, which is the model the specification writes down: a row is
+   * a thing you open and a thing you pick, and one key doing both makes the other unreachable
+   * from a keyboard. `Space` falls through to the global handler when this row offers no
+   * selection, because there it means play or pause and a row that swallowed it would be a row
+   * that broke the player.
+   */
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
-    if (!interactive || event.defaultPrevented) return;
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.defaultPrevented) return;
+    if (event.key === 'Enter' && interactive) {
       event.preventDefault();
       onOpen();
+      return;
+    }
+    if (event.key === ' ' && onSelect !== undefined) {
+      event.preventDefault();
+      onSelect(!selected);
     }
   };
 
   return (
     <div
-      onClick={onOpen}
+      onClick={open}
       onKeyDown={handleKeyDown}
       role={interactive ? 'button' : undefined}
       tabIndex={interactive ? 0 : undefined}
       data-ds="recording-row"
       data-selected={selected ? 'true' : undefined}
+      data-playing={playing ? 'true' : undefined}
       style={{
         height: 'var(--row-height)',
         display: 'flex',
@@ -71,7 +143,39 @@ export function RecordingRow({
       }}
       {...rest}
     >
-      <StateBadge state={state} variant="glyph" />
+      {onSelect !== undefined && (
+        <span data-ds="row-select" style={{ flex: '0 0 auto', display: 'flex' }}>
+          <Checkbox
+            checked={selected}
+            onChange={onSelect}
+            size="row"
+            label={labels?.select?.(name) ?? `Select ${name}`}
+          />
+        </span>
+      )}
+      {onPlay !== undefined && (
+        <IconButton
+          icon={playing ? 'pause' : 'play'}
+          variant="ghost"
+          size={26}
+          label={
+            playing
+              ? (labels?.pause?.(name) ?? `Pause ${name}`)
+              : (labels?.play?.(name) ?? `Play ${name}`)
+          }
+          onClick={(event) => {
+            // The row opens the recording and the button plays it. Without this the button would
+            // do both, and a click on play would leave the list it was meant to keep you in.
+            event.stopPropagation();
+            onPlay();
+          }}
+        />
+      )}
+      <StateBadge
+        state={state}
+        variant="glyph"
+        {...(labels?.state === undefined ? {} : { label: labels.state })}
+      />
       <span
         style={{
           fontFamily: 'var(--font-sans)',
@@ -86,9 +190,27 @@ export function RecordingRow({
       >
         {name}
       </span>
-      <div style={{ width: 88, flex: '0 0 auto' }}>
+      <div data-column="waveform" style={{ width: 88, flex: '0 0 auto' }}>
         <Waveform peaks={peaks} size="dense" played={played} pending={pending} />
       </div>
+      {date !== undefined && (
+        <span
+          data-column="date"
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 'var(--type-numeric-size)',
+            fontVariantNumeric: 'var(--type-numeric-variant)',
+            color: 'var(--text-3)',
+            width: 104,
+            flex: '0 0 auto',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {date}
+        </span>
+      )}
       <span
         style={{
           fontFamily: 'var(--font-mono)',
@@ -102,6 +224,42 @@ export function RecordingRow({
       >
         {duration}
       </span>
+      {category !== undefined && (
+        <span
+          data-column="category"
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+            width: 116,
+            flex: '0 0 auto',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {category}
+        </span>
+      )}
+      {tags.length > 0 && (
+        <span
+          data-column="tags"
+          style={{
+            display: 'flex',
+            gap: 4,
+            width: 148,
+            flex: '0 0 auto',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {/* One chip per tag, clipped rather than counted: a 36px row has no room for a `+N`
+              that would itself take the width of a tag, and the whole column goes at 900 anyway. */}
+          {tags.map((tag) => (
+            <Chip key={tag}>{tag}</Chip>
+          ))}
+        </span>
+      )}
     </div>
   );
 }

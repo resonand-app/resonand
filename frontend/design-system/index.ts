@@ -65,7 +65,7 @@ export { PlayerBar } from './components/media/PlayerBar';
 export type { PlayerBarProps } from './components/media/PlayerBar';
 export { TranscriptLine } from './components/media/TranscriptLine';
 export type { TranscriptLineProps } from './components/media/TranscriptLine';
-export { WAVE_SIZES } from './components/media/wave-sizes';
+export { HEIGHT_TOKEN, WAVE_SIZES } from './components/media/wave-sizes';
 export type { WaveSize } from './components/media/wave-sizes';
 export { Waveform } from './components/media/Waveform';
 export type { WaveformProps } from './components/media/Waveform';
@@ -114,6 +114,8 @@ export type { StateCardProps } from './components/layout/StateSlot';
 // The positioning strategy itself, exported because the application anchors overlays of its own:
 // `UI-4e` hangs the account menu off the avatar, and an overlay placed by hand would be one that
 // does not flip when it runs out of room and does not close on Escape.
+export { Modal } from './components/overlay/Modal';
+export type { ModalProps } from './components/overlay/Modal';
 export { useAnchoredOverlay } from './components/overlay/useAnchoredOverlay';
 export type {
   Alignment,

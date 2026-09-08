@@ -22,6 +22,8 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import { WHOLE_SYSTEM } from './timeouts';
+
 import { ThemeProvider } from '@/design-system';
 import CSS from '@/design-system/components.css?raw';
 import Specimens from '@/dev/Specimens';
@@ -72,7 +74,7 @@ function describeElement(element: HTMLElement): string {
   return `${element.tagName.toLowerCase()} in ${owner} (${name.trim()})`;
 }
 
-describe('the focus treatment', () => {
+describe('the focus treatment', WHOLE_SYSTEM, () => {
   it('is one treatment, and it is the one the specification names', () => {
     // A 2px `--accent` ring at 2px offset (§1.7). Every rule that draws a ring draws this ring:
     // two treatments is the failure this is guarding against, not a missing one.
@@ -130,7 +132,7 @@ describe('the focus treatment', () => {
   });
 });
 
-describe('the 44px floor', () => {
+describe('the 44px floor', WHOLE_SYSTEM, () => {
   it('rests on a token, not on a number', () => {
     expect(SPACING).toMatch(/--hit-target:\s*44px/);
     const grower = rulesIn(CSS).find((rule) => rule.selector.includes('[data-hit-target]::after'));

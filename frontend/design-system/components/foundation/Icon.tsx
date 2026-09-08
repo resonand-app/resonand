@@ -2,22 +2,25 @@ import {
   Check,
   ChevronDown,
   ChevronLeft,
+  ChevronUp,
   CircleAlert,
   CircleDashed,
   Clock,
   CloudUpload,
   EllipsisVertical,
   HardDrive,
+  LayoutGrid,
   Library,
   Loader,
-  Minus,
   LogOut,
+  Minus,
   Moon,
   PanelLeft,
   Pause,
   Pencil,
   Play,
   Plus,
+  Rows3,
   Search,
   Share2,
   SkipBack,
@@ -49,7 +52,9 @@ import type { HTMLAttributes } from 'react';
  * `StateBadge`'s four states, `SearchResults`' two kinds of hit. Adding one is two lines here,
  * and `UI-34` adds a handful: `chevron-down` for the control that opens a list of values, `minus` for a checkbox that is neither
  * on nor off, `pencil` for a field you can correct in place, and
- * `hard-drive` and `cloud-upload` for the two registers of the egress disclosure.
+ * `hard-drive` and `cloud-upload` for the two registers of the egress disclosure. `UI-8d` adds
+ * three: `chevron-up` for a sort that currently runs the other way, and `layout-grid` and `rows`
+ * for the switch between the two densities of one library.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -57,6 +62,7 @@ const GLYPHS = {
   check: Check,
   'chevron-down': ChevronDown,
   'chevron-left': ChevronLeft,
+  'chevron-up': ChevronUp,
   'circle-dashed': CircleDashed,
   clock: Clock,
   'cloud-upload': CloudUpload,
@@ -67,12 +73,14 @@ const GLYPHS = {
   moon: Moon,
   minus: Minus,
   'more-vertical': EllipsisVertical,
+  'layout-grid': LayoutGrid,
   'panel-left': PanelLeft,
   pause: Pause,
   pencil: Pencil,
   play: Play,
   plus: Plus,
   search: Search,
+  rows: Rows3,
   'share-2': Share2,
   'skip-back': SkipBack,
   'skip-forward': SkipForward,

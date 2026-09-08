@@ -17,6 +17,8 @@ import { Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
 
 import { createQueryClient } from '@/api/query-client';
+import { LibrariesView } from '@/features/libraries/LibrariesView';
+import { LibraryView } from '@/features/library/LibraryView';
 
 import { AppShell } from './AppShell';
 import { NotBuiltYet } from './NotBuiltYet';
@@ -58,8 +60,8 @@ function Archive() {
               routes on purpose: the nav, the sidebar and the player must not remount when the
               view changes, which is what makes the player persistent (`UI-5a`). */}
           <Route element={<Framed />}>
-            <Route path={routes.libraries} element={<NotBuiltYet view="V2 - Libraries" />} />
-            <Route path={routes.library} element={<NotBuiltYet view="V3/V4 - A library" />} />
+            <Route path={routes.libraries} element={<LibrariesView />} />
+            <Route path={routes.library} element={<LibraryView />} />
             <Route
               path={routes.librarySettings}
               element={<NotBuiltYet view="V7 - Library settings" />}

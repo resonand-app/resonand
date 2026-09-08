@@ -6,6 +6,17 @@ import { Waveform } from '../media/Waveform';
 
 export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
   name: string;
+  /**
+   * Where the title goes, which is the card's real open affordance (`UI-31b`).
+   *
+   * A link and not a button: opening a library is a navigation, so it is reachable by keyboard,
+   * announced as a link, and can be opened in a new tab by anybody who works that way. `onOpen`
+   * stays the mouse convenience over the whole card -- the two do the same thing, and this is
+   * the one a screen reader is given.
+   */
+  href?: string;
+  /** A quiet line under the meta: who owns a shared library, and what you may do in it. */
+  byline?: string;
   /** Mono metadata line, e.g. "3 recordings · 2 h 04 min". */
   meta?: string;
   /** The library colour the user picked, as a `var(--library-*)` reference. */
@@ -16,6 +27,15 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
   /** True when the most recent recording has no peaks yet. */
   pending?: boolean;
   onOpen?: () => void;
+  /**
+   * The copy, for an application that has its own (`UI-22a`).
+   *
+   * `options` names the overflow control, and takes the library's name because a page of cards
+   * would otherwise offer a screen reader nine buttons called "Options".
+   */
+  labels?: {
+    options?: (name: string) => string;
+  };
 }
 
 /**
@@ -25,28 +45,31 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
  * on the card that is not a number -- a library that has been added to lately looks different
  * from one that has not, without anything having to say so.
  *
- * **`onOpen` is a mouse convenience and is knowingly not keyboard-reachable (`UI-1g`).** The two
- * jsx-a11y rules below are suppressed rather than satisfied, because the obvious way to satisfy
- * them makes the card worse: `role="button"` on an `<article>` that contains the overflow control
- * nests one control inside another, and a screen reader then announces a button whose label is
- * the whole card and loses the menu inside it. The card needs a real open affordance -- the title
- * as a link to `/libraries/<uuid>`, which is a route that exists -- and that is `UI-31b`'s to add
- * when it wires this component to data. Inventing it inside a transcription would be the redesign
- * these five tasks are told not to do.
+ * **The title is the open affordance; `onOpen` is a mouse convenience over the whole card.**
+ * `href` renders the title as a link, so opening a library is reachable by keyboard, announced as
+ * a link and openable in a new tab -- and the two jsx-a11y rules below stay suppressed rather
+ * than satisfied, because the obvious way to satisfy them makes the card worse: `role="button"`
+ * on an `<article>` that contains the overflow control nests one control inside another, and a
+ * screen reader then announces a button whose label is the whole card and loses the menu inside
+ * it. A card with no `href` has no keyboard path to the library and is for a specimen page, not
+ * for a view.
  */
 export function LibraryCard({
   name,
+  href,
+  byline,
   meta,
   colour = 'var(--library-clay)',
   peaks,
   played = 0,
   pending = false,
   onOpen,
+  labels,
   style,
   ...rest
 }: LibraryCardProps) {
   return (
-    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- UI-31b, see above
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- the title link is the keyboard path, see above
     <article
       onClick={onOpen}
       data-ds="library-card"
@@ -82,7 +105,12 @@ export function LibraryCard({
             background: colour,
           }}
         />
-        <IconButton icon="more-vertical" variant="ghost" size={26} label={`Options for ${name}`} />
+          <IconButton
+          icon="more-vertical"
+          variant="ghost"
+          size={26}
+          label={labels?.options?.(name) ?? `Options for ${name}`}
+        />
       </div>
       <h3
         style={{
@@ -96,8 +124,26 @@ export function LibraryCard({
           textWrap: 'pretty',
         }}
       >
-        {name}
+        {href === undefined ? (
+          name
+        ) : (
+          <a data-ds="library-card-title" href={href}>
+            {name}
+          </a>
+        )}
       </h3>
+      {byline !== undefined && (
+        <span
+          style={{
+            marginTop: 2,
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-ui-size-sm)',
+            color: 'var(--text-3)',
+          }}
+        >
+          {byline}
+        </span>
+      )}
       <span
         style={{
           marginTop: 4,

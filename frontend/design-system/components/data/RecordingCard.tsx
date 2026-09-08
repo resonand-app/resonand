@@ -1,23 +1,85 @@
 import type { HTMLAttributes } from 'react';
 
 import type { TranscriptionState } from '../../transcription-states';
+import { Checkbox } from '../forms/Checkbox';
 import { IconButton } from '../forms/IconButton';
 import type { Peaks } from '../media/peaks';
 import { Waveform } from '../media/Waveform';
+import { Icon } from '../foundation/Icon';
 import { Chip } from './Chip';
 import { StateBadge } from './StateBadge';
 
-export interface RecordingCardProps extends HTMLAttributes<HTMLElement> {
+// `onSelect` hands back whether it is now selected rather than a DOM event, and `HTMLAttributes`
+// already has one. Omitting it is what lets the narrower signature stand rather than silently
+// shadow a native handler -- the same arrangement `Sidebar` makes for the same reason.
+export interface RecordingCardProps
+  extends Omit<HTMLAttributes<HTMLElement>, 'onSelect'> {
   name: string;
+  /**
+   * Where the title goes: the card's keyboard path into the recording (`UI-6b`).
+   *
+   * A link, for the reasons `LibraryCard`'s carries one -- opening a recording is a navigation,
+   * and the play button beside it is a different action that must not be the only control on a
+   * card somebody reached with a keyboard.
+   */
+  href?: string;
   /** Mono metadata: duration and date, e.g. "48:12 · 12 Mar 2026". */
   meta?: string;
   state?: TranscriptionState;
+  /**
+   * The category, resolved against the library's own tree by whoever renders the card.
+   *
+   * An id on the recording and a name here: the card does not know the library, and a component
+   * that fetched a tree to draw one word would fetch it once per card.
+   */
+  category?: string;
   /** User-entered tags, shown verbatim. */
   tags?: string[];
+  /**
+   * How many tags to draw before the rest become a count.
+   *
+   * A card is 320px and a recording can carry a dozen tags. Wrapping them all makes every card a
+   * different height, which is the one thing a grid of cards cannot survive.
+   */
+  maxTags?: number;
+  /** A discreet mark for a recording shared on its own, apart from its library. */
+  sharedIndividually?: boolean;
+  /**
+   * Whether this card is selected, and the control that changes that (`UI-9a`).
+   *
+   * The checkbox is in the corner **opposite the play button**, which is the whole design of it:
+   * two controls in one corner makes every click a decision about which one you meant. It appears
+   * on hover, or whenever a selection already exists -- so a grid at rest is a grid of recordings
+   * rather than a form, and once somebody is selecting, every card says it can be.
+   */
+  selected?: boolean;
+  onSelect?: (selected: boolean) => void;
+  /** Whether anything at all is selected, which is what keeps the boxes visible. */
+  selecting?: boolean;
+  /**
+   * Whether this is the recording the player is playing (`UI-6c`).
+   *
+   * It marks the card and turns the play control into a pause, because the control that started
+   * the sound is the one somebody reaches for to stop it. The mark is not a colour alone: the
+   * card takes the accent ring, which is legible next to a selected card and in both themes.
+   */
+  playing?: boolean;
   peaks?: Peaks | undefined;
   played?: number;
   pending?: boolean;
   onPlay?: () => void;
+  /** The copy, for an application that has its own (`UI-22a`). */
+  labels?: {
+    play?: (name: string) => string;
+    /** The same control, once this is the recording being played. */
+    pause?: (name: string) => string;
+    /** The transcription state, in the interface's language. `StateBadge`'s own is English. */
+    state?: string;
+    /** "+3", or whatever a language makes of a count of tags not drawn. */
+    moreTags?: (count: number) => string;
+    select?: (name: string) => string;
+    sharedIndividually?: string;
+  };
 }
 
 /**
@@ -36,7 +98,16 @@ export function RecordingCard({
   name,
   meta,
   state = 'done',
+  category,
   tags = [],
+  maxTags = 3,
+  sharedIndividually = false,
+  selected = false,
+  onSelect,
+  selecting = false,
+  playing = false,
+  href,
+  labels,
   peaks,
   played = 0,
   pending = false,
@@ -47,10 +118,11 @@ export function RecordingCard({
   return (
     <article
       data-ds="recording-card"
+      data-playing={playing ? 'true' : undefined}
+      data-selected={selected ? 'true' : undefined}
+      data-selecting={selecting || selected ? 'true' : undefined}
       style={{
-        background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
-        boxShadow: 'var(--elevation-card)',
         padding: '14px var(--panel-padding)',
         display: 'flex',
         flexDirection: 'column',
@@ -60,6 +132,16 @@ export function RecordingCard({
       {...rest}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        {onSelect !== undefined && (
+          <span data-ds="card-select" style={{ flex: '0 0 auto', paddingTop: 2 }}>
+            <Checkbox
+              checked={selected}
+              onChange={onSelect}
+              size="card"
+              label={labels?.select?.(name) ?? `Select ${name}`}
+            />
+          </span>
+        )}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 3 }}>
           <span
             style={{
@@ -68,9 +150,19 @@ export function RecordingCard({
               fontSize: 'var(--type-body-size)',
               letterSpacing: '-0.005em',
               color: 'var(--text)',
+              // A title wraps rather than being cut: "Interview with grandma Teresa -- the house
+              // on Carrer Nou" is an ordinary title, and an ellipsis in the middle of it is a
+              // recording somebody cannot identify (§V3).
+              textWrap: 'pretty',
             }}
           >
-            {name}
+            {href === undefined ? (
+              name
+            ) : (
+              <a data-ds="recording-card-title" href={href}>
+                {name}
+              </a>
+            )}
           </span>
           <span
             style={{
@@ -83,7 +175,17 @@ export function RecordingCard({
             {meta}
           </span>
         </div>
-        <IconButton icon="play" variant="accent-soft" size={32} label={`Play ${name}`} onClick={onPlay} />
+        <IconButton
+          icon={playing ? 'pause' : 'play'}
+          variant="accent-soft"
+          size={32}
+          label={
+            playing
+              ? (labels?.pause?.(name) ?? `Pause ${name}`)
+              : (labels?.play?.(name) ?? `Play ${name}`)
+          }
+          onClick={onPlay}
+        />
       </div>
       <Waveform
         peaks={peaks}
@@ -92,11 +194,22 @@ export function RecordingCard({
         playhead={played > 0}
         pending={pending}
       />
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-        <StateBadge state={state} />
-        {tags.map((tag) => (
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+        <StateBadge state={state} {...(labels?.state === undefined ? {} : { label: labels.state })} />
+        {sharedIndividually && (
+          <Chip data-kind="shared" title={labels?.sharedIndividually}>
+            <Icon name="share-2" size={13} />
+          </Chip>
+        )}
+        {category !== undefined && <Chip data-kind="category">{category}</Chip>}
+        {tags.slice(0, maxTags).map((tag) => (
           <Chip key={tag}>{tag}</Chip>
         ))}
+        {tags.length > maxTags && (
+          <Chip data-kind="overflow">
+            {labels?.moreTags?.(tags.length - maxTags) ?? `+${String(tags.length - maxTags)}`}
+          </Chip>
+        )}
       </div>
     </article>
   );

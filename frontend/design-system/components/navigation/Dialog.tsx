@@ -9,6 +9,8 @@ export interface DialogProps extends HTMLAttributes<HTMLDivElement> {
   /** Panel width in px. 420 default; 520 for share. */
   width?: number;
   onClose?: () => void;
+  /** The copy, for an application that has its own (`UI-22a`). Names the close control. */
+  labels?: { close?: string };
   /** Action row, right-aligned. Ghost Cancel first, then the primary or danger action. */
   footer?: ReactNode;
   children?: ReactNode;
@@ -29,6 +31,7 @@ export function Dialog({
   description,
   width = 420,
   onClose,
+  labels,
   footer,
   children,
   style,
@@ -84,7 +87,7 @@ export function Dialog({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={labels?.close ?? 'Close'}
           data-ds="dialog-close"
           data-hit-target=""
           style={{

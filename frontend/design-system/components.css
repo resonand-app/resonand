@@ -606,6 +606,121 @@
   box-shadow: var(--elevation-overlay);
 }
 
+/* The title is the card's keyboard path into the library, so it is a link and looks like the
+   title it is: the card carries the affordance, and a blue underlined heading inside a surface
+   that is already obviously clickable is one signal too many. It underlines when the pointer is
+   on it, and the focus ring is the system's own. */
+[data-ds='library-card-title'] {
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-ds='library-card-title']:hover {
+  text-decoration: underline;
+}
+
+/* The dense list's columns go one at a time as the width shrinks (`UI-7b`, §V4).
+ *
+ * Nine columns compressed together produce nine unreadable ones, so the list drops them in the
+ * order somebody needs them least: tags, then category, then the waveform, then the date. What
+ * survives every width is the irreducible row -- play, the transcription state, the title and the
+ * length -- and none of those has a rule here, which is how "never collapses" is written down.
+ *
+ * The thresholds are `--breakpoint-column-*` in `tokens/breakpoints.css`. A media query cannot
+ * read a custom property, so these numbers are repeated from there rather than declared here,
+ * exactly as that file's own note says they have to be.
+ *
+ * The rules cascade rather than each naming a band: below 700 the category and the tags are
+ * already gone, so the waveform's rule only has to say one thing. Bands would be four rules that
+ * each have to agree with the other three about the boundaries.
+ *
+ * The column header collapses with its column, because a heading over a column that is not there
+ * is worse than no heading -- it names the wrong one. */
+@media (max-width: 900px) {
+  [data-column='tags'] {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  [data-column='category'] {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  [data-column='waveform'] {
+    display: none;
+  }
+}
+
+@media (max-width: 620px) {
+  [data-column='date'] {
+    display: none;
+  }
+}
+
+/* RecordingCard. Its elevation is here rather than inline because the playing variant below
+   varies it, and `UI-32a`'s division of labour is not a preference: an inline box-shadow beats
+   every stylesheet rule ever written, so a property this file needs to change has to leave the
+   component. The card's own geometry stayed inline, as it should.
+
+   The recording being played is marked with the accent ring rather than with a colour of its own.
+   A ring survives beside a selected card, reads in both themes, and does not compete with the
+   four transcription-state colours already on the card. */
+[data-ds='recording-card'] {
+  background: var(--surface);
+  box-shadow: var(--elevation-card);
+}
+
+[data-ds='recording-card'][data-playing='true'] {
+  box-shadow:
+    var(--elevation-card),
+    inset 0 0 0 2px var(--accent);
+}
+
+/* Selection appears when it is wanted and not before (`UI-9a`).
+ *
+ * A grid at rest is a grid of recordings, not a form -- so the checkbox is hidden until a pointer
+ * is on the card or a selection already exists. `visibility` rather than `display`, because the
+ * box has to keep its space: a card whose title shifted 26px on hover would be a card nobody can
+ * click accurately.
+ *
+ * **A keyboard reaches it whatever the pointer is doing.** `:focus-within` is the half that makes
+ * the hover rule honest -- without it, tabbing into an invisible checkbox is a focus ring around
+ * nothing, which is the exact failure a hover-only affordance always produces. */
+[data-ds='card-select'] {
+  visibility: hidden;
+}
+
+[data-ds='recording-card']:hover [data-ds='card-select'],
+[data-ds='recording-card']:focus-within [data-ds='card-select'],
+[data-ds='recording-card'][data-selecting='true'] [data-ds='card-select'] {
+  visibility: visible;
+}
+
+/* A selected card takes the surface step, and keeps the accent ring if it is also playing --
+   selection and playback are two different facts about one recording and have to be legible at
+   the same time. Its resting background is declared above rather than inline for the reason the
+   elevation is: an inline value beats every rule this file could write. */
+[data-ds='recording-card'][data-selected='true'] {
+  background: var(--surface-2);
+}
+
+/* The dense list's checkbox is in a column of its own, so it is always there: a column that
+   appeared on hover would make every row 16px narrower than its neighbours. */
+
+/* A recording's title is a link into the recording, and looks like the title it is -- the same
+   arrangement as a library card's, for the same reason. */
+[data-ds='recording-card-title'] {
+  color: inherit;
+  text-decoration: none;
+}
+
+[data-ds='recording-card-title']:hover {
+  text-decoration: underline;
+}
+
 /* CreateLibraryCard. It does not float, because it is not a thing yet -- so its hover is the
    surface step rather than an elevation one. */
 [data-ds='create-library-card'] {
