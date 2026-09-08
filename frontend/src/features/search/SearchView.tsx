@@ -33,7 +33,8 @@ import { count as formatCount } from '@/i18n/format';
 
 import { Results } from './Results';
 import { SearchFilters } from './SearchFilters';
-import { useSearch } from './data';
+import { NoResults, NothingTyped, RecallNote, SearchFailed, Searching } from './SearchStates';
+import { useReadableLibraries, useSearch } from './data';
 
 export function SearchView() {
   const { t } = useTranslation('search');
@@ -53,6 +54,33 @@ export function SearchView() {
   // is more than one page it says which recordings it counted.
   const matches = results.items.reduce((sum, result) => sum + result.total_matches, 0);
   const paginated = results.total > PAGE_SIZE;
+  // How much there is to look through, for the resting state. Summed from the libraries the
+  // sidebar has already fetched rather than asked for again: it is the same number.
+  const archiveSize = useReadableLibraries().reduce((sum, one) => sum + one.audio_count, 0);
+
+  /**
+   * Which of the four this screen is (§3.5).
+   *
+   * Nothing typed is asked first and is not an empty result: no request has been made, and a
+   * screen that said "nothing matched" before anybody searched would be answering a question
+   * nobody asked.
+   */
+  function body() {
+    if (query.trim() === '') return <NothingTyped recordings={archiveSize} />;
+    if (results.error !== null) {
+      return (
+        <SearchFailed
+          error={results.error}
+          onRetry={() => {
+            void results.refetch();
+          }}
+        />
+      );
+    }
+    if (results.isPending) return <Searching />;
+    if (results.items.length === 0) return <NoResults query={query} />;
+    return <Results results={results.items} />;
+  }
 
   return (
     <section>
@@ -80,7 +108,7 @@ export function SearchView() {
         </div>
       )}
       <SearchFilters />
-      <Results results={results.items} />
+      {body()}
       {paginated && (
         <nav
           aria-label={t('pages.label')}
@@ -124,6 +152,11 @@ export function SearchView() {
             {t('pages.next')}
           </Button>
         </nav>
+      )}
+      {results.items.length > 0 && (
+        <p style={{ margin: 'var(--space-5) 0 0' }}>
+          <RecallNote />
+        </p>
       )}
     </section>
   );

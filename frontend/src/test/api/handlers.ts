@@ -392,12 +392,11 @@ export const handlers: HttpHandler[] = [
     }));
     return HttpResponse.json(page(results, url));
   }),
-  http.get('/api/search/about', () =>
-    HttpResponse.json({
-      transcribed: archive.recordings.filter((one) => one.transcription_state === 'done').length,
-      total: archive.recordings.length,
-    }),
-  ),
+  // `{"recall": "..."}`, which is what `about_search` answers: one sentence about what the index
+  // cannot do, for the interface to show rather than copy (`UI-16g`). It answered a pair of
+  // counts, which is a shape the endpoint has never had -- and a view that rendered the real
+  // sentence would have found nothing to render in every test.
+  http.get('/api/search/about', () => HttpResponse.json({ recall: archive.recall })),
   http.get('/api/tags', ({ request }) => {
     // `prefix`, which is what the endpoint documents and what the pickers send. It read `q`, so
     // every prefix was answered with every tag -- and a mock that ignores a filter makes the

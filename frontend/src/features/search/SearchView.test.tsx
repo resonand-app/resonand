@@ -9,7 +9,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { HttpResponse, http } from 'msw';
+import { HttpResponse, delay, http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
@@ -58,6 +58,70 @@ function threeHundred(shownOnAPage: number) {
     }),
   );
 }
+
+describe('the four states', () => {
+  it('says what can be looked for and how much there is, before anything is typed', async () => {
+    show(routes.search);
+    expect(await screen.findByText(/look inside everything you have recorded/i)).toBeVisible();
+    // Not "nothing matched": no request has been made, and answering a question nobody asked is
+    // the mistake §3.5 names.
+    expect(screen.queryByText(/nothing matched/i)).not.toBeInTheDocument();
+  });
+
+  it('shows the shape of the answer while it is being looked for', async () => {
+    server.use(
+      http.get('/api/search', async () => {
+        await delay(50);
+        return HttpResponse.json({ items: [], total: 0, limit: 50, offset: 0 });
+      }),
+    );
+    show(toSearch('vermut'));
+    expect(await screen.findByRole('status', { name: /loading/i })).toBeVisible();
+  });
+
+  it('says nothing matched, and lets the recall note explain why', async () => {
+    show(toSearch('zzzznothing'));
+    expect(await screen.findByText(/nothing matched "zzzznothing"/i)).toBeVisible();
+    expect(await screen.findByText(/does not know that words are related/i)).toBeVisible();
+  });
+
+  it("shows the instance's own sentence rather than a copy of it", async () => {
+    // The wording is the endpoint's. A constant in the bundle would describe the old index the
+    // day the index changes, and nobody would know.
+    server.use(
+      http.get('/api/search/about', () => HttpResponse.json({ recall: 'It only finds Tuesdays.' })),
+    );
+    show(toSearch('zzzznothing'));
+    expect(await screen.findByText('It only finds Tuesdays.')).toBeVisible();
+  });
+
+  it('says nothing about recall at all while the instance has not said anything', async () => {
+    server.use(http.get('/api/search/about', () => HttpResponse.json({})));
+    show(toSearch('zzzznothing'));
+    expect(await screen.findByText(/nothing matched/i)).toBeVisible();
+    expect(screen.queryByText(/does not know that words are related/i)).not.toBeInTheDocument();
+  });
+
+  it('states a failure with what the instance said, and offers to try again', async () => {
+    server.use(
+      http.get('/api/search', () =>
+        HttpResponse.json(
+          {
+            type: '/errors/error',
+            title: 'Error',
+            detail: 'The index is being rebuilt.',
+            status: 500,
+            request_id: 'test',
+          },
+          { status: 500, headers: { 'content-type': 'application/problem+json' } },
+        ),
+      ),
+    );
+    show(toSearch('vermut'));
+    expect(await screen.findByText('The index is being rebuilt.')).toBeVisible();
+    expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
+  });
+});
 
 describe('the title block', () => {
   it('says the query, and how many recordings and how many matches it found', async () => {
