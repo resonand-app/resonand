@@ -36,12 +36,13 @@ import { useAfterPaint } from '@/app/use-after-paint';
 
 import { LibraryFilters } from './LibraryFilters';
 import { LibraryHeader } from './LibraryHeader';
-import { LibraryBulkBar } from './LibraryBulkBar';
+import { BulkReport, LibraryBulkBar } from './LibraryBulkBar';
 import { RecordingGrid } from './RecordingGrid';
 import { RecordingList } from './RecordingList';
 import { useLibrary } from './data';
 import { libraryQuery, useCategories, useRecordings } from './recordings';
-import { EMPTY, coverage, extendTo, selectAll, toggle } from './selection';
+import { EMPTY, coverage, extendTo, retain, selectAll, toggle } from './selection';
+import { useBulk } from './use-bulk';
 
 export function LibraryView() {
   const { uuid = '' } = useParams();
@@ -53,6 +54,7 @@ export function LibraryView() {
   // filters without a window of their own.
   const recordings = useRecordings(uuid, libraryQuery(filters, { limit: PAGE_SIZE, offset: 0 }));
   const [selection, setSelection] = useState(EMPTY);
+  const bulk = useBulk(uuid);
 
   // The order a range is measured in is the order on screen (`UI-9d`). The grid has its page; the
   // dense list windows over the whole library, so a range there spans what has been fetched.
@@ -86,10 +88,26 @@ export function LibraryView() {
           onClear={() => {
             setSelection(EMPTY);
           }}
+          selected={recordings.items.filter((one) => selection.selected.has(one.uuid))}
+          categories={categories.all}
+          bulk={bulk}
+          onOutcome={(outcome) => {
+            // What is left selected is what did not succeed, so Retry is one click rather than a
+            // reconstruction of what somebody had picked (`UI-9c`).
+            setSelection((was) =>
+              retain(
+                was,
+                outcome.failed.map((failure) => failure.uuid),
+              ),
+            );
+          }}
         />
       ) : (
         <LibraryFilters categories={categories.all} />
       )}
+      {/* Outside the swap above: a run that succeeded entirely leaves nothing selected, and a
+          report inside the bulk bar would disappear at the moment it had something to say. */}
+      {bulk.outcome !== null && <BulkReport bulk={bulk} />}
       {filters.view === 'list' ? (
         <RecordingList
           libraryUuid={uuid}

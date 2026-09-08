@@ -9,6 +9,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -17,7 +18,7 @@ import { toLibrary } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { AVIA, CARRER_NOU, PERSONAL, archive } from '@/test/api/archive';
 import { usePlayback } from '@/player/store';
-import { mockApi } from '@/test/api/server';
+import { mockApi, server } from '@/test/api/server';
 
 import { LibraryView } from './LibraryView';
 
@@ -450,5 +451,63 @@ describe('selecting recordings', () => {
     expect(all).toHaveAttribute('aria-checked', 'mixed');
     await user.click(all);
     expect(screen.getByText('3 selected')).toBeVisible();
+  });
+});
+
+describe('a bulk action where some fail', () => {
+  /** Refuse the trash for one recording and accept it for the rest. */
+  function refuse(uuid: string) {
+    server.use(
+      http.delete('/api/audio/:audio_uuid', ({ params }) =>
+        params.audio_uuid === uuid
+          ? HttpResponse.json(
+              {
+                type: 'about:blank',
+                title: 'Conflict',
+                detail: 'That recording is already in the trash.',
+                status: 409,
+              },
+              { status: 409, headers: { 'content-type': 'application/problem+json' } },
+            )
+          : new HttpResponse(null, { status: 204 }),
+      ),
+    );
+  }
+
+  async function selectAllThenTrash(user: ReturnType<typeof userEvent.setup>) {
+    const card = await cardFor('The house on Carrer Nou');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('checkbox', { name: 'Select everything here' }));
+    await user.click(screen.getByRole('button', { name: 'More for the selection' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Send to trash' }));
+  }
+
+  it('reports what worked and what did not, in the API own words', async () => {
+    refuse(CARRER_NOU);
+    const user = userEvent.setup();
+    renderLibrary();
+    await selectAllThenTrash(user);
+    expect(await screen.findByText('2 done, 1 not')).toBeVisible();
+    expect(screen.getByText(/already in the trash/)).toBeVisible();
+  });
+
+  it('leaves the failures selected, so the retry is one click', async () => {
+    refuse(CARRER_NOU);
+    const user = userEvent.setup();
+    renderLibrary();
+    await selectAllThenTrash(user);
+    await screen.findByText('2 done, 1 not');
+    // One left selected, and it is the one that failed -- not a selection somebody has to rebuild.
+    expect(screen.getByText('1 selected')).toBeVisible();
+    expect(screen.getByText(/still selected/)).toBeVisible();
+  });
+
+  it('clears the selection entirely when everything worked', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await selectAllThenTrash(user);
+    expect(await screen.findByText(/3 recordings sent to the trash/)).toBeVisible();
+    // Nothing failed, so nothing is retained, and the filter bar comes back.
+    expect(await screen.findByRole('button', { name: /Any category/ })).toBeVisible();
   });
 });

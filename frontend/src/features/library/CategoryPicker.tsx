@@ -28,10 +28,27 @@ export interface CategoryPickerProps {
   /** The selected category, or undefined for any. */
   value: number | undefined;
   onChange: (id: number | undefined) => void;
+  /**
+   * What the trigger says with nothing chosen.
+   *
+   * "Any category" as a filter, and something else where this control acts rather than narrows --
+   * the bulk bar assigns one. A filter's words on an action is how somebody assigns a category by
+   * accident while trying to clear a filter.
+   */
+  placeholder?: string;
+  /** What the row for "no category" says. Clearing a filter, or clearing a recording's category. */
+  anyLabel?: string;
 }
 
-export function CategoryPicker({ categories, value, onChange }: CategoryPickerProps) {
+export function CategoryPicker({
+  categories,
+  value,
+  onChange,
+  placeholder,
+  anyLabel,
+}: CategoryPickerProps) {
   const { t } = useTranslation('library');
+  const any = anyLabel ?? t('filters.anyCategory');
   const [open, setOpen] = useState(false);
   const surface = useAnchoredOverlay<HTMLButtonElement>({
     open,
@@ -65,7 +82,7 @@ export function CategoryPicker({ categories, value, onChange }: CategoryPickerPr
           setOpen((was) => !was);
         }}
       >
-        {selected?.name ?? t('filters.anyCategory')}
+        {selected?.name ?? placeholder ?? any}
         <Icon name="chevron-down" size={15} />
       </Button>
       {open && (
@@ -87,7 +104,7 @@ export function CategoryPicker({ categories, value, onChange }: CategoryPickerPr
           }}
         >
           <Row
-            label={t('filters.anyCategory')}
+            label={any}
             depth={0}
             selected={value === undefined}
             onSelect={() => {

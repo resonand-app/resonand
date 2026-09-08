@@ -60,5 +60,30 @@
     "label": "How to show them",
     "grid": "Cards",
     "list": "List"
+  },
+  "bulk": {
+    "addTag": "Add a tag",
+    "tagName": "Tag",
+    "apply": "Add it",
+    "more": "More for the selection",
+    "trash": "Send to trash",
+    "running": "{{done}} of {{total}}",
+    "allDone": {
+      "category_one": "One recording moved to that category",
+      "category_other": "{{count}} recordings moved to that category",
+      "tag_one": "One recording tagged",
+      "tag_other": "{{count}} recordings tagged",
+      "move_one": "One recording moved",
+      "move_other": "{{count}} recordings moved",
+      "trash_one": "One recording sent to the trash",
+      "trash_other": "{{count}} recordings sent to the trash"
+    },
+    "partial": "{{done}} done, {{failed}} not",
+    "reason_one": "One: {{detail}}",
+    "reason_other": "{{count}}: {{detail}}",
+    "stillSelected_one": "The one that failed is still selected, so you can try it again.",
+    "stillSelected_other": "The {{count}} that failed are still selected, so you can try them again.",
+    "dismiss": "Dismiss",
+    "category": "Assign a category"
   }
 }
