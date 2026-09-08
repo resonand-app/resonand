@@ -20,6 +20,7 @@ import { createQueryClient } from '@/api/query-client';
 import { LibrariesView } from '@/features/libraries/LibrariesView';
 import { LibraryView } from '@/features/library/LibraryView';
 import { RecordingView } from '@/features/recording/RecordingView';
+import { SearchView } from '@/features/search/SearchView';
 
 import { AppShell } from './AppShell';
 import { NotBuiltYet } from './NotBuiltYet';
@@ -68,7 +69,7 @@ function Archive() {
               element={<NotBuiltYet view="V7 - Library settings" />}
             />
             <Route path={routes.recording} element={<RecordingView />} />
-            <Route path={routes.search} element={<NotBuiltYet view="V6 - Search" />} />
+            <Route path={routes.search} element={<SearchView />} />
             <Route path={routes.trash} element={<NotBuiltYet view="V9 - Trash" />} />
             <Route path={routes.settings} element={<NotBuiltYet view="V10 - Settings" />} />
           </Route>

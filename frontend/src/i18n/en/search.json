@@ -1,6 +1,20 @@
 {
+  "title": "Search",
+  "field": "Search everything you have recorded",
   "quick": {
     "seeAll_one": "All {{count}} result for \"{{query}}\"",
     "seeAll_other": "All {{count}} results for \"{{query}}\""
+  },
+  "found": {
+    "matches_one": "{{count}} match",
+    "matches_other": "{{count}} matches",
+    "onThisPage_one": "{{count}} match on this page",
+    "onThisPage_other": "{{count}} matches on this page"
+  },
+  "pages": {
+    "label": "Pages of results",
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "{{from}}-{{to}} of {{total}}"
   }
 }
