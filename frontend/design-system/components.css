@@ -619,6 +619,15 @@
   text-decoration: underline;
 }
 
+/* The recording being played is marked with the accent ring rather than with a colour of its own.
+   A ring survives beside a selected card, reads in both themes, and does not compete with the
+   four transcription-state colours already on the card. */
+[data-ds='recording-card'][data-playing='true'] {
+  box-shadow:
+    var(--elevation-card),
+    inset 0 0 0 2px var(--accent);
+}
+
 /* A recording's title is a link into the recording, and looks like the title it is -- the same
    arrangement as a library card's, for the same reason. */
 [data-ds='recording-card-title'] {

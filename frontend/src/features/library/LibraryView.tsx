@@ -40,7 +40,12 @@ export function LibraryView() {
   return (
     <section>
       <LibraryHeader context={context} />
-      <RecordingGrid recordings={recordings.items} categories={categories} waveforms={painted} />
+      <RecordingGrid
+        recordings={recordings.items}
+        categories={categories}
+        libraryName={context.library?.name ?? ''}
+        waveforms={painted}
+      />
     </section>
   );
 }

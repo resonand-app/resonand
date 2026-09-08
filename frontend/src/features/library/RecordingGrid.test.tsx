@@ -8,18 +8,26 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { toLibrary } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { AVIA, CARRER_NOU, PERSONAL, archive } from '@/test/api/archive';
+import { usePlayback } from '@/player/store';
 import { mockApi } from '@/test/api/server';
 
 import { LibraryView } from './LibraryView';
 
 mockApi();
+
+// The player is a store and outlives a component, so a test that leaves something playing is the
+// next test's stale mark.
+afterEach(() => {
+  usePlayback.getState().stop();
+});
 
 function renderLibrary(uuid: string = AVIA) {
   const client = createQueryClient();
@@ -141,5 +149,48 @@ describe('a card', () => {
     await waitFor(() => {
       expect(card.querySelector('[data-ds="waveform"]')).not.toBeNull();
     });
+  });
+});
+
+describe('playing from a card', () => {
+  it('plays without leaving the grid', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    await user.click(within(card).getByRole('button', { name: /^Play/ }));
+    // The route is unchanged and the player has the recording: the grid is still on screen, which
+    // is the whole point of a play button on a card.
+    expect(usePlayback.getState().recording?.uuid).toBe(CARRER_NOU);
+    expect(usePlayback.getState().recording?.library).toBe('Àvia Teresa');
+    expect(screen.getByRole('heading', { name: 'Àvia Teresa', level: 1 })).toBeVisible();
+  });
+
+  it('marks the card that is playing, and only that one', async () => {
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    const other = await cardFor('Sopar de Nadal 1998');
+    usePlayback.getState().play({
+      uuid: CARRER_NOU,
+      title: 'The house on Carrer Nou',
+      library: 'Àvia Teresa',
+      durationMs: 2_892_000,
+      hasWaveform: true,
+    });
+    usePlayback.getState().report({ status: 'playing' });
+    await waitFor(() => {
+      expect(card).toHaveAttribute('data-playing', 'true');
+    });
+    expect(other).not.toHaveAttribute('data-playing');
+  });
+
+  it('turns the control that started the sound into the one that stops it', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    await user.click(within(card).getByRole('button', { name: /^Play/ }));
+    usePlayback.getState().report({ status: 'playing' });
+    const pause = await within(card).findByRole('button', { name: /^Pause/ });
+    await user.click(pause);
+    expect(usePlayback.getState().status).not.toBe('playing');
   });
 });

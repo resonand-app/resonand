@@ -16,6 +16,7 @@
   "card": {
     "play": "Play {{name}}",
     "moreTags": "+{{count}}",
-    "sharedIndividually": "Shared on its own, apart from this library"
+    "sharedIndividually": "Shared on its own, apart from this library",
+    "pause": "Pause {{name}}"
   }
 }

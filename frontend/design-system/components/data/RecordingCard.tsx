@@ -39,6 +39,14 @@ export interface RecordingCardProps extends HTMLAttributes<HTMLElement> {
   maxTags?: number;
   /** A discreet mark for a recording shared on its own, apart from its library. */
   sharedIndividually?: boolean;
+  /**
+   * Whether this is the recording the player is playing (`UI-6c`).
+   *
+   * It marks the card and turns the play control into a pause, because the control that started
+   * the sound is the one somebody reaches for to stop it. The mark is not a colour alone: the
+   * card takes the accent ring, which is legible next to a selected card and in both themes.
+   */
+  playing?: boolean;
   peaks?: Peaks | undefined;
   played?: number;
   pending?: boolean;
@@ -46,6 +54,8 @@ export interface RecordingCardProps extends HTMLAttributes<HTMLElement> {
   /** The copy, for an application that has its own (`UI-22a`). */
   labels?: {
     play?: (name: string) => string;
+    /** The same control, once this is the recording being played. */
+    pause?: (name: string) => string;
     /** The transcription state, in the interface's language. `StateBadge`'s own is English. */
     state?: string;
     /** "+3", or whatever a language makes of a count of tags not drawn. */
@@ -74,6 +84,7 @@ export function RecordingCard({
   tags = [],
   maxTags = 3,
   sharedIndividually = false,
+  playing = false,
   href,
   labels,
   peaks,
@@ -86,6 +97,7 @@ export function RecordingCard({
   return (
     <article
       data-ds="recording-card"
+      data-playing={playing ? 'true' : undefined}
       style={{
         background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
@@ -133,10 +145,14 @@ export function RecordingCard({
           </span>
         </div>
         <IconButton
-          icon="play"
+          icon={playing ? 'pause' : 'play'}
           variant="accent-soft"
           size={32}
-          label={labels?.play?.(name) ?? `Play ${name}`}
+          label={
+            playing
+              ? (labels?.pause?.(name) ?? `Pause ${name}`)
+              : (labels?.play?.(name) ?? `Play ${name}`)
+          }
           onClick={onPlay}
         />
       </div>
