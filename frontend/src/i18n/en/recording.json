@@ -46,6 +46,15 @@
     "notes": "Notes",
     "noNotes": "No notes",
     "recorded": "Recorded",
-    "dateNotItsOwn": "From the upload, not the recording"
+    "dateNotItsOwn": "From the upload, not the recording",
+    "category": "Category",
+    "noCategory": "No category",
+    "tags": "Tags",
+    "noTags": "No tags",
+    "addTag": "Add a tag",
+    "removeTag": "Remove the tag {{tag}}",
+    "tagName": "Tag name",
+    "tagSuggestions": "Tags already in use",
+    "newTag": "Press Enter to make the tag {{tag}}."
   }
 }

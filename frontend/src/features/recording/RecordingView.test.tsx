@@ -10,7 +10,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -54,8 +54,11 @@ describe('where you are', () => {
     );
     renderRecording();
     // Resolved from the library's flat list, which is the only place the name exists: the
-    // recording carries the id.
-    expect(await screen.findByText('Converses')).toBeInTheDocument();
+    // recording carries the id. Scoped to the breadcrumb, because the panel names it too.
+    const where = await screen.findByRole('navigation', { name: 'Where this recording is' });
+    await waitFor(() => {
+      expect(within(where).getByText('Converses')).toBeInTheDocument();
+    });
   });
 });
 

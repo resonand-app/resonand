@@ -13,6 +13,10 @@
  * library. `InlineField` draws that state itself, which is why it exists rather than being a
  * `TextField` with a flag.
  *
+ * **A category is cleared with `clear_category`, never with a null** (`UI-13c`). In JSON a null
+ * and "leave it alone" are the same value, and the endpoint reads them as such -- so the one flag
+ * is what makes "no category" expressible at all.
+ *
  * **The recorded date is shown with where it came from, and is not edited here** (`UI-13b`). §1.3
  * is the reason it is shown the way it is: `recorded_at` is a wall-clock reading and is rendered
  * exactly as written, never converted, with its offset beside it when one is known. The
@@ -23,13 +27,16 @@
  * inside a view.
  */
 
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { InlineField } from '@/design-system';
+import { CategoryPicker } from '@/features/library/CategoryPicker';
+import { recordedAt } from '@/i18n/time';
 
+import { TagEditor } from './TagEditor';
 import type { RecordingContext } from './data';
 import { useUpdateRecording } from './metadata';
-import { recordedAt } from '@/i18n/time';
 
 /** The panel's width, from §V5. The transcript takes everything else. */
 export const PANEL_WIDTH = 320;
@@ -75,7 +82,72 @@ export function MetadataPanel({ context }: { context: RecordingContext }) {
         provenance={when.provenance}
         offset={when.offset}
       />
+      <Field label={t('panel.category')}>
+        {readOnly ? (
+          <Fact>{context.categoryName ?? t('panel.noCategory')}</Fact>
+        ) : (
+          <CategoryPicker
+            categories={context.categories.all}
+            value={recording.category_id ?? undefined}
+            placeholder={t('panel.noCategory')}
+            // "No category" rather than "Any category": this control files a recording, and a
+            // filter's words on an action is how somebody clears a category by accident.
+            anyLabel={t('panel.noCategory')}
+            onChange={(categoryId) => {
+              update.mutate(
+                categoryId === undefined ? { clear_category: true } : { category_id: categoryId },
+              );
+            }}
+          />
+        )}
+      </Field>
+      <TagEditor
+        value={recording.tags.map((tag) => tag.name)}
+        readOnly={readOnly}
+        onChange={(names) => {
+          update.mutate({ tags: names });
+        }}
+      />
     </div>
+  );
+}
+
+/** A labelled row: the 10px mono overline the panel's fields share, and whatever is under it. */
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+      <span
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 'var(--type-overline-size)',
+          fontWeight: 'var(--type-overline-weight)',
+          letterSpacing: 'var(--type-overline-tracking)',
+          textTransform: 'uppercase',
+          color: 'var(--text-3)',
+        }}
+      >
+        {label}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+/** A value somebody cannot change: on the page, not in a disabled control (§3.5). */
+function Fact({ children }: { children: ReactNode }) {
+  return (
+    <span
+      data-ds="inline-field-static"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        minHeight: 'var(--field-height)',
+        fontFamily: 'var(--font-sans)',
+        fontSize: 'var(--type-ui-size)',
+      }}
+    >
+      {children}
+    </span>
   );
 }
 
@@ -101,19 +173,7 @@ function Recorded({
   const { t } = useTranslation('recording');
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-      <span
-        style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 'var(--type-overline-size)',
-          fontWeight: 'var(--type-overline-weight)',
-          letterSpacing: 'var(--type-overline-tracking)',
-          textTransform: 'uppercase',
-          color: 'var(--text-3)',
-        }}
-      >
-        {t('panel.recorded')}
-      </span>
+    <Field label={t('panel.recorded')}>
       <span
         style={{
           fontFamily: 'var(--type-numeric-family)',
@@ -136,6 +196,6 @@ function Recorded({
           ? t(`common:time.source.${provenance}`)
           : t('panel.dateNotItsOwn')}
       </span>
-    </div>
+    </Field>
   );
 }

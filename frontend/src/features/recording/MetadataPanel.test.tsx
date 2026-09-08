@@ -189,3 +189,107 @@ describe('the panel itself', () => {
     expect(await screen.findByRole('complementary', { name: 'Details' })).toBeInTheDocument();
   });
 });
+
+describe('the category', () => {
+  it('files the recording, and sends the id', async () => {
+    const user = userEvent.setup();
+    const bodies = recorded();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: /No category/ }));
+    await user.click(await screen.findByRole('radio', { name: 'Converses' }));
+    await waitFor(() => {
+      expect(bodies[0]).toEqual({ category_id: 1 });
+    });
+  });
+
+  it('clears it with the flag rather than with a null', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === CARRER_NOU ? { ...one, category_id: 1 } : one,
+    );
+    const user = userEvent.setup();
+    const bodies = recorded();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: /Converses/ }));
+    await user.click(await screen.findByRole('radio', { name: 'No category' }));
+    // In JSON a null and "leave it alone" are the same value, so `clear_category` is the only
+    // way "no category" can be said at all (`UI-13c`).
+    await waitFor(() => {
+      expect(bodies[0]).toEqual({ clear_category: true });
+    });
+  });
+
+  it('is a fact rather than a control when it is not yours to change', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === CARRER_NOU ? { ...one, level: 10, category_id: 1 } : one,
+    );
+    renderRecording();
+    // Twice on the screen: the breadcrumb names it as well, and neither of them is a control.
+    await waitFor(() => {
+      expect(screen.getAllByText('Converses').length).toBeGreaterThan(0);
+    });
+    expect(screen.queryByRole('button', { name: /Converses/ })).toBeNull();
+  });
+});
+
+describe('the tags', () => {
+  it('sends the whole list, because the endpoint replaces it', async () => {
+    const user = userEvent.setup();
+    const bodies = recorded();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: 'Add a tag' }));
+    await user.click(await screen.findByRole('button', { name: /família/ }));
+    // The two it already had plus the new one. Sending only the new one would strip the rest.
+    await waitFor(() => {
+      expect(bodies[0]).toEqual({ tags: ['memòria', 'català', 'família'] });
+    });
+  });
+
+  it('offers the canonical spelling rather than the one that was typed', async () => {
+    const user = userEvent.setup();
+    const bodies = recorded();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: 'Add a tag' }));
+    await user.type(screen.getByRole('textbox', { name: 'Tag name' }), 'Musica{Enter}');
+    // `música` already exists. The backend normalises to match it and the first writer owns the
+    // display name, so accepting "Musica" would rename somebody else's tag.
+    await waitFor(() => {
+      expect(bodies[0]).toEqual({ tags: ['memòria', 'català', 'música'] });
+    });
+  });
+
+  it('lets somebody name a tag nobody has used yet', async () => {
+    const user = userEvent.setup();
+    const bodies = recorded();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: 'Add a tag' }));
+    await user.type(screen.getByRole('textbox', { name: 'Tag name' }), 'Carrer Nou{Enter}');
+    // The suggestions are what exists, not what is allowed: whoever names a new tag owns its
+    // spelling, which is the same rule from the other side.
+    await waitFor(() => {
+      expect(bodies[0]).toEqual({ tags: ['memòria', 'català', 'Carrer Nou'] });
+    });
+  });
+
+  it('removes one, and sends what is left', async () => {
+    const user = userEvent.setup();
+    const bodies = recorded();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: 'Remove the tag memòria' }));
+    await waitFor(() => {
+      expect(bodies[0]).toEqual({ tags: ['català'] });
+    });
+  });
+
+  it('offers no way to change them on a recording somebody can only read', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+    );
+    renderRecording();
+    await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    // Absent rather than disabled (§3.5). The tags themselves stay: they are what the recording
+    // is filed under, and reading them is the point.
+    expect(screen.getByText('memòria')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add a tag' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Remove the tag/ })).toBeNull();
+  });
+});
