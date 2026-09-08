@@ -32,6 +32,8 @@ export const keys = {
 
   /** One recording, and the things hanging off it. */
   recording: (uuid: string) => ['recordings', uuid] as const,
+  /** How its transcription is going: the state, the attempt, the failure (`API-17`). */
+  transcription: (uuid: string) => ['recordings', uuid, 'transcription'] as const,
   transcript: (uuid: string) => ['recordings', uuid, 'transcript'] as const,
   transcripts: (uuid: string) => ['recordings', uuid, 'transcripts'] as const,
   waveform: (uuid: string, peaks: number) => ['recordings', uuid, 'waveform', peaks] as const,

@@ -1,0 +1,124 @@
+{
+  "breadcrumb": {
+    "label": "Where this recording is",
+    "back": "Back to {{library}}"
+  },
+  "essentials": {
+    "uploadedBy": "Uploaded by {{name}}",
+    "version": "Transcript v{{version}}"
+  },
+  "missing": {
+    "title": "This recording is not here",
+    "body": "It may have been deleted, or it may never have been yours.",
+    "footnote": "The instance does not say which of the two it is."
+  },
+  "unreachable": {
+    "title": "The instance is not answering"
+  },
+  "failed": {
+    "title": "This recording could not be opened"
+  },
+  "player": {
+    "label": "Playback",
+    "seek": "Seek in {{title}}",
+    "play": "Play",
+    "pause": "Pause",
+    "back": "Back {{seconds}} seconds",
+    "forward": "Forward {{seconds}} seconds",
+    "speed": "Playback speed",
+    "speedNow": "Playback speed, now {{speed}}",
+    "noWaveform": "The waveform is still being made. The recording plays; the picture is not there yet."
+  },
+  "transcript": {
+    "label": "Transcript",
+    "heading_one": "{{count}} segment",
+    "heading_other": "{{count}} segments",
+    "hint": "Click a line to jump there.",
+    "released": "You scrolled, so the transcript stopped following the audio.",
+    "resume": "Follow again",
+    "failed": "The transcript could not be loaded"
+  },
+  "readOnly": "You can read this recording. Its details are somebody else's to change.",
+  "panel": {
+    "label": "Details",
+    "show": "Show the details",
+    "hide": "Hide the details",
+    "title": "Title",
+    "notes": "Notes",
+    "noNotes": "No notes",
+    "recorded": "Recorded",
+    "dateNotItsOwn": "From the upload, not the recording",
+    "category": "Category",
+    "noCategory": "No category",
+    "tags": "Tags",
+    "noTags": "No tags",
+    "addTag": "Add a tag",
+    "removeTag": "Remove the tag {{tag}}",
+    "tagName": "Tag name",
+    "tagSuggestions": "Tags already in use",
+    "newTag": "Press Enter to make the tag {{tag}}."
+  },
+  "technical": {
+    "heading": "Technical",
+    "filename": "Original filename",
+    "mime": "Type",
+    "size": "Size",
+    "sampleRate": "Sample rate",
+    "hertz": "{{value}} Hz",
+    "channels": "Channels",
+    "channelCount_one": "{{count}} (mono)",
+    "channelCount_other": "{{count}}",
+    "codec": "Codec",
+    "hash": "SHA-256",
+    "copy": "Copy",
+    "copied": "Copied",
+    "unknown": "Not known yet"
+  },
+  "actions": {
+    "download": "Download the original",
+    "share": "Share this library",
+    "move": "Move to another library",
+    "trash": "Send to the trash",
+    "trashTitle": "Send this recording to the trash?",
+    "trashConsequence_one": "It can be restored for {{count}} day, and is then deleted for good.",
+    "trashConsequence_other": "It can be restored for {{count}} days, and is then deleted for good."
+  },
+  "transcription": {
+    "none": {
+      "title": "This recording has not been transcribed",
+      "body": "Transcribing it makes every word in it searchable, and lets the transcript follow the audio as it plays.",
+      "action": "Transcribe this recording",
+      "readOnly": "Only somebody who can edit this recording can ask for a transcription."
+    },
+    "running": {
+      "title": "Transcribing",
+      "working": "Finding out how it is going...",
+      "queued": "Waiting to start",
+      "since": "Started {{when}}",
+      "attempt_one": "attempt {{count}}",
+      "attempt_other": "attempt {{count}}",
+      "provider": "on {{provider}}"
+    },
+    "failed": {
+      "title": "The transcription did not finish",
+      "noReason": "The provider did not say what went wrong.",
+      "whatToDo": "Trying again is usually enough. If it keeps failing, the provider is worth checking before the recording is."
+    },
+    "retry": "Try transcribing again"
+  },
+  "versions": {
+    "label": "Transcript",
+    "version": "v{{version}}",
+    "active": "Shown",
+    "show": "Show this one",
+    "again": "Transcribe again",
+    "unknownModel": "Unknown model",
+    "unknownLanguage": "Language not recorded"
+  },
+  "trashed": {
+    "body": "This recording is in the trash. It can be played and put back, and nothing about it can be changed while it is in there.",
+    "left_one": "{{count}} day left before it is deleted for good.",
+    "left_other": "{{count}} days left before it is deleted for good.",
+    "restore": "Put it back"
+  }
+}

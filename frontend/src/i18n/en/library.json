@@ -84,7 +84,8 @@
     "stillSelected_one": "The one that failed is still selected, so you can try it again.",
     "stillSelected_other": "The {{count}} that failed are still selected, so you can try them again.",
     "dismiss": "Dismiss",
-    "category": "Assign a category"
+    "category": "Assign a category",
+    "move": "Move to another library"
   },
   "empty": {
     "nothing": {

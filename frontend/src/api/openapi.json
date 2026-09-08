@@ -1789,6 +1789,49 @@
         "title": "TranscriptionState",
         "type": "string"
       },
+      "TranscriptionStatus": {
+        "additionalProperties": false,
+        "description": "What is happening to a recording's transcription, for whoever can read the recording\n(``API-17``, ``UI-15``).\n\n``transcription_state`` on the recording says which of the four states it is in and nothing\nmore, which is enough for a badge and not enough for a screen: ``UI-15b`` says how long it has\nbeen running and which attempt this is, and ``UI-15c`` shows **the real error text**. Those\nthree facts live on the job, and the job was only readable through the administrator-only\nqueue -- so on a shared instance the person whose recording had failed was the one person who\ncould not be told why.\n\nIt reports the newest transcribe job and nothing about any other kind of work: the probe that\ncould not read a file is a different failure with a different remedy, and ``INT-3d``'s queue is\nwhere an operator sees all four.",
+        "properties": {
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "state": {
+            "$ref": "#/components/schemas/TranscriptionState"
+          }
+        },
+        "required": [
+          "state",
+          "attempts",
+          "started_at",
+          "error"
+        ],
+        "title": "TranscriptionStatus",
+        "type": "object"
+      },
       "UpdateAudio": {
         "additionalProperties": false,
         "properties": {
@@ -3107,6 +3150,49 @@
           }
         },
         "summary": "Get Active Transcript",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/transcription": {
+      "get": {
+        "description": "The state, and the three facts about it that only exist on the job (``API-17``).\n\nRead level, the same as the recording itself: how a transcription of your own recording is\ngoing is not privileged information, and until this endpoint the only way to ask was the\nadministrator-only queue -- so on a family instance the person whose recording had failed\nwas the one person who could not find out why (``UI-15b``, ``UI-15c``).\n\nIt reports and reaches out to nothing. Whether the provider is answering is ``INT-3c``'s\nexplicit test, and a status endpoint that contacted it would make opening a recording an\negress.",
+        "operationId": "get_transcription_status_api_audio__audio_uuid__transcription_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionStatus"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "What is happening to this recording's transcription",
         "tags": [
           "recordings"
         ]

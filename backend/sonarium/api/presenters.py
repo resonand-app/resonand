@@ -26,6 +26,7 @@ from sonarium.api.schemas import (
     ShareSummary,
     TagSummary,
     TranscriptDetail,
+    TranscriptionStatus,
     TranscriptSummary,
     UserSummary,
 )
@@ -78,6 +79,32 @@ def transcription_state(session: DbSession, audio_id: int) -> TranscriptionState
     if queue.FAILED in states:
         return TranscriptionState.FAILED
     return TranscriptionState.NONE
+
+
+def transcription_status(session: DbSession, audio_id: int) -> TranscriptionStatus:
+    """What there is to say about a recording's transcription (``API-17``, ``UI-15``).
+
+    The state comes from the same function the badge uses, and the three facts that only exist on
+    the job come from the newest transcribe job. A recording that has never been asked about has
+    no job, and that is not a gap: state ``none`` with no attempts is exactly what the call to
+    action is drawn against.
+    """
+    job = queue.latest_transcription(session, audio_id)
+    if job is None:
+        return TranscriptionStatus(
+            state=transcription_state(session, audio_id),
+            attempts=0,
+            started_at=None,
+            error=None,
+        )
+    return TranscriptionStatus(
+        state=transcription_state(session, audio_id),
+        attempts=job.attempts,
+        # A job back in ``pending`` after a failure has a ``started_at`` from the attempt that
+        # failed, and reporting it would count elapsed time from a run that already ended.
+        started_at=job.started_at if job.state == queue.RUNNING else None,
+        error=job.error,
+    )
 
 
 def user_summary(user: User) -> UserSummary:

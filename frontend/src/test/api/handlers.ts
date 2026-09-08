@@ -63,6 +63,11 @@ const NOT_FOUND = () => problem(404, 'There is no such thing here, or it is not 
 const WAVEFORM_FORMAT_VERSION = 2;
 const WAVEFORM_HEADER_BYTES = 9;
 
+/** A tag name as the slug it resolves to, the way `sonarium.core.text.normalise_slug` does. */
+function fold(name: string): string {
+  return name.normalize('NFKD').replace(/\p{M}/gu, '').trim().toLocaleLowerCase();
+}
+
 /** Answer with a thing, or with the 404 that covers both "gone" and "not yours" (`DEC-14`). */
 function found(value: unknown): Response {
   return value === undefined ? NOT_FOUND() : HttpResponse.json(value);
@@ -314,6 +319,21 @@ export const handlers: HttpHandler[] = [
     );
     return HttpResponse.json(archive.jobs[0], { status: 202 });
   }),
+  http.get('/api/audio/:audio_uuid/transcription', ({ params }) => {
+    const uuid = String(params.audio_uuid);
+    const existing = archive.recordings.find((one) => one.uuid === uuid);
+    if (!existing) return NOT_FOUND();
+    // Derived from the jobs the way the API derives it, rather than stored beside the recording:
+    // a fixture that carried both would let a test pass with a state and an error that could not
+    // have happened together (`API-17`).
+    const job = archive.jobs.find((one) => one.audio_uuid === uuid);
+    return HttpResponse.json({
+      state: existing.transcription_state,
+      attempts: job?.attempts ?? 0,
+      started_at: job?.state === 'running' ? (job.started_at ?? null) : null,
+      error: job?.error ?? null,
+    });
+  }),
   http.get('/api/audio/:audio_uuid/transcript', ({ params }) =>
     found(archive.transcripts[String(params.audio_uuid)]),
   ),
@@ -379,10 +399,16 @@ export const handlers: HttpHandler[] = [
     }),
   ),
   http.get('/api/tags', ({ request }) => {
-    const prefix = (new URL(request.url).searchParams.get('q') ?? '').toLowerCase();
-    return HttpResponse.json(
-      archive.tags.filter((one) => one.tag.name.toLowerCase().startsWith(prefix)),
-    );
+    // `prefix`, which is what the endpoint documents and what the pickers send. It read `q`, so
+    // every prefix was answered with every tag -- and a mock that ignores a filter makes the
+    // feature that uses it untestable.
+    //
+    // Matched against the slug, as `suggest_tags` does: it normalises the prefix and compares it
+    // to `tag.slug`, so typing `Musica` finds `música`. A mock that compared names would answer
+    // nothing there, and `UI-13c`'s canonical-name rule -- the whole reason the suggestion is
+    // preferred over what was typed -- could not be tested at all.
+    const prefix = fold(new URL(request.url).searchParams.get('prefix') ?? '');
+    return HttpResponse.json(archive.tags.filter((one) => one.tag.slug.startsWith(prefix)));
   }),
   http.get('/api/trash/audio', ({ request }) => {
     const url = new URL(request.url);
