@@ -116,6 +116,67 @@ describe('the tray', () => {
   });
 });
 
+describe('the states of a file', () => {
+  beforeEach(() => {
+    useUploads.setState({ files: [], collapsed: false });
+  });
+
+  it('states the actual limit this instance has, rather than only "too large"', async () => {
+    show();
+    useUploads
+      .getState()
+      .add([new File([new Uint8Array(64)], 'huge.wav')], { library: PERSONAL, maxBytes: 32 });
+    expect(
+      await screen.findByText(/over what this instance accepts, which is 32 B/i),
+    ).toBeVisible();
+    // Never sent: the interface already knew.
+    expect(useUploads.getState().files[0]?.status).toBe('too-large');
+  });
+
+  it('treats some of thirty failing as the ordinary outcome, and counts it', async () => {
+    server.use(
+      http.post('/api/libraries/:library_uuid/audio', () =>
+        HttpResponse.json(
+          {
+            type: '/errors/error',
+            title: 'Error',
+            detail: 'There is no room left on this instance.',
+            status: 507,
+            request_id: 'test',
+          },
+          { status: 507, headers: { 'content-type': 'application/problem+json' } },
+        ),
+      ),
+    );
+    show();
+    useUploads.getState().add([file(), file('nadal.mp3')], { library: PERSONAL });
+    // Sequential, so the second one is still going when the first has already failed.
+    await waitFor(() => {
+      expect(screen.getAllByText('There is no room left on this instance.')).toHaveLength(2);
+    });
+    expect(screen.getByText(/0 of 2 uploaded, 2 failed/)).toBeInTheDocument();
+  });
+
+  it('offers to send a failed file again, which is a fresh request and says so', async () => {
+    let attempts = 0;
+    server.use(
+      http.post('/api/libraries/:library_uuid/audio', () => {
+        attempts += 1;
+        return attempts === 1
+          ? new HttpResponse(null, { status: 500 })
+          : HttpResponse.json({ uuid: 'new-1' }, { status: 201 });
+      }),
+    );
+    show();
+    useUploads.getState().add([file()], { library: PERSONAL });
+    const retry = await screen.findByRole('button', { name: /upload it again/i });
+    await userEvent.click(retry);
+    await waitFor(() => {
+      expect(useUploads.getState().files[0]?.status).toBe('done');
+    });
+  });
+});
+
 describe('the phone tab', () => {
   beforeEach(() => {
     useUploads.setState({ files: [], collapsed: false });

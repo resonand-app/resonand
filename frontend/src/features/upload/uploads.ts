@@ -46,6 +46,14 @@ export interface Destination {
    * moment the decision is made rather than the moment the request is sent.
    */
   transcribe?: boolean;
+  /**
+   * The instance's `max_upload_bytes`, so a file over it is stated rather than sent.
+   *
+   * The number is the deployment's and is read from `GET /instance` by whoever opens the dialog.
+   * Sending an 9 GiB file to be refused costs somebody an hour to be told something the interface
+   * already knew.
+   */
+  maxBytes?: number | undefined;
 }
 
 export type UploadStatus =
@@ -59,6 +67,8 @@ export type UploadStatus =
   | 'done'
   /** Deliberately not uploaded: the copy already here was restored, or the warning was heeded. */
   | 'skipped'
+  /** Bigger than this instance accepts. Never sent, and the row says the actual limit. */
+  | 'too-large'
   | 'failed';
 
 export interface Upload {
@@ -74,11 +84,13 @@ export interface Upload {
   /** How much has left this machine, in bytes. */
   sent: number;
   /** What the instance said, when it refused. §1.9's `detail`, shown rather than replaced. */
-  error?: string;
+  error?: string | undefined;
   /** The recording it became, once it is one. */
   uuid?: string;
   /** The recording that is already here, byte for byte, when there is one. */
   duplicate?: DuplicateWarning;
+  /** What this instance accepts, for a row that says why it will not be sent. */
+  maxBytes?: number | undefined;
 }
 
 export interface UploadsState {
@@ -95,6 +107,13 @@ export interface UploadsState {
    * in the trash, because at that point the file has been dealt with without being sent.
    */
   decide: (id: string, decision: 'upload' | 'skip') => void;
+  /**
+   * Send a failed file again.
+   *
+   * A fresh request, not a resumption: `POST /libraries/{uuid}/audio` is one request and an
+   * interruption restarts it, so this says "again" and never "resume" (`UI-18f`).
+   */
+  again: (id: string) => void;
   /** Forget the finished ones. Refused while anything is still going. */
   clear: () => void;
   setCollapsed: (collapsed: boolean) => void;
@@ -109,6 +128,7 @@ export const useUploads = create<UploadsState>((set, get) => ({
 
   add: (files, destination) => {
     if (files.length === 0) return;
+    const limit = destination.maxBytes;
     const queued: Upload[] = files.map((file) => {
       sequence += 1;
       return {
@@ -118,11 +138,18 @@ export const useUploads = create<UploadsState>((set, get) => ({
         library: destination.library,
         categoryId: destination.categoryId,
         transcribe: destination.transcribe ?? false,
-        status: 'waiting',
+        // Over the limit is a row in the tray rather than a refusal in the dialog: at thirty
+        // files it is one of them, and the other twenty-nine still go.
+        status: limit !== undefined && file.size > limit ? 'too-large' : 'waiting',
         sent: 0,
+        maxBytes: limit,
       };
     });
-    pending.push(...files.map((file, index) => ({ file, id: queued[index]?.id ?? '' })));
+    pending.push(
+      ...files
+        .map((file, index) => ({ file, id: queued[index]?.id ?? '' }))
+        .filter(({ id }) => queued.find((one) => one.id === id)?.status === 'waiting'),
+    );
     set({ files: [...get().files, ...queued], collapsed: false });
     void drain();
   },
@@ -143,6 +170,15 @@ export const useUploads = create<UploadsState>((set, get) => ({
     void drain();
   },
 
+  again: (id) => {
+    const file = held.get(id);
+    if (get().files.find((one) => one.id === id)?.status !== 'failed' || file === undefined) return;
+    held.delete(id);
+    update(id, { status: 'waiting', sent: 0, error: undefined });
+    pending.push({ file, id, anyway: true });
+    void drain();
+  },
+
   clear: () => {
     if (get().files.some((one) => one.status === 'waiting' || one.status === 'uploading')) return;
     set({ files: [] });
@@ -157,10 +193,11 @@ export const useUploads = create<UploadsState>((set, get) => ({
 const pending: { file: File; id: string; anyway?: boolean }[] = [];
 
 /**
- * Files waiting on a decision about a duplicate.
+ * Files that are not in the queue but are not finished with either.
  *
- * Held here rather than left at the front of the queue: a warning nobody has answered must not
- * stop the other twenty-nine files, and the `File` has to survive until somebody does answer.
+ * A duplicate waiting on an answer, and a failure waiting to be sent again. Held here rather than
+ * left at the front of the queue: neither must stop the other twenty-nine files, and the `File`
+ * has to survive until somebody decides.
  */
 const held = new Map<string, File>();
 
@@ -191,7 +228,9 @@ async function drain(): Promise<void> {
         update(next.id, { status: 'done', sent: row.size, uuid: recording.uuid });
       } catch (cause) {
         // Partial failure is the normal case at thirty files, not an exception: the one that
-        // failed stops, the queue does not (`UI-18f`).
+        // failed stops, the queue does not (`UI-18f`). The file is kept so it can be sent again
+        // -- again, not resumed: the request starts from the first byte.
+        held.set(next.id, next.file);
         update(next.id, {
           status: 'failed',
           error: cause instanceof ApiProblem ? cause.detail : String(cause),

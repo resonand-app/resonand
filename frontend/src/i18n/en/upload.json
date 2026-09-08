@@ -37,7 +37,12 @@
       "uploading": "Uploading",
       "done": "Uploaded",
       "skipped": "Left out",
-      "failed": "Did not upload"
-    }
+      "failed": "Did not upload",
+      "too-large": "Too large"
+    },
+    "failed_one": "{{count}} failed",
+    "failed_other": "{{count}} failed",
+    "tooLarge": "{{size}} is over what this instance accepts, which is {{limit}}.",
+    "again": "Upload it again"
   }
 }

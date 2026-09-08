@@ -34,11 +34,21 @@ import { DuplicateNotice } from './DuplicateNotice';
 import { useUploads } from './uploads';
 import type { Upload } from './uploads';
 
-/** The one-line answer: "3 of 30 uploaded". Shown collapsed and expanded alike. */
+/**
+ * The one-line answer: "3 of 30 uploaded, 1 failed".
+ *
+ * Shown collapsed and expanded alike, and it names the failures rather than only counting the
+ * successes: at thirty files some of them failing is the ordinary outcome, and a summary that
+ * said "27 of 30 uploaded" would leave somebody to work out the rest by subtraction.
+ */
 function useSummary(files: readonly Upload[]): string {
   const { t } = useTranslation('upload');
   const done = files.filter((one) => one.status === 'done').length;
-  return t('tray.summary', { done, total: files.length });
+  const failed = files.filter(
+    (one) => one.status === 'failed' || one.status === 'too-large',
+  ).length;
+  const summary = t('tray.summary', { done, total: files.length });
+  return failed === 0 ? summary : `${summary}, ${t('tray.failed', { count: failed })}`;
 }
 
 export function Uploads() {
@@ -98,12 +108,25 @@ export function UploadPanel({ onAdd }: { onAdd: () => void }) {
 /** One row per file: what it is, how far it has got, and what it is waiting on. */
 function FileRows({ files }: { files: readonly Upload[] }) {
   const { t } = useTranslation('upload');
+  const again = useUploads((state) => state.again);
 
   /** The right-hand side of a row: how far, or what happened. */
   const detailOf = (upload: Upload): string =>
     upload.status === 'uploading'
       ? `${percent(upload.size === 0 ? 0 : upload.sent / upload.size)} · ${bytes(upload.size)}`
       : t(`tray.status.${upload.status}`);
+
+  /** Why a file will not be sent, or was not, in the words that let somebody act on it. */
+  const reason = (upload: Upload): string | undefined => {
+    if (upload.status === 'too-large') {
+      // The instance's own limit, as a number. "Too large" without one is a dead end.
+      return t('tray.tooLarge', {
+        size: bytes(upload.size),
+        limit: bytes(upload.maxBytes),
+      });
+    }
+    return upload.status === 'failed' ? upload.error : undefined;
+  };
 
   return (
     <ul
@@ -127,6 +150,34 @@ function FileRows({ files }: { files: readonly Upload[] }) {
             label={upload.name}
             detail={detailOf(upload)}
           />
+          {reason(upload) !== undefined && (
+            <span
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'var(--type-ui-size-sm)',
+                lineHeight: 'var(--type-body-leading)',
+                color: 'var(--danger)',
+                textWrap: 'pretty',
+              }}
+            >
+              {reason(upload)}
+            </span>
+          )}
+          {upload.status === 'failed' && (
+            <div>
+              {/* "Again", never "resume": the request starts from the first byte, and a control
+                  that implied otherwise would be the interface promising something the endpoint
+                  cannot do. */}
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  again(upload.id);
+                }}
+              >
+                {t('tray.again')}
+              </Button>
+            </div>
+          )}
           {upload.status === 'duplicate' && <DuplicateNotice upload={upload} />}
         </li>
       ))}

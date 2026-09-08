@@ -118,7 +118,12 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
               disabled={accepted.length === 0 || into === undefined}
               onClick={() => {
                 if (into === undefined) return;
-                add(accepted, { library: into, categoryId, transcribe });
+                add(accepted, {
+                  library: into,
+                  categoryId,
+                  transcribe,
+                  maxBytes: instance?.max_upload_bytes,
+                });
                 close();
               }}
             >
