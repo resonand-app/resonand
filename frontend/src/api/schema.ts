@@ -1023,6 +1023,34 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trash/audio/{audio_uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Purge
+         * @description Destroy one trashed recording now, rather than waiting out its retention (``API-19``).
+         *
+         *     **In the trash namespace and not a flag on the trashing verb.** Deleting from the trash is
+         *     what permanent deletion is, and separating the paths means the irreversible call cannot be
+         *     reached by getting a query parameter wrong on the reversible one.
+         *
+         *     It owns its transaction rather than taking :data:`WriteSession`, because the files go after
+         *     the commit and holding the instance's one write lock across a filesystem walk would stop every
+         *     other writer for its duration (``REV-1``).
+         */
+        delete: operations["purge_api_trash_audio__audio_uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trash/libraries": {
         parameters: {
             query?: never;
@@ -1041,6 +1069,33 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trash/libraries/{library_uuid}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Purge Trashed Library
+         * @description Destroy one trashed library now, with everything in it (``API-19``).
+         *
+         *     It takes the recordings whether or not they were trashed separately, which is what trashing a
+         *     library already means: the retention purge expires everything inside one on the library's own
+         *     clock, so Delete now has to destroy the same set or it would leave behind exactly the rows
+         *     waiting a month would have taken. ``INT-1c``'s confirmation states that count first.
+         *
+         *     Its transaction is its own, for the reason the recording's purge gives.
+         */
+        delete: operations["purge_trashed_library_api_trash_libraries__library_uuid__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1073,6 +1128,32 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AdminUser
+         * @description An account as administration lists it (``API-20``, ``INT-3b``).
+         *
+         *     Beside :class:`UserSummary` rather than replacing it. That one is what a share and
+         *     ``API-15``'s lookup answer with, so ``is_admin`` on it would tell any library manager who runs
+         *     the instance -- the same leak the lookup is deliberately narrow to prevent. This shape is
+         *     answered by the ``/admin/users`` routes and nowhere else.
+         *
+         *     ``disabled_at`` rather than a boolean: "disabled since March" is a fact the row has, and
+         *     "disabled" is a fact it does not.
+         */
+        AdminUser: {
+            /** Created At */
+            created_at: string;
+            /** Disabled At */
+            disabled_at: string | null;
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** Id */
+            id: number;
+            /** Is Admin */
+            is_admin: boolean;
+        };
         /**
          * AudioDetail
          * @description Everything the detail view shows, including the technical metadata it keeps collapsed.
@@ -1973,7 +2054,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"][];
+                    "application/json": components["schemas"]["AdminUser"][];
                 };
             };
         };
@@ -1997,7 +2078,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"];
+                    "application/json": components["schemas"]["AdminUser"];
                 };
             };
             /** @description Validation Error */
@@ -2057,7 +2138,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"];
+                    "application/json": components["schemas"]["AdminUser"];
                 };
             };
             /** @description Validation Error */
@@ -2088,7 +2169,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"];
+                    "application/json": components["schemas"]["AdminUser"];
                 };
             };
             /** @description Validation Error */
@@ -3581,6 +3662,35 @@ export interface operations {
             };
         };
     };
+    purge_api_trash_audio__audio_uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_trashed_libraries_api_trash_libraries_get: {
         parameters: {
             query?: {
@@ -3601,6 +3711,35 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Page_LibrarySummary_"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purge_trashed_library_api_trash_libraries__library_uuid__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                library_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

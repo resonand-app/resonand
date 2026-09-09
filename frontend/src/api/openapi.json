@@ -1,6 +1,53 @@
 {
   "components": {
     "schemas": {
+      "AdminUser": {
+        "additionalProperties": false,
+        "description": "An account as administration lists it (``API-20``, ``INT-3b``).\n\nBeside :class:`UserSummary` rather than replacing it. That one is what a share and\n``API-15``'s lookup answer with, so ``is_admin`` on it would tell any library manager who runs\nthe instance -- the same leak the lookup is deliberately narrow to prevent. This shape is\nanswered by the ``/admin/users`` routes and nowhere else.\n\n``disabled_at`` rather than a boolean: \"disabled since March\" is a fact the row has, and\n\"disabled\" is a fact it does not.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "disabled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabled At"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_admin": {
+            "title": "Is Admin",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "is_admin",
+          "disabled_at",
+          "created_at"
+        ],
+        "title": "AdminUser",
+        "type": "object"
+      },
       "AudioDetail": {
         "additionalProperties": false,
         "description": "Everything the detail view shows, including the technical metadata it keeps collapsed.",
@@ -2363,7 +2410,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/UserSummary"
+                    "$ref": "#/components/schemas/AdminUser"
                   },
                   "title": "Response List Users Api Admin Users Get",
                   "type": "array"
@@ -2396,7 +2443,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             },
@@ -2475,7 +2522,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             },
@@ -2517,7 +2564,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             },
@@ -4916,6 +4963,42 @@
         ]
       }
     },
+    "/api/trash/audio/{audio_uuid}": {
+      "delete": {
+        "description": "Destroy one trashed recording now, rather than waiting out its retention (``API-19``).\n\n**In the trash namespace and not a flag on the trashing verb.** Deleting from the trash is\nwhat permanent deletion is, and separating the paths means the irreversible call cannot be\nreached by getting a query parameter wrong on the reversible one.\n\nIt owns its transaction rather than taking :data:`WriteSession`, because the files go after\nthe commit and holding the instance's one write lock across a filesystem walk would stop every\nother writer for its duration (``REV-1``).",
+        "operationId": "purge_api_trash_audio__audio_uuid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
     "/api/trash/libraries": {
       "get": {
         "description": "Trashed libraries, closest to being purged first, mirroring ``/trash/audio``.\n\nIt takes level 30, the same as trashing one: somebody who could only read a library has no\nbusiness being told it is on its way out.",
@@ -4968,6 +5051,42 @@
           }
         },
         "summary": "List Trashed Libraries",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/trash/libraries/{library_uuid}": {
+      "delete": {
+        "description": "Destroy one trashed library now, with everything in it (``API-19``).\n\nIt takes the recordings whether or not they were trashed separately, which is what trashing a\nlibrary already means: the retention purge expires everything inside one on the library's own\nclock, so Delete now has to destroy the same set or it would leave behind exactly the rows\nwaiting a month would have taken. ``INT-1c``'s confirmation states that count first.\n\nIts transaction is its own, for the reason the recording's purge gives.",
+        "operationId": "purge_trashed_library_api_trash_libraries__library_uuid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge Trashed Library",
         "tags": [
           "libraries"
         ]

@@ -67,6 +67,15 @@ function problem(status: number, detail: string, extra: Record<string, unknown> 
   );
 }
 
+/** Disable or re-enable one account, answering with it the way the endpoints do (`API-20`). */
+function setDisabled(id: number, disabledAt: string | null) {
+  const existing = archive.users.find((one) => one.id === id);
+  if (!existing) return NOT_FOUND();
+  const changed = { ...existing, disabled_at: disabledAt };
+  archive.users = archive.users.map((one) => (one === existing ? changed : one));
+  return HttpResponse.json(changed);
+}
+
 /** What the API says about anything the caller may not read, or that is not there (`DEC-14`). */
 const NOT_FOUND = () => problem(404, 'There is no such thing here, or it is not yours.');
 
@@ -530,6 +539,24 @@ export const handlers: HttpHandler[] = [
       ),
     );
   }),
+  // Permanent deletion, and only from the trash: something that is not in it answers 404 rather
+  // than 400, exactly as the endpoint does, so `INT-1c` cannot be tested against a refusal the
+  // instance never sends (`API-19`).
+  http.delete('/api/trash/audio/:audio_uuid', ({ params }) => {
+    const existing = archive.recordings.find((one) => one.uuid === params.audio_uuid);
+    if (!existing?.deleted_at) return NOT_FOUND();
+    archive.recordings = archive.recordings.filter((one) => one !== existing);
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.delete('/api/trash/libraries/:library_uuid', ({ params }) => {
+    const existing = archive.libraries.find((one) => one.uuid === params.library_uuid);
+    if (!existing?.deleted_at) return NOT_FOUND();
+    archive.libraries = archive.libraries.filter((one) => one !== existing);
+    // It takes the recordings with it, trashed separately or not, because that is what the
+    // endpoint does -- and a mock that left them would make the confirmation's count a lie.
+    archive.recordings = archive.recordings.filter((one) => one.library_uuid !== existing.uuid);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   // --- Where audio goes, and who may know -----------------------------------
 
@@ -578,11 +605,34 @@ export const handlers: HttpHandler[] = [
   ),
   http.get('/api/admin/transcription', () => HttpResponse.json(providerStatus())),
   http.post('/api/admin/transcription/test', () => HttpResponse.json(providerStatus())),
-  http.get('/api/admin/users', () => HttpResponse.json([GABRIEL, MARTA])),
-  http.post('/api/admin/users', () => HttpResponse.json(MARTA, { status: 201 })),
-  http.post('/api/admin/users/:user_id/disable', () => HttpResponse.json(MARTA)),
-  http.post('/api/admin/users/:user_id/enable', () => HttpResponse.json(MARTA)),
-  http.delete('/api/admin/users/:user_id', () => new HttpResponse(null, { status: 204 })),
+  http.get('/api/admin/users', () => HttpResponse.json(archive.users)),
+  http.post('/api/admin/users', async ({ request }) => {
+    const body = (await request.json()) as Schemas['CreateAccount'];
+    const made: Schemas['AdminUser'] = {
+      id: Math.max(0, ...archive.users.map((one) => one.id)) + 1,
+      display_name: body.display_name,
+      email: body.email,
+      is_admin: body.is_admin ?? false,
+      disabled_at: null,
+      created_at: '2026-03-12T10:00:00Z',
+    };
+    archive.users = [...archive.users, made];
+    return HttpResponse.json(made, { status: 201 });
+  }),
+  // Disable and enable answer with the account they changed, as the endpoints do, so a row can
+  // redraw from the answer rather than from a second request that might race it (`API-20`).
+  http.post('/api/admin/users/:user_id/disable', ({ params }) =>
+    setDisabled(Number(params.user_id), '2026-03-12T10:00:00Z'),
+  ),
+  http.post('/api/admin/users/:user_id/enable', ({ params }) =>
+    setDisabled(Number(params.user_id), null),
+  ),
+  http.delete('/api/admin/users/:user_id', ({ params }) => {
+    const existing = archive.users.find((one) => one.id === Number(params.user_id));
+    if (!existing) return NOT_FOUND();
+    archive.users = archive.users.filter((one) => one !== existing);
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
 
 function providerStatus(): Schemas['ProviderStatus'] {

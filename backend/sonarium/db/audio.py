@@ -15,12 +15,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import Select, select
+from sqlalchemy import Select, delete, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from sonarium.acl.query import audio_acl, audio_select, require_audio, require_library
-from sonarium.core.errors import InvalidRequestError
+from sonarium.core.errors import InvalidRequestError, NotFoundError
 from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.text import clean_title
@@ -194,6 +194,38 @@ def trashed_audio(user_id: int) -> Select[tuple[Audio, int]]:
         .where(acl.c.level >= int(Level.EDIT), Audio.deleted_at.is_not(None))
         .order_by(Audio.deleted_at)
     )
+
+
+def remove_recording(session: Session, audio: Audio) -> str:
+    """Delete one recording's row, returning the uuid whose files now have to go.
+
+    **It resolves nothing.** Both callers have already decided they may do this -- the retention
+    purge because the instance's own clock said so, :func:`purge_audio` because it asked the ACL --
+    and this is the row half of the operation on its own.
+
+    The caller deletes the files afterwards and **outside this transaction**, which is the
+    opposite of the intuitive order and deliberate: a crash between the two leaves files no row
+    points at, which ``sonarium fsck`` reports as orphans. The other way round leaves rows
+    pointing at files that are gone, which reads as data loss.
+    """
+    audio_uuid = audio.uuid
+    search_index.remove_audio(session, audio.id)
+    session.execute(delete(Audio).where(Audio.id == audio.id))
+    return audio_uuid
+
+
+def purge_audio(session: Session, user_id: int, audio_uuid: str) -> str:
+    """Destroy one trashed recording now, returning the uuid whose files the caller removes.
+
+    **Only from the trash.** A recording that is not in it answers as though it were not there at
+    all rather than as a bad request: permanent deletion is reachable only from the screen that
+    lists what it would destroy, and a 400 here would confirm the recording exists to somebody who
+    guessed at the URL (``DEC-14``).
+    """
+    audio, _ = require_audio(session, user_id, audio_uuid, Level.EDIT, include_trashed=True)
+    if audio.deleted_at is None:
+        raise NotFoundError("No such recording in the trash.")
+    return remove_recording(session, audio)
 
 
 def find_duplicates(session: Session, user_id: int, sha256: str) -> list[tuple[Audio, bool]]:

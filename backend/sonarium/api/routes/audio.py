@@ -12,7 +12,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from sonarium.acl.query import audio_select, require_audio
-from sonarium.api.deps import CurrentCaller, ReadSession, WriteSession
+from sonarium.api.deps import (
+    ArchiveDatabase,
+    CurrentCaller,
+    InstanceSettings,
+    ReadSession,
+    WriteSession,
+)
 from sonarium.api.pagination import Page, PageRequest, page_of, page_request
 from sonarium.api.presenters import (
     audio_detail,
@@ -45,6 +51,7 @@ from sonarium.db.audio import (
     MetadataPatch,
     find_duplicates,
     move_audio,
+    purge_audio,
     restore_audio,
     trash_audio,
     trashed_audio,
@@ -52,6 +59,7 @@ from sonarium.db.audio import (
 )
 from sonarium.db.models import Library, Transcript
 from sonarium.jobs import queue
+from sonarium.media import storage
 
 router = APIRouter(tags=["recordings"])
 
@@ -135,6 +143,28 @@ def list_trash(caller: CurrentCaller, session: ReadSession, paging: Paging) -> P
         total=total,
         request=paging,
     )
+
+
+@router.delete("/trash/audio/{audio_uuid}", status_code=status.HTTP_204_NO_CONTENT)
+def purge(
+    audio_uuid: str,
+    caller: CurrentCaller,
+    database: ArchiveDatabase,
+    settings: InstanceSettings,
+) -> None:
+    """Destroy one trashed recording now, rather than waiting out its retention (``API-19``).
+
+    **In the trash namespace and not a flag on the trashing verb.** Deleting from the trash is
+    what permanent deletion is, and separating the paths means the irreversible call cannot be
+    reached by getting a query parameter wrong on the reversible one.
+
+    It owns its transaction rather than taking :data:`WriteSession`, because the files go after
+    the commit and holding the instance's one write lock across a filesystem walk would stop every
+    other writer for its duration (``REV-1``).
+    """
+    with database.write_session() as session:
+        removed = purge_audio(session, caller.id, audio_uuid)
+    storage.delete_recording(settings.resolved_storage_dir, removed)
 
 
 @router.get("/audio/duplicates/{sha256}", response_model=list[DuplicateWarning])

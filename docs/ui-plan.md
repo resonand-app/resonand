@@ -950,14 +950,15 @@ One destination with sections, not a scattering of screens.
       restoring one child alone puts it back in a library that is still in the trash, where you
       would not see it. ⇢ INT-1a, API-14
 - [ ] **INT-1c** · Restore, one call per item; and Delete now through `TypedConfirm`, stating
-      exactly what is destroyed. ⇢ INT-1a, UI-34m
+      exactly what is destroyed. ⇢ INT-1a, UI-34m, API-19
 - [ ] **INT-1d** · The states: items in their last day marked unmistakably, loading, and empty —
       where the good state reads as reassurance rather than as absence. ⇢ INT-1a, UI-35c
 - [ ] **INT-3a** · Administration's own chrome inside Settings, so nobody wanders into it: it runs
       the instance for everybody on it, and it says so. ⇢ UI-20a, API-7
 - [ ] **INT-3b** · Users: create, disable, re-enable, and the **refusal to delete an owner that
       names the libraries and recordings in the way**. Transferring content between accounts is a
-      later task, so until then an account can be disabled but not deleted. ⇢ INT-3a, API-7
+      later task, so until then an account can be disabled but not deleted. ⇢ INT-3a, API-7,
+      API-20
 - [ ] **INT-3c** · The transcription provider: its fields, the egress notice in its calm register,
       and a test that is **explicit and never automatic** — opening the page contacts nothing. Plus
       the no-provider state, which says plainly that nothing on this instance can be transcribed.

@@ -22,6 +22,7 @@ from sonarium.core import colours
 from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
 from sonarium.core.levels import GRANTABLE, Level
 from sonarium.core.time import now_instant
+from sonarium.db.audio import remove_recording
 from sonarium.db.models import Audio, Library, Share, User
 
 
@@ -124,6 +125,30 @@ def restore_library(session: Session, user_id: int, library_uuid: str) -> Librar
     library.deleted_at = None
     session.flush()
     return library
+
+
+def purge_library(session: Session, user_id: int, library_uuid: str) -> list[str]:
+    """Destroy one trashed library now, with everything in it (``API-19``).
+
+    Returns the uuids whose files the caller removes afterwards and outside this transaction, for
+    the reason :func:`sonarium.db.audio.remove_recording` gives.
+
+    **It takes the recordings, trashed separately or not.** That is what trashing a library already
+    means -- the retention purge expires everything inside one on the library's own clock -- so
+    doing it now has to destroy the same set, or Delete now would leave behind exactly the rows
+    waiting a month would have taken. ``INT-1c``'s confirmation states that count before it fires.
+
+    **Only from the trash**, and a library that is not in it answers as though it were not there,
+    for the same reason :func:`sonarium.db.audio.purge_audio` does.
+    """
+    library, _ = require_library(session, user_id, library_uuid, Level.MANAGE, include_trashed=True)
+    if library.deleted_at is None:
+        raise NotFoundError("No such library in the trash.")
+    rows = session.execute(select(Audio).where(Audio.library_id == library.id)).scalars().all()
+    uuids = [remove_recording(session, audio) for audio in rows]
+    session.delete(library)
+    session.flush()
+    return uuids
 
 
 def list_shares(session: Session, user_id: int, library_uuid: str) -> list[tuple[Share, User]]:
