@@ -56,6 +56,7 @@
     }
   },
   "administration": {
-    "tabHint": "You are an administrator of this instance."
+    "title": "This instance",
+    "intro": "These settings belong to the whole instance and to everybody with an account on it, not to you."
   }
 }
