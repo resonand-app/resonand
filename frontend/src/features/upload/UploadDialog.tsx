@@ -39,6 +39,7 @@ import type { DragEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAllLibraries } from '@/app/library-data';
+import { useInstance } from '@/app/session';
 import { LEVEL } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
 import { useDestination } from '@/features/recording/transcription';
@@ -46,7 +47,7 @@ import { Button, Dialog, EgressNotice, Icon, Modal, Select, Switch } from '@/des
 import type { SelectOption } from '@/design-system';
 import { bytes } from '@/i18n/format';
 
-import { isAccepted, isVideo, useInstance } from './instance';
+import { isAccepted, isVideo } from './instance';
 import { useUploads } from './uploads';
 
 export interface UploadDialogProps {
@@ -58,7 +59,7 @@ export interface UploadDialogProps {
 
 export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
   const { t } = useTranslation('upload');
-  const instance = useInstance();
+  const instance = useInstance().data;
   const add = useUploads((state) => state.add);
   const picker = useRef<HTMLInputElement>(null);
   const [chosen, setChosen] = useState<File[]>([]);

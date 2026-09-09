@@ -1,30 +1,16 @@
 /**
- * What this instance accepts, read from the instance (`UI-18a`, §V-E).
+ * Which files this instance ingests (`UI-18a`, §V-E).
  *
  * The formats and the size limit are **stated before a file is chosen**, and they are facts about
  * the deployment rather than about the product: an operator can raise `max_upload_bytes` and the
- * dialog has to say the new number without anybody rebuilding the bundle. So they come from
- * `GET /instance`, which is where instance facts live, and there is no constant here to go stale.
+ * dialog has to say the new number without anybody rebuilding the bundle. They come from
+ * `GET /instance` through `useInstance` in the session module, which is where every view reads the
+ * instance's facts -- there is no second query here, and no constant to go stale.
  */
 
-import { useQuery } from '@tanstack/react-query';
-
-import { get } from '@/api/client';
-import { keys } from '@/api/keys';
 import type { components } from '@/api/schema';
 
 export type InstanceState = components['schemas']['InstanceState'];
-
-export function useInstance(): InstanceState | undefined {
-  const { data } = useQuery({
-    queryKey: keys.instance(),
-    queryFn: () => get('/api/instance'),
-    // A property of the deployment. It changes when an operator restarts it with a new setting,
-    // which is not something to poll for.
-    staleTime: 60 * 60_000,
-  });
-  return data;
-}
 
 /**
  * Whether this instance ingests a file with this name.
