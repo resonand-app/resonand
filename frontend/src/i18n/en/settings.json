@@ -23,6 +23,23 @@
     "changed": "Your password has been changed. Every other sign-in has ended.",
     "wrongPassword": "That is not your current password."
   },
+  "sessions": {
+    "title": "Where you are signed in",
+    "intro": "Every device holding a sign-in for this account.",
+    "current": "This device",
+    "unknownDevice": "Unrecognised device",
+    "started": "Signed in {{when}}",
+    "lastSeen": "Last used {{when}}",
+    "expires": "Expires {{when}}",
+    "revoke": "Sign out",
+    "revokeNamed": "Sign out {{device}}",
+    "revokeOthers": "Sign out everywhere else",
+    "revokeOthersConfirm": "Sign out of every device except this one?",
+    "revokeOthersBody_one": "{{count}} other sign-in ends. Nothing is deleted, and you stay signed in here.",
+    "revokeOthersBody_other": "{{count}} other sign-ins end. Nothing is deleted, and you stay signed in here.",
+    "loading": "Reading your sign-ins",
+    "error": "Your sign-ins could not be read."
+  },
   "administration": {
     "tabHint": "You are an administrator of this instance."
   }

@@ -3,7 +3,7 @@
  *
  * One module for the account and its sessions, because they are the same subject seen twice --
  * who you are, and where you are signed in -- and because both invalidate the same cached answer
- * the sidebar and the profile menu are already drawing. The sessions half arrives with `UI-20c`.
+ * the sidebar and the profile menu are already drawing.
  *
  * **The theme is deliberately absent.** It is per device and lives in browser storage
  * (`UI-1j`), so it has no request to make and nothing here to invalidate. Language is the
@@ -11,15 +11,17 @@
  * reason `UI-20d` ships a select with one option in it.
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UseMutationResult } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
-import { patch, post } from '@/api/client';
+import { get, patch, post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
+import { keys } from '@/api/keys';
 import type { components } from '@/api/schema';
 
 type Schemas = components['schemas'];
 export type UpdateMe = Schemas['UpdateMe'];
+export type SessionSummary = Schemas['SessionSummary'];
 
 /** Display name, address and language. Never the password, which is a different operation. */
 export function useUpdateAccount(): UseMutationResult<unknown, unknown, UpdateMe> {
@@ -53,4 +55,46 @@ export function useChangePassword(): UseMutationResult<unknown, unknown, Passwor
       await invalidate(client, { kind: 'session' });
     },
   });
+}
+
+/** Every sign-in this account has (`UI-20c`). */
+export function useSessions(): UseQueryResult<SessionSummary[]> {
+  return useQuery({
+    queryKey: keys.sessions(),
+    queryFn: () => get('/api/auth/sessions'),
+    // A device somebody has just noticed is a device they want gone now, so this is the one list
+    // in the product that is stale the moment it is drawn.
+    staleTime: 0,
+  });
+}
+
+export interface SessionRevocations {
+  one: UseMutationResult<unknown, unknown, number>;
+  others: UseMutationResult<unknown, unknown, void>;
+}
+
+/**
+ * Revoking one sign-in, and revoking every other one.
+ *
+ * Two mutations rather than one with a flag, because the API has two endpoints and they answer
+ * different questions: "not that device" and "none of them but this one". A single call taking a
+ * list would make the second one a loop over sessions the interface had to enumerate first --
+ * and the list it enumerated could already be out of date.
+ */
+export function useSessionRevocations(): SessionRevocations {
+  const client = useQueryClient();
+  const settle = async () => {
+    await invalidate(client, { kind: 'session' });
+  };
+  return {
+    one: useMutation({
+      mutationFn: (id: number) =>
+        remove('/api/auth/sessions/{session_id}', { path: { session_id: id } }),
+      onSuccess: settle,
+    }),
+    others: useMutation({
+      mutationFn: () => remove('/api/auth/sessions'),
+      onSuccess: settle,
+    }),
+  };
 }
