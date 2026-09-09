@@ -60,6 +60,26 @@ class UserSummary(Api):
     email: str
 
 
+class AdminUser(Api):
+    """An account as administration lists it (``API-20``, ``INT-3b``).
+
+    Beside :class:`UserSummary` rather than replacing it. That one is what a share and
+    ``API-15``'s lookup answer with, so ``is_admin`` on it would tell any library manager who runs
+    the instance -- the same leak the lookup is deliberately narrow to prevent. This shape is
+    answered by the ``/admin/users`` routes and nowhere else.
+
+    ``disabled_at`` rather than a boolean: "disabled since March" is a fact the row has, and
+    "disabled" is a fact it does not.
+    """
+
+    id: int
+    display_name: str
+    email: str
+    is_admin: bool
+    disabled_at: str | None
+    created_at: str
+
+
 class Me(Api):
     """The signed-in account."""
 

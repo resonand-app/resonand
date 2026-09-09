@@ -1,6 +1,53 @@
 {
   "components": {
     "schemas": {
+      "AdminUser": {
+        "additionalProperties": false,
+        "description": "An account as administration lists it (``API-20``, ``INT-3b``).\n\nBeside :class:`UserSummary` rather than replacing it. That one is what a share and\n``API-15``'s lookup answer with, so ``is_admin`` on it would tell any library manager who runs\nthe instance -- the same leak the lookup is deliberately narrow to prevent. This shape is\nanswered by the ``/admin/users`` routes and nowhere else.\n\n``disabled_at`` rather than a boolean: \"disabled since March\" is a fact the row has, and\n\"disabled\" is a fact it does not.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "disabled_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Disabled At"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_admin": {
+            "title": "Is Admin",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "email",
+          "is_admin",
+          "disabled_at",
+          "created_at"
+        ],
+        "title": "AdminUser",
+        "type": "object"
+      },
       "AudioDetail": {
         "additionalProperties": false,
         "description": "Everything the detail view shows, including the technical metadata it keeps collapsed.",
@@ -2363,7 +2410,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/UserSummary"
+                    "$ref": "#/components/schemas/AdminUser"
                   },
                   "title": "Response List Users Api Admin Users Get",
                   "type": "array"
@@ -2396,7 +2443,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             },
@@ -2475,7 +2522,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             },
@@ -2517,7 +2564,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/UserSummary"
+                  "$ref": "#/components/schemas/AdminUser"
                 }
               }
             },

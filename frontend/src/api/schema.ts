@@ -1129,6 +1129,32 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * AdminUser
+         * @description An account as administration lists it (``API-20``, ``INT-3b``).
+         *
+         *     Beside :class:`UserSummary` rather than replacing it. That one is what a share and
+         *     ``API-15``'s lookup answer with, so ``is_admin`` on it would tell any library manager who runs
+         *     the instance -- the same leak the lookup is deliberately narrow to prevent. This shape is
+         *     answered by the ``/admin/users`` routes and nowhere else.
+         *
+         *     ``disabled_at`` rather than a boolean: "disabled since March" is a fact the row has, and
+         *     "disabled" is a fact it does not.
+         */
+        AdminUser: {
+            /** Created At */
+            created_at: string;
+            /** Disabled At */
+            disabled_at: string | null;
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** Id */
+            id: number;
+            /** Is Admin */
+            is_admin: boolean;
+        };
+        /**
          * AudioDetail
          * @description Everything the detail view shows, including the technical metadata it keeps collapsed.
          */
@@ -2028,7 +2054,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"][];
+                    "application/json": components["schemas"]["AdminUser"][];
                 };
             };
         };
@@ -2052,7 +2078,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"];
+                    "application/json": components["schemas"]["AdminUser"];
                 };
             };
             /** @description Validation Error */
@@ -2112,7 +2138,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"];
+                    "application/json": components["schemas"]["AdminUser"];
                 };
             };
             /** @description Validation Error */
@@ -2143,7 +2169,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["UserSummary"];
+                    "application/json": components["schemas"]["AdminUser"];
                 };
             };
             /** @description Validation Error */

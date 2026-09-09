@@ -24,6 +24,7 @@ export type RecordingDetail = Schemas['AudioDetail'];
 export type Transcript = Schemas['TranscriptDetail'];
 export type Account = Schemas['Me'];
 export type Instance = Schemas['InstanceState'];
+export type AdminUser = Schemas['AdminUser'];
 
 const GABRIEL: Schemas['UserSummary'] = {
   id: 1,
@@ -89,6 +90,14 @@ export interface Archive {
   categories: Record<string, Schemas['CategorySummary'][]>;
   shares: Record<string, Schemas['ShareSummary'][]>;
   sessions: Schemas['SessionSummary'][];
+  /**
+   * Every account, as administration sees it (`API-20`, `INT-3b`).
+   *
+   * Separate from `accounts`, which is who the mock will let sign in. This is the list
+   * administration draws, and it carries the two facts a sign-in does not need and `INT-3b`
+   * cannot work without: who runs the instance, and who is already disabled.
+   */
+  users: AdminUser[];
   jobs: Schemas['JobSummary'][];
   tags: Schemas['TagSuggestion'][];
   destination: Schemas['TranscriptionDestination'];
@@ -338,6 +347,15 @@ function fresh(): Archive {
       is_local: true,
       configured: true,
     },
+    users: [
+      { ...GABRIEL, is_admin: true, disabled_at: null, created_at: '2025-11-02T09:00:00Z' },
+      {
+        ...MARTA,
+        is_admin: false,
+        disabled_at: '2026-01-18T08:30:00Z',
+        created_at: '2025-12-14T18:20:00Z',
+      },
+    ],
     accounts: [
       { email: GABRIEL.email, password: PASSWORD, disabled: false },
       { email: MARTA.email, password: PASSWORD, disabled: true },

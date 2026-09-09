@@ -408,6 +408,50 @@ def test_an_administrator_cannot_disable_themselves(
     assert refused.status_code == status.HTTP_409_CONFLICT
 
 
+def test_the_list_says_which_accounts_are_disabled_and_which_run_the_instance(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """``INT-3b`` chooses between disable and re-enable, which it cannot do without knowing which
+    one an account is already in -- and it marks administrators."""
+    sign_in(client, "admin")
+    client.post(f"/admin/users/{accounts['friend']}/disable")
+    listed = {row["id"]: row for row in client.get("/admin/users").json()}
+    assert listed[accounts["admin"]]["is_admin"] is True
+    assert listed[accounts["admin"]]["disabled_at"] is None
+    assert listed[accounts["friend"]]["is_admin"] is False
+    assert listed[accounts["friend"]]["disabled_at"] is not None
+
+
+def test_disable_and_enable_answer_with_the_account_they_changed(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """So the row redraws from the answer rather than from a second request that might race it."""
+    sign_in(client, "admin")
+    disabled = client.post(f"/admin/users/{accounts['friend']}/disable").json()
+    assert disabled["disabled_at"] is not None
+    enabled = client.post(f"/admin/users/{accounts['friend']}/enable").json()
+    assert enabled["disabled_at"] is None
+
+
+def test_a_share_still_says_nothing_about_who_runs_the_instance(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """Which is why administration got a shape of its own rather than a wider ``UserSummary``.
+
+    A share and ``API-15``'s lookup both answer with that one, so ``is_admin`` on it would tell
+    any library manager who runs the instance -- the leak the narrow lookup exists to prevent.
+    """
+    sign_in(client, "admin")
+    client.put(
+        f"/libraries/{owner_library}/shares",
+        json={"grantee_id": accounts["friend"], "level": int(Level.READ)},
+    )
+    grantee = client.get(f"/libraries/{owner_library}/shares").json()[0]["grantee"]
+    assert set(grantee) == {"id", "display_name", "email"}
+    found = client.get("/users/lookup", params={"email": "friend@example.test"}).json()
+    assert set(found[0]) == {"id", "display_name", "email"}
+
+
 # --- Operations -----------------------------------------------------------
 
 

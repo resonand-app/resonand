@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session as DbSession
 
 from sonarium.api.schemas import (
+    AdminUser,
     AudioDetail,
     AudioSummary,
     CategorySummary,
@@ -109,6 +110,23 @@ def transcription_status(session: DbSession, audio_id: int) -> TranscriptionStat
 
 def user_summary(user: User) -> UserSummary:
     return UserSummary(id=user.id, display_name=user.display_name, email=user.email)
+
+
+def admin_user(user: User) -> AdminUser:
+    """The same account, for the one caller allowed to know how it stands (``API-20``).
+
+    Two facts more than :func:`user_summary`, and both of them are why administration exists:
+    ``INT-3b`` chooses between disable and re-enable, which it cannot do without knowing which
+    one the account is already in, and it marks the people who run the instance.
+    """
+    return AdminUser(
+        id=user.id,
+        display_name=user.display_name,
+        email=user.email,
+        is_admin=bool(user.is_admin),
+        disabled_at=user.disabled_at,
+        created_at=user.created_at,
+    )
 
 
 def tag_summary(tag: Tag) -> TagSummary:
