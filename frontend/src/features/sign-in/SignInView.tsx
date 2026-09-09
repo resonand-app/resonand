@@ -69,7 +69,13 @@ export function SignInView() {
         instance.data === undefined ? undefined : t('on', { instance: instance.data.name })
       }
     >
-      {instance.data === undefined ? null : instance.data.needs_bootstrap ? (
+      {instance.error !== null ? (
+        <Unreachable
+          onRetry={() => {
+            void instance.refetch();
+          }}
+        />
+      ) : instance.data === undefined ? null : instance.data.needs_bootstrap ? (
         <FirstRun onArrived={arrived} />
       ) : (
         <SignIn onArrived={arrived} />
@@ -84,10 +90,6 @@ function SignIn({ onArrived }: { onArrived: () => void }) {
   const signIn = useSignIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // The API's own `detail`, shown rather than replaced (§1.9). `UI-21c` is where the states this
-  // can be become states rather than one line.
-  const refusal = isApiProblem(signIn.error) ? signIn.error.detail : undefined;
 
   function submit(event: SyntheticEvent) {
     event.preventDefault();
@@ -117,8 +119,10 @@ function SignIn({ onArrived }: { onArrived: () => void }) {
           setPassword(event.target.value);
         }}
       />
-      <Submit disabled={email.trim() === '' || password === ''}>{t('submit')}</Submit>
-      {refusal !== undefined && <Refusal>{refusal}</Refusal>}
+      <Submit busy={signIn.isPending} disabled={email.trim() === '' || password === ''}>
+        {signIn.isPending ? t('submitting') : t('submit')}
+      </Submit>
+      <Refusal error={signIn.error} />
     </Form>
   );
 }
@@ -141,7 +145,6 @@ function FirstRun({ onArrived }: { onArrived: () => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const refusal = isApiProblem(bootstrap.error) ? bootstrap.error.detail : undefined;
   const ready =
     displayName.trim() !== '' && email.trim() !== '' && password.length >= MINIMUM_PASSWORD_LENGTH;
 
@@ -188,8 +191,10 @@ function FirstRun({ onArrived }: { onArrived: () => void }) {
         }}
       />
       <Quiet>{t('firstRun.minimum', { count: MINIMUM_PASSWORD_LENGTH })}</Quiet>
-      <Submit disabled={!ready}>{t('firstRun.submit')}</Submit>
-      {refusal !== undefined && <Refusal>{refusal}</Refusal>}
+      <Submit busy={bootstrap.isPending} disabled={!ready}>
+        {bootstrap.isPending ? t('firstRun.submitting') : t('firstRun.submit')}
+      </Submit>
+      <Refusal error={bootstrap.error} />
     </Form>
   );
 }
@@ -226,13 +231,29 @@ function Form({
   );
 }
 
-/** The one action, which is the same shape on both faces. */
-function Submit({ disabled, children }: { disabled: boolean; children: ReactNode }) {
+/**
+ * The one action, which is the same shape on both faces.
+ *
+ * **Submitting is the button's state and not the form's.** The fields hold what was typed and
+ * stay editable, because a request that comes back refused leaves somebody one character from
+ * being right -- clearing the form, or freezing it, would make them type the address again to
+ * fix a password. What is prevented is a second request, which is what the disable is for.
+ */
+function Submit({
+  busy,
+  disabled,
+  children,
+}: {
+  busy: boolean;
+  disabled: boolean;
+  children: ReactNode;
+}) {
   return (
     <Button
       variant="primary"
       type="submit"
-      disabled={disabled}
+      aria-busy={busy}
+      disabled={disabled || busy}
       style={{ justifyContent: 'center', marginTop: 'var(--space-1)' }}
     >
       {children}
@@ -259,12 +280,28 @@ function Quiet({ children }: { children: ReactNode }) {
 }
 
 /**
- * Why the instance would not let somebody in.
+ * Why the instance would not let somebody in (`UI-21c`, §V1).
+ *
+ * **The API's `detail`, shown rather than replaced**, which is what makes the three failures one
+ * failure: an unknown address, a wrong password and a disabled account are answered with one
+ * sentence on purpose, so that a sign-in form cannot be used to find out which addresses have
+ * accounts here. The interface adds no branch of its own, and the test that walks all three and
+ * compares the sentences is what keeps it that way.
+ *
+ * Two things do get a line of their own, because they are not that failure at all. Being rate
+ * limited is a state somebody waits out rather than retypes, and the fact that is not in the
+ * API's sentence is the one worth adding: the count is against the address, so a second device
+ * is the same counter. An instance that never answered is already its own sentence -- the
+ * client writes it when a request does not arrive -- and it must never read as a wrong password.
  *
  * A live region, because it appears in place after a press rather than on load: without one, a
  * screen reader announces nothing and the only feedback is a colour somebody cannot see.
  */
-function Refusal({ children }: { children: ReactNode }) {
+function Refusal({ error }: { error: unknown }) {
+  const { t } = useTranslation('signIn');
+  const problem = isApiProblem(error) ? error : undefined;
+  if (problem === undefined) return null;
+
   return (
     <p
       role="alert"
@@ -277,8 +314,41 @@ function Refusal({ children }: { children: ReactNode }) {
         textWrap: 'pretty',
       }}
     >
-      {children}
+      {problem.detail}
+      {problem.isRateLimited && <> {t('rateLimited')}</>}
     </p>
+  );
+}
+
+/**
+ * `GET /instance` itself did not answer (§V1).
+ *
+ * Its own state and not a failed sign-in: there is nothing to type here, and telling somebody
+ * whose server is down that their password was wrong sends them to reset a password that works.
+ * The panel is the message, because the form behind it could not be drawn honestly anyway --
+ * which face this screen has is a fact only the instance has.
+ */
+function Unreachable({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation('signIn');
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      <h1
+        style={{
+          margin: 0,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'var(--type-title-size)',
+          fontWeight: 'var(--type-title-weight)',
+          letterSpacing: 'var(--type-title-tracking)',
+          color: 'var(--text)',
+        }}
+      >
+        {t('unreachable.title')}
+      </h1>
+      <Quiet>{t('common:state.offline')}</Quiet>
+      <Button variant="secondary" onClick={onRetry} style={{ justifyContent: 'center' }}>
+        {t('unreachable.retry')}
+      </Button>
+    </div>
   );
 }
 

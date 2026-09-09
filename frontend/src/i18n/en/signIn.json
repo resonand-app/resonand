@@ -12,6 +12,13 @@
     "name": "Display name",
     "minimum_one": "A password needs at least {{count}} character.",
     "minimum_other": "A password needs at least {{count}} characters.",
-    "submit": "Create the account"
+    "submit": "Create the account",
+    "submitting": "Creating the account"
+  },
+  "submitting": "Signing in",
+  "rateLimited": "Attempts are counted per email address, not per device.",
+  "unreachable": {
+    "title": "This instance is not answering",
+    "retry": "Try again"
   }
 }

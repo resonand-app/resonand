@@ -48,6 +48,9 @@ export const UNREACHABLE = 0;
  */
 export const UNREACHABLE_DETAIL = 'The instance could not be reached. It may be offline.';
 
+/** The type the API gives an attempt refused for coming too fast (`INT-5`, `V1`). */
+const TOO_MANY_REQUESTS = '/errors/too_many_requests';
+
 export class ApiProblem extends Error {
   readonly type: string;
   readonly title: string;
@@ -85,6 +88,18 @@ export class ApiProblem extends Error {
    */
   get isMissing(): boolean {
     return this.status === 404;
+  }
+
+  /**
+   * Asked too often, and the answer is to wait rather than to type something else.
+   *
+   * The **type** and not the status. Sign-in raises `InvalidRequestError` with a code of its own
+   * (`api/routes/auth.py`), so a refused password and a refused rate are both `400` and the type
+   * is the only thing that tells them apart -- which is what §1.9 says a client branches on.
+   * Read here so that string lives in one place rather than in whichever view needs it next.
+   */
+  get isRateLimited(): boolean {
+    return this.type === TOO_MANY_REQUESTS;
   }
 
   /** Something the person can resolve -- a name already taken, a job already running. */

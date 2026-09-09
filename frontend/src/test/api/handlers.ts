@@ -20,7 +20,7 @@ import type { HttpHandler } from 'msw';
 
 import type { components } from '@/api/schema';
 
-import { GABRIEL, MARTA, archive, detailOf } from './archive';
+import { GABRIEL, LOGIN_ATTEMPTS_PER_MINUTE, MARTA, archive, detailOf } from './archive';
 
 type Schemas = components['schemas'];
 
@@ -144,12 +144,28 @@ export const handlers: HttpHandler[] = [
   }),
   http.post('/api/auth/session', async ({ request }) => {
     const body = (await request.json()) as Schemas['SignIn'];
-    const account = archive.accounts.find(
-      (one) => one.email.toLocaleLowerCase() === body.email.trim().toLocaleLowerCase(),
-    );
+    // Normalised, because the instance counts and looks up against the address rather than
+    // against what was typed: `Admin@Example.test` and `admin@example.test` are one account and
+    // therefore one counter.
+    const key = body.email.trim().toLocaleLowerCase();
+    const spent = archive.attempts[key] ?? 0;
+    if (spent >= LOGIN_ATTEMPTS_PER_MINUTE) {
+      return problem(400, 'Too many sign-in attempts. Wait a minute and try again.', {
+        type: '/errors/too_many_requests',
+      });
+    }
+    const account = archive.accounts.find((one) => one.email.toLocaleLowerCase() === key);
     const admitted =
       account !== undefined && !account.disabled && account.password === body.password;
-    if (!admitted) return SAME_ANSWER();
+    if (!admitted) {
+      archive.attempts[key] = spent + 1;
+      return SAME_ANSWER();
+    }
+    // Forgotten on the way in, so somebody who mistyped twice and then got it right is not
+    // still being counted.
+    archive.attempts = Object.fromEntries(
+      Object.entries(archive.attempts).filter(([address]) => address !== key),
+    );
     return HttpResponse.json(archive.me);
   }),
   http.delete('/api/auth/session', () => new HttpResponse(null, { status: 204 })),

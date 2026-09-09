@@ -1,18 +1,27 @@
 /**
- * V1 · Getting in, the screen that must not offer a way to sign up, and the first run
- * (`UI-21a`, `UI-21b`, §V1).
+ * V1 · Getting in, the screen that must not offer a way to sign up, the first run, and the four
+ * states (`UI-21a`, `UI-21b`, `UI-21c`, §V1).
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
+import { post } from '@/api/client';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
-import { CARRER_NOU, NOBODY, PASSWORD, archive } from '@/test/api/archive';
-import { mockApi } from '@/test/api/server';
+import {
+  CARRER_NOU,
+  LOGIN_ATTEMPTS_PER_MINUTE,
+  MARTA,
+  NOBODY,
+  PASSWORD,
+  archive,
+} from '@/test/api/archive';
+import { mockApi, server } from '@/test/api/server';
 
 import { intended } from './intended';
 import { MINIMUM_PASSWORD_LENGTH, SignInView } from './SignInView';
@@ -163,5 +172,74 @@ describe('the first run', () => {
     // instance, and a form that swapped itself out a moment later is one somebody types into.
     show();
     expect(screen.queryByRole('heading')).not.toBeInTheDocument();
+  });
+});
+
+describe('the four states', () => {
+  it('is busy while the instance decides, and the fields hold what was typed', async () => {
+    server.use(http.post('/api/auth/session', () => new Promise(() => undefined)));
+    show();
+    await signIn(archive.me.email, PASSWORD);
+
+    const action = screen.getByRole('button', { name: 'Signing in' });
+    expect(action).toHaveAttribute('aria-busy', 'true');
+    expect(action).toBeDisabled();
+    // A refused answer leaves somebody one character from being right, so the fields are not
+    // cleared and not frozen -- only a second request is prevented.
+    expect(screen.getByLabelText('Email')).toHaveValue(archive.me.email);
+    expect(screen.getByLabelText('Password')).toBeEnabled();
+  });
+
+  it('answers an unknown address, a wrong password and a disabled account with one string', async () => {
+    // The test `UI-21c` asks for. A sign-in form that answered these three differently would be
+    // a way to find out which addresses have accounts on somebody's instance, which is why the
+    // API sends one sentence and the interface adds no branch of its own.
+    const said: string[] = [];
+    const refused: [address: string, password: string][] = [
+      [NOBODY, PASSWORD],
+      [archive.me.email, 'not-the-password'],
+      [MARTA.email, PASSWORD],
+    ];
+    for (const [address, password] of refused) {
+      const { unmount } = show();
+      await signIn(address, password);
+      said.push((await screen.findByRole('alert')).textContent);
+      unmount();
+    }
+    expect(new Set(said).size).toBe(1);
+    expect(said[0]).toMatch(/do not match an account/i);
+    // And it names none of the three situations it is standing in for.
+    expect(said[0]?.toLowerCase()).not.toMatch(/disabled|unknown|no such|exist/);
+  });
+
+  it('says being rate limited is a wait, and that the count is against the address', async () => {
+    const address = archive.me.email;
+    for (let attempt = 0; attempt < LOGIN_ATTEMPTS_PER_MINUTE; attempt += 1) {
+      await post('/api/auth/session', {
+        body: { email: address, password: 'not-the-password' },
+      }).catch(() => undefined);
+    }
+    show();
+    await signIn(address, PASSWORD);
+
+    const said = await screen.findByRole('alert');
+    expect(said).toHaveTextContent(/too many sign-in attempts/i);
+    // The fact the API's sentence does not carry: a second device is the same counter.
+    expect(said).toHaveTextContent(/per email address/i);
+  });
+
+  it('says the instance is not answering, and never that a password was wrong', async () => {
+    server.use(http.get('/api/instance', () => HttpResponse.error()));
+    show();
+
+    expect(await screen.findByRole('heading', { name: /not answering/i })).toBeVisible();
+    // Nothing to type: sending somebody whose server is down to check their password sends them
+    // to reset one that works.
+    expect(screen.queryByLabelText('Password')).not.toBeInTheDocument();
+    expect(document.body.textContent.toLowerCase()).not.toContain('password');
+
+    server.resetHandlers();
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByRole('heading', { name: 'Sign in' })).toBeVisible();
   });
 });

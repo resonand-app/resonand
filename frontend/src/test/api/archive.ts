@@ -103,6 +103,14 @@ export interface Archive {
    * read the same would be asserting nothing.
    */
   accounts: SignInAccount[];
+  /**
+   * Sign-in attempts per address since the last reset (`INT-5`).
+   *
+   * Per address and not per connection, which is the fact V1 has to state: the instance counts
+   * against the email somebody typed, so trying a second password from a second tab is the same
+   * counter. Reset between tests, or the eleventh test to sign in would be rate limited.
+   */
+  attempts: Record<string, number>;
 }
 
 /** An account the mock instance will let in, or deliberately will not. */
@@ -114,6 +122,9 @@ export interface SignInAccount {
 
 /** The password every fixture account has. Long enough to pass the ten-character minimum. */
 export const PASSWORD = 'remembering-well';
+
+/** How many sign-in attempts an address gets, as `login_attempts_per_minute` defaults. */
+export const LOGIN_ATTEMPTS_PER_MINUTE = 10;
 
 /** An address with no account behind it, for the failure that must look like the other two. */
 export const NOBODY = 'ningu@example.test';
@@ -331,6 +342,7 @@ function fresh(): Archive {
       { email: GABRIEL.email, password: PASSWORD, disabled: false },
       { email: MARTA.email, password: PASSWORD, disabled: true },
     ],
+    attempts: {},
     recall:
       'Search ignores accents and matches the start of the last word you type. It does not ' +
       'know that words are related: searching for one form of a word will not find its other ' +
