@@ -24,9 +24,18 @@ from sqlalchemy import select, text
 
 
 def _trashed(
-    database: Database, settings: Settings, *, days_ago: int, title: str = "Old note"
+    database: Database,
+    settings: Settings,
+    *,
+    days_ago: int,
+    title: str = "Old note",
+    trash_the_recording: bool = True,
 ) -> str:
-    """A recording sent to the trash a given number of days ago, with a real file on disk."""
+    """A recording with a real file on disk, sent to the trash a given number of days ago.
+
+    ``trash_the_recording=False`` leaves it where it is, which is the state a recording is in when
+    the library around it was trashed instead: the row is untouched and carries no expiry.
+    """
     with database.write_session() as session:
         user = users.find_by_email(session, "o@x.test")
         if user is None:
@@ -47,9 +56,10 @@ def _trashed(
         audio.storage_path = storage.relative(settings.resolved_storage_dir, path)
         audio.sha256 = digest.sha256
         session.flush()
-        trash_audio(session, user.id, audio.uuid)
-        audio.deleted_at = instant_after(timedelta(days=-days_ago), since=utc_now())
-        session.flush()
+        if trash_the_recording:
+            trash_audio(session, user.id, audio.uuid)
+            audio.deleted_at = instant_after(timedelta(days=-days_ago), since=utc_now())
+            session.flush()
         return audio.uuid
 
 
@@ -135,19 +145,40 @@ def test_an_empty_expired_library_is_removed(database: Database, db_settings: Se
         assert session.execute(select(Library).where(Library.uuid == uuid)).first() is None
 
 
-def test_an_expired_library_that_still_holds_recordings_is_kept_for_now(
+def test_a_trashed_library_takes_its_untrashed_recordings_with_it(
     database: Database, db_settings: Settings
 ) -> None:
-    """Its recordings are purged on their own schedule; the library goes on the next run once it
-    is genuinely empty. Removing it first would orphan them."""
-    _trashed(database, db_settings, days_ago=1)
+    """Trashing a library sets one ``deleted_at`` and touches no recording rows, so nothing inside
+    one carries an expiry of its own. Matching only on the recording's own ``deleted_at`` left the
+    library holding rows for ever, and ``INT-1`` counted down to a purge that could not arrive."""
+    uuid = _trashed(database, db_settings, days_ago=40, trash_the_recording=False)
     with database.write_session() as session:
         library = session.execute(select(Library).where(Library.is_personal == 0)).scalar_one()
         library.deleted_at = instant_after(timedelta(days=-40), since=utc_now())
-        uuid = library.uuid
+        library_uuid = library.uuid
     _purge(database, db_settings)
     with database.read_session() as session:
-        assert session.execute(select(Library).where(Library.uuid == uuid)).first() is not None
+        assert session.execute(select(Audio).where(Audio.uuid == uuid)).first() is None
+        assert session.execute(select(Library).where(Library.uuid == library_uuid)).first() is None
+    assert not storage.recording_dir(db_settings.resolved_storage_dir, uuid).exists()
+
+
+def test_a_library_inside_its_retention_keeps_everything_in_it(
+    database: Database, db_settings: Settings
+) -> None:
+    """The days before it runs are the whole point of a trash, and trashing a library is the one
+    gesture that puts a recording somebody never trashed on a countdown."""
+    uuid = _trashed(database, db_settings, days_ago=40, trash_the_recording=False)
+    with database.write_session() as session:
+        library = session.execute(select(Library).where(Library.is_personal == 0)).scalar_one()
+        library.deleted_at = instant_after(timedelta(days=-5), since=utc_now())
+        library_uuid = library.uuid
+    _purge(database, db_settings)
+    with database.read_session() as session:
+        assert session.execute(select(Audio).where(Audio.uuid == uuid)).first() is not None
+        assert (
+            session.execute(select(Library).where(Library.uuid == library_uuid)).first() is not None
+        )
 
 
 def test_the_purge_is_scheduled_once_a_day_and_not_once_a_tick(

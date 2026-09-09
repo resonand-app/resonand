@@ -22,7 +22,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from sqlalchemy import delete, select
+from sqlalchemy import and_, delete, or_, select
 from sqlalchemy.orm import Session
 
 from sonarium.core.time import instant_after, now_instant, utc_now
@@ -65,13 +65,27 @@ def due_before(retention_days: int) -> str:
 def expired_recordings(session: Session, retention_days: int) -> list[Audio]:
     """Recordings whose retention period has run out.
 
-    Trashed recordings inside a trashed library are included: the library going was the user's
-    decision about everything in it.
+    **A trashed library expires everything inside it, trashed separately or not.** Trashing a
+    library sets one ``deleted_at`` and touches no recording rows, which is what makes restoring
+    it one line -- so matching on the recording's own ``deleted_at`` alone found nothing in it,
+    ``expired_libraries`` then found the library still holding rows, and a trashed library was
+    kept for ever while ``INT-1`` counted down to a purge that could not arrive.
+
+    Either instant expiring is enough. A recording trashed before its library reaches the end of
+    its own retention first, and a library trashed before its recordings takes them with it: the
+    library going was the decision about everything in it.
     """
     cutoff = due_before(retention_days)
     return list(
         session.execute(
-            select(Audio).where(Audio.deleted_at.is_not(None), Audio.deleted_at < cutoff)
+            select(Audio)
+            .join(Library, Library.id == Audio.library_id)
+            .where(
+                or_(
+                    and_(Audio.deleted_at.is_not(None), Audio.deleted_at < cutoff),
+                    and_(Library.deleted_at.is_not(None), Library.deleted_at < cutoff),
+                )
+            )
         )
         .scalars()
         .all()
