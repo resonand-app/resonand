@@ -1,0 +1,61 @@
+{
+  "title": "Settings",
+  "meta": "Your account and this instance",
+  "sections": {
+    "label": "Settings sections",
+    "account": "Account",
+    "sessions": "Sessions",
+    "appearance": "Appearance",
+    "administration": "Administration"
+  },
+  "account": {
+    "identity": "Who you are",
+    "displayName": "Display name",
+    "email": "Email address",
+    "noAvatar": "Sonarium stores no pictures of you, and fetches none from anywhere else.",
+    "saved": "Saved",
+    "password": "Password",
+    "passwordIntro": "Changing it signs you out everywhere else.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "minimum": "At least {{count}} characters.",
+    "change": "Change password",
+    "changed": "Your password has been changed. Every other sign-in has ended.",
+    "wrongPassword": "That is not your current password."
+  },
+  "sessions": {
+    "title": "Where you are signed in",
+    "intro": "Every device holding a sign-in for this account.",
+    "current": "This device",
+    "unknownDevice": "Unrecognised device",
+    "started": "Signed in {{when}}",
+    "lastSeen": "Last used {{when}}",
+    "expires": "Expires {{when}}",
+    "revoke": "Sign out",
+    "revokeNamed": "Sign out {{device}}",
+    "revokeOthers": "Sign out everywhere else",
+    "revokeOthersConfirm": "Sign out of every device except this one?",
+    "revokeOthersBody_one": "{{count}} other sign-in ends. Nothing is deleted, and you stay signed in here.",
+    "revokeOthersBody_other": "{{count}} other sign-ins end. Nothing is deleted, and you stay signed in here.",
+    "loading": "Reading your sign-ins",
+    "error": "Your sign-ins could not be read."
+  },
+  "appearance": {
+    "theme": "Theme",
+    "themeHint": "Saved on this device, because it is a property of the screen you are looking at.",
+    "themeChoice": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Follow the system"
+    },
+    "language": "Language",
+    "languageHint": "English is the only language this version speaks. It is saved to your account.",
+    "languages": {
+      "en": "English",
+      "pseudo": "Pseudo-English (development)"
+    }
+  },
+  "administration": {
+    "tabHint": "You are an administrator of this instance."
+  }
+}

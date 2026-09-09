@@ -313,6 +313,29 @@ function fresh(): Archive {
         user_agent: 'Firefox on Linux',
         is_current: true,
       },
+      // A second device, so `UI-20c`'s "sign out everywhere else" has something to do -- and a
+      // third with no user agent at all, which is the state the panel must show rather than
+      // guess at. A fixture with one session could not tell either apart from the other.
+      {
+        id: 2,
+        created_at: '2026-03-01T19:12:00Z',
+        last_seen_at: '2026-03-11T22:40:00Z',
+        expires_at: '2026-03-31T19:12:00Z',
+        revoked_at: null,
+        ip: '10.0.0.4',
+        user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_3 like Mac OS X) AppleWebKit/605.1.15',
+        is_current: false,
+      },
+      {
+        id: 3,
+        created_at: '2026-02-20T07:05:00Z',
+        last_seen_at: '2026-02-20T07:06:00Z',
+        expires_at: '2026-03-22T07:05:00Z',
+        revoked_at: null,
+        ip: null,
+        user_agent: null,
+        is_current: false,
+      },
     ],
     jobs: [
       {
