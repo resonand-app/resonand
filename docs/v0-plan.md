@@ -552,6 +552,32 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *Found while building `UI-15`: §6 assumed the job was readable and no task made it so, which
       is why the identifier comes after `API-16` rather than beside `API-11`.*
 
+- [ ] **API-18** · **The permission vocabulary, so the interface can describe a level nobody
+      holds.** `level_description` is sent on a `ShareSummary`, which means the API describes the
+      levels **in use** rather than the levels that exist: a library shared with one person at
+      `edit` carries that one sentence and no other. `UI-34k`'s whole design is that the selector
+      renders the API's wording rather than a copy of it -- so at the moment somebody chooses what
+      another person may do, the two options they are not on have nothing to show.
+      Add the grantable levels and their descriptions to `GET /instance`, beside the other facts
+      about the instance that every view reads rather than hard-codes, from
+      `sonarium.core.levels.GRANTABLE` and `DESCRIPTIONS`:
+
+      ```
+      levels  [ {"level": 10, "description": "Can read: ..."}, ... ]   READ, EDIT, MANAGE
+      ```
+
+      **Owner is not in it.** It is read off `library.owner_id`, a `CHECK` refuses a share row
+      carrying it, and an option nobody can ever pick is one `UI-34c` says not to draw.
+      `/instance` is answered without a session, and none of this is a secret: it is the product's
+      own description of what sharing means.
+      *Done when:* `UI-17c`'s level selector renders three sentences with one share in the
+      library, and the interface has no copy of the wording left in it. ⇢ API-14, DAT-1 🧪
+      *Found while building `UI-17c`: §6 listed nine gaps and this was not one of them, because
+      the panel reads correctly for the level somebody already has -- it is the two they might
+      change to that are blank. The interface ships a short name in the gap and says so in the
+      component, which is a label rather than a second copy of the sentence and is exactly the
+      drift `UI-34k` exists to prevent.*
+
 ---
 
 ## Phase 3 · Four parallel tracks
