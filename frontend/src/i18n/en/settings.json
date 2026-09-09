@@ -124,5 +124,30 @@
       "title": "Everything asked for has been done",
       "body": "Nothing is waiting, running or failed."
     }
+  },
+  "status": {
+    "title": "System status",
+    "loading": "Reading the instance",
+    "version": "Version",
+    "revision": "Database revision",
+    "unknownRevision": "Unknown",
+    "recordings": "Recordings",
+    "trashed": "In the trash",
+    "libraries": "Libraries",
+    "duration": "Total audio",
+    "originals": "Originals",
+    "derived": "Derived files",
+    "database": "Database",
+    "free": "Free space",
+    "unknownFree": "Not reported",
+    "retention": "Trash retention",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "mismatch": {
+      "title": "The database is not where this build expects it",
+      "body": "Writes may fail or lose data until the migrations have run. Run them, or go back to the image that matches this database.",
+      "at": "Database is at",
+      "expected": "This build expects"
+    }
   }
 }

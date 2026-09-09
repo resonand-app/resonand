@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Provider } from './Provider';
 import { Queue } from './Queue';
+import { SystemStatus } from './SystemStatus';
 import { Users } from './Users';
 
 export function Administration() {
@@ -68,6 +69,7 @@ export function Administration() {
       <Users />
       <Provider />
       <Queue />
+      <SystemStatus />
     </section>
   );
 }
