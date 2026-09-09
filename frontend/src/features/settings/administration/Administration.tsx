@@ -19,6 +19,7 @@
 
 import { useTranslation } from 'react-i18next';
 
+import { Provider } from './Provider';
 import { Users } from './Users';
 
 export function Administration() {
@@ -64,6 +65,7 @@ export function Administration() {
         </p>
       </header>
       <Users />
+      <Provider />
     </section>
   );
 }

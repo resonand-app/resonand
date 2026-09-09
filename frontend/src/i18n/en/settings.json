@@ -78,5 +78,26 @@
     "create": "Create account",
     "cancel": "Cancel",
     "createFailed": "The account could not be created."
+  },
+  "provider": {
+    "title": "Transcription",
+    "intro": "Where recordings are sent to be transcribed, and whether that is off this machine.",
+    "loading": "Reading the provider",
+    "name": "Provider",
+    "model": "Model",
+    "baseUrl": "Address",
+    "noBaseUrl": "Not set",
+    "language": "Default language",
+    "detected": "Detected per recording",
+    "credential": "Credential",
+    "credentialSet": "Set",
+    "credentialUnset": "Not set",
+    "test": "Test the connection",
+    "testing": "Contacting it",
+    "untested": "Not contacted yet",
+    "reachable": "It answered",
+    "unreachable": "It did not answer",
+    "neverAutomatic": "Nothing is contacted until you press this. Opening this page reaches out to nobody.",
+    "unconfigured": "No provider is set up, so nothing on this instance can be transcribed. Set SONARIUM_TRANSCRIPTION_* in the environment and restart."
   }
 }

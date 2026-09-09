@@ -70,3 +70,46 @@ export function useUserActions(): UserActions {
     }),
   };
 }
+
+/**
+ * The provider, as configured and — only if asked — as reached (`INT-3c`).
+ *
+ * **`reachable` stays `null` until somebody presses the test.** Reading this is a plain read of
+ * what the instance holds; nothing here contacts a third party, because a page that quietly
+ * reached out to draw a green dot would be a smaller version of the violation principle 2 exists
+ * to prevent.
+ */
+export function useProvider(): UseQueryResult<Schemas['ProviderStatus']> {
+  return useQuery({
+    queryKey: keys.provider(),
+    queryFn: () => get('/api/admin/transcription'),
+  });
+}
+
+/**
+ * Contact the provider, because somebody asked (`INT-3c`).
+ *
+ * A mutation and not a query, which is the whole design: a query would be free to run on mount,
+ * on a refocus, or on a retry after a network blip, and every one of those would be the instance
+ * reaching out to a third party without anybody having asked it to. A mutation only fires when
+ * something is pressed.
+ */
+export function useTestProvider(): UseMutationResult<Schemas['ProviderStatus'], unknown, void> {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () => post('/api/admin/transcription/test'),
+    onSuccess: (answer) => {
+      // The answer is the newest truth about the provider, so it replaces the cached one rather
+      // than invalidating it -- refetching would ask again and get `reachable: null` back.
+      client.setQueryData(keys.provider(), answer);
+    },
+  });
+}
+
+/** What the instance itself reports: versions, storage, the job counts, the revision (`INT-3e`). */
+export function useSystemStatus(): UseQueryResult<Schemas['SystemStatus']> {
+  return useQuery({
+    queryKey: keys.systemStatus(),
+    queryFn: () => get('/api/admin/status'),
+  });
+}

@@ -604,7 +604,8 @@ export const handlers: HttpHandler[] = [
     }),
   ),
   http.get('/api/admin/transcription', () => HttpResponse.json(providerStatus())),
-  http.post('/api/admin/transcription/test', () => HttpResponse.json(providerStatus())),
+  // The one call in administration that contacts anything, and only because it was asked to.
+  http.post('/api/admin/transcription/test', () => HttpResponse.json(providerStatus(true))),
   http.get('/api/admin/users', () => HttpResponse.json(archive.users)),
   http.post('/api/admin/users', async ({ request }) => {
     const body = (await request.json()) as Schemas['CreateAccount'];
@@ -635,7 +636,16 @@ export const handlers: HttpHandler[] = [
   }),
 ];
 
-function providerStatus(): Schemas['ProviderStatus'] {
+/**
+ * The provider as the instance holds it (`INT-3c`).
+ *
+ * **`reachable` is `null` unless somebody ran the test**, which is the endpoint's own contract and
+ * not a detail: nothing contacts a third party because a page was opened, so a plain read cannot
+ * know whether the provider answers. A mock that returned `true` here would make the one state
+ * `INT-3c` exists to draw -- untested -- unreachable in a test, and the page would look right
+ * while proving nothing.
+ */
+function providerStatus(reachable: boolean | null = null): Schemas['ProviderStatus'] {
   return {
     provider: archive.destination.provider,
     base_url: 'http://whisper:8000/v1',
@@ -643,8 +653,8 @@ function providerStatus(): Schemas['ProviderStatus'] {
     default_language: null,
     configured: archive.destination.configured,
     has_credential: false,
-    reachable: true,
-    detail: 'Answering on whisper:8000.',
+    reachable,
+    detail: reachable === null ? '' : 'Answering on whisper:8000.',
   };
 }
 
