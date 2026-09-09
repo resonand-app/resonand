@@ -23,10 +23,10 @@ import { LibrarySettingsView } from '@/features/library-settings/LibrarySettings
 import { RecordingView } from '@/features/recording/RecordingView';
 import { SearchView } from '@/features/search/SearchView';
 import { SettingsView } from '@/features/settings/SettingsView';
+import { TrashView } from '@/features/trash/TrashView';
 import { SignInView } from '@/features/sign-in/SignInView';
 
 import { AppShell } from './AppShell';
-import { NotBuiltYet } from './NotBuiltYet';
 import { NotFound } from './NotFound';
 import { RequireSession } from './RequireSession';
 import { SessionExpiry } from './SessionExpiry';
@@ -70,7 +70,7 @@ function Archive() {
             <Route path={routes.librarySettings} element={<LibrarySettingsView />} />
             <Route path={routes.recording} element={<RecordingView />} />
             <Route path={routes.search} element={<SearchView />} />
-            <Route path={routes.trash} element={<NotBuiltYet view="V9 - Trash" />} />
+            <Route path={routes.trash} element={<TrashView />} />
             <Route path={routes.settings} element={<SettingsView />} />
           </Route>
         </Route>

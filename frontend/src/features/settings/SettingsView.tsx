@@ -24,6 +24,7 @@ import type { Tab } from '@/design-system';
 
 import { AccountPanel } from './AccountPanel';
 import { AppearancePanel } from './AppearancePanel';
+import { Administration } from './administration/Administration';
 import { SessionsPanel } from './SessionsPanel';
 import { SECTIONS, SECTION_PARAM, sectionIn } from './sections';
 import type { Section } from './sections';
@@ -91,34 +92,4 @@ function Panel({ section }: { section: Section }) {
     case 'administration':
       return <Administration />;
   }
-}
-
-/** Scaffolding until `INT-3a` gives Administration its chrome. */
-function Administration() {
-  const { t } = useTranslation('settings');
-  const { t: shell } = useTranslation('shell');
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <p
-        style={{
-          margin: 0,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--type-ui-size)',
-          color: 'var(--text-2)',
-        }}
-      >
-        {t('administration.tabHint')}
-      </p>
-      <p
-        style={{
-          margin: 0,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--type-ui-size-sm)',
-          color: 'var(--text-3)',
-        }}
-      >
-        {shell('notBuilt.detail')}
-      </p>
-    </div>
-  );
 }

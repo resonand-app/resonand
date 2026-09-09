@@ -56,6 +56,98 @@
     }
   },
   "administration": {
-    "tabHint": "You are an administrator of this instance."
+    "title": "This instance",
+    "intro": "These settings belong to the whole instance and to everybody with an account on it, not to you."
+  },
+  "users": {
+    "title": "Accounts",
+    "intro": "Accounts are made here, by hand, for people you know. There is no sign-up page.",
+    "loading": "Reading the accounts",
+    "administrator": "Administrator",
+    "disabledSince": "Disabled {{when}}",
+    "disable": "Disable",
+    "enable": "Re-enable",
+    "delete": "Delete",
+    "deleteNamed": "Delete the account for {{name}}",
+    "add": "New account",
+    "name": "Display name",
+    "email": "Email address",
+    "password": "Password",
+    "makeAdmin": "Can run this instance",
+    "makeAdminHint": "Administrators see this section and everything in it.",
+    "create": "Create account",
+    "cancel": "Cancel",
+    "createFailed": "The account could not be created."
+  },
+  "provider": {
+    "title": "Transcription",
+    "intro": "Where recordings are sent to be transcribed, and whether that is off this machine.",
+    "loading": "Reading the provider",
+    "name": "Provider",
+    "model": "Model",
+    "baseUrl": "Address",
+    "noBaseUrl": "Not set",
+    "language": "Default language",
+    "detected": "Detected per recording",
+    "credential": "Credential",
+    "credentialSet": "Set",
+    "credentialUnset": "Not set",
+    "test": "Test the connection",
+    "testing": "Contacting it",
+    "untested": "Not contacted yet",
+    "reachable": "It answered",
+    "unreachable": "It did not answer",
+    "neverAutomatic": "Nothing is contacted until you press this. Opening this page reaches out to nobody.",
+    "unconfigured": "No provider is set up, so nothing on this instance can be transcribed. Set SONARIUM_TRANSCRIPTION_* in the environment and restart."
+  },
+  "queue": {
+    "title": "Background work",
+    "intro": "Probing, waveforms, transcoding and transcription. Newest first, because the reason to look is that something just went wrong.",
+    "loading": "Reading the queue",
+    "all": "Everything",
+    "state": {
+      "failed": "Failed",
+      "running": "Running",
+      "pending": "Waiting",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "attempts_one": "{{count}} attempt",
+    "attempts_other": "{{count}} attempts",
+    "nextAttempt": "Next attempt {{when}}",
+    "retry": "Retry",
+    "retryNamed": "Retry the {{kind}} job {{id}}",
+    "cancel": "Cancel",
+    "cancelNamed": "Cancel the {{kind}} job {{id}}",
+    "tooMany": "Showing the newest {{shown}} of {{total}}. The counts above are the whole queue.",
+    "empty": {
+      "title": "Everything asked for has been done",
+      "body": "Nothing is waiting, running or failed."
+    }
+  },
+  "status": {
+    "title": "System status",
+    "loading": "Reading the instance",
+    "version": "Version",
+    "revision": "Database revision",
+    "unknownRevision": "Unknown",
+    "recordings": "Recordings",
+    "trashed": "In the trash",
+    "libraries": "Libraries",
+    "duration": "Total audio",
+    "originals": "Originals",
+    "derived": "Derived files",
+    "database": "Database",
+    "free": "Free space",
+    "unknownFree": "Not reported",
+    "retention": "Trash retention",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "mismatch": {
+      "title": "The database is not where this build expects it",
+      "body": "Writes may fail or lose data until the migrations have run. Run them, or go back to the image that matches this database.",
+      "at": "Database is at",
+      "expected": "This build expects"
+    }
   }
 }

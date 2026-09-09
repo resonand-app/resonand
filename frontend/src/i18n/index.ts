@@ -31,6 +31,7 @@ import search from './en/search.json';
 import settings from './en/settings.json';
 import shell from './en/shell.json';
 import signIn from './en/signIn.json';
+import trash from './en/trash.json';
 import upload from './en/upload.json';
 import { pseudoBundle } from './pseudo';
 
@@ -57,6 +58,7 @@ export const NAMESPACES = [
   'settings',
   'shell',
   'signIn',
+  'trash',
   'upload',
 ] as const;
 
@@ -72,6 +74,7 @@ const english = {
   settings,
   shell,
   signIn,
+  trash,
   upload,
 };
 

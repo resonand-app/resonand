@@ -1,0 +1,37 @@
+{
+  "title": "Trash",
+  "meta": "Deleted recordings and libraries",
+  "retention": "Everything here is kept for {{count}} days, then destroyed.",
+  "type": {
+    "library": "Library",
+    "recording": "Recording"
+  },
+  "left_one": "{{count}} day left",
+  "left_other": "{{count}} days left",
+  "lastDay": "Last day",
+  "goesToday": "Destroyed today",
+  "contains_one": "{{count}} recording goes with it",
+  "contains_other": "{{count}} recordings go with it",
+  "alsoTrashed_one": "{{count}} recording in it was deleted separately",
+  "alsoTrashed_other": "{{count}} recordings in it were deleted separately",
+  "inTrashedLibrary": "Its library is in the trash too. Restoring this on its own puts it back somewhere you would not see it.",
+  "restoreBoth": "Restore the library too",
+  "restore": "Restore",
+  "restoreNamed": "Restore {{name}}",
+  "deleteNow": "Delete now",
+  "deleteNamed": "Delete {{name}} permanently",
+  "destroys": {
+    "recording": "this recording, its original audio and its transcript",
+    "library_zero": "this library and everything in it",
+    "library_one": "{{count}} recording, {{duration}} of audio, and their transcripts",
+    "library_other": "{{count}} recordings, {{duration}} of audio, and their transcripts"
+  },
+  "empty": {
+    "title": "Nothing is waiting to be deleted",
+    "body": "Deleting a recording or a library puts it here first, and it stays for {{count}} days before anything is destroyed."
+  },
+  "error": {
+    "title": "The trash could not be read"
+  },
+  "partial": "Showing the first {{count}}. There is more in the trash than this page holds."
+}
