@@ -1,0 +1,48 @@
+{
+  "dialog": {
+    "title": "Upload audio",
+    "drop": "Drop files here, or choose them",
+    "limit": "Up to {{size}} each.",
+    "formats": "Accepted: {{formats}}",
+    "video": "Video files are kept whole and played as audio, never as video.",
+    "chosen": "Files to upload",
+    "asAudio": "video, played as audio",
+    "refused_one": "{{names}} is not a format this archive ingests.",
+    "refused_other": "{{names}} are not formats this archive ingests.",
+    "submit_zero": "Upload",
+    "submit_one": "Upload {{count}} file",
+    "submit_other": "Upload {{count}} files",
+    "library": "Into which library",
+    "noLibrary": "No library you can add to",
+    "category": "Category",
+    "noCategory": "No category",
+    "transcribe": "Transcribe when the upload finishes"
+  },
+  "duplicate": {
+    "here": "This exact file is already here, as \"{{name}}\".",
+    "inTrash": "This exact file is in the trash, as \"{{name}}\". Restoring that one keeps its title, its notes and its transcript.",
+    "restore": "Restore that one instead",
+    "anyway": "Upload it anyway",
+    "skip": "Leave it out"
+  },
+  "tray": {
+    "summary": "{{done}} of {{total}} uploaded",
+    "files": "Files being uploaded",
+    "add": "Choose files",
+    "nothing": "Nothing is uploading. What you start here keeps going while you use the rest of the app.",
+    "status": {
+      "waiting": "Waiting",
+      "checking": "Checking",
+      "duplicate": "Already here",
+      "uploading": "Uploading",
+      "done": "Uploaded",
+      "skipped": "Left out",
+      "failed": "Did not upload",
+      "too-large": "Too large"
+    },
+    "failed_one": "{{count}} failed",
+    "failed_other": "{{count}} failed",
+    "tooLarge": "{{size}} is over what this instance accepts, which is {{limit}}.",
+    "again": "Upload it again"
+  }
+}

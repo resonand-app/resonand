@@ -1,0 +1,71 @@
+{
+  "title": "Library settings",
+  "identity": {
+    "name": "Name",
+    "description": "Description",
+    "noDescription": "No description",
+    "colour": "Colour",
+    "colourReaches": "The colour appears in the sidebar straight away."
+  },
+  "missing": {
+    "title": "This library is not here",
+    "body": "It may have been deleted, or it may never have been yours. This instance does not say which."
+  },
+  "error": {
+    "title": "That did not work"
+  },
+  "categories": {
+    "title": "Categories",
+    "none": "This library has no categories.",
+    "first": "No categories yet. The first one goes here.",
+    "add": "New category",
+    "create": "Add",
+    "atRoot": "At the top level",
+    "parentOf": "What {{name}} sits under",
+    "up": "Move {{name}} up",
+    "down": "Move {{name}} down",
+    "remove": "Delete {{name}}",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody_zero": "Nothing is in it. Deleting a category never deletes recordings.",
+    "deleteBody_one": "{{count}} recording loses its category. It is not deleted.",
+    "deleteBody_other": "{{count}} recordings lose their category. They are not deleted.",
+    "deleteWithChildren_zero": "Its {{children}} sub-categories go with it. Nothing is in them, and deleting a category never deletes recordings.",
+    "deleteWithChildren_one": "Its {{children}} sub-categories go with it, and {{count}} recording loses its category. No recording is deleted.",
+    "deleteWithChildren_other": "Its {{children}} sub-categories go with it, and {{count}} recordings lose their category. No recording is deleted.",
+    "deleteConfirm": "Delete the category"
+  },
+  "shares": {
+    "title": "Who has access",
+    "none": "Only you can see this library.",
+    "grantedBy": "Shared by {{who}}, {{when}}",
+    "grantedOn": "Shared {{when}}",
+    "whatTheyCanDo": "What {{name}} can do",
+    "revoke": "Remove {{name}}",
+    "revokeTitle": "Remove {{name}}?",
+    "revokeBody_one": "{{name}} loses access to the {{count}} recording in {{library}}.",
+    "revokeBody_other": "{{name}} loses access to all {{count}} recordings in {{library}}.",
+    "revokeConfirm": "Remove their access",
+    "throughThisLibrary": "Access through this library. A recording moved here from somewhere else can carry access of its own, which is shown on the recording.",
+    "personal": "Your personal library cannot be shared. It is where a recording goes when nobody chose, so it stays yours.",
+    "readOnly": "You can add to this library but not share it onwards. Only somebody who can manage it can change who has access."
+  },
+  "add": {
+    "title": "Give somebody access",
+    "email": "Their email address",
+    "notADirectory": "The whole address, exactly. Sonarium does not search for people, and will not tell you who else has an account here.",
+    "nobody": "No account here has that address.",
+    "already": "{{name}} already has access. Change their level above.",
+    "whatTheyCanDo": "What they will be able to do",
+    "share": "Share with {{name}}"
+  },
+  "trash": {
+    "action": "Move this library to the trash",
+    "title": "Move {{name}} to the trash?",
+    "body_zero": "Nothing is in it.",
+    "body_one": "Its {{count}} recording goes with it.",
+    "body_other": "Its {{count}} recordings go with it.",
+    "window_one": "You can put it back for {{count}} day.",
+    "window_other": "You can put it back for {{count}} days.",
+    "confirm": "Move it to the trash"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "title": "Search",
+  "field": "Search everything you have recorded",
+  "quick": {
+    "seeAll_one": "All {{count}} result for \"{{query}}\"",
+    "seeAll_other": "All {{count}} results for \"{{query}}\""
+  },
+  "found": {
+    "matches_one": "{{count}} match",
+    "matches_other": "{{count}} matches",
+    "onThisPage_one": "{{count}} match on this page",
+    "onThisPage_other": "{{count}} matches on this page"
+  },
+  "pages": {
+    "label": "Pages of results",
+    "previous": "Previous",
+    "next": "Next",
+    "showing": "{{from}}-{{to}} of {{total}}"
+  },
+  "filters": {
+    "title": "Filters",
+    "open": "Filter",
+    "someOn_one": "{{count}} filter",
+    "someOn_other": "{{count}} filters",
+    "clear": "Clear the filters",
+    "library": "Which library",
+    "anyLibrary": "Any library",
+    "ranges": "When and how long",
+    "rangesOn_one": "When and how long ({{count}})",
+    "rangesOn_other": "When and how long ({{count}})",
+    "recordedFrom": "Recorded from",
+    "recordedTo": "Recorded to",
+    "longerThan": "Longer than (min)",
+    "shorterThan": "Shorter than (min)"
+  },
+  "states": {
+    "resting": {
+      "title": "Look inside everything you have recorded",
+      "body": "Transcripts, titles, notes and tags. Type a word and the recordings that say it come back, with the moment it was said.",
+      "size_one": "{{formatted}} recording to look through.",
+      "size_other": "{{formatted}} recordings to look through."
+    },
+    "none": {
+      "title": "Nothing matched \"{{query}}\"",
+      "body": "No recording you can read says it, in its transcript or in its details."
+    },
+    "failed": "The search did not run",
+    "unreachable": "The instance could not be reached"
+  }
+}

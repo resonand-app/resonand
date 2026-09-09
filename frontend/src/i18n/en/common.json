@@ -23,7 +23,8 @@
     "owner": "Owner"
   },
   "search": {
-    "more": "+{{count}} more in this recording"
+    "more": "+{{count}} more in this recording",
+    "inDetails": "In the details"
   },
   "selection": {
     "count": "{{count}} selected",

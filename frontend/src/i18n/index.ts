@@ -23,10 +23,13 @@ import { initReactI18next } from 'react-i18next';
 import common from './en/common.json';
 import libraries from './en/libraries.json';
 import library from './en/library.json';
+import librarySettings from './en/librarySettings.json';
 import move from './en/move.json';
 import player from './en/player.json';
 import recording from './en/recording.json';
+import search from './en/search.json';
 import shell from './en/shell.json';
+import upload from './en/upload.json';
 import { pseudoBundle } from './pseudo';
 
 /** The language every string is written in, and the one every other one is checked against. */
@@ -44,13 +47,27 @@ export const NAMESPACES = [
   'common',
   'libraries',
   'library',
+  'librarySettings',
   'move',
   'player',
   'recording',
+  'search',
   'shell',
+  'upload',
 ] as const;
 
-const english = { common, libraries, library, move, player, recording, shell };
+const english = {
+  common,
+  libraries,
+  library,
+  librarySettings,
+  move,
+  player,
+  recording,
+  search,
+  shell,
+  upload,
+};
 
 export const resources = {
   [BASE]: english,

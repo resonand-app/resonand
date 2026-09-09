@@ -30,6 +30,19 @@ export function destinationTo(id: string): string {
   return toLibrary(id);
 }
 
+/**
+ * The library a path is inside, if it is inside one.
+ *
+ * Which is where an upload started from that screen goes by default (`UI-18b`). A recording's own
+ * page does not answer it: the library it belongs to is on the recording, not in the URL, and
+ * fetching one to find out where an upload should go would be a request made for a default.
+ */
+export function libraryIn(pathname: string): string | undefined {
+  if (!pathname.startsWith('/library/')) return undefined;
+  const uuid = pathname.split('/')[2];
+  return uuid === undefined || uuid === '' ? undefined : decodeURIComponent(uuid);
+}
+
 /** Initials, because there are no avatar images anywhere in the product. */
 export function initialsOf(name: string | undefined): string {
   if (!name) return '';

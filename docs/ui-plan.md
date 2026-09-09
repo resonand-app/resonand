@@ -844,9 +844,15 @@ The reason the product exists: two surfaces over one endpoint.
       they were all is the one thing this screen must not do. ⇢ UI-16a, UI-35b
 - [ ] **UI-16c** · The filters — library, category, date range, duration range, tags — and the four
       state toggles, now that all four are answerable. ⇢ UI-35g, JOB-11b
-- [ ] **UI-16d** · Results grouped under the recording, **three matches shown and `+N more`
-      expanding**, each match carrying the fragment the database already marked and its timestamp.
+- [ ] **UI-16d** · Results grouped under the recording, **three matches shown and `+N more`**,
+      each match carrying the fragment the database already marked and its timestamp.
       ⇢ UI-35j, JOB-10
+      **`+N more` opens the recording rather than expanding here.** This entry asked for an
+      expansion and the API settles it the other way: `GET /search` groups the matches and sends
+      the best three with `total_matches` beside them, so the fourth match is not on the screen to
+      be revealed and expanding would need an endpoint returning every match for one recording.
+      There should not be one — past three the question has stopped being *which recording* and
+      started being *where in it*, which is the transcript's screen. `UI-35j` already said so.
 - [ ] **UI-16e** · 🔒 **Play from a match without leaving the results.** Navigating to the detail
       view would defeat the screen. 🧪 the route does not change ⇢ UI-16d, UI-5a
 - [ ] **UI-16f** · A metadata match has no timestamp and no play-from-here, and **needs a form that
@@ -883,7 +889,15 @@ The reason the product exists: two surfaces over one endpoint.
       those recordings lose their category and are not deleted. ⇢ UI-17a, UI-34c
 - [ ] **UI-17c** · Who has access: each grant with the person, the level, who granted it and when;
       `LevelSelector` rendering the API's own wording; and a revoke confirm that says what the
-      person loses. ⇢ UI-34k, API-8
+      person loses. ⇢ UI-34k, API-8, API-18
+      **A level nobody in this library holds has no wording to render**, because
+      `level_description` arrives attached to a grant: the API describes the levels in use rather
+      than the vocabulary. Until `API-18` answers it once, the selector falls back to the
+      interface's own short name — a label, not a second copy of the API's sentence — and every
+      description seen on screen is collected, so a library that uses a level explains it.
+      *`granted_by` is an id with no name beside it.* The only people this screen can name are the
+      owner, the signed-in account and the grantees, so when it cannot, the line says *when*
+      instead of inventing a *who*: a wrong name on a permission is worse than no name.
 - [ ] **UI-17d** · Add a person through the narrow lookup — a full email address, at most one
       result. It is not a directory, and the interface must not look like one. ⇢ UI-17c, API-15
 - [ ] **UI-17e** · The three variants: the inherited-versus-individual split kept visible even

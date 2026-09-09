@@ -57,6 +57,10 @@ const NOT_A_SURFACE: { file: string; why: string }[] = [
     file: 'features/recording/transcription.ts',
     why: 'The typed call and the hook around it. It renders nothing and has no control to put a notice beside.',
   },
+  {
+    file: 'features/upload/uploads.ts',
+    why: 'The upload queue. It draws nothing at all -- the switch that sets the flag is in UploadDialog, which shows the notice beside it, and this only carries the answer.',
+  },
 ];
 
 /** Every source file the application ships, tests aside. */

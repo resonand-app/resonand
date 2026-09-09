@@ -92,6 +92,8 @@ export interface Archive {
   jobs: Schemas['JobSummary'][];
   tags: Schemas['TagSuggestion'][];
   destination: Schemas['TranscriptionDestination'];
+  /** `GET /search/about`'s one sentence, in the words `recall_note()` writes it. */
+  recall: string;
 }
 
 export const PERSONAL = '11111111-1111-4111-8111-111111111111';
@@ -249,7 +251,10 @@ function fresh(): Archive {
         {
           grantee: MARTA,
           level: 20,
-          level_description: 'Can add recordings and edit their details.',
+          // The wording `sonarium.core.levels.DESCRIPTIONS` sends, colon and all: `LevelSelector`
+          // splits on it to draw the name and the sentence, and a fixture worded differently
+          // would test a split that never happens.
+          level_description: 'Can edit: change titles, categories and tags, but not share.',
           granted_by: GABRIEL.id,
           created_at: '2026-02-01T12:00:00Z',
         },
@@ -300,6 +305,10 @@ function fresh(): Archive {
       is_local: true,
       configured: true,
     },
+    recall:
+      'Search ignores accents and matches the start of the last word you type. It does not ' +
+      'know that words are related: searching for one form of a word will not find its other ' +
+      'forms.',
   };
 }
 

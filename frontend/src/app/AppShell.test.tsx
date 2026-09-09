@@ -130,12 +130,25 @@ describe('which destination is lit', () => {
 });
 
 describe('the top nav', () => {
-  it('takes a search to the search view, where the query lives in the URL', async () => {
+  it('offers the quick hits while it is typed into, and goes nowhere yet (`UI-16a`)', async () => {
+    // A keystroke is not a navigation: typing opens the dropdown and the address stays where it
+    // was, because a history entry per letter is a back button nobody can use.
     renderShell();
     const field = await screen.findByPlaceholderText('Search everything');
-    await userEvent.type(field, 'vermut');
+    await userEvent.type(field, 'Nadal');
+    // One recording in the archive is called that, and the see-all row counts honestly rather
+    // than saying "results" over a single one.
+    expect(await screen.findByText(/all 1 result for/i)).toBeInTheDocument();
+    expect(screen.getByTestId('where')).toHaveTextContent(routes.libraries);
+    expect(screen.getByTestId('where')).not.toHaveTextContent('q=');
+  });
+
+  it('leaves for the full results on Enter, carrying the query (`UI-16a`)', async () => {
+    renderShell();
+    const field = await screen.findByPlaceholderText('Search everything');
+    await userEvent.type(field, 'Nadal{Enter}');
     await waitFor(() => {
-      expect(screen.getByTestId('where')).toHaveTextContent('q=vermut');
+      expect(screen.getByTestId('where')).toHaveTextContent('q=Nadal');
     });
   });
 
