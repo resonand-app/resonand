@@ -8,6 +8,21 @@
     "appearance": "Appearance",
     "administration": "Administration"
   },
+  "account": {
+    "identity": "Who you are",
+    "displayName": "Display name",
+    "email": "Email address",
+    "noAvatar": "Sonarium stores no pictures of you, and fetches none from anywhere else.",
+    "saved": "Saved",
+    "password": "Password",
+    "passwordIntro": "Changing it signs you out everywhere else.",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "minimum": "At least {{count}} characters.",
+    "change": "Change password",
+    "changed": "Your password has been changed. Every other sign-in has ended.",
+    "wrongPassword": "That is not your current password."
+  },
   "administration": {
     "tabHint": "You are an administrator of this instance."
   }

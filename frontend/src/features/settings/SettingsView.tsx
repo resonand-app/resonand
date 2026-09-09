@@ -22,6 +22,7 @@ import { useSession } from '@/app/session';
 import { PageHeader, Tabs } from '@/design-system';
 import type { Tab } from '@/design-system';
 
+import { AccountPanel } from './AccountPanel';
 import { SECTIONS, SECTION_PARAM, sectionIn } from './sections';
 import type { Section } from './sections';
 
@@ -74,7 +75,7 @@ export function SettingsView() {
 /**
  * Whichever section is on screen.
  *
- * The three that are somebody's own settings arrive with `UI-20b`, `UI-20c` and `UI-20d`; the
+ * The two still to come arrive with `UI-20c` and `UI-20d`; the
  * fourth is `INT-3` and is a whole view of its own -- users, the provider, the queue and the
  * instance's own status. The tabs are this task, and they are drawn against the four sections
  * §V10 names rather than against however many happen to be built.
@@ -82,6 +83,7 @@ export function SettingsView() {
 function Panel({ section }: { section: Section }) {
   switch (section) {
     case 'account':
+      return <AccountPanel />;
     case 'sessions':
     case 'appearance':
       return null;
