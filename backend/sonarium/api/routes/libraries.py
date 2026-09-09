@@ -15,7 +15,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, status
 
 from sonarium.acl.query import require_library
-from sonarium.api.deps import CurrentCaller, ReadSession, WriteSession
+from sonarium.api.deps import (
+    ArchiveDatabase,
+    CurrentCaller,
+    InstanceSettings,
+    ReadSession,
+    WriteSession,
+)
 from sonarium.api.filters import RecordingFilters, RecordingSort
 from sonarium.api.pagination import Page, PageRequest, page_of, page_request
 from sonarium.api.presenters import (
@@ -41,7 +47,9 @@ from sonarium.core.levels import Level
 from sonarium.db import categories as category_repo
 from sonarium.db import libraries as library_repo
 from sonarium.db.audio import library_audio
+from sonarium.db.libraries import purge_library
 from sonarium.db.models import User
+from sonarium.media import storage
 
 router = APIRouter(prefix="/libraries", tags=["libraries"])
 
@@ -243,6 +251,28 @@ is where a thing went, not whether it was a library -- and the interface merges 
 client-side. Sitting them next to each other in the URL space is what makes that read as one
 thing.
 """
+
+
+@trash_router.delete("/trash/libraries/{library_uuid}", status_code=status.HTTP_204_NO_CONTENT)
+def purge_trashed_library(
+    library_uuid: str,
+    caller: CurrentCaller,
+    database: ArchiveDatabase,
+    settings: InstanceSettings,
+) -> None:
+    """Destroy one trashed library now, with everything in it (``API-19``).
+
+    It takes the recordings whether or not they were trashed separately, which is what trashing a
+    library already means: the retention purge expires everything inside one on the library's own
+    clock, so Delete now has to destroy the same set or it would leave behind exactly the rows
+    waiting a month would have taken. ``INT-1c``'s confirmation states that count first.
+
+    Its transaction is its own, for the reason the recording's purge gives.
+    """
+    with database.write_session() as session:
+        removed = purge_library(session, caller.id, library_uuid)
+    for audio_uuid in removed:
+        storage.delete_recording(settings.resolved_storage_dir, audio_uuid)
 
 
 @trash_router.get("/trash/libraries", response_model=Page[LibrarySummary])

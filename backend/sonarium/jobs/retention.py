@@ -22,11 +22,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from sqlalchemy import and_, delete, or_, select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from sonarium.core.time import instant_after, now_instant, utc_now
-from sonarium.db import search_index, sessions
+from sonarium.db import sessions
 from sonarium.db.models import Audio, Library
 from sonarium.jobs.queue import Work, enqueue
 
@@ -107,18 +107,6 @@ def expired_libraries(session: Session, retention_days: int) -> list[Library]:
         for library in candidates
         if session.execute(select(Audio.id).where(Audio.library_id == library.id)).first() is None
     ]
-
-
-def remove_recording(session: Session, audio: Audio) -> str:
-    """Delete one recording's row, returning the uuid whose files now have to go.
-
-    The caller deletes the files afterwards and outside this transaction. See the module note on
-    why that order is the safe one.
-    """
-    audio_uuid = audio.uuid
-    search_index.remove_audio(session, audio.id)
-    session.execute(delete(Audio).where(Audio.id == audio.id))
-    return audio_uuid
 
 
 def purge_sessions(session: Session) -> int:

@@ -22,6 +22,7 @@ from sqlalchemy.orm import Session
 from sonarium.core.config import Settings
 from sonarium.core.errors import NotFoundError
 from sonarium.db import search_index, transcripts
+from sonarium.db.audio import remove_recording
 from sonarium.db.engine import Database
 from sonarium.db.models import Audio
 from sonarium.db.transcripts import Origin, SegmentDraft
@@ -215,7 +216,7 @@ def handle_purge(work: Work, context: Context) -> None:
     days = context.settings.trash_retention_days
     with context.database.write_session() as session:
         uuids = [
-            retention.remove_recording(session, audio)
+            remove_recording(session, audio)
             for audio in retention.expired_recordings(session, days)
         ]
         libraries = retention.expired_libraries(session, days)

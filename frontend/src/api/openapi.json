@@ -4916,6 +4916,42 @@
         ]
       }
     },
+    "/api/trash/audio/{audio_uuid}": {
+      "delete": {
+        "description": "Destroy one trashed recording now, rather than waiting out its retention (``API-19``).\n\n**In the trash namespace and not a flag on the trashing verb.** Deleting from the trash is\nwhat permanent deletion is, and separating the paths means the irreversible call cannot be\nreached by getting a query parameter wrong on the reversible one.\n\nIt owns its transaction rather than taking :data:`WriteSession`, because the files go after\nthe commit and holding the instance's one write lock across a filesystem walk would stop every\nother writer for its duration (``REV-1``).",
+        "operationId": "purge_api_trash_audio__audio_uuid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
     "/api/trash/libraries": {
       "get": {
         "description": "Trashed libraries, closest to being purged first, mirroring ``/trash/audio``.\n\nIt takes level 30, the same as trashing one: somebody who could only read a library has no\nbusiness being told it is on its way out.",
@@ -4968,6 +5004,42 @@
           }
         },
         "summary": "List Trashed Libraries",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/trash/libraries/{library_uuid}": {
+      "delete": {
+        "description": "Destroy one trashed library now, with everything in it (``API-19``).\n\nIt takes the recordings whether or not they were trashed separately, which is what trashing a\nlibrary already means: the retention purge expires everything inside one on the library's own\nclock, so Delete now has to destroy the same set or it would leave behind exactly the rows\nwaiting a month would have taken. ``INT-1c``'s confirmation states that count first.\n\nIts transaction is its own, for the reason the recording's purge gives.",
+        "operationId": "purge_trashed_library_api_trash_libraries__library_uuid__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "library_uuid",
+            "required": true,
+            "schema": {
+              "title": "Library Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge Trashed Library",
         "tags": [
           "libraries"
         ]

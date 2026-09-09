@@ -530,6 +530,24 @@ export const handlers: HttpHandler[] = [
       ),
     );
   }),
+  // Permanent deletion, and only from the trash: something that is not in it answers 404 rather
+  // than 400, exactly as the endpoint does, so `INT-1c` cannot be tested against a refusal the
+  // instance never sends (`API-19`).
+  http.delete('/api/trash/audio/:audio_uuid', ({ params }) => {
+    const existing = archive.recordings.find((one) => one.uuid === params.audio_uuid);
+    if (!existing?.deleted_at) return NOT_FOUND();
+    archive.recordings = archive.recordings.filter((one) => one !== existing);
+    return new HttpResponse(null, { status: 204 });
+  }),
+  http.delete('/api/trash/libraries/:library_uuid', ({ params }) => {
+    const existing = archive.libraries.find((one) => one.uuid === params.library_uuid);
+    if (!existing?.deleted_at) return NOT_FOUND();
+    archive.libraries = archive.libraries.filter((one) => one !== existing);
+    // It takes the recordings with it, trashed separately or not, because that is what the
+    // endpoint does -- and a mock that left them would make the confirmation's count a lie.
+    archive.recordings = archive.recordings.filter((one) => one.library_uuid !== existing.uuid);
+    return new HttpResponse(null, { status: 204 });
+  }),
 
   // --- Where audio goes, and who may know -----------------------------------
 

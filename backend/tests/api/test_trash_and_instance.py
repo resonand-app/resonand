@@ -9,12 +9,17 @@ were the ones who could not be told.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import status
 from fastapi.testclient import TestClient
 from sonarium.core import formats
+from sonarium.core.config import Settings
 from sonarium.core.levels import Level
 from sonarium.db import libraries as library_repo
+from sonarium.db.audio import create_audio
 from sonarium.db.engine import Database
+from sonarium.media import storage
 
 from tests.api.conftest import sign_in
 
@@ -129,3 +134,139 @@ def test_the_instance_still_says_nothing_about_who_is_on_it(client: TestClient) 
         "accepted_extensions",
         "video_extensions",
     }
+
+
+# --- Emptying the trash now (``API-19``) ----------------------------------
+
+
+def _a_recording(
+    database: Database, accounts: dict[str, int], library_uuid: str, *, title: str = "Note"
+) -> str:
+    """A recording in a library, with a real file under it."""
+    with database.write_session() as session:
+        library = next(
+            row[0]
+            for row in library_repo.list_libraries(session, accounts["admin"])
+            if row[0].uuid == library_uuid
+        )
+        audio = create_audio(
+            session,
+            library_id=library.id,
+            uploaded_by=accounts["admin"],
+            storage_path="",
+            original_filename=f"{title}.m4a",
+            title=title,
+        )
+        return audio.uuid
+
+
+def _with_bytes(settings: Settings, audio_uuid: str) -> Path:
+    """Put a real original under a recording, so a purge has files to remove."""
+    path, _ = storage.store_original(
+        settings.resolved_storage_dir, audio_uuid, [b"bytes"], filename="note.m4a"
+    )
+    return path
+
+
+def test_a_trashed_recording_can_be_destroyed_now(
+    client: TestClient,
+    database: Database,
+    settings: Settings,
+    accounts: dict[str, int],
+    owner_library: str,
+) -> None:
+    """``INT-1c``: the trash is recoverable until somebody decides it is not."""
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    _with_bytes(settings, audio_uuid)
+    sign_in(client, "admin")
+    assert client.delete(f"/audio/{audio_uuid}").status_code == status.HTTP_204_NO_CONTENT
+    assert client.delete(f"/trash/audio/{audio_uuid}").status_code == status.HTTP_204_NO_CONTENT
+    assert client.get("/trash/audio").json()["total"] == 0
+    assert client.get(f"/audio/{audio_uuid}").status_code == status.HTTP_404_NOT_FOUND
+    assert not storage.recording_dir(settings.resolved_storage_dir, audio_uuid).exists()
+
+
+def test_a_recording_that_is_not_in_the_trash_cannot_be_destroyed(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """404 and not 400, because permanent deletion is reachable only from the screen that lists
+    what it would destroy -- and a bad request would confirm the recording exists (``DEC-14``)."""
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+    assert client.delete(f"/trash/audio/{audio_uuid}").status_code == status.HTTP_404_NOT_FOUND
+    assert client.get(f"/audio/{audio_uuid}").status_code == status.HTTP_200_OK
+
+
+def test_somebody_who_could_only_read_it_cannot_destroy_it(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """403 and not 404 here, which is the ACL's own rule rather than an exception to it: below
+    read the answer hides the recording, and above it a refusal is honest, because pretending
+    something somebody is looking at does not exist would be a confusing lie."""
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    with database.write_session() as session:
+        library_repo.share_library(
+            session,
+            accounts["admin"],
+            owner_library,
+            grantee_id=accounts["friend"],
+            level=Level.READ,
+        )
+    sign_in(client, "admin")
+    client.delete(f"/audio/{audio_uuid}")
+    client.delete("/auth/session")
+    sign_in(client, "friend")
+    assert client.delete(f"/trash/audio/{audio_uuid}").status_code == status.HTTP_403_FORBIDDEN
+
+
+def test_destroying_a_library_takes_its_recordings_and_their_files(
+    client: TestClient,
+    database: Database,
+    settings: Settings,
+    accounts: dict[str, int],
+    owner_library: str,
+) -> None:
+    """Trashed separately or not. Waiting out the retention destroys the same set, so Delete now
+    that left rows behind would not be the thing it says it is."""
+    trashed = _a_recording(database, accounts, owner_library, title="Trashed")
+    untrashed = _a_recording(database, accounts, owner_library, title="Untrashed")
+    for audio_uuid in (trashed, untrashed):
+        _with_bytes(settings, audio_uuid)
+    sign_in(client, "admin")
+    client.delete(f"/audio/{trashed}")
+    client.delete(f"/libraries/{owner_library}")
+    assert (
+        client.delete(f"/trash/libraries/{owner_library}").status_code == status.HTTP_204_NO_CONTENT
+    )
+    assert client.get("/trash/libraries").json()["total"] == 0
+    assert client.get(f"/libraries/{owner_library}").status_code == status.HTTP_404_NOT_FOUND
+    for audio_uuid in (trashed, untrashed):
+        assert client.get(f"/audio/{audio_uuid}").status_code == status.HTTP_404_NOT_FOUND
+        assert not storage.recording_dir(settings.resolved_storage_dir, audio_uuid).exists()
+
+
+def test_a_library_that_is_not_in_the_trash_cannot_be_destroyed(
+    client: TestClient, accounts: dict[str, int], owner_library: str
+) -> None:
+    sign_in(client, "admin")
+    assert (
+        client.delete(f"/trash/libraries/{owner_library}").status_code == status.HTTP_404_NOT_FOUND
+    )
+    assert client.get(f"/libraries/{owner_library}").status_code == status.HTTP_200_OK
+
+
+def test_a_destroyed_recording_leaves_the_search_index(
+    client: TestClient,
+    database: Database,
+    settings: Settings,
+    accounts: dict[str, int],
+    owner_library: str,
+) -> None:
+    """The row and the index go together, or the archive keeps finding a recording nobody can
+    open."""
+    audio_uuid = _a_recording(database, accounts, owner_library, title="Grandmother")
+    _with_bytes(settings, audio_uuid)
+    sign_in(client, "admin")
+    client.delete(f"/audio/{audio_uuid}")
+    client.delete(f"/trash/audio/{audio_uuid}")
+    assert client.get("/search", params={"q": "Grandmother"}).json()["total"] == 0
