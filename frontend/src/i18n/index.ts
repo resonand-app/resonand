@@ -28,6 +28,7 @@ import move from './en/move.json';
 import player from './en/player.json';
 import recording from './en/recording.json';
 import search from './en/search.json';
+import settings from './en/settings.json';
 import shell from './en/shell.json';
 import signIn from './en/signIn.json';
 import upload from './en/upload.json';
@@ -53,6 +54,7 @@ export const NAMESPACES = [
   'player',
   'recording',
   'search',
+  'settings',
   'shell',
   'signIn',
   'upload',
@@ -67,6 +69,7 @@ const english = {
   player,
   recording,
   search,
+  settings,
   shell,
   signIn,
   upload,

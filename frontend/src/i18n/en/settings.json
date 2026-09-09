@@ -1,0 +1,14 @@
+{
+  "title": "Settings",
+  "meta": "Your account and this instance",
+  "sections": {
+    "label": "Settings sections",
+    "account": "Account",
+    "sessions": "Sessions",
+    "appearance": "Appearance",
+    "administration": "Administration"
+  },
+  "administration": {
+    "tabHint": "You are an administrator of this instance."
+  }
+}

@@ -22,6 +22,7 @@ import { LibraryView } from '@/features/library/LibraryView';
 import { LibrarySettingsView } from '@/features/library-settings/LibrarySettingsView';
 import { RecordingView } from '@/features/recording/RecordingView';
 import { SearchView } from '@/features/search/SearchView';
+import { SettingsView } from '@/features/settings/SettingsView';
 import { SignInView } from '@/features/sign-in/SignInView';
 
 import { AppShell } from './AppShell';
@@ -70,7 +71,7 @@ function Archive() {
             <Route path={routes.recording} element={<RecordingView />} />
             <Route path={routes.search} element={<SearchView />} />
             <Route path={routes.trash} element={<NotBuiltYet view="V9 - Trash" />} />
-            <Route path={routes.settings} element={<NotBuiltYet view="V10 - Settings" />} />
+            <Route path={routes.settings} element={<SettingsView />} />
           </Route>
         </Route>
         {/* A trailing slash is the same place, not a different one. */}
