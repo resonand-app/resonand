@@ -59,6 +59,19 @@ function problem(status: number, detail: string, extra: Record<string, unknown> 
 /** What the API says about anything the caller may not read, or that is not there (`DEC-14`). */
 const NOT_FOUND = () => problem(404, 'There is no such thing here, or it is not yours.');
 
+/**
+ * The one answer an unknown address, a wrong password and a disabled account all get (§V1).
+ *
+ * **400 and not 401**, and the type rather than the status is what names it. The real endpoint
+ * raises `InvalidRequestError` with `code="unauthenticated"`, so a refused sign-in is a bad
+ * request that says which kind it is -- and a mock answering 401 would let a view branch on a
+ * status the instance never sends here.
+ */
+const SAME_ANSWER = () =>
+  problem(400, 'That email and password do not match an account.', {
+    type: '/errors/unauthenticated',
+  });
+
 /** The stored waveform's header: version, duration in milliseconds, bucket count (`ING-5`). */
 const WAVEFORM_FORMAT_VERSION = 2;
 const WAVEFORM_HEADER_BYTES = 9;
@@ -96,7 +109,12 @@ export const handlers: HttpHandler[] = [
   http.post('/api/auth/bootstrap', () => HttpResponse.json(archive.me, { status: 201 })),
   http.post('/api/auth/session', async ({ request }) => {
     const body = (await request.json()) as Schemas['SignIn'];
-    if (body.password === 'wrong') return problem(401, 'That address and password do not match.');
+    const account = archive.accounts.find(
+      (one) => one.email.toLocaleLowerCase() === body.email.trim().toLocaleLowerCase(),
+    );
+    const admitted =
+      account !== undefined && !account.disabled && account.password === body.password;
+    if (!admitted) return SAME_ANSWER();
     return HttpResponse.json(archive.me);
   }),
   http.delete('/api/auth/session', () => new HttpResponse(null, { status: 204 })),

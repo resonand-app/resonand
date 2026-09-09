@@ -22,6 +22,7 @@ import { LibraryView } from '@/features/library/LibraryView';
 import { LibrarySettingsView } from '@/features/library-settings/LibrarySettingsView';
 import { RecordingView } from '@/features/recording/RecordingView';
 import { SearchView } from '@/features/search/SearchView';
+import { SignInView } from '@/features/sign-in/SignInView';
 
 import { AppShell } from './AppShell';
 import { NotBuiltYet } from './NotBuiltYet';
@@ -57,7 +58,7 @@ function Archive() {
     <QueryClientProvider client={client}>
       <SessionExpiry expiry={expiry} />
       <Routes>
-        <Route path={routes.signIn} element={<NotBuiltYet view="V1 - Sign in" />} />
+        <Route path={routes.signIn} element={<SignInView />} />
         <Route element={<RequireSession />}>
           {/* Everything with a session is drawn inside the frame, and the frame is outside the
               routes on purpose: the nav, the sidebar and the player must not remount when the

@@ -1,0 +1,9 @@
+{
+  "title": "Sign in",
+  "tagline": "Your recordings, transcribed and searchable. Nothing is shared until you share it.",
+  "on": "on {{instance}}",
+  "email": "Email",
+  "password": "Password",
+  "submit": "Sign in",
+  "version": "Version {{version}}"
+}

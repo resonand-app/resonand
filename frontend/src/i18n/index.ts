@@ -29,6 +29,7 @@ import player from './en/player.json';
 import recording from './en/recording.json';
 import search from './en/search.json';
 import shell from './en/shell.json';
+import signIn from './en/signIn.json';
 import upload from './en/upload.json';
 import { pseudoBundle } from './pseudo';
 
@@ -53,6 +54,7 @@ export const NAMESPACES = [
   'recording',
   'search',
   'shell',
+  'signIn',
   'upload',
 ] as const;
 
@@ -66,6 +68,7 @@ const english = {
   recording,
   search,
   shell,
+  signIn,
   upload,
 };
 

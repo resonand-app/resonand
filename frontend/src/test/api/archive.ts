@@ -94,7 +94,29 @@ export interface Archive {
   destination: Schemas['TranscriptionDestination'];
   /** `GET /search/about`'s one sentence, in the words `recall_note()` writes it. */
   recall: string;
+  /**
+   * Who can sign in (`UI-21`, §V1).
+   *
+   * Three accounts rather than one, because V1's central claim is that an unknown address, a
+   * wrong password and a disabled account are indistinguishable -- and a mock that knew only one
+   * account could not tell those three situations apart to begin with, so a test asserting they
+   * read the same would be asserting nothing.
+   */
+  accounts: SignInAccount[];
 }
+
+/** An account the mock instance will let in, or deliberately will not. */
+export interface SignInAccount {
+  email: string;
+  password: string;
+  disabled: boolean;
+}
+
+/** The password every fixture account has. Long enough to pass the ten-character minimum. */
+export const PASSWORD = 'remembering-well';
+
+/** An address with no account behind it, for the failure that must look like the other two. */
+export const NOBODY = 'ningu@example.test';
 
 export const PERSONAL = '11111111-1111-4111-8111-111111111111';
 export const AVIA = '22222222-2222-4222-8222-222222222222';
@@ -305,6 +327,10 @@ function fresh(): Archive {
       is_local: true,
       configured: true,
     },
+    accounts: [
+      { email: GABRIEL.email, password: PASSWORD, disabled: false },
+      { email: MARTA.email, password: PASSWORD, disabled: true },
+    ],
     recall:
       'Search ignores accents and matches the start of the last word you type. It does not ' +
       'know that words are related: searching for one form of a word will not find its other ' +
