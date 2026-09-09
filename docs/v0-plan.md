@@ -578,6 +578,54 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       component, which is a label rather than a second copy of the sentence and is exactly the
       drift `UI-34k` exists to prevent.*
 
+- [ ] **API-19** · **Emptying the trash now, rather than at the end of the month.** Deletion is
+      always a trash with retention (principle 5), and `INT-2` empties it on a schedule -- but
+      `INT-1` offers **Delete now** behind a typed confirmation, and there is no endpoint under it.
+      `DELETE /audio/{uuid}` and `DELETE /libraries/{uuid}` both trash, deliberately: *"there is no
+      immediate hard delete anywhere"*. So the one destructive gesture the interface draws is the
+      one the API refuses to perform.
+      Add it **inside the trash namespace** rather than as a flag on the trashing verb:
+
+      ```
+      DELETE /trash/audio/{uuid}       level 20, and only when it is already trashed
+      DELETE /trash/libraries/{uuid}   level 30, and it takes the recordings with it
+      ```
+
+      Deleting from the trash is what permanent deletion **is**, and putting it there means the
+      dangerous call cannot be reached by getting a query parameter wrong on the ordinary one.
+      **Something not in the trash answers 404**, not 400: permanent deletion is reachable only
+      from the place that lists what it would destroy.
+      It reuses `retention.remove_recording` and `storage.delete_recording` rather than opening a
+      second delete path -- the row inside the transaction and the files after it, for the reason
+      the retention module gives -- so a purge on demand and a purge on schedule cannot drift into
+      two answers to the same question.
+      *Done when:* `INT-1c`'s `TypedConfirm` has an endpoint, and the numbers it states -- the
+      library's `audio_count` and `total_duration_ms` -- are what actually goes. ⇢ INT-2, API-14 🧪
+      🧪 A recording that is not trashed cannot be purged; purging a library removes its
+      recordings and their files; and the search index no longer matches either.
+      *Found while building `INT-1c`: §6 listed nine gaps and this was not one of them, because
+      the trash was read as a listing problem. Restore had an endpoint and Delete now never did.*
+
+- [ ] **API-20** · **Which accounts are disabled, and which run the instance.** `GET /admin/users`
+      answers `UserSummary` -- `id`, `display_name`, `email` -- and the `User` row's `is_admin` and
+      `disabled_at` are both dropped by the presenter. `INT-3b` lists accounts and offers
+      **disable** or **re-enable**, which is a choice it cannot make without knowing which one the
+      account is already in, and it marks administrators, which it cannot see either.
+      **Widening `UserSummary` is the wrong fix.** It is what a share and `API-15`'s lookup answer
+      with, so `is_admin` on it would tell any library manager who runs the instance -- the same
+      class of leak the lookup is deliberately narrow to prevent. Add an administrator-only
+      `AdminUser` beside it, answered by the four `/admin/users` routes and nowhere else:
+
+      ```
+      id  display_name  email  is_admin  disabled_at  created_at
+      ```
+
+      `disabled_at` rather than a boolean, because "disabled since March" is a fact the row has and
+      "disabled" is a fact it does not.
+      *Done when:* `INT-3b` draws one action per account rather than two, and disable and enable
+      answer with the account they changed. ⇢ API-7, INT-3 🧪
+      🧪 The shape a share answers with is unchanged, which is what keeps the leak closed.
+
 ---
 
 ## Phase 3 · Four parallel tracks
