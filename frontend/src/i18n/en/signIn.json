@@ -5,5 +5,13 @@
   "email": "Email",
   "password": "Password",
   "submit": "Sign in",
-  "version": "Version {{version}}"
+  "version": "Version {{version}}",
+  "firstRun": {
+    "title": "Create the first account",
+    "body": "There are no accounts on this instance yet. This one will be the administrator, and it is what creates the others.",
+    "name": "Display name",
+    "minimum_one": "A password needs at least {{count}} character.",
+    "minimum_other": "A password needs at least {{count}} characters.",
+    "submit": "Create the account"
+  }
 }

@@ -11,7 +11,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { UseQueryResult } from '@tanstack/react-query';
+import type { QueryClient, UseQueryResult } from '@tanstack/react-query';
 
 import { get, post, remove } from '@/api/client';
 import { keys } from '@/api/keys';
@@ -66,10 +66,38 @@ export function useSignIn() {
     mutationFn: (credentials: { email: string; password: string }) =>
       post('/api/auth/session', { body: credentials }),
     onSuccess: (account) => {
-      // Everything cached belonged to whoever was signed in before -- which, on a shared
-      // machine, is somebody else.
-      client.clear();
-      client.setQueryData(keys.me(), account);
+      arrive(client, account);
+    },
+  });
+}
+
+/**
+ * What a new session does to everything cached.
+ *
+ * Everything is forgotten first, because on a shared machine what is cached belonged to somebody
+ * else -- and only then is the account written in, so the first render after signing in has a
+ * session rather than a request for one.
+ */
+function arrive(client: QueryClient, account: Account): void {
+  client.clear();
+  client.setQueryData(keys.me(), account);
+}
+
+/**
+ * The first run: an account, and the session that comes with it (`UI-21b`).
+ *
+ * Separate from `useSignIn` rather than a flag on it, because they are different requests with
+ * different bodies answered by different rules -- and the one moment an instance has nobody to
+ * authorise a request is not a variant of signing in. What they share is the aftermath, so that
+ * is what is shared: `arrive` seeds the cache the same way for both.
+ */
+export function useBootstrap() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (account: { email: string; password: string; display_name: string }) =>
+      post('/api/auth/bootstrap', { body: account }),
+    onSuccess: (account) => {
+      arrive(client, account);
     },
   });
 }

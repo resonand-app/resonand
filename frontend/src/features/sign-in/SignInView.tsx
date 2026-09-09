@@ -1,5 +1,5 @@
 /**
- * V1 · Sign in (`UI-21a`, §V1).
+ * V1 · Sign in and first run (`UI-21a`, `UI-21b`, §V1).
  *
  * The one screen outside the shell: no nav, no sidebar, no player, because none of them mean
  * anything before there is a session. One panel, centred, with the mark above it.
@@ -15,6 +15,12 @@
  * block. A second sign-in path later is a sibling added under the button; a divider drawn now
  * would be a rule with nothing on the other side of it.
  *
+ * **Two faces, and the instance chooses which.** `needs_bootstrap` is true only while there are
+ * no accounts at all, so the choice is a fact about the instance rather than about the person --
+ * which is why the panel waits for `GET /instance` rather than drawing the form and swapping it.
+ * Nothing is drawn in its place: the answer is one request away and a card that flashes empty is
+ * worse than a beat of nothing (`RequireSession` settles the same question the same way).
+ *
  * **Where somebody was going is remembered.** The guard puts it in the router's state
  * (`RequireSession`), so a link to a recording that bounced off the guard comes back to the
  * recording rather than to the landing page.
@@ -26,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
-import { useInstance, useSignIn } from '@/app/session';
+import { useBootstrap, useInstance, useSignIn } from '@/app/session';
 import { Button, Logo, TextField } from '@/design-system';
 
 import { intended } from './intended';
@@ -37,84 +43,218 @@ const MARK_SIZE = 40;
 /** The panel's width. Wider is a form that reads as a page; narrower crowds an email address. */
 const PANEL_WIDTH = 380;
 
+/**
+ * The shortest password the instance will store.
+ *
+ * The backend's own minimum, written here because `GET /instance` does not carry it and a first
+ * account refused after it has been typed is the worst moment to learn a rule. It is stated
+ * before anything is typed, the way `UI-20b` states it for a password change.
+ */
+export const MINIMUM_PASSWORD_LENGTH = 10;
+
 export function SignInView() {
   const { t } = useTranslation('signIn');
   const navigate = useNavigate();
   const location = useLocation();
   const instance = useInstance();
+
+  function arrived() {
+    void navigate(intended(location.state), { replace: true });
+  }
+
+  return (
+    <Frame
+      version={instance.data?.version}
+      instanceName={
+        instance.data === undefined ? undefined : t('on', { instance: instance.data.name })
+      }
+    >
+      {instance.data === undefined ? null : instance.data.needs_bootstrap ? (
+        <FirstRun onArrived={arrived} />
+      ) : (
+        <SignIn onArrived={arrived} />
+      )}
+    </Frame>
+  );
+}
+
+/** Getting in: an address, a password, one action. */
+function SignIn({ onArrived }: { onArrived: () => void }) {
+  const { t } = useTranslation('signIn');
   const signIn = useSignIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // The API's own `detail`, shown rather than replaced (§1.9). `UI-21c` is where the four states
-  // this can be become four states rather than one line.
+  // The API's own `detail`, shown rather than replaced (§1.9). `UI-21c` is where the states this
+  // can be become states rather than one line.
   const refusal = isApiProblem(signIn.error) ? signIn.error.detail : undefined;
 
   function submit(event: SyntheticEvent) {
     event.preventDefault();
-    signIn.mutate(
-      { email: email.trim(), password },
-      {
-        onSuccess: () => {
-          void navigate(intended(location.state), { replace: true });
-        },
-      },
+    signIn.mutate({ email: email.trim(), password }, { onSuccess: onArrived });
+  }
+
+  return (
+    <Form onSubmit={submit} title={t('title')}>
+      <TextField
+        label={t('email')}
+        type="email"
+        name="email"
+        autoComplete="username"
+        value={email}
+        maxLength={320}
+        onChange={(event) => {
+          setEmail(event.target.value);
+        }}
+      />
+      <TextField
+        label={t('password')}
+        type="password"
+        name="password"
+        autoComplete="current-password"
+        value={password}
+        onChange={(event) => {
+          setPassword(event.target.value);
+        }}
+      />
+      <Submit disabled={email.trim() === '' || password === ''}>{t('submit')}</Submit>
+      {refusal !== undefined && <Refusal>{refusal}</Refusal>}
+    </Form>
+  );
+}
+
+/**
+ * The first run: the account that will run this instance (`UI-21b`, §V1).
+ *
+ * It says what it is doing rather than looking like a sign-up form that happens to work. The
+ * account created here is the administrator -- it creates every other account by hand, because
+ * v0 has no open registration -- and that is a sentence somebody should read before they type,
+ * not a surprise they meet in the settings later.
+ *
+ * The endpoint refuses the moment any account exists, so this is not a second way in: it is the
+ * one moment an instance has nobody to authorise a request.
+ */
+function FirstRun({ onArrived }: { onArrived: () => void }) {
+  const { t } = useTranslation('signIn');
+  const bootstrap = useBootstrap();
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const refusal = isApiProblem(bootstrap.error) ? bootstrap.error.detail : undefined;
+  const ready =
+    displayName.trim() !== '' && email.trim() !== '' && password.length >= MINIMUM_PASSWORD_LENGTH;
+
+  function submit(event: SyntheticEvent) {
+    event.preventDefault();
+    bootstrap.mutate(
+      { email: email.trim(), password, display_name: displayName.trim() },
+      { onSuccess: onArrived },
     );
   }
 
   return (
-    <Panel
-      version={instance.data?.version}
-      footer={instance.data === undefined ? undefined : t('on', { instance: instance.data.name })}
+    <Form onSubmit={submit} title={t('firstRun.title')}>
+      <Quiet>{t('firstRun.body')}</Quiet>
+      <TextField
+        label={t('firstRun.name')}
+        name="name"
+        autoComplete="name"
+        value={displayName}
+        maxLength={200}
+        onChange={(event) => {
+          setDisplayName(event.target.value);
+        }}
+      />
+      <TextField
+        label={t('email')}
+        type="email"
+        name="email"
+        autoComplete="username"
+        value={email}
+        maxLength={320}
+        onChange={(event) => {
+          setEmail(event.target.value);
+        }}
+      />
+      <TextField
+        label={t('password')}
+        type="password"
+        name="password"
+        autoComplete="new-password"
+        value={password}
+        onChange={(event) => {
+          setPassword(event.target.value);
+        }}
+      />
+      <Quiet>{t('firstRun.minimum', { count: MINIMUM_PASSWORD_LENGTH })}</Quiet>
+      <Submit disabled={!ready}>{t('firstRun.submit')}</Submit>
+      {refusal !== undefined && <Refusal>{refusal}</Refusal>}
+    </Form>
+  );
+}
+
+/** The panel's form: a heading and a column, which both faces are. */
+function Form({
+  title,
+  onSubmit,
+  children,
+}: {
+  title: string;
+  onSubmit: (event: SyntheticEvent) => void;
+  children: ReactNode;
+}) {
+  return (
+    <form
+      onSubmit={onSubmit}
+      style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
     >
-      <form
-        onSubmit={submit}
-        style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}
+      <h1
+        style={{
+          margin: 0,
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'var(--type-title-size)',
+          fontWeight: 'var(--type-title-weight)',
+          letterSpacing: 'var(--type-title-tracking)',
+          color: 'var(--text)',
+        }}
       >
-        <h1
-          style={{
-            margin: 0,
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'var(--type-title-size)',
-            fontWeight: 'var(--type-title-weight)',
-            letterSpacing: 'var(--type-title-tracking)',
-            color: 'var(--text)',
-          }}
-        >
-          {t('title')}
-        </h1>
-        <TextField
-          label={t('email')}
-          type="email"
-          name="email"
-          autoComplete="username"
-          value={email}
-          maxLength={320}
-          onChange={(event) => {
-            setEmail(event.target.value);
-          }}
-        />
-        <TextField
-          label={t('password')}
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
-        />
-        <Button
-          variant="primary"
-          type="submit"
-          disabled={email.trim() === '' || password === ''}
-          style={{ justifyContent: 'center', marginTop: 'var(--space-1)' }}
-        >
-          {t('submit')}
-        </Button>
-        {refusal !== undefined && <Refusal>{refusal}</Refusal>}
-      </form>
-    </Panel>
+        {title}
+      </h1>
+      {children}
+    </form>
+  );
+}
+
+/** The one action, which is the same shape on both faces. */
+function Submit({ disabled, children }: { disabled: boolean; children: ReactNode }) {
+  return (
+    <Button
+      variant="primary"
+      type="submit"
+      disabled={disabled}
+      style={{ justifyContent: 'center', marginTop: 'var(--space-1)' }}
+    >
+      {children}
+    </Button>
+  );
+}
+
+/** A line that explains rather than labels: what this account is, what a password needs. */
+function Quiet({ children }: { children: ReactNode }) {
+  return (
+    <p
+      style={{
+        margin: 0,
+        fontFamily: 'var(--font-sans)',
+        fontSize: 'var(--type-ui-size-sm)',
+        lineHeight: 'var(--type-body-leading)',
+        color: 'var(--text-3)',
+        textWrap: 'pretty',
+      }}
+    >
+      {children}
+    </p>
   );
 }
 
@@ -143,20 +283,19 @@ function Refusal({ children }: { children: ReactNode }) {
 }
 
 /**
- * The frame every face of this screen shares: the mark, one sentence, the panel, the version.
+ * The frame both faces share: the mark, one sentence, the panel, and what the instance is.
  *
- * Written once because `UI-21b` puts a second face inside it, and a first run that drifted a few
- * pixels from the sign-in screen would look like a different product on the day somebody meets
- * it for the first time.
+ * Written once because a first run that drifted a few pixels from the sign-in screen would look
+ * like a different product on the day somebody meets it for the first time.
  */
-function Panel({
+function Frame({
   children,
-  footer,
+  instanceName,
   version,
 }: {
   children: ReactNode;
   /** Which instance this is, once it has said. */
-  footer: string | undefined;
+  instanceName: string | undefined;
   version: string | undefined;
 }) {
   const { t } = useTranslation('signIn');
@@ -193,16 +332,18 @@ function Panel({
             {t('tagline')}
           </p>
         </div>
-        <div
-          style={{
-            background: 'var(--surface)',
-            borderRadius: 'var(--radius-panel)',
-            boxShadow: 'var(--elevation-panel)',
-            padding: 'var(--space-6)',
-          }}
-        >
-          {children}
-        </div>
+        {children !== null && (
+          <div
+            style={{
+              background: 'var(--surface)',
+              borderRadius: 'var(--radius-panel)',
+              boxShadow: 'var(--elevation-panel)',
+              padding: 'var(--space-6)',
+            }}
+          >
+            {children}
+          </div>
+        )}
         <div
           style={{
             display: 'flex',
@@ -213,7 +354,7 @@ function Panel({
             color: 'var(--text-3)',
           }}
         >
-          {footer !== undefined && <span>{footer}</span>}
+          {instanceName !== undefined && <span>{instanceName}</span>}
           {version !== undefined && <span>{t('version', { version })}</span>}
         </div>
       </div>

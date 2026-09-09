@@ -43,9 +43,20 @@ function problem(status: number, detail: string, extra: Record<string, unknown> 
     409: 'Conflict',
     422: 'Invalid request',
   };
+  // The API derives the type from the status it answered with (`api/errors.py`), so the mock
+  // does too rather than calling everything that is not a 404 an error. A caller that branches
+  // on the type -- V1 does, because a refused sign-in and a rate-limited one are both 400 --
+  // would otherwise be testing against a vocabulary the instance does not use.
+  const codes: Record<number, string> = {
+    400: 'invalid_request',
+    401: 'unauthenticated',
+    404: 'not_found',
+    409: 'conflict',
+    422: 'invalid_request',
+  };
   return HttpResponse.json(
     {
-      type: `/errors/${status === 404 ? 'not_found' : 'error'}`,
+      type: `/errors/${codes[status] ?? 'error'}`,
       title: titles[status] ?? 'Error',
       detail,
       status,
@@ -71,6 +82,9 @@ const SAME_ANSWER = () =>
   problem(400, 'That email and password do not match an account.', {
     type: '/errors/unauthenticated',
   });
+
+/** The shortest password the instance stores, as `sonarium.api.routes.auth` counts it. */
+const MINIMUM_PASSWORD_LENGTH = 10;
 
 /** The stored waveform's header: version, duration in milliseconds, bucket count (`ING-5`). */
 const WAVEFORM_FORMAT_VERSION = 2;
@@ -106,7 +120,28 @@ export const handlers: HttpHandler[] = [
     return HttpResponse.json(archive.me);
   }),
   http.post('/api/auth/password', () => new HttpResponse(null, { status: 204 })),
-  http.post('/api/auth/bootstrap', () => HttpResponse.json(archive.me, { status: 201 })),
+  http.post('/api/auth/bootstrap', async ({ request }) => {
+    const body = (await request.json()) as Schemas['Bootstrap'];
+    // Refused the moment any account exists, which is what makes this not a second way in.
+    if (!archive.instance.needs_bootstrap) {
+      return problem(409, 'This instance already has an account. Sign in instead.');
+    }
+    if (body.password.length < MINIMUM_PASSWORD_LENGTH) {
+      return problem(
+        400,
+        `A password needs at least ${String(MINIMUM_PASSWORD_LENGTH)} characters.`,
+      );
+    }
+    archive.instance = { ...archive.instance, needs_bootstrap: false };
+    archive.me = {
+      ...archive.me,
+      display_name: body.display_name,
+      email: body.email,
+      is_admin: true,
+    };
+    archive.accounts = [{ email: body.email, password: body.password, disabled: false }];
+    return HttpResponse.json(archive.me, { status: 201 });
+  }),
   http.post('/api/auth/session', async ({ request }) => {
     const body = (await request.json()) as Schemas['SignIn'];
     const account = archive.accounts.find(
