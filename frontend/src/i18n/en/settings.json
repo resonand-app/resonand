@@ -58,5 +58,25 @@
   "administration": {
     "title": "This instance",
     "intro": "These settings belong to the whole instance and to everybody with an account on it, not to you."
+  },
+  "users": {
+    "title": "Accounts",
+    "intro": "Accounts are made here, by hand, for people you know. There is no sign-up page.",
+    "loading": "Reading the accounts",
+    "administrator": "Administrator",
+    "disabledSince": "Disabled {{when}}",
+    "disable": "Disable",
+    "enable": "Re-enable",
+    "delete": "Delete",
+    "deleteNamed": "Delete the account for {{name}}",
+    "add": "New account",
+    "name": "Display name",
+    "email": "Email address",
+    "password": "Password",
+    "makeAdmin": "Can run this instance",
+    "makeAdminHint": "Administrators see this section and everything in it.",
+    "create": "Create account",
+    "cancel": "Cancel",
+    "createFailed": "The account could not be created."
   }
 }
