@@ -40,6 +40,21 @@
     "loading": "Reading your sign-ins",
     "error": "Your sign-ins could not be read."
   },
+  "appearance": {
+    "theme": "Theme",
+    "themeHint": "Saved on this device, because it is a property of the screen you are looking at.",
+    "themeChoice": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Follow the system"
+    },
+    "language": "Language",
+    "languageHint": "English is the only language this version speaks. It is saved to your account.",
+    "languages": {
+      "en": "English",
+      "pseudo": "Pseudo-English (development)"
+    }
+  },
   "administration": {
     "tabHint": "You are an administrator of this instance."
   }

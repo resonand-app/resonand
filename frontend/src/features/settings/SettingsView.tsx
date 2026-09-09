@@ -23,6 +23,7 @@ import { PageHeader, Tabs } from '@/design-system';
 import type { Tab } from '@/design-system';
 
 import { AccountPanel } from './AccountPanel';
+import { AppearancePanel } from './AppearancePanel';
 import { SessionsPanel } from './SessionsPanel';
 import { SECTIONS, SECTION_PARAM, sectionIn } from './sections';
 import type { Section } from './sections';
@@ -76,10 +77,8 @@ export function SettingsView() {
 /**
  * Whichever section is on screen.
  *
- * Appearance arrives with `UI-20d`; the
- * fourth is `INT-3` and is a whole view of its own -- users, the provider, the queue and the
- * instance's own status. The tabs are this task, and they are drawn against the four sections
- * §V10 names rather than against however many happen to be built.
+ * The fourth is `INT-3` and is a whole view of its own -- users, the provider, the queue and the
+ * instance's own status.
  */
 function Panel({ section }: { section: Section }) {
   switch (section) {
@@ -88,7 +87,7 @@ function Panel({ section }: { section: Section }) {
     case 'sessions':
       return <SessionsPanel />;
     case 'appearance':
-      return null;
+      return <AppearancePanel />;
     case 'administration':
       return <Administration />;
   }
