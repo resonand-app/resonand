@@ -13,6 +13,13 @@
  * **Recolouring reaches the sidebar immediately** (§V7). The colour is how a library is found in a
  * list of seven, so a swatch that needed a reload would feel like it had not worked.
  *
+ * **Trashing it is the last thing on the screen, and it is not permanent** (`UI-17f`). Deletion is
+ * a `deleted_at` and never a cascade: nothing inside is touched, which is what makes restoring it
+ * one line. So the confirm is an ordinary dialog with a danger button rather than `TypedConfirm` --
+ * that gesture means "this cannot be undone", and spending it on something recoverable is how it
+ * stops meaning anything the day it is needed. What the confirm owes is the count and the window:
+ * how many recordings go with it, and for how long it can come back.
+ *
  * **A library you can only edit is not a settings screen.** Level 30 is what this route needs, and
  * below it the honest answer is the same one the ACL gives for anything else it will not show:
  * this may not be yours (`DEC-14`). Except for the sharing panel, which stays visible and
@@ -31,6 +38,7 @@ import { useCategories } from '@/features/library/recordings';
 
 import { CategoryTree } from './CategoryTree';
 import { SharePanel } from './SharePanel';
+import { TrashLibrary } from './TrashLibrary';
 import { useCategoryEdits, useShareEdits, useUpdateLibrary } from './data';
 
 export function LibrarySettingsView() {
@@ -132,6 +140,10 @@ export function LibrarySettingsView() {
           edits={shareEdits}
           canManage={context.canManage}
         />
+
+        {/* The personal library cannot be deleted, and the affordance is absent rather than
+            disabled: the API refuses it, and a button that always fails is worse than none. */}
+        {context.canManage && !library.is_personal && <TrashLibrary library={library} />}
       </div>
     </section>
   );
