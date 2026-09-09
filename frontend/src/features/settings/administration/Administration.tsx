@@ -20,6 +20,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { Provider } from './Provider';
+import { Queue } from './Queue';
 import { Users } from './Users';
 
 export function Administration() {
@@ -66,6 +67,7 @@ export function Administration() {
       </header>
       <Users />
       <Provider />
+      <Queue />
     </section>
   );
 }

@@ -113,3 +113,63 @@ export function useSystemStatus(): UseQueryResult<Schemas['SystemStatus']> {
     queryFn: () => get('/api/admin/status'),
   });
 }
+
+/** How many rows the queue draws before it stops being a list and becomes a count (`INT-3d`). */
+export const QUEUE_ROW_LIMIT = 25;
+
+export interface Queue {
+  jobs: Schemas['JobSummary'][];
+  /** How many match, which is not how many are drawn once a bulk import is running. */
+  total: number;
+  isPending: boolean;
+  error: unknown;
+}
+
+/**
+ * The queue, newest first (`INT-3d`).
+ *
+ * Newest rather than oldest, because the reason somebody opens this page is that something has
+ * just gone wrong -- and the thing that went wrong is at the top.
+ *
+ * It asks for one row more than it will draw, so "there are more than this" is a fact from the
+ * envelope rather than a guess from the length of the list.
+ */
+export function useQueue(state: string | undefined): Queue {
+  const query = useQuery({
+    queryKey: keys.jobs({ state }),
+    queryFn: () =>
+      get('/api/admin/jobs', {
+        query: state === undefined ? { limit: QUEUE_ROW_LIMIT } : { state, limit: QUEUE_ROW_LIMIT },
+      }),
+    // A queue is the one thing in the product that is moving while somebody watches it.
+    refetchInterval: 5_000,
+  });
+  return {
+    jobs: query.data?.items ?? [],
+    total: query.data?.total ?? 0,
+    isPending: query.isPending,
+    error: query.error,
+  };
+}
+
+export interface JobActions {
+  retry: UseMutationResult<unknown, unknown, number>;
+  cancel: UseMutationResult<unknown, unknown, number>;
+}
+
+export function useJobActions(): JobActions {
+  const client = useQueryClient();
+  const settle = async () => {
+    await invalidate(client, { kind: 'administration' });
+  };
+  return {
+    retry: useMutation({
+      mutationFn: (id: number) => post('/api/admin/jobs/{job_id}/retry', { path: { job_id: id } }),
+      onSuccess: settle,
+    }),
+    cancel: useMutation({
+      mutationFn: (id: number) => post('/api/admin/jobs/{job_id}/cancel', { path: { job_id: id } }),
+      onSuccess: settle,
+    }),
+  };
+}

@@ -99,5 +99,30 @@
     "unreachable": "It did not answer",
     "neverAutomatic": "Nothing is contacted until you press this. Opening this page reaches out to nobody.",
     "unconfigured": "No provider is set up, so nothing on this instance can be transcribed. Set SONARIUM_TRANSCRIPTION_* in the environment and restart."
+  },
+  "queue": {
+    "title": "Background work",
+    "intro": "Probing, waveforms, transcoding and transcription. Newest first, because the reason to look is that something just went wrong.",
+    "loading": "Reading the queue",
+    "all": "Everything",
+    "state": {
+      "failed": "Failed",
+      "running": "Running",
+      "pending": "Waiting",
+      "done": "Done",
+      "cancelled": "Cancelled"
+    },
+    "attempts_one": "{{count}} attempt",
+    "attempts_other": "{{count}} attempts",
+    "nextAttempt": "Next attempt {{when}}",
+    "retry": "Retry",
+    "retryNamed": "Retry the {{kind}} job {{id}}",
+    "cancel": "Cancel",
+    "cancelNamed": "Cancel the {{kind}} job {{id}}",
+    "tooMany": "Showing the newest {{shown}} of {{total}}. The counts above are the whole queue.",
+    "empty": {
+      "title": "Everything asked for has been done",
+      "body": "Nothing is waiting, running or failed."
+    }
   }
 }
