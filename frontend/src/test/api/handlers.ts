@@ -20,7 +20,7 @@ import type { HttpHandler } from 'msw';
 
 import type { components } from '@/api/schema';
 
-import { GABRIEL, MARTA, archive, detailOf } from './archive';
+import { GABRIEL, LOGIN_ATTEMPTS_PER_MINUTE, MARTA, archive, detailOf } from './archive';
 
 type Schemas = components['schemas'];
 
@@ -43,9 +43,20 @@ function problem(status: number, detail: string, extra: Record<string, unknown> 
     409: 'Conflict',
     422: 'Invalid request',
   };
+  // The API derives the type from the status it answered with (`api/errors.py`), so the mock
+  // does too rather than calling everything that is not a 404 an error. A caller that branches
+  // on the type -- V1 does, because a refused sign-in and a rate-limited one are both 400 --
+  // would otherwise be testing against a vocabulary the instance does not use.
+  const codes: Record<number, string> = {
+    400: 'invalid_request',
+    401: 'unauthenticated',
+    404: 'not_found',
+    409: 'conflict',
+    422: 'invalid_request',
+  };
   return HttpResponse.json(
     {
-      type: `/errors/${status === 404 ? 'not_found' : 'error'}`,
+      type: `/errors/${codes[status] ?? 'error'}`,
       title: titles[status] ?? 'Error',
       detail,
       status,
@@ -58,6 +69,22 @@ function problem(status: number, detail: string, extra: Record<string, unknown> 
 
 /** What the API says about anything the caller may not read, or that is not there (`DEC-14`). */
 const NOT_FOUND = () => problem(404, 'There is no such thing here, or it is not yours.');
+
+/**
+ * The one answer an unknown address, a wrong password and a disabled account all get (§V1).
+ *
+ * **400 and not 401**, and the type rather than the status is what names it. The real endpoint
+ * raises `InvalidRequestError` with `code="unauthenticated"`, so a refused sign-in is a bad
+ * request that says which kind it is -- and a mock answering 401 would let a view branch on a
+ * status the instance never sends here.
+ */
+const SAME_ANSWER = () =>
+  problem(400, 'That email and password do not match an account.', {
+    type: '/errors/unauthenticated',
+  });
+
+/** The shortest password the instance stores, as `sonarium.api.routes.auth` counts it. */
+const MINIMUM_PASSWORD_LENGTH = 10;
 
 /** The stored waveform's header: version, duration in milliseconds, bucket count (`ING-5`). */
 const WAVEFORM_FORMAT_VERSION = 2;
@@ -93,10 +120,52 @@ export const handlers: HttpHandler[] = [
     return HttpResponse.json(archive.me);
   }),
   http.post('/api/auth/password', () => new HttpResponse(null, { status: 204 })),
-  http.post('/api/auth/bootstrap', () => HttpResponse.json(archive.me, { status: 201 })),
+  http.post('/api/auth/bootstrap', async ({ request }) => {
+    const body = (await request.json()) as Schemas['Bootstrap'];
+    // Refused the moment any account exists, which is what makes this not a second way in.
+    if (!archive.instance.needs_bootstrap) {
+      return problem(409, 'This instance already has an account. Sign in instead.');
+    }
+    if (body.password.length < MINIMUM_PASSWORD_LENGTH) {
+      return problem(
+        400,
+        `A password needs at least ${String(MINIMUM_PASSWORD_LENGTH)} characters.`,
+      );
+    }
+    archive.instance = { ...archive.instance, needs_bootstrap: false };
+    archive.me = {
+      ...archive.me,
+      display_name: body.display_name,
+      email: body.email,
+      is_admin: true,
+    };
+    archive.accounts = [{ email: body.email, password: body.password, disabled: false }];
+    return HttpResponse.json(archive.me, { status: 201 });
+  }),
   http.post('/api/auth/session', async ({ request }) => {
     const body = (await request.json()) as Schemas['SignIn'];
-    if (body.password === 'wrong') return problem(401, 'That address and password do not match.');
+    // Normalised, because the instance counts and looks up against the address rather than
+    // against what was typed: `Admin@Example.test` and `admin@example.test` are one account and
+    // therefore one counter.
+    const key = body.email.trim().toLocaleLowerCase();
+    const spent = archive.attempts[key] ?? 0;
+    if (spent >= LOGIN_ATTEMPTS_PER_MINUTE) {
+      return problem(400, 'Too many sign-in attempts. Wait a minute and try again.', {
+        type: '/errors/too_many_requests',
+      });
+    }
+    const account = archive.accounts.find((one) => one.email.toLocaleLowerCase() === key);
+    const admitted =
+      account !== undefined && !account.disabled && account.password === body.password;
+    if (!admitted) {
+      archive.attempts[key] = spent + 1;
+      return SAME_ANSWER();
+    }
+    // Forgotten on the way in, so somebody who mistyped twice and then got it right is not
+    // still being counted.
+    archive.attempts = Object.fromEntries(
+      Object.entries(archive.attempts).filter(([address]) => address !== key),
+    );
     return HttpResponse.json(archive.me);
   }),
   http.delete('/api/auth/session', () => new HttpResponse(null, { status: 204 })),
