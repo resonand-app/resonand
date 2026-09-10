@@ -54,5 +54,11 @@
   },
   "upload": {
     "region": "Uploads"
+  },
+  "egress": {
+    "none": "No transcription provider is configured. Nothing can be transcribed until an administrator sets one up.",
+    "local": "Transcription runs on {{host}}, on your own network. The audio does not leave it.",
+    "retry": "Retrying sends the audio to {{host}} again.",
+    "external": "Transcription is sent to {{host}}. The audio leaves this instance."
   }
 }

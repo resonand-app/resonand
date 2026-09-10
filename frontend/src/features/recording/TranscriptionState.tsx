@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button, EgressNotice, StateCard } from '@/design-system';
 import { relative } from '@/i18n/time';
+import { useEgressLabels } from '@/components/egress-labels';
 
 import type { RecordingContext } from './data';
 import { useDestination, useTranscribe, useTranscriptionStatus } from './transcription';
@@ -44,6 +45,7 @@ export interface TranscriptionStateProps {
 
 export function TranscriptionState({ context, state }: TranscriptionStateProps) {
   const { t, i18n } = useTranslation('recording');
+  const egressLabels = useEgressLabels();
   const recording = context.recording;
   const destination = useDestination();
   const status = useTranscriptionStatus(recording?.uuid ?? '', state !== 'done');
@@ -57,7 +59,8 @@ export function TranscriptionState({ context, state }: TranscriptionStateProps) 
   const mayAsk = context.canEdit && configured;
   const asking = transcribe.isPending;
 
-  const notice = where === undefined ? null : <EgressNotice destination={where} />;
+  const notice =
+    where === undefined ? null : <EgressNotice destination={where} labels={egressLabels} />;
 
   if (state === 'running') {
     return (
@@ -89,6 +92,7 @@ export function TranscriptionState({ context, state }: TranscriptionStateProps) 
             <EgressNotice
               destination={where}
               placement="retry"
+              labels={egressLabels}
               action={
                 <Button
                   variant="secondary"

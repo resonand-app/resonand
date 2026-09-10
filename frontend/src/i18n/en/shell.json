@@ -7,6 +7,8 @@
   },
   "sidebar": {
     "libraries": "Libraries",
+    "search": "Search",
+    "yours": "Your libraries",
     "shared": "Shared with you",
     "trash": "Trash",
     "settings": "Settings"

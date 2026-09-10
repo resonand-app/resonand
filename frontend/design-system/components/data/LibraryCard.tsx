@@ -34,6 +34,8 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
    * would otherwise offer a screen reader nine buttons called "Options".
    */
   labels?: {
+    /** What the waveform says before the peaks job has run. */
+    noWaveform?: string;
     options?: (name: string) => string;
   };
 }
@@ -127,7 +129,7 @@ export function LibraryCard({
         {href === undefined ? (
           name
         ) : (
-          <a data-ds="library-card-title" href={href}>
+          <a data-ds="library-card-title" data-hit-target href={href}>
             {name}
           </a>
         )}
@@ -156,7 +158,13 @@ export function LibraryCard({
         {meta}
       </span>
       <div style={{ marginTop: 'auto' }}>
-        <Waveform peaks={peaks} size="card" played={played} pending={pending} />
+        <Waveform
+          peaks={peaks}
+          size="card"
+          played={played}
+          pending={pending}
+          noWaveformLabel={labels?.noWaveform}
+        />
       </div>
     </article>
   );

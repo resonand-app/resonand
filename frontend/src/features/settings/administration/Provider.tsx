@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { isApiProblem } from '@/api/problem';
 import { Button, EgressNotice, KeyValueList, StateCard } from '@/design-system';
 import type { KeyValueRow } from '@/design-system';
+import { useEgressLabels } from '@/components/egress-labels';
 
 import { AdminSection } from './AdminSection';
 import { useProvider, useTestProvider } from './data';
@@ -32,6 +33,7 @@ import { useProvider, useTestProvider } from './data';
 export function Provider() {
   const { t } = useTranslation('settings');
   const { t: common } = useTranslation();
+  const egressLabels = useEgressLabels();
   const provider = useProvider();
   const test = useTestProvider();
 
@@ -85,6 +87,7 @@ export function Provider() {
           configured: status.configured,
         }}
         placement="panel"
+        labels={egressLabels}
       />
       {status.configured ? (
         <>

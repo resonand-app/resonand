@@ -58,27 +58,42 @@ function Archive() {
   return (
     <QueryClientProvider client={client}>
       <SessionExpiry expiry={expiry} />
-      <Routes>
-        <Route path={routes.signIn} element={<SignInView />} />
-        <Route element={<RequireSession />}>
-          {/* Everything with a session is drawn inside the frame, and the frame is outside the
+      <AppRoutes />
+    </QueryClientProvider>
+  );
+}
+
+/**
+ * The eight routes and the frame around seven of them.
+ *
+ * Exported, and separate from `Archive`, so that a test can mount the real route table under a
+ * `MemoryRouter` instead of restating it. The cross-cutting pass audits every view -- axe,
+ * focus, the phone widths, the pseudo-locale -- and a second copy of this table is a copy that
+ * eventually disagrees with this one: the view somebody adds would be audited only if they
+ * remembered to add it twice, which is exactly the failure `UI-23a` exists to prevent.
+ */
+export function AppRoutes() {
+  return (
+    <Routes>
+      <Route path={routes.signIn} element={<SignInView />} />
+      <Route element={<RequireSession />}>
+        {/* Everything with a session is drawn inside the frame, and the frame is outside the
               routes on purpose: the nav, the sidebar and the player must not remount when the
               view changes, which is what makes the player persistent (`UI-5a`). */}
-          <Route element={<Framed />}>
-            <Route path={routes.libraries} element={<LibrariesView />} />
-            <Route path={routes.library} element={<LibraryView />} />
-            <Route path={routes.librarySettings} element={<LibrarySettingsView />} />
-            <Route path={routes.recording} element={<RecordingView />} />
-            <Route path={routes.search} element={<SearchView />} />
-            <Route path={routes.trash} element={<TrashView />} />
-            <Route path={routes.settings} element={<SettingsView />} />
-          </Route>
+        <Route element={<Framed />}>
+          <Route path={routes.libraries} element={<LibrariesView />} />
+          <Route path={routes.library} element={<LibraryView />} />
+          <Route path={routes.librarySettings} element={<LibrarySettingsView />} />
+          <Route path={routes.recording} element={<RecordingView />} />
+          <Route path={routes.search} element={<SearchView />} />
+          <Route path={routes.trash} element={<TrashView />} />
+          <Route path={routes.settings} element={<SettingsView />} />
         </Route>
-        {/* A trailing slash is the same place, not a different one. */}
-        <Route path="/index.html" element={<Navigate to={routes.libraries} replace />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </QueryClientProvider>
+      </Route>
+      {/* A trailing slash is the same place, not a different one. */}
+      <Route path="/index.html" element={<Navigate to={routes.libraries} replace />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 

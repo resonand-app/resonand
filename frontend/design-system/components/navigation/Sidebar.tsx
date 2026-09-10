@@ -124,6 +124,23 @@ export interface SidebarProps
   /** Current destination: "libraries", "trash", "settings", or a library id. */
   activeId?: string;
   onSelect?: (id: string) => void;
+  /**
+   * The six fixed strings, for an application that has a language (`UI-24c`).
+   *
+   * They default to English so the standalone specimen kit renders with no bundle behind it,
+   * which is the same arrangement `RecordingCard` uses. The application always passes them: a
+   * default that is never exercised in the product is the point, because a sidebar that quietly
+   * fell back to English was how all six of these went untranslated until the pseudo-locale was
+   * pointed at a mounted view.
+   */
+  labels?: {
+    libraries?: string;
+    search?: string;
+    yours?: string;
+    shared?: string;
+    trash?: string;
+    settings?: string;
+  };
 }
 
 /**
@@ -143,6 +160,7 @@ export function Sidebar({
   collapsed = false,
   activeId = 'libraries',
   onSelect,
+  labels,
   style,
   ...rest
 }: SidebarProps) {
@@ -171,16 +189,21 @@ export function Sidebar({
     >
       <Item
         icon="library"
-        label="Libraries"
+        label={labels?.libraries ?? 'Libraries'}
         active={activeId === 'libraries'}
         collapsed={collapsed}
         onClick={pick('libraries')}
       />
       {collapsed ? (
-        <Item icon="search" label="Search" collapsed onClick={pick('search')} />
+        <Item
+          icon="search"
+          label={labels?.search ?? 'Search'}
+          collapsed
+          onClick={pick('search')}
+        />
       ) : (
         <>
-          <GroupLabel>Your libraries</GroupLabel>
+          <GroupLabel>{labels?.yours ?? 'Your libraries'}</GroupLabel>
           {own.map((library) => (
             <Item
               key={idOf(library)}
@@ -191,7 +214,7 @@ export function Sidebar({
               onClick={pick(idOf(library))}
             />
           ))}
-          {shared.length > 0 && <GroupLabel>Shared with you</GroupLabel>}
+          {shared.length > 0 && <GroupLabel>{labels?.shared ?? 'Shared with you'}</GroupLabel>}
           {shared.map((library) => (
             <Item
               key={idOf(library)}
@@ -214,7 +237,7 @@ export function Sidebar({
       >
         <Item
           icon="trash-2"
-          label="Trash"
+          label={labels?.trash ?? 'Trash'}
           count={collapsed ? null : trashCount}
           collapsed={collapsed}
           active={activeId === 'trash'}
@@ -222,7 +245,7 @@ export function Sidebar({
         />
         <Item
           icon="sliders-horizontal"
-          label="Settings"
+          label={labels?.settings ?? 'Settings'}
           collapsed={collapsed}
           active={activeId === 'settings'}
           onClick={pick('settings')}

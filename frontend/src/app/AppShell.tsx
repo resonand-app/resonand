@@ -239,6 +239,14 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
           {...(shared.length > 0 ? { shared } : {})}
           {...(trashCount > 0 ? { trashCount } : {})}
           collapsed={collapsed}
+          labels={{
+            libraries: t('sidebar.libraries'),
+            search: t('sidebar.search'),
+            yours: t('sidebar.yours'),
+            shared: t('sidebar.shared'),
+            trash: t('sidebar.trash'),
+            settings: t('sidebar.settings'),
+          }}
           activeId={destinationOf(location.pathname)}
           onSelect={(id) => {
             void navigate(destinationTo(id));

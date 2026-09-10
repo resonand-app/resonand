@@ -21,6 +21,18 @@ export interface TranscriptionDestination {
   configured: boolean;
 }
 
+/**
+ * Where the provider's name goes inside a translated sentence (`UI-24c`).
+ *
+ * The wording is the application's, because it has the language; the *arrangement* stays here,
+ * because the sentence somebody reads before their recording leaves the machine should have one
+ * author. So a label is an ordinary i18next string interpolated with this marker, and the notice
+ * splits on it to put the host back in its own type. A marker rather than a `<Trans>` component
+ * because nothing else in this product uses one, and principle 2's only implementation is a poor
+ * place to introduce a second way of writing a sentence.
+ */
+export const HOST = '\u0000host\u0000';
+
 export interface EgressNoticeProps {
   destination: TranscriptionDestination;
   /**
@@ -30,6 +42,20 @@ export interface EgressNoticeProps {
   placement?: 'panel' | 'dialog' | 'retry';
   /** The retry control, for `placement="retry"`. */
   action?: ReactNode;
+  /**
+   * The four sentences, each interpolated with `HOST` where the provider's name goes.
+   *
+   * English by default so the standalone kit renders. **The application always passes them**, and
+   * this is the component where that matters most: until `UI-24c`, the one disclosure telling
+   * somebody their audio is about to leave the instance was hardcoded English, so a reader in any
+   * other language got the product's most important sentence in a language they may not have.
+   */
+  labels?: {
+    none?: string;
+    local?: string;
+    retry?: string;
+    external?: string;
+  };
 }
 
 /**
@@ -56,7 +82,12 @@ export interface EgressNoticeProps {
  * before their recording leaves the machine is one sentence with one author, and `UI-25b`'s test
  * has one thing to look for.
  */
-export function EgressNotice({ destination, placement = 'panel', action }: EgressNoticeProps) {
+export function EgressNotice({
+  destination,
+  placement = 'panel',
+  action,
+  labels,
+}: EgressNoticeProps) {
   const { provider, host, is_local: local, configured } = destination;
   const where = host ?? provider;
 
@@ -64,26 +95,33 @@ export function EgressNotice({ destination, placement = 'panel', action }: Egres
   const glyph: IconName =
     tone === 'none' ? 'circle-dashed' : tone === 'local' ? 'hard-drive' : 'cloud-upload';
 
-  const sentence =
-    tone === 'none' ? (
-      <>
-        No transcription provider is configured. Nothing can be transcribed until an administrator
-        sets one up.
-      </>
-    ) : tone === 'local' ? (
-      <>
-        Transcription runs on <Host>{where}</Host>, on your own network. The audio does not leave
-        it.
-      </>
-    ) : placement === 'retry' ? (
-      <>
-        Retrying sends the audio to <Host>{where}</Host> again.
-      </>
-    ) : (
-      <>
-        Transcription is sent to <Host>{where}</Host>. The audio leaves this instance.
-      </>
-    );
+  const template =
+    tone === 'none'
+      ? (labels?.none ??
+        'No transcription provider is configured. Nothing can be transcribed until an administrator sets one up.')
+      : tone === 'local'
+        ? (labels?.local ??
+          `Transcription runs on ${HOST}, on your own network. The audio does not leave it.`)
+        : placement === 'retry'
+          ? (labels?.retry ?? `Retrying sends the audio to ${HOST} again.`)
+          : (labels?.external ??
+            `Transcription is sent to ${HOST}. The audio leaves this instance.`);
+
+  // Split rather than replace: the host is drawn in its own type, so it has to survive as an
+  // element. A sentence with no marker in it is rendered whole, which is the `none` case and is
+  // also what keeps a mistranslation that dropped the marker readable rather than blank.
+  const [before, ...after] = template.split(HOST);
+  const sentence = (
+    <>
+      {before}
+      {after.length > 0 && (
+        <>
+          <Host>{where}</Host>
+          {after.join(HOST)}
+        </>
+      )}
+    </>
+  );
 
   return (
     <div

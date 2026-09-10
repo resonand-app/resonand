@@ -27,6 +27,7 @@ import { post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { Button, EgressNotice } from '@/design-system';
 import { instant } from '@/i18n/time';
+import { useEgressLabels } from '@/components/egress-labels';
 
 import type { RecordingContext } from './data';
 import { useDestination, useTranscribe } from './transcription';
@@ -39,6 +40,7 @@ export interface TranscriptVersionsProps {
 
 export function TranscriptVersions({ context, transcripts }: TranscriptVersionsProps) {
   const { t, i18n } = useTranslation('recording');
+  const egressLabels = useEgressLabels();
   const recording = context.recording;
   const destination = useDestination();
   const transcribe = useTranscribe(recording?.uuid ?? '');
@@ -138,6 +140,7 @@ export function TranscriptVersions({ context, transcripts }: TranscriptVersionsP
         <EgressNotice
           destination={where}
           placement="retry"
+          labels={egressLabels}
           action={
             <Button
               variant="ghost"

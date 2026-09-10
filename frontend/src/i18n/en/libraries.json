@@ -26,5 +26,8 @@
   },
   "unreachable": {
     "title": "The instance is not answering"
+  },
+  "yours": {
+    "title": "Your libraries"
   }
 }

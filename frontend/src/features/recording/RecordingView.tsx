@@ -256,7 +256,7 @@ function Whereabouts({ context }: { context: RecordingContext }) {
           color: 'var(--text-3)',
         }}
       >
-        <Link to={toLibrary(library.uuid)} data-app="breadcrumb-library">
+        <Link to={toLibrary(library.uuid)} data-app="breadcrumb-library" data-hit-target>
           {library.name}
         </Link>
         {categoryName !== undefined && (
