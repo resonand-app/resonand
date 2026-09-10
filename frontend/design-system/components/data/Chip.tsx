@@ -41,6 +41,9 @@ export function Chip({ children, active, as = 'span', style, ...rest }: ChipProp
         display: 'inline-flex',
         alignItems: 'center',
         height: 24,
+        // The height is fixed, so a wrapped label is drawn outside the pill.
+        flex: '0 0 auto',
+        whiteSpace: 'nowrap',
         padding: '0 10px',
         borderRadius: 'var(--radius-chip)',
         fontFamily: 'var(--font-sans)',

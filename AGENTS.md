@@ -114,7 +114,7 @@ application shell and the hashed bundle the shell references, and that the CLI r
 
 > **The three subsections that follow are scoped to the build of the first version.** Commits,
 > branches and task identifiers describe how v0 is being built against `docs/v0-plan.md`. When
-> v0 ships, delete them — keeping only Conventional Commits itself and the prose voice below.
+> v0 ships, delete them — keeping only Conventional Commits itself and the comment rules below.
 
 ### Commits
 
@@ -163,12 +163,33 @@ test. **A task is done when it meets the criterion written next to it, not when 
 
 Gaps in the numbering are expected: a task that moves to `ROADMAP.md` keeps its identifier.
 
-### Prose voice
+### Comments
 
-Comments, docstrings and plan entries in this repository explain the reasoning, name the
-alternative that was rejected, and state consequences in numbers. Match that when you add to
-them. Sentence case, no emoji outside the plans' notation, no marketing register. Do not add
-comments that restate the code.
+**A comment answers "why?", in one line. Two or three only when one genuinely will not do.**
+
+Write one only where the code cannot say it itself: a non-obvious constraint, a browser or library
+behaviour somebody would otherwise "fix", a rejected alternative that looks better than it is. If
+the reasoning is already legible in the code, there is no comment to write.
+
+Never restate what the code does, and never narrate the change that introduced it — no bug
+reports, no before-and-after, no "it used to". The diff and the commit body hold that; a comment
+that tells the story of a fix is read for years by people who never saw the bug.
+
+```ts
+// The height is fixed, so a wrapped label is drawn outside the pill.
+flex: '0 0 auto',
+whiteSpace: 'nowrap',
+```
+
+Docstrings are the exception and stay as they are: a module or an exported component earns a
+paragraph saying what it is for and what it deliberately is not. Keep it about the thing, not
+about its history.
+
+Sentence case, no emoji outside the plans' notation, no marketing register. ASCII only, as in
+commit messages.
+
+Entries in `docs/` are prose and not comments: there, name the alternative that was rejected and
+state consequences in numbers, at whatever length the decision needs.
 
 ## Hard rules
 

@@ -219,6 +219,15 @@ describe('the account menu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('names its layer, so it draws over the view rather than under it', async () => {
+    renderShell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
+    const menu = await screen.findByRole('menu');
+    // jsdom has no stacking, so it cannot see the menu paint behind the page. It can hold the
+    // cause: an overlay naming no layer stacks by DOM order, under the `<main>` after it.
+    expect(menu.style.zIndex).toBe('var(--z-menu)');
+  });
+
   it('closes on Escape, like every other overlay in the product', async () => {
     renderShell();
     await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
@@ -227,5 +236,31 @@ describe('the account menu', () => {
     await waitFor(() => {
       expect(screen.queryByRole('menu')).not.toBeInTheDocument();
     });
+  });
+});
+
+describe('the lockup', () => {
+  it('is the way back to the libraries, and gets there without leaving the router', async () => {
+    renderShell(toLibrary(AVIA));
+    const home = await screen.findByRole('link', { name: /back to your libraries/ });
+    expect(home).toHaveAttribute('href', routes.libraries);
+    await userEvent.click(home);
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent(routes.libraries);
+    });
+  });
+});
+
+describe('the search field', () => {
+  it('takes a click anywhere in the box, not only on the input', async () => {
+    // jsdom has no pseudo-elements, so it cannot reproduce the `::after` that intercepts the
+    // click. It can hold the arrangement that survives it: a label wrapping its own input.
+    renderShell();
+    const field = await screen.findByRole('textbox', { name: 'Search everything' });
+    const box = field.closest('label');
+    expect(box).not.toBeNull();
+    expect(box).toHaveAttribute('data-ds', 'search-field');
+    await userEvent.click(box as HTMLElement);
+    expect(field).toHaveFocus();
   });
 });

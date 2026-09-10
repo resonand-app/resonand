@@ -3,7 +3,8 @@
     "search": "Search everything",
     "sidebar": "Show or hide the sidebar",
     "upload": "Upload recordings",
-    "account": "Your account"
+    "account": "Your account",
+    "home": "Sonarium, back to your libraries"
   },
   "sidebar": {
     "libraries": "Libraries",

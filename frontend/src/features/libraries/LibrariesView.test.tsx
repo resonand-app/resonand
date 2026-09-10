@@ -11,10 +11,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { toLibrary } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { ATENEU, AVIA, NOTA, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
@@ -22,6 +23,12 @@ import { mockApi, server } from '@/test/api/server';
 import { LibrariesView } from './LibrariesView';
 
 mockApi();
+
+/** Where the router thinks it is, for the tests about opening a library. */
+function Where() {
+  const location = useLocation();
+  return <div data-testid="where">{location.pathname}</div>;
+}
 
 function renderView() {
   const client = createQueryClient();
@@ -251,5 +258,55 @@ describe('creating a library', () => {
     renderView();
     await user.click(screen.getByRole('button', { name: /Create a library/ }));
     expect(await screen.findByRole('dialog', { name: 'Create a library' })).toBeInTheDocument();
+  });
+});
+
+describe('opening a library', () => {
+  /** The grid, with somewhere to read the address off. */
+  function renderWithLocation() {
+    const client = createQueryClient();
+    client.setDefaultOptions({ queries: { retry: false } });
+    return render(
+      <QueryClientProvider client={client}>
+        <ThemeProvider>
+          <MemoryRouter>
+            <Where />
+            <LibrariesView />
+          </MemoryRouter>
+        </ThemeProvider>
+      </QueryClientProvider>,
+    );
+  }
+
+  it('opens from the whole card and not only from the title', async () => {
+    const user = userEvent.setup();
+    renderWithLocation();
+    const card = await cardFor('Personal');
+    // The meta line: a part of the card that is not the link.
+    await user.click(within(card).getByText(/recordings ·/));
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent(toLibrary(PERSONAL));
+    });
+  });
+
+  it('keeps the title a link, and answers it in the router rather than reloading', async () => {
+    const user = userEvent.setup();
+    renderWithLocation();
+    const card = await cardFor('Personal');
+    const title = within(card).getByRole('link', { name: 'Personal' });
+    expect(title).toHaveAttribute('href', toLibrary(PERSONAL));
+    await user.click(title);
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent(toLibrary(PERSONAL));
+    });
+  });
+
+  it('does not open the library when the overflow control is pressed', async () => {
+    const user = userEvent.setup();
+    renderWithLocation();
+    const card = await cardFor('Personal');
+    await user.click(within(card).getByRole('button', { name: 'Options for Personal' }));
+    expect(screen.getByTestId('where')).toHaveTextContent('/');
+    expect(screen.getByTestId('where')).not.toHaveTextContent(toLibrary(PERSONAL));
   });
 });

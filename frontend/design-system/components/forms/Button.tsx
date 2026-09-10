@@ -47,6 +47,9 @@ export function Button({ variant = 'primary', icon, children, disabled, style, .
         display: 'inline-flex',
         alignItems: 'center',
         gap: 7,
+        // The height is fixed, so a wrapped label is drawn outside the pill. `style` overrides.
+        flex: '0 0 auto',
+        whiteSpace: 'nowrap',
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--type-ui-size)',
         transition:

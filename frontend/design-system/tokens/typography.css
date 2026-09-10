@@ -26,21 +26,21 @@
   --type-title-leading: 1.25;
 
   /* Body and transcript — read for minutes, not glanced at. */
-  --type-body-size: 15px;
+  --type-body-size: 16px;
   --type-body-leading: 1.6;
 
   /* The working size of the app: rows, labels, menu items, buttons. */
-  --type-ui-size: 13px;
-  --type-ui-size-sm: 12px;
+  --type-ui-size: 14px;
+  --type-ui-size-sm: 13px;
 
   /* Anything comparable to another number is mono and tabular. */
   --type-numeric-family: var(--font-mono);
-  --type-numeric-size: 11.5px;
+  --type-numeric-size: 12.5px;
   --type-numeric-size-lg: 22px;
   --type-numeric-variant: tabular-nums;
 
   /* Group labels and overlines. */
-  --type-overline-size: 10px;
+  --type-overline-size: 11px;
   --type-overline-weight: var(--weight-medium);
   --type-overline-tracking: 0.12em;
 }

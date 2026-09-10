@@ -73,7 +73,15 @@ export function LibraryCard({
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- the title link is the keyboard path, see above
     <article
-      onClick={onOpen}
+      onClick={(event) => {
+        if (onOpen === undefined) return;
+        // A modifier click stays the browser's, so the title link can still open a new tab.
+        // Anything else cancels it: following the `href` would reload out of the router.
+        if (event.defaultPrevented || event.button !== 0) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        onOpen();
+      }}
       data-ds="library-card"
       data-interactive={onOpen === undefined ? undefined : 'true'}
       style={{
@@ -107,11 +115,15 @@ export function LibraryCard({
             background: colour,
           }}
         />
-          <IconButton
+        <IconButton
           icon="more-vertical"
           variant="ghost"
           size={26}
           label={labels?.options?.(name) ?? `Options for ${name}`}
+          // The whole card opens the library, and opening this menu must not.
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
         />
       </div>
       <h3
