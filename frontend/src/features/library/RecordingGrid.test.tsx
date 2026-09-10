@@ -289,20 +289,24 @@ describe('the transcription state toggles', () => {
     }
   });
 
-  it('are real toggles, and any of them means either', async () => {
+  it('are one choice, so picking a state drops the one before it', async () => {
     const user = userEvent.setup();
     renderLibrary();
     await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Transcribed' }));
     await user.click(screen.getByRole('button', { name: 'Transcribing' }));
-    // Repeated rather than joined: the API unions what it is given, so two states on is one
-    // request that asks for either.
+    // The four are the states one recording can be in, so filtering by two of them at once is a
+    // question nobody asks: the second press replaces the first rather than adding to it.
     const where = screen.getByTestId('where').textContent;
-    expect(where).toContain('transcription_state=done');
     expect(where).toContain('transcription_state=running');
-    expect(screen.getByRole('button', { name: 'Transcribed' })).toHaveAttribute(
+    expect(where).not.toContain('transcription_state=done');
+    expect(screen.getByRole('button', { name: 'Transcribing' })).toHaveAttribute(
       'aria-pressed',
       'true',
+    );
+    expect(screen.getByRole('button', { name: 'Transcribed' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
     );
   });
 

@@ -6,10 +6,10 @@
  * thing that has to name them, and two lists in two files is how they come to disagree. The
  * translation is the interface's; the order and the glyphs are the system's.
  *
- * **Repeatable, and any of them means either.** The API takes `transcription_state` more than
- * once and unions what it is given (`JOB-11b`), so three toggles on is one request rather than
- * three -- and none on means every state, which is why there is no "all" toggle: it is the
- * absence of the others.
+ * **One at a time.** The API unions repeated `transcription_state` values (`JOB-11b`) and the URL
+ * still carries a list, but the row offers a choice rather than a set: picking a state replaces
+ * whatever was picked, and picking it again clears it. None on means every state, which is why
+ * there is no "all" toggle -- it is the absence of the others.
  */
 
 import { useTranslation } from 'react-i18next';
@@ -40,7 +40,7 @@ export function StateToggles({ value, onChange }: StateTogglesProps) {
             active={on}
             aria-pressed={on}
             onClick={() => {
-              onChange(on ? value.filter((one) => one !== state) : [...value, state]);
+              onChange(on ? [] : [state]);
             }}
           >
             <Icon name={TRANSCRIPTION_STATES[state].icon} size={13} />
