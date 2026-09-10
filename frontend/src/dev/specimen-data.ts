@@ -11,7 +11,6 @@
 import { generatePeaks } from '@/design-system';
 
 export const PEAKS = generatePeaks(11, 240);
-export const SHORT_PEAKS = generatePeaks(41, 90);
 
 export const LIBRARIES = [
   { id: 'avia', name: 'Àvia Teresa', colour: 'var(--library-clay)', count: 37 },

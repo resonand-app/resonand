@@ -23,18 +23,17 @@
   /* The phone shell replaces the desktop shell. */
   --breakpoint-phone: 720px;
 
-  /* The dense list's four column widths (`UI-7b`, §V4), in the order the columns go.
+  /* The dense list's column widths (`UI-7b`, §V4), in the order the columns go.
    *
    * The list drops a column at each of these rather than compressing every column at once,
-   * because the row is nine columns wide and squeezing all nine produces nine unreadable ones.
-   * What survives to the bottom is the irreducible row -- title, length, transcript state and
-   * play -- and the order is the specification's: what a person needs least, first.
+   * because squeezing them all produces a row of unreadable ones. What survives to the bottom is
+   * the irreducible row -- title, length, transcript state and play -- and the order is the
+   * specification's: what a person needs least, first.
    *
    * The tags threshold and --breakpoint-grid-2 are the same number and are deliberately two
    * tokens: they answer different questions, and a future move of one must not silently move
    * the other. */
   --breakpoint-column-tags: 900px;
   --breakpoint-column-category: 800px;
-  --breakpoint-column-waveform: 700px;
   --breakpoint-column-date: 620px;
 }

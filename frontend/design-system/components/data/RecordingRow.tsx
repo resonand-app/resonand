@@ -1,8 +1,6 @@
 import type { HTMLAttributes, KeyboardEvent, MouseEvent } from 'react';
 
 import type { TranscriptionState } from '../../transcription-states';
-import type { Peaks } from '../media/peaks';
-import { Waveform } from '../media/Waveform';
 import { Checkbox } from '../forms/Checkbox';
 import { IconButton } from '../forms/IconButton';
 import { Chip } from './Chip';
@@ -29,9 +27,6 @@ export interface RecordingRowProps
   /** User-entered tags, shown verbatim. */
   tags?: string[];
   state?: TranscriptionState;
-  peaks?: Peaks | undefined;
-  played?: number;
-  pending?: boolean;
   /** Row is the current selection or the playing recording. */
   selected?: boolean;
   /** The selection control, in its own column (`UI-9a`). Absent where selection is not offered. */
@@ -46,8 +41,6 @@ export interface RecordingRowProps
   onPlay?: () => void;
   /** The copy, for an application that has its own (`UI-22a`). */
   labels?: {
-    /** What the waveform says before the peaks job has run. */
-    noWaveform?: string;
     play?: (name: string) => string;
     pause?: (name: string) => string;
     state?: string;
@@ -63,6 +56,11 @@ export interface RecordingRowProps
  * it can take a role where `LibraryCard` cannot. `UI-7a` virtualises eight hundred of these and
  * `UI-4g` owns the arrow keys between them; a roving tab stop is theirs to impose, and until then
  * a row nobody can reach without a mouse is the worse of the two problems.
+ *
+ * **Every column is drawn whether or not it has a value.** A row is only a row next to its
+ * neighbours: dropping the cell of a recording with no category slid its tags one column left and
+ * its length one column right, so a list where any recording lacked one thing lined up nowhere.
+ * There is no waveform column -- a 36px sparkline told nobody anything the grid does not.
  */
 export function RecordingRow({
   name,
@@ -71,9 +69,6 @@ export function RecordingRow({
   category,
   tags = [],
   state = 'done',
-  peaks,
-  played = 0,
-  pending = false,
   selected = false,
   playing = false,
   onOpen,
@@ -192,33 +187,22 @@ export function RecordingRow({
       >
         {name}
       </span>
-      <div data-column="waveform" style={{ width: 88, flex: '0 0 auto' }}>
-        <Waveform
-          peaks={peaks}
-          size="dense"
-          played={played}
-          pending={pending}
-          noWaveformLabel={labels?.noWaveform}
-        />
-      </div>
-      {date !== undefined && (
-        <span
-          data-column="date"
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 'var(--type-numeric-size)',
-            fontVariantNumeric: 'var(--type-numeric-variant)',
-            color: 'var(--text-3)',
-            width: 104,
-            flex: '0 0 auto',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {date}
-        </span>
-      )}
+      <span
+        data-column="date"
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 'var(--type-numeric-size)',
+          fontVariantNumeric: 'var(--type-numeric-variant)',
+          color: 'var(--text-3)',
+          width: 104,
+          flex: '0 0 auto',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {date}
+      </span>
       <span
         style={{
           fontFamily: 'var(--font-mono)',
@@ -232,42 +216,38 @@ export function RecordingRow({
       >
         {duration}
       </span>
-      {category !== undefined && (
-        <span
-          data-column="category"
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'var(--type-ui-size-sm)',
-            color: 'var(--text-3)',
-            width: 116,
-            flex: '0 0 auto',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {category}
-        </span>
-      )}
-      {tags.length > 0 && (
-        <span
-          data-column="tags"
-          style={{
-            display: 'flex',
-            gap: 4,
-            width: 148,
-            flex: '0 0 auto',
-            overflow: 'hidden',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {/* One chip per tag, clipped rather than counted: a 36px row has no room for a `+N`
-              that would itself take the width of a tag, and the whole column goes at 900 anyway. */}
-          {tags.map((tag) => (
-            <Chip key={tag}>{tag}</Chip>
-          ))}
-        </span>
-      )}
+      <span
+        data-column="category"
+        style={{
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'var(--type-ui-size-sm)',
+          color: 'var(--text-3)',
+          width: 116,
+          flex: '0 0 auto',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
+        {category}
+      </span>
+      <span
+        data-column="tags"
+        style={{
+          display: 'flex',
+          gap: 4,
+          width: 148,
+          flex: '0 0 auto',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {/* One chip per tag, clipped rather than counted: a 36px row has no room for a `+N`
+            that would itself take the width of a tag, and the whole column goes at 900 anyway. */}
+        {tags.map((tag) => (
+          <Chip key={tag}>{tag}</Chip>
+        ))}
+      </span>
     </div>
   );
 }
