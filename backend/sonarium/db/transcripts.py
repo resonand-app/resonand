@@ -56,7 +56,13 @@ def create_transcript(
     *,
     make_active: bool = True,
 ) -> Transcript:
-    """Store a transcript and its segments, optionally making it the active one."""
+    """Store a transcript and its segments, optionally making it the active one.
+
+    The timings are checked before the first row is written, so a provider that returned an end
+    before its start fails the job it came from instead of leaving a transcript that reads
+    correctly and seeks to the wrong place (``REV-6``).
+    """
+    validate_segments(segments)
     provenance = origin or Origin()
     transcript = Transcript(
         audio_id=audio_id,
@@ -167,7 +173,8 @@ def validate_segments(segments: list[SegmentDraft]) -> None:
 
     A provider that returns an end before its start, or a negative offset, has given us something
     that will silently seek to the wrong place; failing here is how that gets noticed while the
-    provider is still on screen.
+    provider is still on screen. ``create_transcript`` calls it, so every path into the archive --
+    the worker, the import and the seed -- goes through it.
     """
     for index, segment in enumerate(segments):
         if segment.start_ms < 0 or segment.end_ms < segment.start_ms:

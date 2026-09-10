@@ -108,6 +108,33 @@ def test_an_export_writes_the_audio_the_sidecar_and_the_subtitles(
     assert json.loads(written.sidecar.read_text())["uuid"] == recording
 
 
+def test_the_original_is_copied_rather_than_read_into_memory(
+    database: Database,
+    db_settings: Settings,
+    recording: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``REV-9``: this command is principle 1's proof and it died on a large original.
+
+    Asserted as "the file never becomes one object in memory" rather than by exporting something
+    enormous: the size at which the old line failed is larger than a test has any business
+    writing to disk.
+    """
+    destination = tmp_path / "export"
+
+    def refuse(self: Path) -> bytes:
+        raise AssertionError(f"{self} was read into memory whole.")
+
+    monkeypatch.setattr(Path, "read_bytes", refuse)
+    with database.read_session() as session:
+        audio = find_by_uuid(session, recording)
+        assert audio is not None
+        written = export_recording(session, audio, destination, db_settings.resolved_storage_dir)
+    monkeypatch.undo()
+    assert written.audio.read_bytes() == b"the original bytes"
+
+
 def test_the_export_is_readable_without_this_software(
     database: Database, db_settings: Settings, recording: str, tmp_path: Path
 ) -> None:

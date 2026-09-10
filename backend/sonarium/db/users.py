@@ -9,7 +9,7 @@ a service that remembers to do both.
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from sonarium.core.errors import ConflictError, NotFoundError
@@ -138,5 +138,9 @@ def set_disabled(session: Session, user_id: int, *, disabled: bool) -> User:
 
 
 def count_users(session: Session) -> int:
-    """How many accounts exist. ``API-7`` uses it to decide whether this is the first run."""
-    return len(session.execute(select(User.id)).scalars().all())
+    """How many accounts exist. ``API-7`` uses it to decide whether this is the first run.
+
+    Counted in SQL rather than by hydrating every id: the answer is one integer and building a
+    list to measure it grows with the archive for nothing (``REV-2``).
+    """
+    return session.execute(select(func.count()).select_from(User)).scalar_one()
