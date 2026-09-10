@@ -22,7 +22,8 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, type RenderResult } from '@testing-library/react';
+import { expect } from 'vitest';
+import { render, screen, waitFor, type RenderResult } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router';
 
@@ -54,6 +55,15 @@ export interface ViewUnderTest {
    * names a string that arrives with the answer instead.
    */
   settled: string | RegExp;
+  /**
+   * A selector that must also match before the view counts as drawn.
+   *
+   * For the views whose only unambiguous text marker arrives before their data does. V2 is the
+   * case that put this here: its settle string belongs to the create-a-library card, which is
+   * drawn immediately, so the audits were running against a page with no libraries on it and
+   * passing. A selector says "the content is here" in a way no wording can.
+   */
+  drawn?: string;
 }
 
 /**
@@ -76,8 +86,10 @@ export const VIEWS: readonly ViewUnderTest[] = [
     name: 'V2 - Libraries',
     module: 'features/libraries/LibrariesView.tsx',
     at: routes.libraries,
-    // A library name would match the sidebar as well as the card.
+    // A library name would match the sidebar as well as the card, so the text marker is the
+    // create-a-library card -- which is drawn before the libraries are, hence `drawn`.
     settled: 'Name it and pick a colour',
+    drawn: '[data-ds="library-card"]',
   },
   {
     name: 'V3 - A library',
@@ -230,5 +242,14 @@ export async function mountView(
     </I18nextProvider>,
   );
   await screen.findByText(view.settled, undefined, { timeout: 5000 });
+  const selector = view.drawn;
+  if (selector !== undefined) {
+    await waitFor(() => {
+      expect(
+        document.querySelector(selector),
+        `${view.name} never drew ${selector}`,
+      ).not.toBeNull();
+    });
+  }
   return result;
 }

@@ -65,6 +65,10 @@ export function LibrariesView() {
       />
       {error === null || error === undefined ? (
         <>
+          {/* The page's default content wants no heading above it, but the shared group below
+              has one -- so without this the page ran h1 straight to the cards' h3, and axe is
+              right that a skipped level is a document nobody can outline (`UI-23a`). */}
+          <h2 data-visually-hidden>{t('yours.title')}</h2>
           <Grid>
             <CreateLibraryCard
               labels={{ action: t('create.action'), hint: t('create.hint') }}
@@ -155,7 +159,10 @@ export function Card({
         : {})}
       peaks={peaks}
       pending={pending}
-      labels={{ options: (name) => t('card.options', { name }) }}
+      labels={{
+        options: (name) => t('card.options', { name }),
+        noWaveform: t('player:state.noWaveform'),
+      }}
     />
   );
 }
