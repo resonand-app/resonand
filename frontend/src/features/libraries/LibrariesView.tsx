@@ -19,6 +19,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { toLibrary } from '@/app/routes';
@@ -139,12 +140,17 @@ export function Card({
   byline?: boolean;
 }) {
   const { t } = useTranslation('libraries');
+  const navigate = useNavigate();
   const { peaks, pending } = useLatestWaveform(library, waveforms);
 
   return (
     <LibraryCard
       name={library.name}
       href={toLibrary(library.uuid)}
+      // The card opens the library through the router; the `href` above would reload the page.
+      onOpen={() => {
+        void navigate(toLibrary(library.uuid));
+      }}
       colour={colourOf(library.colour)}
       meta={`${t('common:count.recordings', { count: library.audio_count })} · ${format.total(
         library.total_duration_ms,
