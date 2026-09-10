@@ -131,12 +131,15 @@ export interface PointerResponse {
  * Painted is the qualifier that makes it fair. The seekable waveform takes a pointer cursor and
  * deliberately nothing else -- the bars are the data and nothing is drawn over them -- so it is
  * not in that set and needs no excuse for not being.
+ *
+ * It matches `cursor: pointer` and not any `cursor`, which is what the sentence above always
+ * said: a text field that lit up under a passing mouse would be a field pretending to be a button.
  */
 export function pointerResponse(css: string): PointerResponse {
   const clickable = new Set<string>();
   const painted = new Set<string>();
   const responds = new Set<string>();
-  for (const { selector, properties } of rulesIn(css)) {
+  for (const { selector, properties, declarations } of rulesIn(css)) {
     for (const part of selectorParts(selector)) {
       const name = subjectOf(part);
       if (name === undefined) continue;
@@ -144,7 +147,7 @@ export function pointerResponse(css: string): PointerResponse {
         responds.add(name);
         continue;
       }
-      if (properties.includes('cursor')) clickable.add(name);
+      if (/cursor\s*:\s*pointer/.test(declarations)) clickable.add(name);
       if (properties.includes('background') || properties.includes('box-shadow')) painted.add(name);
     }
   }

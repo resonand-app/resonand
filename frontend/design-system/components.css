@@ -80,6 +80,13 @@
   outline: none;
 }
 
+/* The caret over the whole box, not just the input: the 44px pseudo-element covers the input, so
+   the arrow was what a pointer showed over the one part of the control that is the text. */
+[data-ds='field-box'],
+[data-ds='search-field'] {
+  cursor: text;
+}
+
 /* ==========================================================================
    Visually hidden (`UI-23a`)
    ========================================================================== */

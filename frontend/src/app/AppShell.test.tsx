@@ -229,3 +229,17 @@ describe('the account menu', () => {
     });
   });
 });
+
+describe('the search field', () => {
+  it('takes a click anywhere in the box, not only on the input', async () => {
+    // jsdom has no pseudo-elements, so it cannot reproduce the `::after` that intercepts the
+    // click. It can hold the arrangement that survives it: a label wrapping its own input.
+    renderShell();
+    const field = await screen.findByRole('textbox', { name: 'Search everything' });
+    const box = field.closest('label');
+    expect(box).not.toBeNull();
+    expect(box).toHaveAttribute('data-ds', 'search-field');
+    await userEvent.click(box as HTMLElement);
+    expect(field).toHaveFocus();
+  });
+});

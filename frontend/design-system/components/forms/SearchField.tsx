@@ -36,7 +36,9 @@ export function SearchField({
   ...rest
 }: SearchFieldProps) {
   return (
-    <div
+    // A label, not a div: `[data-hit-target]::after` covers the input and swallows the click,
+    // and only a label forwards that click to the control inside it.
+    <label
       data-ds="search-field"
       data-hit-target=""
       style={{
@@ -58,6 +60,9 @@ export function SearchField({
         // Escape handling, and both are visual changes this task is not allowed to make.
         // `UI-4g` owns Escape, and the filter bar owns clearing.
         placeholder={placeholder}
+        // The wrapping label has no readable text, and an empty label still beats the
+        // placeholder -- without this the field has no accessible name at all.
+        aria-label={placeholder}
         style={{
           flex: 1,
           minWidth: 0,
@@ -71,6 +76,8 @@ export function SearchField({
       />
       {shortcut !== null && (
         <span
+          // Inside the label, so it would otherwise be read as the field's name.
+          aria-hidden
           style={{
             fontFamily: 'var(--font-mono)',
             fontWeight: 'var(--weight-medium)',
@@ -81,6 +88,6 @@ export function SearchField({
           {shortcut}
         </span>
       )}
-    </div>
+    </label>
   );
 }
