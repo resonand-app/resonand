@@ -219,6 +219,15 @@ describe('the account menu', () => {
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
+  it('names its layer, so it draws over the view rather than under it', async () => {
+    renderShell();
+    await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
+    const menu = await screen.findByRole('menu');
+    // jsdom has no stacking, so it cannot see the menu paint behind the page. It can hold the
+    // cause: an overlay naming no layer stacks by DOM order, under the `<main>` after it.
+    expect(menu.style.zIndex).toBe('var(--z-menu)');
+  });
+
   it('closes on Escape, like every other overlay in the product', async () => {
     renderShell();
     await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));

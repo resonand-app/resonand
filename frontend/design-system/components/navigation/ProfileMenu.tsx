@@ -102,6 +102,9 @@ export function ProfileMenu({
       data-ds="profile-menu"
       style={{
         width: 236,
+        // Without a layer it stacks by DOM order, which puts it under the positioned `<main>`
+        // the nav is drawn before -- painted behind the view, with no row clickable.
+        zIndex: 'var(--z-menu)',
         background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
         boxShadow: 'var(--elevation-overlay)',
