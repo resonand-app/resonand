@@ -36,7 +36,6 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from sonarium.core import colours
 from sonarium.core.ids import new_uuid
-from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
 
 __all__ = [
@@ -47,7 +46,6 @@ __all__ = [
     "Base",
     "Category",
     "Job",
-    "Level",
     "Library",
     "Segment",
     "Session",
