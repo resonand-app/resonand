@@ -27,7 +27,7 @@ from sonarium.db.audio import (
 from sonarium.db.engine import Database
 from sonarium.db.models import Audio, Library, Segment
 from sonarium.db.transcripts import Origin, SegmentDraft
-from sqlalchemy import select, text
+from sqlalchemy import event, select, text
 
 # --- Accounts and the personal library (DAT-5) ----------------------------
 
@@ -49,6 +49,37 @@ def test_a_failed_user_creation_leaves_no_half_account(database: Database) -> No
     with database.read_session() as session:
         assert session.execute(select(Audio)).all() == []
         assert users.count_users(session) == 0
+
+
+def test_counting_accounts_asks_the_database_for_the_number(database: Database) -> None:
+    """``REV-2``: one integer was being measured by fetching every id and taking its length.
+
+    Asserted on the statement rather than on the result, because both versions answer 3 -- what
+    differs is whether the work grows with the archive.
+    """
+    with database.write_session() as session:
+        for index in range(3):
+            users.create_user(session, email=f"a{index}@x.test", display_name=f"A{index}")
+    statements: list[str] = []
+
+    def record(
+        _connection: object,
+        _cursor: object,
+        statement: str,
+        _parameters: object,
+        _context: object,
+        _executemany: bool,
+    ) -> None:
+        statements.append(statement)
+
+    event.listen(database.engine, "before_cursor_execute", record)
+    try:
+        with database.read_session() as session:
+            assert users.count_users(session) == 3
+    finally:
+        event.remove(database.engine, "before_cursor_execute", record)
+    counted = [line for line in statements if "user" in line.lower()]
+    assert counted and all("count(" in line.lower() for line in counted)
 
 
 def test_an_address_is_taken_whichever_way_it_is_typed(database: Database) -> None:
