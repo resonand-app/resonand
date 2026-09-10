@@ -222,20 +222,21 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
             {t('dialog.video')}
           </p>
 
-          {goesTo !== undefined &&
-            (goesTo.configured ? (
-              <Switch
-                checked={transcribe}
-                onChange={setTranscribe}
-                label={t('dialog.transcribe')}
-                description={
-                  <EgressNotice destination={goesTo} placement="dialog" labels={egressLabels} />
-                }
-                ariaLabel={t('dialog.transcribe')}
-              />
-            ) : (
+          {/* A sibling of the switch rather than its `description`, which indented the banner
+              under the label and left it flush with the dialog on the right only. */}
+          {goesTo !== undefined && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              {goesTo.configured && (
+                <Switch
+                  checked={transcribe}
+                  onChange={setTranscribe}
+                  label={t('dialog.transcribe')}
+                  ariaLabel={t('dialog.transcribe')}
+                />
+              )}
               <EgressNotice destination={goesTo} placement="dialog" labels={egressLabels} />
-            ))}
+            </div>
+          )}
 
           {chosen.length > 0 && (
             <ul
