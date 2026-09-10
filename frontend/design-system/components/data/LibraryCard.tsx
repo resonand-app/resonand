@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import type { HTMLAttributes, ReactNode } from 'react';
 
 import { IconButton } from '../forms/IconButton';
 import type { Peaks } from '../media/peaks';
@@ -28,6 +28,14 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
   pending?: boolean;
   onOpen?: () => void;
   /**
+   * What goes in the top-right corner, where the overflow control is.
+   *
+   * A slot rather than a list of items, because what a library offers is the application's
+   * question and the menu that answers it is already a component (`Menu`). Left out, the corner
+   * draws the inert button a specimen needs to show the card's shape.
+   */
+  actions?: ReactNode;
+  /**
    * The copy, for an application that has its own (`UI-22a`).
    *
    * `options` names the overflow control, and takes the library's name because a page of cards
@@ -55,6 +63,10 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
  * screen reader then announces a button whose label is the whole card and loses the menu inside
  * it. A card with no `href` has no keyboard path to the library and is for a specimen page, not
  * for a view.
+ *
+ * **The corner is a slot.** What a library offers is the application's question, and `Menu`
+ * already answers it -- so the card marks the corner `card-actions`, keeps its clicks out of
+ * `onOpen`, and draws an inert button only where nothing was passed.
  */
 export function LibraryCard({
   name,
@@ -66,6 +78,7 @@ export function LibraryCard({
   played = 0,
   pending = false,
   onOpen,
+  actions,
   labels,
   style,
   ...rest
@@ -75,6 +88,13 @@ export function LibraryCard({
     <article
       onClick={(event) => {
         if (onOpen === undefined) return;
+        // The corner is the library's own menu and opening it is not opening the library.
+        if (
+          event.target instanceof Element &&
+          event.target.closest('[data-ds="card-actions"]') !== null
+        ) {
+          return;
+        }
         // A modifier click stays the browser's, so the title link can still open a new tab.
         // Anything else cancels it: following the `href` would reload out of the router.
         if (event.defaultPrevented || event.button !== 0) return;
@@ -87,13 +107,11 @@ export function LibraryCard({
       style={{
         width: '100%',
         height: 'var(--card-height)',
-        background: 'var(--surface)',
         borderRadius: 'var(--radius-panel)',
         padding: 'var(--panel-padding)',
         display: 'flex',
         flexDirection: 'column',
         cursor: onOpen ? 'pointer' : 'default',
-        transition: 'box-shadow var(--transition-state)',
         ...style,
       }}
       {...rest}
@@ -115,16 +133,16 @@ export function LibraryCard({
             background: colour,
           }}
         />
-        <IconButton
-          icon="more-vertical"
-          variant="ghost"
-          size={26}
-          label={labels?.options?.(name) ?? `Options for ${name}`}
-          // The whole card opens the library, and opening this menu must not.
-          onClick={(event) => {
-            event.stopPropagation();
-          }}
-        />
+        <span data-ds="card-actions" style={{ display: 'flex', flex: '0 0 auto' }}>
+          {actions ?? (
+            <IconButton
+              icon="more-vertical"
+              variant="ghost"
+              size={26}
+              label={labels?.options?.(name) ?? `Options for ${name}`}
+            />
+          )}
+        </span>
       </div>
       <h3
         style={{

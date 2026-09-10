@@ -1,7 +1,8 @@
 {
   "title": "Libraries",
   "card": {
-    "options": "Options for {{name}}"
+    "options": "Options for {{name}}",
+    "settings": "Settings"
   },
   "create": {
     "action": "Create a library",
