@@ -18,6 +18,7 @@ into another timezone.
 from __future__ import annotations
 
 import json
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -107,7 +108,12 @@ def export_recording(
     *,
     copy_audio: bool = True,
 ) -> ExportedRecording:
-    """Write one recording out: the original, the sidecar, and the derived subtitles."""
+    """Write one recording out: the original, the sidecar, and the derived subtitles.
+
+    The original is copied through a buffer rather than read into memory: an export is the one
+    command that touches every byte in the archive, and a multi-gigabyte recording would take the
+    process down with it (``REV-9``).
+    """
     destination.mkdir(parents=True, exist_ok=True)
     stem = _safe_stem(audio)
     sidecar_path = destination / f"{stem}{SIDECAR_SUFFIX}"
@@ -118,7 +124,7 @@ def export_recording(
     if copy_audio:
         source = storage.resolve(storage_root, audio.storage_path)
         if source.exists():
-            audio_path.write_bytes(source.read_bytes())
+            shutil.copyfile(source, audio_path)
 
     written: list[Path] = []
     transcript = payload.get("transcript")
