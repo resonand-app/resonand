@@ -25,7 +25,7 @@ from sonarium.db.audio import (
     update_metadata,
 )
 from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Library
+from sonarium.db.models import Audio, Library, Segment
 from sonarium.db.transcripts import Origin, SegmentDraft
 from sqlalchemy import select, text
 
@@ -513,6 +513,37 @@ def test_segments_are_renumbered_in_the_order_given(database: Database) -> None:
 def test_an_impossibly_timed_segment_is_refused() -> None:
     with pytest.raises(InvalidRequestError, match="timed impossibly"):
         transcripts.validate_segments([SegmentDraft(5000, 1000, "backwards")])
+
+
+def test_creating_a_transcript_refuses_impossible_timings_before_writing_anything(
+    database: Database,
+) -> None:
+    """``REV-6``: the check existed and nothing on the ingestion path called it.
+
+    A transcript whose end precedes its start reads correctly and seeks to the wrong place, which
+    is why it has to fail here rather than reach a row.
+    """
+    with database.write_session() as session:
+        owner = users.create_user(session, email="o@x.test", display_name="O")
+        library = libraries.create_library(session, owner.id, name="L")
+        audio = create_audio(
+            session,
+            library_id=library.id,
+            uploaded_by=owner.id,
+            storage_path="storage/aa/aa/original.m4a",
+            original_filename="a.m4a",
+        )
+        audio_id = audio.id
+    with (
+        pytest.raises(InvalidRequestError, match="timed impossibly"),
+        database.write_session() as session,
+    ):
+        transcripts.create_transcript(
+            session, audio_id, [SegmentDraft(0, 1000, "fine"), SegmentDraft(5000, 1000, "not")]
+        )
+    with database.read_session() as session:
+        assert transcripts.list_transcripts(session, audio_id) == []
+        assert session.execute(select(Segment)).scalars().all() == []
 
 
 # --- The seed (DAT-8) -----------------------------------------------------

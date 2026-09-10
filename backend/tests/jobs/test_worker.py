@@ -34,8 +34,14 @@ from tests.media.conftest import make_audio, needs_ffmpeg
 class FakeProvider:
     """An engine that answers instantly, and can be told to fail."""
 
-    def __init__(self, *, fail_with: str | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        fail_with: str | None = None,
+        segments: tuple[TranscriptSegment, ...] | None = None,
+    ) -> None:
         self.fail_with = fail_with
+        self.segments = segments
         self.submitted: list[TranscriptionRequest] = []
 
     name = "fake"
@@ -53,7 +59,8 @@ class FakeProvider:
                 provider=self.name,
                 model=self.model,
                 language="en",
-                segments=(TranscriptSegment(0, 1_000, f"part starting {request.filename}"),),
+                segments=self.segments
+                or (TranscriptSegment(0, 1_000, f"part starting {request.filename}"),),
             ),
         )
 
@@ -84,6 +91,34 @@ def ingested(database: Database, db_settings: Settings, tmp_path: Path) -> tuple
         source = make_audio(tmp_path / "source.wav", seconds=2.0)
         path, digest = storage.store_original(
             root, audio.uuid, [source.read_bytes()], filename="Recording 2024-03-11 18.22.wav"
+        )
+        audio.storage_path = storage.relative(root, path)
+        audio.sha256 = digest.sha256
+        audio.size_bytes = digest.size_bytes
+        session.flush()
+        return audio.uuid, audio.id
+
+
+@pytest.fixture
+def stored(database: Database, db_settings: Settings) -> tuple[str, int]:
+    """A recording on disk whose bytes are not audio.
+
+    A recording short enough to go to the provider in one part is never decoded on the way, so a
+    test about what the provider answers does not need ffmpeg to have made the file.
+    """
+    root = db_settings.resolved_storage_dir
+    with database.write_session() as session:
+        owner = users.create_user(session, email="p@x.test", display_name="P")
+        library = libraries.create_library(session, owner.id, name="L")
+        audio = create_audio(
+            session,
+            library_id=library.id,
+            uploaded_by=owner.id,
+            storage_path="placeholder",
+            original_filename="note.wav",
+        )
+        path, digest = storage.store_original(
+            root, audio.uuid, [b"pretend this is a recording"], filename="note.wav"
         )
         audio.storage_path = storage.relative(root, path)
         audio.sha256 = digest.sha256
@@ -191,6 +226,44 @@ def test_a_provider_failure_is_recorded_with_its_real_message(
     assert job.error is not None
     assert "whisper.local refused" in job.error
     assert job.state == queue.PENDING, "it will be tried again"
+
+
+def test_a_provider_that_returns_impossible_timings_stores_no_transcript(
+    database: Database, db_settings: Settings, stored: tuple[str, int]
+) -> None:
+    """``REV-6``: the check on the timings had no caller on this path at all.
+
+    An end before its start is not a transcript that is slightly wrong -- it reads correctly and
+    seeks to the wrong place, which nobody would report as a bug against the provider. The job
+    carries the message instead.
+    """
+    _, audio_id = stored
+    provider = FakeProvider(segments=(TranscriptSegment(5_000, 1_000, "backwards"),))
+    with database.write_session() as session:
+        queue.enqueue(session, "transcribe", audio_id=audio_id)
+    worker = Worker(context_for(database, db_settings, provider))
+    assert worker.run_once() is True
+    with database.read_session() as session:
+        job = session.execute(select(Job).where(Job.kind == "transcribe")).scalars().one()
+        assert transcripts.list_transcripts(session, audio_id) == []
+    assert "timed impossibly" in (job.error or "")
+    assert worker.stats.completed == 0
+
+
+def test_a_provider_that_answers_sensibly_still_gets_its_transcript(
+    database: Database, db_settings: Settings, stored: tuple[str, int]
+) -> None:
+    """The other side of the same guard: it refuses the impossible and nothing else."""
+    _, audio_id = stored
+    provider = FakeProvider(segments=(TranscriptSegment(0, 1_000, "hello"),))
+    with database.write_session() as session:
+        queue.enqueue(session, "transcribe", audio_id=audio_id)
+    worker = Worker(context_for(database, db_settings, provider))
+    assert worker.run_once() is True
+    with database.read_session() as session:
+        transcript = transcripts.active_transcript(session, audio_id)
+    assert transcript is not None
+    assert worker.stats.completed == 1
 
 
 def test_a_job_with_no_handler_fails_instead_of_spinning(
