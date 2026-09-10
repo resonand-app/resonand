@@ -143,9 +143,17 @@
  * DOM order. A full-bleed row is 34px in one axis and the width of a panel in the other; that is
  * a large target that is short, not a small one. `hit-targets.test.tsx` holds both halves: 44 in
  * both axes for anything discrete, and an entry in its own list naming the reason for anything
- * exempt. */
+ * exempt.
+ *
+ * **The target sits under the control's own content, not over it.** A pseudo-element painted on
+ * top swallows every pointer event the content would have had, which on a text field means the
+ * caret, the drag-select and the double-click a word: the browser selected the label instead and
+ * a double-click in the search field highlighted the `⌘K` hint. `isolation: isolate` keeps the
+ * `z-index: -1` inside the control's own stacking context, so the target still covers the
+ * overhang -- where there is no content and nothing else to hit -- and gives the rest back. */
 [data-hit-target] {
   position: relative;
+  isolation: isolate;
 }
 
 [data-hit-target]::after {
@@ -158,6 +166,7 @@
   height: 100%;
   min-width: var(--hit-target);
   min-height: var(--hit-target);
+  z-index: -1;
 }
 
 /* ==========================================================================
