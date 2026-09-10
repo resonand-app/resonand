@@ -144,7 +144,10 @@ export function EgressNotice({
         style={{
           margin: 0,
           flex: 1,
-          minWidth: 190,
+          // A floor, not a demand: below 190 the sentence is a one-word column beside the glyph,
+          // and in a folded-open detail panel there is genuinely less than that -- where a hard
+          // 190 made the notice wider than the column holding it.
+          minWidth: 'min(190px, 100%)',
           fontSize: 'var(--type-ui-size-sm)',
           lineHeight: 1.55,
           color: 'var(--text-2)',
