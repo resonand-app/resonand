@@ -1,0 +1,69 @@
+/* The base layer: the three rules the document itself needs (`UI-1c`, `UI-35a`).
+ *
+ * Everything else in this system styles a component. This file styles the page the components
+ * are drawn on, which is nobody's component and was therefore nobody's job -- the specimen
+ * boards in `docs/internal/design/provenance/` open with exactly these declarations, and the
+ * production stylesheet shipped without them. Both omissions were visible: an 8px white frame
+ * around the interface, and a page that scrolled 40px on a view that fits.
+ *
+ * It is imported after the tokens and before the components: it reads `--bg` and `--text`, and
+ * anything a component declares about itself has to win over what is set here.
+ */
+
+/* Border-box, everywhere.
+ *
+ * The system's geometry is written as a height and a padding on the same element -- `Shell` is
+ * `100dvh` with a `--panel-gap` of padding, and it means the frame is the height of the screen,
+ * not the height of the screen plus 24px. Under the browser's `content-box` default it meant the
+ * latter, so the one element that must not overflow overflowed by exactly its own padding.
+ *
+ * The specimen boards were authored with this rule in place, so every component in `components/`
+ * was drawn against it; the rule is not a change of intent but the missing half of one. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* The page.
+ *
+ * `margin: 0` removes the user agent's 8px, which is not a margin anybody chose and which the
+ * floating frame -- already spaced by `--panel-gap` -- would only double.
+ *
+ * The background matters for a reason the margin does not make obvious. A `<body>` with no
+ * background of its own leaves the browser painting the canvas from `color-scheme`, so the band
+ * outside the frame was white in a light-preferring browser regardless of what the tokens said.
+ * Setting it here also settles the overscroll gutter and the area behind a short page, because a
+ * background on `<body>` propagates to the canvas. It is `--bg`, so it follows the theme like
+ * everything else rather than being a third opinion about what the page is. */
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Text carries no margin of its own.
+ *
+ * Spacing between things in this system is the container's `gap`, never the text's margin, and
+ * a heading that brings its own `1em` is a heading that adds to the gap rather than filling it.
+ * Every component already knew that: 18 of the 19 headings and paragraphs in the product write
+ * `margin: 0` or an explicit value inline, which is the same rule enforced 18 times by hand.
+ *
+ * So this changes nothing that renders today -- measured, not assumed: injecting it into the
+ * running app moved zero of 139 elements on the densest prose view. It is here for the
+ * nineteenth. `PhonePlayer`'s no-waveform line is a direct child of a flex column with a gap and
+ * sets no margin, so it sits about 16px further from its neighbours than the waveform it stands
+ * in for -- the failure mode of an unwritten rule, which is that forgetting it is silent.
+ *
+ * The two deliberate margins (`LibraryCard`, `SearchView`) are inline and beat this. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin: 0;
+}

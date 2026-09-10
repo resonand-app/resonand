@@ -42,7 +42,12 @@ export function Shell({ nav, sidebar, children, player, tray }: ShellProps) {
     <div
       data-ds="shell"
       style={{
-        height: '100vh',
+        // `dvh` and not `vh`, the same unit the phone shell uses: on a mobile browser `100vh` is
+        // the viewport with the address bar retracted, which is taller than the viewport you are
+        // actually looking at, and the frame that must never scroll would scroll by the height of
+        // the chrome. The `--panel-gap` padding stays inside it -- `base.css` makes the box a
+        // border-box, so this is the height of the screen rather than the height plus the gaps.
+        height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         gap: 'var(--panel-gap)',

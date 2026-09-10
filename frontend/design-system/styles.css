@@ -8,6 +8,10 @@
 @import "tokens/motion.css";
 @import "tokens/semantic.css";
 
+/* The document itself, once the tokens exist to describe it: border-box and a page that is the
+   colour the theme says it is, rather than the colour the browser assumed (`UI-35a`). */
+@import "base.css";
+
 /* The interaction layer, last: it reads the tokens above and adds the half of the system that
    an inline style object cannot express -- hover, press, focus and the 44px floor (`UI-32a`). */
 @import "components.css";
