@@ -130,7 +130,6 @@ export function LibraryView() {
         categories={categories}
         query={libraryQuery(filters)}
         libraryName={libraryName}
-        waveforms={painted}
         {...(selectable === undefined ? {} : { selection: selectable })}
       />
     ) : (

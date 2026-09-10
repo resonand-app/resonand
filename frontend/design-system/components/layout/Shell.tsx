@@ -28,10 +28,10 @@ export interface ShellProps {
  * between them and around them -- all from tokens, so `UI-4c`'s breakpoints change the numbers in
  * one file rather than in eight.
  *
- * **Nothing here scrolls except the content.** The nav, the sidebar and the player are fixed
- * furniture; the view moves underneath them. That is what makes the player persistent in the
- * sense that matters -- it survives every navigation because it is never inside the thing that
- * navigates.
+ * **Nothing here scrolls except the content, and that only downwards.** The nav, the sidebar and
+ * the player are fixed furniture; the view moves underneath them. That is what makes the player
+ * persistent in the sense that matters -- it survives every navigation because it is never inside
+ * the thing that navigates.
  *
  * The phone shell is not this component (`DEC-23`). Below `--breakpoint-phone` the desktop frame
  * is replaced rather than narrowed: four bottom tabs, a docked player strip, and sheets instead of
@@ -61,9 +61,20 @@ export function Shell({ nav, sidebar, children, player, tray }: ShellProps) {
         {sidebar}
         {/* The only thing on the page that scrolls. `minWidth: 0` because a grid of cards inside
             a flex child will otherwise push the sidebar off the screen rather than wrap. */}
+        {/* `clip` on the cross axis rather than `auto`: every view here is built to fit the width
+            it is given -- the columns collapse, the grids reflow, and every flex child carries
+            `minWidth: 0` -- so a horizontal scrollbar is never the answer to anything, it is a
+            layout bug offering to hide itself. `clip` pairs with `auto` without turning the
+            vertical scroll into two scrollbars, which `hidden` would. */}
         <main
           data-ds="shell-content"
-          style={{ flex: 1, minWidth: 0, overflowY: 'auto', position: 'relative' }}
+          style={{
+            flex: 1,
+            minWidth: 0,
+            overflowY: 'auto',
+            overflowX: 'clip',
+            position: 'relative',
+          }}
         >
           {/* The gutter is on a box inside the scrollport, not on `<main>`: a sticky offset is
               measured from the scroll container's padding box, so padding `<main>` would pin the

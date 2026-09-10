@@ -20,6 +20,7 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
 import { shiftHeld } from '@/app/modifiers';
@@ -96,6 +97,7 @@ function Card({
   selection?: RecordingGridProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
+  const navigate = useNavigate();
   // Subscribed narrowly: a card re-renders when it becomes the playing one, and the position is
   // read only by the card that is playing. Subscribing every card to `positionMs` would re-render
   // a screenful of cards several times a second.
@@ -125,14 +127,12 @@ function Card({
   return (
     <RecordingCard
       {...longPress.handlers}
-      onClick={(event) => {
-        // The card is an anchor, so the click that follows a press would open the recording
-        // somebody was trying to select. Cancelled here rather than in the hook because the row
-        // next door already owns its own `onClick` and would lose it to a spread prop.
-        if (longPress.consumedByPress()) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
+      onOpen={() => {
+        // A press that has just selected this card also produces a click, and the card reads a
+        // click as "open me". Opening now would take somebody who asked to select one recording
+        // to that recording instead.
+        if (longPress.consumedByPress()) return;
+        void navigate(toRecording(recording.uuid));
       }}
       name={recording.title}
       href={toRecording(recording.uuid)}

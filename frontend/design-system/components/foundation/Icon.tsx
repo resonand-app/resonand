@@ -26,6 +26,7 @@ import {
   SkipBack,
   SkipForward,
   SlidersHorizontal,
+  Sun,
   Tag,
   TextAlignStart,
   Trash,
@@ -54,7 +55,8 @@ import type { HTMLAttributes } from 'react';
  * on nor off, `pencil` for a field you can correct in place, and
  * `hard-drive` and `cloud-upload` for the two registers of the egress disclosure. `UI-8d` adds
  * three: `chevron-up` for a sort that currently runs the other way, and `layout-grid` and `rows`
- * for the switch between the two densities of one library.
+ * for the switch between the two densities of one library. `sun` is `moon`'s other half, for the
+ * account menu's theme row, which shows the theme somebody is in rather than the word "Theme".
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -85,6 +87,7 @@ const GLYPHS = {
   'skip-back': SkipBack,
   'skip-forward': SkipForward,
   'sliders-horizontal': SlidersHorizontal,
+  sun: Sun,
   tag: Tag,
   'trash-2': Trash,
   upload: Upload,

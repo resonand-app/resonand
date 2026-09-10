@@ -80,11 +80,14 @@ export function PhoneShell({
       {header !== undefined && (
         <header style={{ flex: '0 0 auto', padding: 'var(--panel-gap)' }}>{header}</header>
       )}
+      {/* `clip` on the cross axis, as the desktop shell does: a phone screen has one direction
+          and a view that could be pushed sideways on it is a view nobody can read. */}
       <main
         style={{
           flex: 1,
           minHeight: 0,
           overflowY: 'auto',
+          overflowX: 'clip',
           padding: '0 var(--panel-gap) var(--panel-gap)',
         }}
       >

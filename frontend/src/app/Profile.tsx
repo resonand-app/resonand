@@ -5,6 +5,10 @@
  * in `V10`, and a menu that grew a third of the settings view would be two places to change one
  * thing.
  *
+ * **The theme row is light and dark, and it says which one you are in.** Following the system is
+ * still a choice and still lives in Settings (`UI-20d`); what it is not is a third stop on a
+ * control somebody presses to change the light in front of them.
+ *
  * **Signing out forgets everything cached**, which the mutation does (`UI-4a`). On a shared
  * machine the next person must not find the last one's library names in the sidebar.
  */
@@ -12,7 +16,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { THEME_CHOICES, ProfileMenu, useTheme } from '@/design-system';
+import { ProfileMenu, useTheme } from '@/design-system';
 import type { AnchoredOverlay } from '@/design-system';
 
 import { initialsOf } from './destinations';
@@ -37,7 +41,7 @@ export function Profile({ onClose, surface }: ProfileProps) {
   const { t: common } = useTranslation();
   const navigate = useNavigate();
   const { account } = useSession();
-  const { choice, setChoice } = useTheme();
+  const { resolved, setChoice } = useTheme();
   const signOut = useSignOut();
 
   return (
@@ -47,12 +51,14 @@ export function Profile({ onClose, surface }: ProfileProps) {
       name={account?.display_name ?? ''}
       email={account?.email ?? ''}
       initials={initialsOf(account?.display_name)}
-      theme={t(`theme.${choice}`)}
+      theme={t(`theme.${resolved}`)}
+      themeIcon={resolved === 'dark' ? 'moon' : 'sun'}
       onTheme={() => {
-        // One row rather than three: the menu shows what the theme is and pressing it moves to
-        // the next one, which is light, dark, follow the system, round again.
-        const next = THEME_CHOICES[(THEME_CHOICES.indexOf(choice) + 1) % THEME_CHOICES.length];
-        setChoice(next ?? 'system');
+        // Two states here and three in Settings (`UI-20d`): a menu row is a switch somebody
+        // flicks when the room changes, and "follow the system" is not a third thing to flick
+        // past on the way. It reads and writes what is on screen, so the row is never a step
+        // behind a device that changed its mind.
+        setChoice(resolved === 'dark' ? 'light' : 'dark');
       }}
       onSettings={() => {
         onClose();

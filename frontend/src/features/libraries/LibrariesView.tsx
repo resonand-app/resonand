@@ -22,13 +22,14 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
-import { toLibrary } from '@/app/routes';
+import { toLibrary, toLibrarySettings } from '@/app/routes';
 import { useAfterPaint } from '@/app/use-after-paint';
 import {
   Button,
   CardSkeleton,
   CreateLibraryCard,
   LibraryCard,
+  Menu,
   PageHeader,
   StateCard,
 } from '@/design-system';
@@ -163,6 +164,16 @@ export function Card({
             }),
           }
         : {})}
+      actions={
+        <Menu
+          label={t('card.options', { name: library.name })}
+          width={180}
+          items={[{ id: 'settings', label: t('card.settings'), icon: 'sliders-horizontal' }]}
+          onSelect={() => {
+            void navigate(toLibrarySettings(library.uuid));
+          }}
+        />
+      }
       peaks={peaks}
       pending={pending}
       labels={{

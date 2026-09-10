@@ -83,9 +83,11 @@ export function StateCard({ icon, title, body, action, footnote, dashed }: State
           {title}
         </span>
         {body !== undefined && (
-          <p
+          // A `div` and not a `p`: `body` is a `ReactNode`, and the transcription states put a
+          // whole `EgressNotice` in it -- which is a paragraph, and a paragraph inside a
+          // paragraph is markup the browser silently takes apart.
+          <div
             style={{
-              margin: 0,
               fontSize: 'var(--type-ui-size)',
               lineHeight: 'var(--type-body-leading)',
               color: 'var(--text-2)',
@@ -93,7 +95,7 @@ export function StateCard({ icon, title, body, action, footnote, dashed }: State
             }}
           >
             {body}
-          </p>
+          </div>
         )}
       </div>
       {action}

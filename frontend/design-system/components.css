@@ -143,9 +143,17 @@
  * DOM order. A full-bleed row is 34px in one axis and the width of a panel in the other; that is
  * a large target that is short, not a small one. `hit-targets.test.tsx` holds both halves: 44 in
  * both axes for anything discrete, and an entry in its own list naming the reason for anything
- * exempt. */
+ * exempt.
+ *
+ * **The target sits under the control's own content, not over it.** A pseudo-element painted on
+ * top swallows every pointer event the content would have had, which on a text field means the
+ * caret, the drag-select and the double-click a word: the browser selected the label instead and
+ * a double-click in the search field highlighted the `⌘K` hint. `isolation: isolate` keeps the
+ * `z-index: -1` inside the control's own stacking context, so the target still covers the
+ * overhang -- where there is no content and nothing else to hit -- and gives the rest back. */
 [data-hit-target] {
   position: relative;
+  isolation: isolate;
 }
 
 [data-hit-target]::after {
@@ -158,6 +166,7 @@
   height: 100%;
   min-width: var(--hit-target);
   min-height: var(--hit-target);
+  z-index: -1;
 }
 
 /* ==========================================================================
@@ -640,12 +649,21 @@
 /* LibraryCard. A card floats further off the page than the chrome does, and one you can open
    floats further still while the pointer is on it -- `--elevation-card` to `--elevation-overlay`,
    which is the step the component's `transition: box-shadow` was already written for and never
-   had. A card with no `onOpen` does not move. */
+   had. A card with no `onOpen` does not move.
+
+   The surface step goes with the shadow, and it is the half that carries dark: a black shadow on
+   a near-black page is a hover nobody can see, so on dark the card was the one surface in the
+   product that did not answer a pointer. */
 [data-ds='library-card'] {
+  background: var(--surface);
   box-shadow: var(--elevation-card);
+  transition:
+    box-shadow var(--transition-state),
+    background var(--transition-state);
 }
 
 [data-ds='library-card'][data-interactive='true']:hover {
+  background: var(--surface-2);
   box-shadow: var(--elevation-overlay);
 }
 
@@ -662,18 +680,18 @@
 
 /* The dense list's columns go one at a time as the width shrinks (`UI-7b`, §V4).
  *
- * Nine columns compressed together produce nine unreadable ones, so the list drops them in the
- * order somebody needs them least: tags, then category, then the waveform, then the date. What
- * survives every width is the irreducible row -- play, the transcription state, the title and the
- * length -- and none of those has a rule here, which is how "never collapses" is written down.
+ * Columns compressed together produce unreadable ones, so the list drops them in the order
+ * somebody needs them least: tags, then category, then the date. What survives every width is the
+ * irreducible row -- play, the transcription state, the title and the length -- and none of those
+ * has a rule here, which is how "never collapses" is written down.
  *
  * The thresholds are `--breakpoint-column-*` in `tokens/breakpoints.css`. A media query cannot
  * read a custom property, so these numbers are repeated from there rather than declared here,
  * exactly as that file's own note says they have to be.
  *
- * The rules cascade rather than each naming a band: below 700 the category and the tags are
- * already gone, so the waveform's rule only has to say one thing. Bands would be four rules that
- * each have to agree with the other three about the boundaries.
+ * The rules cascade rather than each naming a band: below 620 the category and the tags are
+ * already gone, so the date's rule only has to say one thing. Bands would be three rules that
+ * each have to agree with the other two about the boundaries.
  *
  * The column header collapses with its column, because a heading over a column that is not there
  * is worse than no heading -- it names the wrong one. */
@@ -685,12 +703,6 @@
 
 @media (max-width: 800px) {
   [data-column='category'] {
-    display: none;
-  }
-}
-
-@media (max-width: 700px) {
-  [data-column='waveform'] {
     display: none;
   }
 }
@@ -712,6 +724,16 @@
 [data-ds='recording-card'] {
   background: var(--surface);
   box-shadow: var(--elevation-card);
+  transition:
+    box-shadow var(--transition-state),
+    background var(--transition-state);
+}
+
+/* The same step a library card takes, for the same reason: a recording card you can open has to
+   answer a pointer, and on dark only the surface change is visible. */
+[data-ds='recording-card'][data-interactive='true']:hover {
+  background: var(--surface-2);
+  box-shadow: var(--elevation-overlay);
 }
 
 [data-ds='recording-card'][data-playing='true'] {
@@ -752,14 +774,11 @@
    appeared on hover would make every row 16px narrower than its neighbours. */
 
 /* A recording's title is a link into the recording, and looks like the title it is -- the same
-   arrangement as a library card's, for the same reason. */
+   arrangement as a library card's, and no hover underline for the same reason: the whole card
+   opens the recording, and a line under the title says the title is a narrower thing to aim at. */
 [data-ds='recording-card-title'] {
   color: inherit;
   text-decoration: none;
-}
-
-[data-ds='recording-card-title']:hover {
-  text-decoration: underline;
 }
 
 /* CreateLibraryCard. It does not float, because it is not a thing yet -- so its hover is the

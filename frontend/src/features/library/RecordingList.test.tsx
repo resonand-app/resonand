@@ -20,10 +20,9 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { PAGE_SIZE } from '@/api/paged';
-import { BUCKETS } from '@/api/waveform';
 import { createQueryClient } from '@/api/query-client';
 import { toLibrary } from '@/app/routes';
-import { HEIGHT_TOKEN, ThemeProvider } from '@/design-system';
+import { ThemeProvider } from '@/design-system';
 import { usePlayback } from '@/player/store';
 import { AVIA, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
@@ -154,7 +153,8 @@ describe('the dense list', () => {
   it('keeps its column header on screen and names the columns that never collapse', async () => {
     renderList();
     await screen.findByRole('table');
-    for (const column of ['Title', 'Length', 'Shape']) {
+    // The irreducible four: play, the transcription state, the title and the length (§V4).
+    for (const column of ['Play', 'Transcript', 'Title', 'Length']) {
       expect(screen.getByRole('columnheader', { name: column })).toBeInTheDocument();
     }
   });
@@ -201,12 +201,12 @@ describe('which columns go, and in which order', () => {
     ...components.matchAll(/@media \(max-width: (\d+)px\)\s*\{\s*\[data-column='([a-z]+)'\]/g),
   ].map((found) => ({ width: Number(found[1]), column: found[2] }));
 
-  it('drops the four columns the specification names, and only those', () => {
-    expect(bands.map((band) => band.column)).toEqual(['tags', 'category', 'waveform', 'date']);
+  it('drops the columns the specification names, and only those', () => {
+    expect(bands.map((band) => band.column)).toEqual(['tags', 'category', 'date']);
   });
 
-  it('drops them at the four widths, widest first', () => {
-    expect(bands.map((band) => band.width)).toEqual([900, 800, 700, 620]);
+  it('drops them at the three widths, widest first', () => {
+    expect(bands.map((band) => band.width)).toEqual([900, 800, 620]);
   });
 
   it('leaves the irreducible row alone', () => {
@@ -222,7 +222,7 @@ describe('which columns go, and in which order', () => {
     await screen.findByRole('table');
     // The heading carries the same marker as the cell, so the two go together -- a heading over a
     // column that is not there names the wrong one.
-    for (const column of ['waveform', 'date', 'category', 'tags']) {
+    for (const column of ['date', 'category', 'tags']) {
       expect(
         document.querySelector(`[role="columnheader"][data-column="${column}"]`),
       ).not.toBeNull();
@@ -230,30 +230,19 @@ describe('which columns go, and in which order', () => {
   });
 });
 
-describe('the waveform column', () => {
-  it('asks for a blob sized for twenty pixels, not for the whole recording', async () => {
+describe('there is no waveform column', () => {
+  it('fetches no peaks at all, which is what its removal was worth', async () => {
     measured();
     const asked: string[] = [];
     server.events.on('request:start', ({ request }) => asked.push(request.url));
     renderList();
     await screen.findByRole('table');
     await waitFor(() => {
-      expect(asked.some((url) => url.includes('/waveform'))).toBe(true);
+      expect(document.querySelectorAll('[data-ds="recording-row"]').length).toBeGreaterThan(0);
     });
-    // §V4's warning in one assertion: a 48-minute recording stores about 28,800 pairs, and a
-    // screen of 26 rows drawing them whole would be megabytes of peaks for 20px of picture. The
-    // column is affordable only because the request is reduced on the way out (`ING-14`).
-    for (const url of asked.filter((one) => one.includes('/waveform'))) {
-      expect(url).toContain(`peaks=${String(BUCKETS.row)}`);
-    }
-    expect(BUCKETS.row).toBeLessThan(BUCKETS.card);
-  });
-
-  it('draws it at the dense height, which is a token and not a number in a component', () => {
-    // `UI-2b`'s criterion from this column's side: the row names a size, the size names a token,
-    // and the token's value lives in `tokens/shape.css` -- where `design-system-tokens.node.test`
-    // is what holds it to 20px. Nothing in the row or the list repeats the number.
-    expect(HEIGHT_TOKEN.dense).toBe('--wave-height-dense');
+    // §V4's warning, answered by not drawing it: a screen of 26 rows was a request per row for
+    // 20px of picture, and 20px of picture told nobody anything the grid does not.
+    expect(asked.filter((url) => url.includes('/waveform'))).toEqual([]);
   });
 });
 
@@ -320,7 +309,7 @@ describe('sorting from a column heading', () => {
     renderList();
     await screen.findByRole('table');
     // A heading that looks pressable and does nothing is worse than one that plainly is not.
-    for (const column of ['Shape', 'Category', 'Tags']) {
+    for (const column of ['Category', 'Tags']) {
       const heading = screen.getByRole('columnheader', { name: column });
       expect(heading.querySelector('button')).toBeNull();
     }

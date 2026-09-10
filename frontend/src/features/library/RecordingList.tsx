@@ -32,7 +32,6 @@ import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
-import { BUCKETS, useWaveform } from '@/api/waveform';
 import { toRecording } from '@/app/routes';
 import { shiftHeld } from '@/app/modifiers';
 import { useUrlState } from '@/app/url-state';
@@ -40,7 +39,7 @@ import type { SortDirection, SortField } from '@/app/url-state';
 import { Icon, RecordingRow, RowSkeleton } from '@/design-system';
 import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
-import { playedFraction, usePlayback } from '@/player/store';
+import { usePlayback } from '@/player/store';
 
 import { transcriptionState } from './recordings';
 import { useLongPress } from './use-long-press';
@@ -69,8 +68,6 @@ export interface RecordingListProps {
   query: Record<string, unknown>;
   /** The library's name, which the player shows under the title (§3.1). */
   libraryName: string;
-  /** Whether the deferred per-row waveform fetches may start. */
-  waveforms: boolean;
 }
 
 export function RecordingList({
@@ -78,7 +75,6 @@ export function RecordingList({
   categories,
   query,
   libraryName,
-  waveforms,
   selection,
 }: RecordingListProps) {
   // The virtualiser measures a live DOM node and hands back functions whose results change
@@ -147,7 +143,6 @@ export function RecordingList({
                     recording={recording}
                     category={categories.nameOf(recording.category_id)}
                     libraryName={libraryName}
-                    waveforms={waveforms}
                     {...(selection === undefined ? {} : { selection })}
                   />
                 )}
@@ -233,9 +228,6 @@ function Columns({ selecting }: { selecting: boolean }) {
         aria-label={t('list.state')}
       />
       <Heading label={t('list.title')} style={{ flex: 1, minWidth: 0 }} {...sortable('title')} />
-      <span role="columnheader" data-column="waveform" style={{ width: 88, flex: '0 0 auto' }}>
-        {t('list.waveform')}
-      </span>
       <Heading
         label={t('list.date')}
         column="date"
@@ -326,25 +318,17 @@ function Row({
   recording,
   category,
   libraryName,
-  waveforms,
   selection,
 }: {
   recording: Recording;
   category: string | undefined;
   libraryName: string;
-  waveforms: boolean;
   selection?: RecordingListProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
   const navigate = useNavigate();
   const isCurrent = usePlayback((state) => state.recording?.uuid === recording.uuid);
   const isPlaying = usePlayback((state) => isCurrent && state.status === 'playing');
-  const played = usePlayback((state) => (isCurrent ? playedFraction(state) : 0));
-  const { peaks, pending } = useWaveform(
-    recording.uuid,
-    BUCKETS.row,
-    waveforms && recording.has_waveform,
-  );
   const state = transcriptionState(recording.transcription_state);
   const when = recordedAt(recording, i18n.language);
   // The dense list has the same problem the grid does: a phone has no hover and no tab key, so
@@ -366,9 +350,6 @@ function Row({
       {...(category === undefined ? {} : { category })}
       tags={recording.tags.map((tag) => tag.name)}
       state={state}
-      peaks={peaks}
-      pending={pending}
-      played={played}
       playing={isPlaying}
       {...(selection === undefined
         ? {}
@@ -398,7 +379,6 @@ function Row({
           });
       }}
       labels={{
-        noWaveform: t('player:state.noWaveform'),
         play: (name) => t('card.play', { name }),
         pause: (name) => t('card.pause', { name }),
         select: (name) => t('card.select', { name }),

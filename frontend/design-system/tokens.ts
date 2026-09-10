@@ -17,7 +17,6 @@ export const TOKENS = [
   '--breakpoint-phone',
   '--breakpoint-column-tags',
   '--breakpoint-column-category',
-  '--breakpoint-column-waveform',
   '--breakpoint-column-date',
   '--amber-300',
   '--amber-400',

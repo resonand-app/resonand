@@ -51,7 +51,7 @@ import {
 } from '@/design-system';
 import type { IconName, LibraryColorName, ToastEntry } from '@/design-system';
 
-import { HITS, LIBRARIES, PEAKS, SHARED, SHORT_PEAKS } from '@/dev/specimen-data';
+import { HITS, LIBRARIES, PEAKS, SHARED } from '@/dev/specimen-data';
 
 /**
  * Every component in the system, on one page, in whichever theme you ask for (`UI-1k`).
@@ -582,8 +582,9 @@ export default function Specimens() {
                 key={state}
                 name={`Entrevista amb l’àvia Teresa · ${state}`}
                 duration="48:12"
+                date="12 Mar 2026"
+                category="Family"
                 state={state}
-                peaks={SHORT_PEAKS}
                 selected={i === 1}
                 onOpen={() => undefined}
               />
@@ -730,11 +731,7 @@ export default function Specimens() {
               }
             >
               <PageHeader title="Àvia Teresa" meta="37 recordings · 24 h 12 min" />
-              <RecordingRow
-                name="Entrevista amb l’àvia Teresa"
-                duration="48:12"
-                peaks={SHORT_PEAKS}
-              />
+              <RecordingRow name="Entrevista amb l’àvia Teresa" duration="48:12" />
             </Shell>
           </div>
         </Panel>

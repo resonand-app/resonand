@@ -52,8 +52,16 @@ export interface ProfileMenuProps extends HTMLAttributes<HTMLDivElement> {
   name?: string;
   email?: string;
   initials?: string;
-  /** Current theme label: "Dark", "Light" or "System". */
+  /** Current theme label: "Dark" or "Light". */
   theme?: string;
+  /**
+   * The glyph on the theme row: the theme somebody is in, not the one pressing it would bring.
+   *
+   * A moon in the dark and a sun in the light, which is the reading everybody already has for
+   * those two shapes -- a row that showed the destination instead would be a row whose icon and
+   * whose value disagreed.
+   */
+  themeIcon?: IconName;
   onTheme?: () => void;
   onSettings?: () => void;
   /**
@@ -87,6 +95,7 @@ export function ProfileMenu({
   email = '',
   initials = '',
   theme,
+  themeIcon = 'moon',
   onTheme,
   onSettings,
   labels,
@@ -160,7 +169,7 @@ export function ProfileMenu({
         </div>
       </div>
       <div style={{ height: 1, background: 'var(--hairline)', margin: '2px 0 4px' }} />
-      <Row icon="moon" label={labels?.theme ?? 'Theme'} value={theme} onClick={onTheme} />
+      <Row icon={themeIcon} label={labels?.theme ?? 'Theme'} value={theme} onClick={onTheme} />
       <Row
         icon="sliders-horizontal"
         label={labels?.settings ?? 'Settings'}
