@@ -121,6 +121,35 @@ export const VIEWS: readonly ViewUnderTest[] = [
   },
 ];
 
+/**
+ * Give every scroller a viewport, because jsdom performs no layout.
+ *
+ * The recording list and the transcript are virtualised. A virtualiser asked how tall its
+ * scroller is hears zero and draws **no rows at all** -- so a walk over V3 or V5 would audit a
+ * library with no recordings in it and a transcript with no lines, and pass having checked the
+ * page furniture. Every assertion would be green and none of them would be about the content.
+ *
+ * Done once at module scope rather than per test, and with `defineProperty` rather than a spy:
+ * nothing here needs restoring between tests, because there is no real value being shadowed --
+ * jsdom's answer is zero and it is zero for everybody. Only the files that mount views import
+ * this module, so no component test inherits it.
+ */
+Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
+  configurable: true,
+  get: () => 720,
+});
+if (!('ResizeObserver' in globalThis)) {
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    configurable: true,
+    writable: true,
+    value: class {
+      observe = () => undefined;
+      unobserve = () => undefined;
+      disconnect = () => undefined;
+    },
+  });
+}
+
 /** How wide the window is, which decides which of the two shells a view is drawn in. */
 export const DESKTOP = 1440;
 
