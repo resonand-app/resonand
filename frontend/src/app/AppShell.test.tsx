@@ -230,6 +230,18 @@ describe('the account menu', () => {
   });
 });
 
+describe('the lockup', () => {
+  it('is the way back to the libraries, and gets there without leaving the router', async () => {
+    renderShell(toLibrary(AVIA));
+    const home = await screen.findByRole('link', { name: /back to your libraries/ });
+    expect(home).toHaveAttribute('href', routes.libraries);
+    await userEvent.click(home);
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent(routes.libraries);
+    });
+  });
+});
+
 describe('the search field', () => {
   it('takes a click anywhere in the box, not only on the input', async () => {
     // jsdom has no pseudo-elements, so it cannot reproduce the `::after` that intercepts the

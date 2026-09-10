@@ -1,4 +1,11 @@
-import type { ChangeEvent, HTMLAttributes, KeyboardEvent, ReactNode, Ref } from 'react';
+import type {
+  ChangeEvent,
+  HTMLAttributes,
+  KeyboardEvent,
+  MouseEventHandler,
+  ReactNode,
+  Ref,
+} from 'react';
 
 import { Logo } from '../foundation/Logo';
 import { Button } from '../forms/Button';
@@ -25,6 +32,15 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
   onUpload?: () => void;
   onProfile?: () => void;
   /**
+   * Where the lockup goes, which is the landing page (`UI-4e`).
+   *
+   * A link and not a button, for the reason a library card's title is one: going home is a
+   * navigation. Absent leaves the lockup inert, which is what a specimen board wants.
+   */
+  homeHref?: string;
+  /** The router's half of `homeHref`: cancel the browser's navigation and do it in the app. */
+  onHome?: MouseEventHandler<HTMLAnchorElement>;
+  /**
    * The copy, for an application that has its own (`UI-22a`).
    *
    * The defaults are English, because a component with no label at all is a component that draws
@@ -37,6 +53,8 @@ export interface TopNavProps extends HTMLAttributes<HTMLElement> {
     sidebar?: string;
     upload?: string;
     account?: string;
+    /** Names the lockup when it is a link: the wordmark beside it is a picture of a word. */
+    home?: string;
   };
   /**
    * The search input itself, for whoever owns the keyboard.
@@ -83,6 +101,8 @@ export function TopNav({
   onToggleSidebar,
   onUpload,
   onProfile,
+  homeHref,
+  onHome,
   labels,
   searchRef,
   avatarRef,
@@ -114,7 +134,19 @@ export function TopNav({
         onClick={onToggleSidebar}
         style={{ borderRadius: 'var(--radius-control)' }}
       />
-      <Logo size={21} />
+      {homeHref === undefined ? (
+        <Logo size={21} />
+      ) : (
+        <a
+          data-ds="nav-home"
+          data-hit-target=""
+          href={homeHref}
+          onClick={onHome}
+          aria-label={labels?.home ?? 'Sonarium home'}
+        >
+          <Logo size={21} />
+        </a>
+      )}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', position: 'relative' }}>
         <div style={{ width: '100%', maxWidth: 540, position: 'relative' }}>
           <SearchField

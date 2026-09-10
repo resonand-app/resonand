@@ -936,6 +936,16 @@
   color: var(--state-failed);
 }
 
+/* TopNav's lockup, when it is the way home. No underline: the mark is the affordance. */
+[data-ds='nav-home'] {
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-control);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 /* TopNav's account button. Initials and never an image: no storage exists for an avatar and
    fetching one externally would break the promise that nothing leaves the instance. */
 [data-ds='avatar-button'] {

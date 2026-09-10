@@ -36,6 +36,7 @@ import { usePlayback } from '@/player/store';
 import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
 import { destinationOf, destinationTo, initialsOf, libraryIn } from './destinations';
+import { isPlainClick } from './links';
 import { useLibraries, useTrashCount } from './library-data';
 import { queryIn, recordingIn, routes, toRecording, toSearch } from './routes';
 import { useSession } from './session';
@@ -197,6 +198,12 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
             onProfile?.();
             setProfileOpen((open) => !open);
           }}
+          homeHref={routes.libraries}
+          onHome={(event) => {
+            if (!isPlainClick(event)) return;
+            event.preventDefault();
+            void navigate(routes.libraries);
+          }}
           searchRef={search}
           avatarRef={profile.anchorRef}
           labels={{
@@ -204,6 +211,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
             sidebar: t('nav.sidebar'),
             upload: t('nav.upload'),
             account: t('nav.account'),
+            home: t('nav.home'),
           }}
           accountMenu={
             profileOpen ? (
