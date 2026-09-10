@@ -649,12 +649,21 @@
 /* LibraryCard. A card floats further off the page than the chrome does, and one you can open
    floats further still while the pointer is on it -- `--elevation-card` to `--elevation-overlay`,
    which is the step the component's `transition: box-shadow` was already written for and never
-   had. A card with no `onOpen` does not move. */
+   had. A card with no `onOpen` does not move.
+
+   The surface step goes with the shadow, and it is the half that carries dark: a black shadow on
+   a near-black page is a hover nobody can see, so on dark the card was the one surface in the
+   product that did not answer a pointer. */
 [data-ds='library-card'] {
+  background: var(--surface);
   box-shadow: var(--elevation-card);
+  transition:
+    box-shadow var(--transition-state),
+    background var(--transition-state);
 }
 
 [data-ds='library-card'][data-interactive='true']:hover {
+  background: var(--surface-2);
   box-shadow: var(--elevation-overlay);
 }
 
@@ -715,6 +724,16 @@
 [data-ds='recording-card'] {
   background: var(--surface);
   box-shadow: var(--elevation-card);
+  transition:
+    box-shadow var(--transition-state),
+    background var(--transition-state);
+}
+
+/* The same step a library card takes, for the same reason: a recording card you can open has to
+   answer a pointer, and on dark only the surface change is visible. */
+[data-ds='recording-card'][data-interactive='true']:hover {
+  background: var(--surface-2);
+  box-shadow: var(--elevation-overlay);
 }
 
 [data-ds='recording-card'][data-playing='true'] {
