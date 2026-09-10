@@ -65,7 +65,12 @@ export function Shell({ nav, sidebar, children, player, tray }: ShellProps) {
           data-ds="shell-content"
           style={{ flex: 1, minWidth: 0, overflowY: 'auto', position: 'relative' }}
         >
-          {children}
+          {/* The gutter is on a box inside the scrollport, not on `<main>`: a sticky offset is
+              measured from the scroll container's padding box, so padding `<main>` would pin the
+              dense list's header 28px down and leave a band for rows to scroll through. */}
+          <div data-ds="shell-page" style={{ padding: 'var(--page-padding)' }}>
+            {children}
+          </div>
         </main>
       </div>
       {tray}
