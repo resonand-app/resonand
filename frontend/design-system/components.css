@@ -755,14 +755,11 @@
    appeared on hover would make every row 16px narrower than its neighbours. */
 
 /* A recording's title is a link into the recording, and looks like the title it is -- the same
-   arrangement as a library card's, for the same reason. */
+   arrangement as a library card's, and no hover underline for the same reason: the whole card
+   opens the recording, and a line under the title says the title is a narrower thing to aim at. */
 [data-ds='recording-card-title'] {
   color: inherit;
   text-decoration: none;
-}
-
-[data-ds='recording-card-title']:hover {
-  text-decoration: underline;
 }
 
 /* CreateLibraryCard. It does not float, because it is not a thing yet -- so its hover is the

@@ -79,9 +79,13 @@ describe('long-press to select', WHOLE_SYSTEM, () => {
     const user = userEvent.setup();
     await mountView(view('V3 - A library'), { width: PHONE });
     const card = firstCard();
+    const title = within(card).getByRole('link').textContent;
 
     await user.pointer([{ keys: '[TouchA>]', target: card }, { keys: '[/TouchA]' }]);
-    expect(firstCard().dataset.selected).toBeUndefined();
+    // The tap opened the recording rather than picking it, so the library is no longer on
+    // screen: nothing was selected on the way out, which is the claim.
+    expect(cards().some((one) => one.dataset.selected === 'true')).toBe(false);
+    await screen.findByRole('heading', { name: title, level: 1 });
   });
 
   it('does not fire when the finger is scrolling', async () => {

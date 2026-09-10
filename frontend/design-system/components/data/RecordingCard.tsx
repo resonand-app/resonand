@@ -68,6 +68,14 @@ export interface RecordingCardProps
   played?: number;
   pending?: boolean;
   onPlay?: () => void;
+  /**
+   * Open the recording, from anywhere on the card (`UI-6b`).
+   *
+   * The mouse convenience over the whole surface, exactly as `LibraryCard` has it: `href` on the
+   * title stays the keyboard path and the thing a screen reader is given, and this is what makes
+   * the other nine tenths of the card worth aiming at.
+   */
+  onOpen?: () => void;
   /** The copy, for an application that has its own (`UI-22a`). */
   labels?: {
     /** What the waveform says before the peaks job has run. */
@@ -90,6 +98,10 @@ export interface RecordingCardProps
  * The play control is a real button in the corner, which is what leaves the opposite corner free
  * for `UI-9a`'s selection checkbox -- the two must not fight, because selecting forty recordings
  * and playing one are things people do in the same minute.
+ *
+ * **The whole card opens the recording and the title link is the keyboard path**, the arrangement
+ * `LibraryCard` already makes: a title is a small thing to aim at on a surface that is obviously
+ * one thing, and the two controls on it say so by being the two places a click does not open it.
  *
  * It asks for `variant="accent-soft"` rather than passing the same two colours through `style`,
  * which is what it did until `UI-32a` -- and an inline background is a paint no hover rule can
@@ -114,12 +126,31 @@ export function RecordingCard({
   played = 0,
   pending = false,
   onPlay,
+  onOpen,
   style,
   ...rest
 }: RecordingCardProps) {
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- the title link is the keyboard path, as on `LibraryCard`
     <article
+      onClick={(event) => {
+        if (onOpen === undefined) return;
+        // The checkbox picks the recording and the play button plays it. Neither opens it.
+        if (
+          event.target instanceof Element &&
+          event.target.closest('[data-ds="card-select"], [data-ds="card-play"]') !== null
+        ) {
+          return;
+        }
+        // A modifier click stays the browser's, so the title link can still open a new tab.
+        // Anything else cancels it: following the `href` would reload out of the router.
+        if (event.defaultPrevented || event.button !== 0) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        onOpen();
+      }}
       data-ds="recording-card"
+      data-interactive={onOpen === undefined ? undefined : 'true'}
       data-playing={playing ? 'true' : undefined}
       data-selected={selected ? 'true' : undefined}
       data-selecting={selecting || selected ? 'true' : undefined}
@@ -129,6 +160,7 @@ export function RecordingCard({
         display: 'flex',
         flexDirection: 'column',
         gap: 10,
+        cursor: onOpen === undefined ? 'default' : 'pointer',
         ...style,
       }}
       {...rest}
@@ -177,17 +209,19 @@ export function RecordingCard({
             {meta}
           </span>
         </div>
-        <IconButton
-          icon={playing ? 'pause' : 'play'}
-          variant="accent-soft"
-          size={32}
-          label={
-            playing
-              ? (labels?.pause?.(name) ?? `Pause ${name}`)
-              : (labels?.play?.(name) ?? `Play ${name}`)
-          }
-          onClick={onPlay}
-        />
+        <span data-ds="card-play" style={{ flex: '0 0 auto', display: 'flex' }}>
+          <IconButton
+            icon={playing ? 'pause' : 'play'}
+            variant="accent-soft"
+            size={32}
+            label={
+              playing
+                ? (labels?.pause?.(name) ?? `Pause ${name}`)
+                : (labels?.play?.(name) ?? `Play ${name}`)
+            }
+            onClick={onPlay}
+          />
+        </span>
       </div>
       <Waveform
         peaks={peaks}
