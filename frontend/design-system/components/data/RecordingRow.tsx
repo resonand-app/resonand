@@ -46,6 +46,8 @@ export interface RecordingRowProps
   onPlay?: () => void;
   /** The copy, for an application that has its own (`UI-22a`). */
   labels?: {
+    /** What the waveform says before the peaks job has run. */
+    noWaveform?: string;
     play?: (name: string) => string;
     pause?: (name: string) => string;
     state?: string;
@@ -191,7 +193,13 @@ export function RecordingRow({
         {name}
       </span>
       <div data-column="waveform" style={{ width: 88, flex: '0 0 auto' }}>
-        <Waveform peaks={peaks} size="dense" played={played} pending={pending} />
+        <Waveform
+          peaks={peaks}
+          size="dense"
+          played={played}
+          pending={pending}
+          noWaveformLabel={labels?.noWaveform}
+        />
       </div>
       {date !== undefined && (
         <span

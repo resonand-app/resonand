@@ -78,7 +78,7 @@ export { Chip } from './components/data/Chip';
 export type { ChipProps } from './components/data/Chip';
 export { CreateLibraryCard } from './components/data/CreateLibraryCard';
 export type { CreateLibraryCardProps } from './components/data/CreateLibraryCard';
-export { EgressNotice } from './components/data/EgressNotice';
+export { EgressNotice, HOST } from './components/data/EgressNotice';
 export type {
   EgressNoticeProps,
   TranscriptionDestination,

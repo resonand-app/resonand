@@ -64,6 +64,13 @@ export interface WaveformProps extends Omit<SVGAttributes<SVGSVGElement>, 'onSee
   pending?: boolean;
   /** Shown beside the dashed rule when `pending`. The formatted duration, mono and tabular. */
   duration?: string | undefined;
+  /**
+   * What the pending drawing says when there is no duration to show either (`UI-24c`).
+   *
+   * English by default so the standalone kit renders, and always passed by the application: this
+   * string reached three card surfaces untranslated because the fallback looked like a detail.
+   */
+  noWaveformLabel?: string | undefined;
   /** Click and arrow keys seek. Only the detail view passes this. */
   onSeek?: ((fraction: number) => void) | undefined;
   /** Names the control when it can be seeked. */
@@ -103,6 +110,7 @@ export function Waveform({
   playhead = false,
   pending = false,
   duration,
+  noWaveformLabel,
   onSeek,
   label,
   style,
@@ -171,7 +179,7 @@ export function Waveform({
             flex: '0 0 auto',
           }}
         >
-          {duration ?? 'No waveform yet'}
+          {duration ?? noWaveformLabel ?? 'No waveform yet'}
         </span>
       </div>
     );

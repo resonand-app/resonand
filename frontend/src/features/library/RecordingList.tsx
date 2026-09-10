@@ -398,6 +398,7 @@ function Row({
           });
       }}
       labels={{
+        noWaveform: t('player:state.noWaveform'),
         play: (name) => t('card.play', { name }),
         pause: (name) => t('card.pause', { name }),
         select: (name) => t('card.select', { name }),

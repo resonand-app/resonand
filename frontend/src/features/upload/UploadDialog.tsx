@@ -46,6 +46,7 @@ import { useDestination } from '@/features/recording/transcription';
 import { Button, Dialog, EgressNotice, Icon, Modal, Select, Switch } from '@/design-system';
 import type { SelectOption } from '@/design-system';
 import { bytes } from '@/i18n/format';
+import { useEgressLabels } from '@/components/egress-labels';
 
 import { isAccepted, isVideo } from './instance';
 import { useUploads } from './uploads';
@@ -59,6 +60,7 @@ export interface UploadDialogProps {
 
 export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
   const { t } = useTranslation('upload');
+  const egressLabels = useEgressLabels();
   const instance = useInstance().data;
   const add = useUploads((state) => state.add);
   const picker = useRef<HTMLInputElement>(null);
@@ -226,11 +228,13 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
                 checked={transcribe}
                 onChange={setTranscribe}
                 label={t('dialog.transcribe')}
-                description={<EgressNotice destination={goesTo} placement="dialog" />}
+                description={
+                  <EgressNotice destination={goesTo} placement="dialog" labels={egressLabels} />
+                }
                 ariaLabel={t('dialog.transcribe')}
               />
             ) : (
-              <EgressNotice destination={goesTo} placement="dialog" />
+              <EgressNotice destination={goesTo} placement="dialog" labels={egressLabels} />
             ))}
 
           {chosen.length > 0 && (

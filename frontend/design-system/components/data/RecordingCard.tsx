@@ -70,6 +70,8 @@ export interface RecordingCardProps
   onPlay?: () => void;
   /** The copy, for an application that has its own (`UI-22a`). */
   labels?: {
+    /** What the waveform says before the peaks job has run. */
+    noWaveform?: string;
     play?: (name: string) => string;
     /** The same control, once this is the recording being played. */
     pause?: (name: string) => string;
@@ -193,6 +195,7 @@ export function RecordingCard({
         played={played}
         playhead={played > 0}
         pending={pending}
+        noWaveformLabel={labels?.noWaveform}
       />
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
         <StateBadge state={state} {...(labels?.state === undefined ? {} : { label: labels.state })} />
