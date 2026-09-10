@@ -45,7 +45,9 @@ export function ColorSwatchPicker({
           {label}
         </span>
       )}
-      <div style={{ display: 'flex', gap: 6 }}>
+      {/* Wider than the gap a row of circles wants, because the ring is drawn outside the
+          swatch: at 6 the two rings met and a selected colour looked joined to its neighbour. */}
+      <div style={{ display: 'flex', gap: 12 }}>
         {LIBRARY_COLORS.map((colour) => (
           <button
             key={colour.name}
