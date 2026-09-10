@@ -106,6 +106,7 @@ export function ResultGroup({
       <header style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
         <button
           type="button"
+          data-app="result-title"
           onClick={onOpen}
           style={{
             flex: 1,

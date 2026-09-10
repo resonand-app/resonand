@@ -159,7 +159,7 @@ export function RecordingCard({
             {href === undefined ? (
               name
             ) : (
-              <a data-ds="recording-card-title" href={href}>
+              <a data-ds="recording-card-title" data-hit-target href={href}>
                 {name}
               </a>
             )}

@@ -43,6 +43,7 @@ import { recordedAt } from '@/i18n/time';
 import { playedFraction, usePlayback } from '@/player/store';
 
 import { transcriptionState } from './recordings';
+import { useLongPress } from './use-long-press';
 import type { Categories, Recording } from './recordings';
 import { useRowCount, useRows } from './rows';
 
@@ -346,9 +347,19 @@ function Row({
   );
   const state = transcriptionState(recording.transcription_state);
   const when = recordedAt(recording, i18n.language);
+  // The dense list has the same problem the grid does: a phone has no hover and no tab key, so
+  // until a selection exists there is nothing to press (`UI-24b`).
+  const longPress = useLongPress(
+    selection === undefined
+      ? undefined
+      : () => {
+          selection.onToggle(recording.uuid, false);
+        },
+  );
 
   return (
     <RecordingRow
+      {...longPress.handlers}
       name={recording.title}
       duration={format.duration(recording.duration_ms)}
       date={when.text}
@@ -368,6 +379,10 @@ function Row({
             },
           })}
       onOpen={() => {
+        // A press that has just selected this row also produces a click, and the row reads a
+        // click as "open me". Opening now would take somebody who asked to select one recording
+        // to that recording instead.
+        if (longPress.consumedByPress()) return;
         void navigate(toRecording(recording.uuid));
       }}
       onPlay={() => {

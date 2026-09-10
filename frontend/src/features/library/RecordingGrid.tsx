@@ -30,6 +30,7 @@ import { recordedAt } from '@/i18n/time';
 import { playedFraction, usePlayback } from '@/player/store';
 
 import { transcriptionState } from './recordings';
+import { useLongPress } from './use-long-press';
 import type { Categories, Recording } from './recordings';
 
 export interface RecordingGridProps {
@@ -111,9 +112,28 @@ function Card({
 
   const when = recordedAt(recording, i18n.language);
   const state = transcriptionState(recording.transcription_state);
+  // A phone reaches the checkbox no other way: it has no hover and no tab key, so until a
+  // selection exists the box is hidden and nothing can start one (`UI-24b`).
+  const longPress = useLongPress(
+    selection === undefined
+      ? undefined
+      : () => {
+          selection.onToggle(recording.uuid, false);
+        },
+  );
 
   return (
     <RecordingCard
+      {...longPress.handlers}
+      onClick={(event) => {
+        // The card is an anchor, so the click that follows a press would open the recording
+        // somebody was trying to select. Cancelled here rather than in the hook because the row
+        // next door already owns its own `onClick` and would lose it to a spread prop.
+        if (longPress.consumedByPress()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
       name={recording.title}
       href={toRecording(recording.uuid)}
       meta={`${format.duration(recording.duration_ms)} · ${when.text}`}

@@ -113,3 +113,23 @@ export const KNOWN_SMALL_TARGETS: TargetExemption[] = [
     why: 'A card with the same footprint as a library card: 320x188 by token. Nothing here is small.',
   },
 ];
+
+/**
+ * Application markup that is exempt from the 44px floor, and why (`UI-24b`).
+ *
+ * The parallel of `KNOWN_SMALL_TARGETS` for controls the application composes rather than the
+ * design system ships. Keyed by `data-app`, which is the application's own naming, and held to
+ * the same rule: an entry is a promise that this control is *a large target that is short*
+ * rather than a small one -- `components.css` states the distinction, and a full-bleed control
+ * whose height is set by one line of text is the case it names.
+ *
+ * A control that is genuinely small does not belong here. It gets `data-hit-target`, which grows
+ * the target with a pseudo-element and moves nothing next to it -- which is what the recording
+ * card's title link and the recording breadcrumb both got when this list was written.
+ */
+export const KNOWN_SMALL_TARGETS_IN_VIEWS: TargetExemption[] = [
+  {
+    component: 'result-title',
+    why: 'The title of a search result, `flex: 1` across the whole width of the result card and clipped to one line. It is as wide as the card and as tall as its text, which is the full-bleed row case rather than a discrete control.',
+  },
+];
