@@ -46,7 +46,7 @@ export function SettingsView() {
     <section>
       <PageHeader title={t('title')} meta={t('meta')} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
-        <div style={{ borderBottom: '1px solid var(--border-1)' }}>
+        <div style={{ borderBottom: '1px solid var(--hairline)' }}>
           <Tabs
             tabs={tabs}
             value={section}
@@ -66,7 +66,10 @@ export function SettingsView() {
           role="tabpanel"
           aria-labelledby={`${PANEL_ID}-tab-${section}`}
           tabIndex={-1}
-          style={{ maxWidth: 640 }}
+          // A reading column for the three sections that are forms about one person, and the
+          // full width for the fourth. Administration is a dashboard -- four independent cards
+          // an operator scans -- and 640px turned it into one tall column beside empty space.
+          style={section === 'administration' ? undefined : { maxWidth: 640 }}
         >
           <Panel section={section} />
         </div>

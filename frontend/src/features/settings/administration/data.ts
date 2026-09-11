@@ -114,8 +114,19 @@ export function useSystemStatus(): UseQueryResult<Schemas['SystemStatus']> {
   });
 }
 
-/** How many rows the queue draws before it stops being a list and becomes a count (`INT-3d`). */
-export const QUEUE_ROW_LIMIT = 25;
+/**
+ * How many rows the queue draws before it stops being a list and becomes a count (`INT-3d`).
+ *
+ * **Five, not twenty-five.** The counts above the list already answer the question that brings
+ * somebody here -- is anything failed, is anything moving -- and newest-first means the job that
+ * just broke is the first row. Everything after the fifth was a finished job from an hour ago
+ * pushing the instance's own status two screens down, which is how a healthy queue ended up
+ * being the loudest thing on the page.
+ *
+ * `EXPANDED` is what pressing "Show more" asks for, and it is the old default: enough to work
+ * through a bad morning's failures without the panel ever being the whole page by accident.
+ */
+export const QUEUE_ROWS = { default: 5, expanded: 25 } as const;
 
 export interface Queue {
   jobs: Schemas['JobSummary'][];
@@ -131,18 +142,24 @@ export interface Queue {
  * Newest rather than oldest, because the reason somebody opens this page is that something has
  * just gone wrong -- and the thing that went wrong is at the top.
  *
- * It asks for one row more than it will draw, so "there are more than this" is a fact from the
- * envelope rather than a guess from the length of the list.
+ * `total` comes from the envelope and counts what matches the filter, not what was returned, so
+ * "there are more than this" is a fact rather than a guess from the length of the list. The
+ * caller passes `limit`, because how many rows are wanted is a decision the panel makes and
+ * changes while somebody is looking at it.
  */
-export function useQueue(state: string | undefined): Queue {
+export function useQueue(state: string | undefined, limit: number): Queue {
   const query = useQuery({
-    queryKey: keys.jobs({ state }),
+    queryKey: keys.jobs({ state, limit }),
     queryFn: () =>
       get('/api/admin/jobs', {
-        query: state === undefined ? { limit: QUEUE_ROW_LIMIT } : { state, limit: QUEUE_ROW_LIMIT },
+        query: state === undefined ? { limit } : { state, limit },
       }),
     // A queue is the one thing in the product that is moving while somebody watches it.
     refetchInterval: 5_000,
+    // Asking for more rows should extend the list, not blank it: the rows already on screen
+    // are the first rows of the answer being fetched, and flashing a spinner over them would
+    // make "show more" look like "start again".
+    placeholderData: (previous) => previous,
   });
   return {
     jobs: query.data?.items ?? [],

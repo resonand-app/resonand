@@ -21,6 +21,10 @@
 
   --card-width: 320px;
   --card-height: 188px;
+  /* Administration's cards, which are not recording cards. The track has to hold a job row --
+     a kind, a uuid, an error and two buttons -- so it is wider than --card-width, and it is
+     what decides that the grid is two columns at a desktop width and one below ~880px. */
+  --admin-card-width: 400px;
   --row-height: 36px;
   --control-height: 34px;
   --field-height: 36px;

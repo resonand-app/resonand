@@ -115,8 +115,51 @@ describe('four hundred jobs after a bulk import', () => {
       finished_at: null,
     }));
     show();
+    expect(await screen.findByText(/Showing the newest 5 of 400/)).toBeVisible();
+    expect(screen.getAllByText('waveform')).toHaveLength(5);
+  });
+
+  it('goes longer when asked, and stops offering once it has', async () => {
+    archive.jobs = Array.from({ length: 400 }, (_, index) => ({
+      id: 1000 + index,
+      kind: 'waveform',
+      state: 'pending',
+      audio_uuid: CANCONS,
+      attempts: 1,
+      error: null,
+      created_at: '2026-03-12T09:00:00Z',
+      ready_at: '2026-03-12T09:00:00Z',
+      started_at: null,
+      finished_at: null,
+    }));
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Show the newest 25' }));
     expect(await screen.findByText(/Showing the newest 25 of 400/)).toBeVisible();
-    expect(screen.getAllByText('waveform')).toHaveLength(25);
+    await waitFor(() => {
+      expect(screen.getAllByText('waveform')).toHaveLength(25);
+    });
+    // The button would be a lie at the longest the list goes: there is no further to show.
+    expect(screen.queryByRole('button', { name: /Show the newest/ })).toBeNull();
+  });
+
+  it('collapses back to the newest few when the filter changes', async () => {
+    archive.jobs = Array.from({ length: 400 }, (_, index) => ({
+      id: 1000 + index,
+      kind: 'waveform',
+      state: 'pending',
+      audio_uuid: CANCONS,
+      attempts: 1,
+      error: null,
+      created_at: '2026-03-12T09:00:00Z',
+      ready_at: '2026-03-12T09:00:00Z',
+      started_at: null,
+      finished_at: null,
+    }));
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Show the newest 25' }));
+    await screen.findByText(/Showing the newest 25 of 400/);
+    await userEvent.click(screen.getByRole('button', { name: 'Waiting' }));
+    expect(await screen.findByText(/Showing the newest 5 of 400/)).toBeVisible();
   });
 });
 
