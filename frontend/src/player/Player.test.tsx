@@ -8,9 +8,11 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { MemoryRouter, Route, Routes } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { routes, toRecording } from '@/app/routes';
 import { mockApi } from '@/test/api/server';
 
 import { MediaSession } from './MediaSession';
@@ -33,11 +35,23 @@ beforeEach(() => {
   usePlayback.getState().setRate(1);
 });
 
-/** The player fetches the shape of what is playing, so it is mounted with a client. */
+/**
+ * The player as the shell mounts it: a query client for the shape of what is playing, and a
+ * router, because the bar is a way into the recording as well as a way to control it.
+ */
 function show(element: React.ReactElement) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
-  return render(<QueryClientProvider client={client}>{element}</QueryClientProvider>);
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={element} />
+          <Route path={routes.recording} element={<p>the recording view</p>} />
+        </Routes>
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
 }
 
 /** The waveform the bar draws, or null where the slot is collapsed. */
@@ -197,6 +211,34 @@ describe('on a phone', () => {
     expect(screen.getByRole('button', { name: /back 15 seconds/i })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /stop playing/i }));
     expect(usePlayback.getState().recording).toBeNull();
+  });
+});
+
+describe('opening what is playing', () => {
+  it('is a link on the title, so it can be reached and opened like one', () => {
+    playing();
+    show(<Player />);
+    expect(screen.getByRole('link', { name: CARRER_NOU.title })).toHaveAttribute(
+      'href',
+      toRecording(CARRER_NOU.uuid),
+    );
+  });
+
+  it('opens the recording from anywhere on the bar', async () => {
+    playing();
+    show(<Player />);
+    await userEvent.click(screen.getByText(/Àvia Teresa/));
+    expect(screen.getByText('the recording view')).toBeInTheDocument();
+  });
+
+  it('leaves the transport alone, which is what the bar is mostly made of', async () => {
+    playing();
+    show(<Player />);
+    await userEvent.click(screen.getByRole('button', { name: /pause/i }));
+    // Pressing pause is not asking to go somewhere, and a bar that navigated under every control
+    // would take somebody off the page they were reading.
+    expect(screen.queryByText('the recording view')).toBeNull();
+    expect(usePlayback.getState().status).toBe('paused');
   });
 });
 

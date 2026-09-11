@@ -13,6 +13,14 @@ const MONO: CSSProperties = {
 
 export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   title?: string;
+  /**
+   * Where the recording being played lives, which makes the title the bar's open affordance.
+   *
+   * A link and not a button, for the reason a card's title is one: opening a recording is a
+   * navigation, so it is reachable by keyboard, announced as a link and openable in a new tab.
+   * `onOpen` is the mouse convenience over the rest of the bar, and the two do the same thing.
+   */
+  href?: string;
   /** Library name shown beneath the title. */
   library?: string;
   /**
@@ -46,6 +54,8 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   onForward?: () => void;
   /** Stops playback and dismisses the bar. Absent draws no close control. */
   onClose?: () => void;
+  /** Opens what is playing. The bar's own controls keep their clicks out of it. */
+  onOpen?: () => void;
   /**
    * The copy, for an application that has its own (`UI-22a`).
    *
@@ -79,6 +89,7 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
  */
 export function PlayerBar({
   title = '',
+  href,
   library = '',
   peaks,
   position = '',
@@ -92,14 +103,33 @@ export function PlayerBar({
   onBack,
   onForward,
   onClose,
+  onOpen,
   labels,
   style,
   ...rest
 }: PlayerBarProps) {
   const shape = peaks !== undefined && peaks.length > 0;
   return (
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- the title link is the keyboard path, see above
     <div
       data-ds="player-bar"
+      onClick={(event) => {
+        if (onOpen === undefined) return;
+        // The transport, the speed and the waveform are what the bar is for; opening the
+        // recording is what the space around them does.
+        if (
+          event.target instanceof Element &&
+          event.target.closest('button, [data-ds="waveform"]') !== null
+        ) {
+          return;
+        }
+        // A modifier click stays the browser's, so the title link can still open a new tab.
+        // Anything else cancels it: following the `href` would reload out of the router.
+        if (event.defaultPrevented || event.button !== 0) return;
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        onOpen();
+      }}
       style={{
         height: 'var(--player-height)',
         background: 'var(--surface)',
@@ -109,6 +139,7 @@ export function PlayerBar({
         alignItems: 'center',
         gap: 16,
         padding: '0 16px',
+        cursor: onOpen === undefined ? 'default' : 'pointer',
         ...style,
       }}
       {...rest}
@@ -159,7 +190,13 @@ export function PlayerBar({
             textOverflow: 'ellipsis',
           }}
         >
-          {title}
+          {href === undefined ? (
+            title
+          ) : (
+            <a data-ds="player-bar-title" data-hit-target href={href}>
+              {title}
+            </a>
+          )}
         </span>
         <span
           style={{

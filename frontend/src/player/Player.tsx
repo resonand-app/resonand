@@ -19,7 +19,9 @@
  */
 
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
+import { toRecording } from '@/app/routes';
 import { PlayerBar } from '@/design-system';
 import { duration as asDuration, speed as asSpeed } from '@/i18n/format';
 
@@ -33,6 +35,7 @@ export interface PlayerProps {
 
 export function Player({ onScreen }: PlayerProps) {
   const { t } = useTranslation('player');
+  const navigate = useNavigate();
   const state = usePlayback();
   const { recording, status } = state;
   const isOnScreen = onScreen !== undefined && onScreen === recording?.uuid;
@@ -51,6 +54,11 @@ export function Player({ onScreen }: PlayerProps) {
     <div data-app="player" data-status={status}>
       <PlayerBar
         title={recording.title}
+        href={toRecording(recording.uuid)}
+        // The bar opens what is playing through the router; the `href` above would reload the page.
+        onOpen={() => {
+          void navigate(toRecording(recording.uuid));
+        }}
         library={note(recording.library, {
           failed: status === 'failed' ? t('state.failed') : undefined,
           onScreen: isOnScreen ? t('state.onScreen') : undefined,
