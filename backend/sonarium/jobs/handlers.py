@@ -92,6 +92,7 @@ def handle_probe(work: Work, context: Context) -> None:
         if derived is not None and audio.recorded_at is None:
             audio.recorded_at = derived.wall_clock
             audio.recorded_at_offset = derived.offset_minutes
+            audio.recorded_at_source = derived.source
         session.flush()
         enqueue(session, KIND_WAVEFORM, audio_id=audio.id, idempotency_key=f"waveform:{audio_uuid}")
         enqueue(

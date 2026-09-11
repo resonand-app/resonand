@@ -191,6 +191,9 @@ class Audio(Base):
     recorded_at_offset: Mapped[int | None] = mapped_column(Integer)
     """Minutes east of UTC when the offset is genuinely known, ``NULL`` when it is not."""
 
+    recorded_at_source: Mapped[str | None] = mapped_column(Text)
+    """``container`` | ``filename`` | ``filesystem``, whichever won (``ING-12``)."""
+
     created_at: Mapped[str] = mapped_column(Text, nullable=False, default=now_instant)
     deleted_at: Mapped[str | None] = mapped_column(Text)
 
