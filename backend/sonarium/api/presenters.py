@@ -186,7 +186,7 @@ def audio_summary(
         notes=audio.notes,
         recorded_at=audio.recorded_at,
         recorded_at_offset=audio.recorded_at_offset,
-        recorded_at_source=None,
+        recorded_at_source=audio.recorded_at_source,
         created_at=audio.created_at,
         duration_ms=audio.duration_ms,
         library_uuid=library.uuid if library is not None else "",

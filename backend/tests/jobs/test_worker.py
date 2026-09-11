@@ -151,6 +151,7 @@ def test_probing_a_recording_fills_in_what_it_is_and_when_it_was_made(
     assert audio.sample_rate
     assert audio.recorded_at == "2024-03-11T18:22:00", "from the filename, as written"
     assert audio.recorded_at_offset is None, "a filename knows no timezone"
+    assert audio.recorded_at_source == "filename"
 
 
 @needs_ffmpeg
