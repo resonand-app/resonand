@@ -18,16 +18,14 @@ export interface BreadcrumbProps {
 /**
  * Where you are, and the one way back (`UI-11a`).
  *
- * **The place's name is the control.** It carries the chevron that says which direction it goes,
- * which is what lets this replace a second "Back to <name>" button opposite it: two controls
- * naming one destination is one of them explaining the other.
+ * **The place's name is the control**, carrying the chevron that says which direction it goes, so
+ * a screen needs no second control naming the same destination.
  *
  * **No underline.** The line reads as a path -- "Personal / interviews" -- and an underline inside
  * it makes a location look like prose with a link in it. The affordance is the chevron at rest
- * and the surface step on hover, which is how the rest of the system draws a quiet target.
+ * and the surface step on hover.
  *
- * The detail after it is not a link, because there is no screen for a category on its own: it
- * says what this is filed under, and the file it is in is the thing you can go to.
+ * The detail after it is not a link, because there is no screen for a category on its own.
  */
 export function Breadcrumb({ name, href, detail, label, onNavigate }: BreadcrumbProps) {
   return (

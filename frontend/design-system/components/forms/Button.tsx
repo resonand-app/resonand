@@ -16,14 +16,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** Glyph rendered before the label. */
   icon?: IconName;
-  /**
-   * Renders an `<a>` with the button's shape, for an action the browser already performs.
-   *
-   * A download is a navigation -- it can be opened in a new tab and saved from the context menu,
-   * and needs no fetch, no blob and no progress an interface would have to invent. It belongs in
-   * the row of actions beside the ones that are buttons, so it is given the same shape here
-   * rather than a hand-drawn copy of these styles inside a view.
-   */
+  /** Renders an `<a>` with the button's shape, for a navigation the browser performs itself. */
   href?: string;
   /** Saves the target rather than opening it. Only meaningful beside `href`. */
   download?: boolean;
@@ -81,8 +74,8 @@ export function Button({
     </>
   );
 
-  // No `rest` on the anchor: a link's behaviour is the browser's, and forwarding a button's
-  // handlers onto one is how a download quietly becomes something else.
+  // No `rest` on the anchor: a button's handlers on a link are how a download becomes something
+  // else.
   if (href !== undefined) {
     return (
       <a data-ds="button" href={href} download={download} {...shape}>

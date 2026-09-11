@@ -69,9 +69,8 @@ export function MoveDialog({ recordings, categoryName, onClose, onConfirm }: Mov
   );
   const chosen = available.find((one) => one.uuid === destination);
 
-  // Rendered only while it is open, so `open` is constant -- `Modal` is here for the other half
-  // of a dialog: the scrim, the focus trap, `Esc`, and the centring that puts it in front of the
-  // page rather than inline in whichever column opened it.
+  // `open` is constant because this is rendered only while open. `Modal` is the other half of a
+  // dialog: the scrim, the focus trap, `Esc`, and the centring.
   return (
     <Modal open onClose={onClose}>
       <Dialog

@@ -65,14 +65,7 @@ const MAX_HEIGHT = 640;
 export interface TranscriptProps {
   context: RecordingContext;
   transcripts: Transcripts;
-  /**
-   * Take the height the column has left, rather than a height of its own.
-   *
-   * True on the desktop shell, where the view fills the screen and this is the column that gives
-   * -- a fixed height there either leaves a band of empty page under it or pushes the player off
-   * the top of it. False on the phone, whose content area is a page you scroll: there is no
-   * settled height to fill, and filling an unsettled one draws every segment at once.
-   */
+  /** Take the height the column has left. False on the phone, which has none to give. */
   fills?: boolean;
 }
 

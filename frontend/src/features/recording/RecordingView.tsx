@@ -96,18 +96,8 @@ export function RecordingView() {
   }
   if (context.recording === undefined) return <Loading />;
 
-  /**
-   * The screen fits the screen, on the desktop shell (`UI-11c`).
-   *
-   * What is long here is the transcript, and a page that grew to fit one would take the player
-   * and the details off the top of the screen to show more of a column that was already
-   * scrolling. So the view fills the scrollport and the two columns scroll inside themselves.
-   *
-   * Not on the phone, and not as a narrowing of this (`DEC-23`): that shell's content area is a
-   * page you scroll, with no settled height to hand down, and a transcript asked to fill an
-   * unsettled one grows to its full length -- which is every segment drawn at once, and the
-   * virtualiser is the reason the screen opens at all.
-   */
+  // The columns scroll, not the page (`UI-11c`). Not on the phone (`DEC-23`): that shell hands
+  // down no settled height, and a transcript filling an unsettled one draws every segment.
   const fills = !isPhone;
 
   return (
@@ -168,11 +158,10 @@ export function RecordingView() {
             isPhone || panel.collapsed
               ? 'minmax(0, 1fr)'
               : `minmax(0, 1fr) ${String(PANEL_WIDTH)}px`,
+          // `minmax(0, 1fr)` on the row too: an implicit row is sized to its tallest item, so the
+          // panel would set the grid's height rather than fit inside it.
           ...(fills
-            ? // `minmax(0, 1fr)` on the row as well: an implicit row is sized to its tallest
-              // item, so the panel would set the grid's height rather than fit inside it -- and
-              // the columns scroll on their own precisely because they cannot do that.
-              { gridTemplateRows: 'minmax(0, 1fr)', alignItems: 'stretch', flex: 1, minHeight: 0 }
+            ? { gridTemplateRows: 'minmax(0, 1fr)', alignItems: 'stretch', flex: 1, minHeight: 0 }
             : { alignItems: 'start' }),
           gap: 'var(--space-6)',
         }}
@@ -181,9 +170,8 @@ export function RecordingView() {
           style={{ minWidth: 0, ...(fills ? { display: 'flex', flexDirection: 'column' } : {}) }}
         >
           <RecordingPlayer context={context} />
-          {/* The player keeps its height and this takes the rest. A transcript fills it and
-              scrolls inside itself; the three transcript-less states are shorter than it and sit
-              at the top, with `auto` for the short viewport where they are not. */}
+          {/* The player keeps its height and this takes the rest. `auto` for the short viewport
+              where a transcript-less state is taller than what is left. */}
           <div
             style={
               fills
@@ -200,9 +188,7 @@ export function RecordingView() {
             <Middle context={context} transcripts={transcripts} fills={fills} />
           </div>
         </div>
-        {/* The panel scrolls on its own rather than lengthening the page: it is a column of
-            details beside the transcript, and a tall one is not a reason for the player to leave
-            the screen. */}
+        {/* A tall panel is not a reason for the player to leave the screen. */}
         {!isPhone && !panel.collapsed && (
           <aside
             aria-label={t('panel.label')}
@@ -288,8 +274,7 @@ function Middle({
  * them to go back to, and "back" on this screen means the library this recording is in.
  *
  * **One way back, not two.** The library's name is the control, with the chevron that says which
- * direction it goes -- a second "Back to <library>" button opposite it named the same destination
- * a second time and took the width of the line to do it.
+ * direction it goes; nothing else on the screen names the same destination again.
  */
 function Whereabouts({ context }: { context: RecordingContext }) {
   const { t } = useTranslation('recording');
