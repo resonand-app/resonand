@@ -96,9 +96,9 @@ function RevisionMismatch({ at, expected }: { at: string | null; expected: strin
         flexDirection: 'column',
         gap: 'var(--space-2)',
         padding: 'var(--space-3)',
-        borderRadius: 'var(--radius-card)',
+        borderRadius: 'var(--radius-panel)',
         border: '1px solid var(--state-failed)',
-        background: 'var(--surface-1)',
+        background: 'var(--surface-2)',
       }}
     >
       <strong
@@ -117,7 +117,7 @@ function RevisionMismatch({ at, expected }: { at: string | null; expected: strin
           maxWidth: 520,
           fontFamily: 'var(--font-sans)',
           fontSize: 'var(--type-ui-size-sm)',
-          color: 'var(--text-1)',
+          color: 'var(--text)',
         }}
       >
         {t('status.mismatch.body')}

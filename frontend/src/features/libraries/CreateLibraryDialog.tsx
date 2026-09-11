@@ -127,7 +127,7 @@ export function CreateLibraryDialog({ open, onClose }: CreateLibraryDialogProps)
                 margin: 0,
                 fontFamily: 'var(--font-sans)',
                 fontSize: 'var(--type-ui-size-sm)',
-                color: 'var(--danger)',
+                color: 'var(--state-failed)',
               }}
               role="alert"
             >

@@ -98,7 +98,7 @@ export function LibrariesView() {
         }}
       />
       {shared.length > 0 && (
-        <section style={{ marginTop: 'var(--space-10)' }}>
+        <section style={{ marginTop: 'var(--space-8)' }}>
           <h2
             style={{
               margin: '0 0 var(--space-4)',

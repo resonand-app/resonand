@@ -175,6 +175,7 @@ export const TOKENS = [
   '--player-height',
   '--card-width',
   '--card-height',
+  '--admin-card-width',
   '--row-height',
   '--control-height',
   '--field-height',

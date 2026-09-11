@@ -103,7 +103,11 @@ export function TrashLibrary({ library }: TrashLibraryProps) {
         >
           {trash.error !== null && (
             <p
-              style={{ margin: 0, fontSize: 'var(--type-ui-size-sm)', color: 'var(--danger)' }}
+              style={{
+                margin: 0,
+                fontSize: 'var(--type-ui-size-sm)',
+                color: 'var(--state-failed)',
+              }}
               role="alert"
             >
               {/* Whatever the instance said, shown rather than replaced (§1.9). A personal

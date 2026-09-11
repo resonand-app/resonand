@@ -120,6 +120,7 @@
     "cancel": "Cancel",
     "cancelNamed": "Cancel the {{kind}} job {{id}}",
     "tooMany": "Showing the newest {{shown}} of {{total}}. The counts above are the whole queue.",
+    "showMore": "Show the newest {{n}}",
     "empty": {
       "title": "Everything asked for has been done",
       "body": "Nothing is waiting, running or failed."

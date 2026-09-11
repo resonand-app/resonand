@@ -6,9 +6,10 @@
  * as that rather than as a list with nothing in it.
  *
  * **Four hundred pending jobs after a bulk import is also healthy**, and drawing four hundred
- * rows would bury the one that matters. Past a threshold the panel shows the counts and the
- * newest few, because what somebody needs from a long queue is whether it is moving and whether
- * anything failed -- not a row per file.
+ * rows would bury the one that matters. So the panel leads with the counts and then draws the
+ * newest five, because what somebody needs from a long queue is whether it is moving and
+ * whether anything failed -- not a row per file. "Show more" is there for the morning when the
+ * fifth row is not far enough back, and it is the only way the list gets long.
  *
  * **`ready_at` is rendered as when the next attempt happens.** It is what a backoff looks like
  * from outside, and hiding it turns "waiting four minutes" into "stuck". Together with `attempts`
@@ -28,7 +29,7 @@ import { count } from '@/i18n/format';
 import { instant, relative } from '@/i18n/time';
 
 import { AdminSection } from './AdminSection';
-import { QUEUE_ROW_LIMIT, useJobActions, useQueue, useSystemStatus } from './data';
+import { QUEUE_ROWS, useJobActions, useQueue, useSystemStatus } from './data';
 import type { JobActions } from './data';
 
 /** The states the API reports, in the order an operator cares about them. */
@@ -38,7 +39,9 @@ export function Queue() {
   const { t } = useTranslation('settings');
   const { t: common } = useTranslation();
   const [state, setState] = useState<string | undefined>(undefined);
-  const queue = useQueue(state);
+  const [expanded, setExpanded] = useState(false);
+  const limit = expanded ? QUEUE_ROWS.expanded : QUEUE_ROWS.default;
+  const queue = useQueue(state, limit);
   const actions = useJobActions();
   // The counts by state come from the status endpoint, which `INT-3e` also draws. One key, one
   // request: react-query hands both sections the same answer rather than asking twice.
@@ -53,6 +56,7 @@ export function Queue() {
           active={state === undefined}
           onClick={() => {
             setState(undefined);
+            setExpanded(false);
           }}
         >
           {t('queue.all')}
@@ -64,13 +68,25 @@ export function Queue() {
             active={state === one}
             onClick={() => {
               setState(one);
+              setExpanded(false);
             }}
           >
             {t(`queue.state.${one}`)}
           </Chip>
         ))}
       </div>
-      <Rows queue={queue} actions={actions} />
+      <Rows
+        queue={queue}
+        actions={actions}
+        shown={limit}
+        onShowMore={
+          expanded
+            ? undefined
+            : () => {
+                setExpanded(true);
+              }
+        }
+      />
       {queue.error !== null && queue.error !== undefined && (
         <StateCard
           icon="alert-circle"
@@ -98,7 +114,18 @@ function Counts({ counts }: { counts: Record<string, number> }) {
   return <KeyValueList rows={rows} layout="inline" />;
 }
 
-function Rows({ queue, actions }: { queue: ReturnType<typeof useQueue>; actions: JobActions }) {
+function Rows({
+  queue,
+  actions,
+  shown,
+  onShowMore,
+}: {
+  queue: ReturnType<typeof useQueue>;
+  actions: JobActions;
+  shown: number;
+  /** Absent once the list is already as long as it goes, which is when the button would lie. */
+  onShowMore?: (() => void) | undefined;
+}) {
   const { t } = useTranslation('settings');
 
   if (queue.isPending) return <StateCard icon="loader" title={t('queue.loading')} />;
@@ -110,18 +137,33 @@ function Rows({ queue, actions }: { queue: ReturnType<typeof useQueue>; actions:
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      {queue.total > QUEUE_ROW_LIMIT && (
-        <p
+      {queue.total > shown && (
+        <div
           style={{
-            margin: 0,
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'var(--type-ui-size-sm)',
-            color: 'var(--text-3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 'var(--space-3)',
+            flexWrap: 'wrap',
           }}
         >
-          {/* The counts above are the answer for a long queue; these rows are the newest few. */}
-          {t('queue.tooMany', { shown: QUEUE_ROW_LIMIT, total: count(queue.total) })}
-        </p>
+          <p
+            style={{
+              margin: 0,
+              fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--type-ui-size-sm)',
+              color: 'var(--text-3)',
+            }}
+          >
+            {/* The counts above are the answer for a long queue; these rows are the newest few. */}
+            {t('queue.tooMany', { shown, total: count(queue.total) })}
+          </p>
+          {onShowMore !== undefined && (
+            <Button variant="secondary" onClick={onShowMore}>
+              {t('queue.showMore', { n: QUEUE_ROWS.expanded })}
+            </Button>
+          )}
+        </div>
       )}
       <ul
         style={{
@@ -167,8 +209,8 @@ function JobRow({
         justifyContent: 'space-between',
         gap: 'var(--space-3)',
         padding: 'var(--space-3)',
-        borderRadius: 'var(--radius-card)',
-        background: 'var(--surface-1)',
+        borderRadius: 'var(--radius-panel)',
+        background: 'var(--surface-2)',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
@@ -178,9 +220,9 @@ function JobRow({
           <span
             style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--type-meta-size)',
+              fontSize: 'var(--type-overline-size)',
               textTransform: 'uppercase',
-              letterSpacing: 'var(--tracking-meta)',
+              letterSpacing: 'var(--type-overline-tracking)',
               color: 'var(--text-3)',
             }}
           >
