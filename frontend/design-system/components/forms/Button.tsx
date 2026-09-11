@@ -16,6 +16,17 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** Glyph rendered before the label. */
   icon?: IconName;
+  /**
+   * Renders an `<a>` with the button's shape, for an action the browser already performs.
+   *
+   * A download is a navigation -- it can be opened in a new tab and saved from the context menu,
+   * and needs no fetch, no blob and no progress an interface would have to invent. It belongs in
+   * the row of actions beside the ones that are buttons, so it is given the same shape here
+   * rather than a hand-drawn copy of these styles inside a view.
+   */
+  href?: string;
+  /** Saves the target rather than opening it. Only meaningful beside `href`. */
+  download?: boolean;
   children?: ReactNode;
 }
 
@@ -31,35 +42,58 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * has to live beside the fill it changes to. The `focused` prop that faked the ring for the
  * specimen boards is gone with it: focus is `:focus-visible` now, once, for everything.
  */
-export function Button({ variant = 'primary', icon, children, disabled, style, ...rest }: ButtonProps) {
-  return (
-    <button
-      type="button"
-      data-ds="button"
-      data-variant={variant}
-      data-hit-target=""
-      disabled={disabled}
-      style={{
-        height: 'var(--control-height)',
-        padding: icon ? '0 15px 0 13px' : '0 15px',
-        border: 'none',
-        borderRadius: 'var(--radius-pill)',
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 7,
-        // The height is fixed, so a wrapped label is drawn outside the pill. `style` overrides.
-        flex: '0 0 auto',
-        whiteSpace: 'nowrap',
-        fontFamily: 'var(--font-sans)',
-        fontSize: 'var(--type-ui-size)',
-        transition:
-          'background var(--transition-state), color var(--transition-state), box-shadow var(--transition-state)',
-        ...style,
-      }}
-      {...rest}
-    >
+export function Button({
+  variant = 'primary',
+  icon,
+  href,
+  download,
+  children,
+  disabled,
+  style,
+  ...rest
+}: ButtonProps) {
+  const shape = {
+    'data-variant': variant,
+    'data-hit-target': '',
+    style: {
+      height: 'var(--control-height)',
+      padding: icon ? '0 15px 0 13px' : '0 15px',
+      border: 'none',
+      borderRadius: 'var(--radius-pill)',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 7,
+      // The height is fixed, so a wrapped label is drawn outside the pill. `style` overrides.
+      flex: '0 0 auto',
+      whiteSpace: 'nowrap',
+      fontFamily: 'var(--font-sans)',
+      fontSize: 'var(--type-ui-size)',
+      transition:
+        'background var(--transition-state), color var(--transition-state), box-shadow var(--transition-state)',
+      ...style,
+    },
+  };
+
+  const content = (
+    <>
       {icon !== undefined && <Icon name={icon} size={17} />}
       {children}
+    </>
+  );
+
+  // No `rest` on the anchor: a link's behaviour is the browser's, and forwarding a button's
+  // handlers onto one is how a download quietly becomes something else.
+  if (href !== undefined) {
+    return (
+      <a data-ds="button" href={href} download={download} {...shape}>
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    <button data-ds="button" type="button" disabled={disabled} {...shape} {...rest}>
+      {content}
     </button>
   );
 }

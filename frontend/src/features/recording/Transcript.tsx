@@ -59,15 +59,24 @@ const ESTIMATED_LINE = 46;
 /** How many lines to draw beyond the viewport, so a fast scroll does not show empty space. */
 const OVERSCAN = 10;
 
-/** How tall the scroller gets. The transcript is the screen, so it takes what it can. */
+/** How tall the scroller gets where the column has no height to give it. */
 const MAX_HEIGHT = 640;
 
 export interface TranscriptProps {
   context: RecordingContext;
   transcripts: Transcripts;
+  /**
+   * Take the height the column has left, rather than a height of its own.
+   *
+   * True on the desktop shell, where the view fills the screen and this is the column that gives
+   * -- a fixed height there either leaves a band of empty page under it or pushes the player off
+   * the top of it. False on the phone, whose content area is a page you scroll: there is no
+   * settled height to fill, and filling an unsettled one draws every segment at once.
+   */
+  fills?: boolean;
 }
 
-export function Transcript({ context, transcripts }: TranscriptProps) {
+export function Transcript({ context, transcripts, fills = false }: TranscriptProps) {
   // The virtualiser measures live DOM nodes and returns different results from the same inputs,
   // which is what the React Compiler is entitled to assume does not happen -- the same directive
   // and the same reason as `RecordingList`.
@@ -160,15 +169,24 @@ export function Transcript({ context, transcripts }: TranscriptProps) {
   if (recording === undefined || segments.length === 0) return null;
 
   return (
-    <section data-app="transcript" aria-label={t('transcript.label')}>
+    <section
+      data-app="transcript"
+      aria-label={t('transcript.label')}
+      style={
+        fills ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined
+      }
+    >
       <Heading count={transcripts.active?.segment_count ?? segments.length} />
       {!follow.following && <Released onResume={follow.resume} />}
+      {/* The transcript is the screen, so it takes what the column has left rather than a height
+          of its own: a fixed one either leaves a band of empty page under it or pushes the player
+          off the top, depending on the screen it lands on. */}
       <div
         ref={scroller}
         data-app="transcript-scroller"
         onScroll={follow.onScroll}
         style={{
-          height: `min(60vh, ${String(MAX_HEIGHT)}px)`,
+          ...(fills ? { flex: 1, minHeight: 0 } : { height: `min(60vh, ${String(MAX_HEIGHT)}px)` }),
           overflowY: 'auto',
           contain: 'strict',
         }}

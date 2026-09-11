@@ -3,10 +3,12 @@
  *
  * **Download is always there, for everybody who can hear it.** Principle 1 is that the original
  * is yours and is kept byte for byte; a screen that can play a recording but not give it back
- * would be a claim the software does not honour. It is a plain link to
- * `GET /audio/{uuid}/original` rather than a `Button` with a handler, because a download is a
- * navigation the browser already knows how to do -- it can be opened in a new tab, saved from the
- * context menu, and needs no fetch, no blob and no progress the interface would have to invent.
+ * would be a claim the software does not honour. It is still a link to `GET /audio/{uuid}/original`
+ * and not a handler -- a download is a navigation the browser already knows how to do, so it can
+ * be opened in a new tab and saved from the context menu, and needs no fetch, no blob and no
+ * progress the interface would have to invent. It wears a `Button`'s shape because it stands in
+ * a row of actions, and an underlined line of prose among four buttons reads as a different kind
+ * of thing than it is.
  *
  * **Everything else is absent rather than disabled** (§3.5, `UI-10c`). A row of greyed-out
  * buttons reads as a bug; their absence reads as a decision, and the decision was made by whoever
@@ -32,7 +34,7 @@ import { invalidate } from '@/api/invalidate';
 import { toLibrary, toLibrarySettings } from '@/app/routes';
 import { useInstance } from '@/app/session';
 import { MoveDialog } from '@/components/MoveDialog';
-import { Button, Dialog } from '@/design-system';
+import { Button, Dialog, Modal } from '@/design-system';
 
 import type { RecordingContext } from './data';
 import { originalUrl } from './original';
@@ -79,21 +81,9 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <a
-        href={originalUrl(recording.uuid)}
-        download
-        data-app="download"
-        data-hit-target=""
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          minHeight: 'var(--control-height)',
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--type-ui-size)',
-        }}
-      >
+      <Button variant="ghost" icon="download" href={originalUrl(recording.uuid)} download>
         {t('actions.download')}
-      </a>
+      </Button>
       {context.canShare && library !== undefined && (
         <Button
           variant="ghost"
@@ -108,6 +98,7 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
       {context.canEdit && (
         <Button
           variant="ghost"
+          icon="folder-input"
           onClick={() => {
             setMoving(true);
           }}
@@ -126,7 +117,12 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
           {t('actions.trash')}
         </Button>
       )}
-      {confirming && (
+      <Modal
+        open={confirming}
+        onClose={() => {
+          setConfirming(false);
+        }}
+      >
         <Dialog
           title={t('actions.trashTitle')}
           description={t('actions.trashConsequence', {
@@ -157,7 +153,7 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
             </>
           }
         />
-      )}
+      </Modal>
       {moving && (
         <MoveDialog
           recordings={[recording]}

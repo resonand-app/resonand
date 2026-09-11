@@ -7,7 +7,9 @@ import {
   CircleDashed,
   Clock,
   CloudUpload,
+  Download,
   EllipsisVertical,
+  FolderInput,
   HardDrive,
   LayoutGrid,
   Library,
@@ -57,6 +59,8 @@ import type { HTMLAttributes } from 'react';
  * three: `chevron-up` for a sort that currently runs the other way, and `layout-grid` and `rows`
  * for the switch between the two densities of one library. `sun` is `moon`'s other half, for the
  * account menu's theme row, which shows the theme somebody is in rather than the word "Theme".
+ * `download` and `folder-input` name a recording's two actions that move it somewhere: onto your
+ * own disk, and into another library.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -68,6 +72,8 @@ const GLYPHS = {
   'circle-dashed': CircleDashed,
   clock: Clock,
   'cloud-upload': CloudUpload,
+  download: Download,
+  'folder-input': FolderInput,
   'hard-drive': HardDrive,
   library: Library,
   loader: Loader,

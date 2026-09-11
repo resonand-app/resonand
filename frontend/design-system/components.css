@@ -193,8 +193,11 @@
    what `--accent-hover` is for, and why it is a token rather than a calculation -- and press
    takes `--accent-pressed`. A neutral variant raises one surface step instead: transparent to
    `--surface-2`, `--surface-2` to `--border`. */
+/* `text-decoration` because a Button is sometimes an `<a>` -- a download is a navigation the
+   browser performs -- and the shape has to read the same whichever element is under it. */
 [data-ds='button'] {
   cursor: pointer;
+  text-decoration: none;
 }
 
 [data-ds='button'][data-variant='primary'] {
@@ -472,6 +475,24 @@
 [data-ds='shell'] {
   background: var(--bg);
   color: var(--text);
+}
+
+/* A view that fits the screen instead of lengthening the page, opted into by its root (`UI-11c`).
+ *
+ * The recording view asks for this and nothing else does. What is long on that screen is the
+ * transcript, which has a scrollbar of its own, so a page that grew to fit it would take the
+ * player and the details off the top of the screen to show more of a column that was already
+ * scrolling.
+ *
+ * `:has()` rather than a prop, because the shell hands the view a box and does not know what is
+ * in it, and a `height` here rather than a `min-height` because a flex child can only be asked to
+ * fit a container whose height is settled. Views that do not opt in never match, and keep the
+ * content-height page -- and their bottom gutter with it, which a `height` on every page would
+ * take away the moment one of them overflowed. */
+[data-ds='shell-page']:has(> [data-fills]) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* StateSlot. The filled card is a surface like any other; the dashed one is the system's single
@@ -961,6 +982,34 @@
 [data-ds='menu-row'][data-destructive='true']:hover:not(:disabled) {
   background: var(--state-failed-bg);
   color: var(--state-failed);
+}
+
+/* The breadcrumb's library name, which is the way back to the library (`UI-11a`).
+ *
+ * No underline: it sits in a line that reads as a location -- "Personal / categoria 1" -- and an
+ * underline there makes a path look like prose with a link in it. It is the quiet grey of the
+ * line it belongs to and steps up to full text on hover, which is the affordance.
+ *
+ * The chevron is the only thing that says "back" now that the second, redundant control beside
+ * the title is gone: the place you return to is named, so naming it twice named it twice. */
+[data-ds='breadcrumb-link'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: -4px;
+  padding: 2px 5px 2px 1px;
+  border-radius: var(--radius-control);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--transition-state),
+    background var(--transition-state);
+}
+
+[data-ds='breadcrumb-link']:hover {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 /* TopNav's lockup, when it is the way home. No underline: the mark is the affordance. */

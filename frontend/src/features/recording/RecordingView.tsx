@@ -52,14 +52,15 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
+import { isPlainClick } from '@/app/links';
 import { transcriptionState } from '@/features/library/recordings';
 import { toLibrary } from '@/app/routes';
 import {
+  Breadcrumb,
   Button,
-  Icon,
   IconButton,
   PageHeader,
   RowSkeleton,
@@ -95,8 +96,27 @@ export function RecordingView() {
   }
   if (context.recording === undefined) return <Loading />;
 
+  /**
+   * The screen fits the screen, on the desktop shell (`UI-11c`).
+   *
+   * What is long here is the transcript, and a page that grew to fit one would take the player
+   * and the details off the top of the screen to show more of a column that was already
+   * scrolling. So the view fills the scrollport and the two columns scroll inside themselves.
+   *
+   * Not on the phone, and not as a narrowing of this (`DEC-23`): that shell's content area is a
+   * page you scroll, with no settled height to hand down, and a transcript asked to fill an
+   * unsettled one grows to its full length -- which is every segment drawn at once, and the
+   * virtualiser is the reason the screen opens at all.
+   */
+  const fills = !isPhone;
+
   return (
-    <article>
+    <article
+      {...(fills ? { 'data-fills': '' } : {})}
+      style={
+        fills ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined
+      }
+    >
       <Whereabouts context={context} />
       <Essentials
         context={context}
@@ -148,16 +168,46 @@ export function RecordingView() {
             isPhone || panel.collapsed
               ? 'minmax(0, 1fr)'
               : `minmax(0, 1fr) ${String(PANEL_WIDTH)}px`,
+          ...(fills
+            ? // `minmax(0, 1fr)` on the row as well: an implicit row is sized to its tallest
+              // item, so the panel would set the grid's height rather than fit inside it -- and
+              // the columns scroll on their own precisely because they cannot do that.
+              { gridTemplateRows: 'minmax(0, 1fr)', alignItems: 'stretch', flex: 1, minHeight: 0 }
+            : { alignItems: 'start' }),
           gap: 'var(--space-6)',
-          alignItems: 'start',
         }}
       >
-        <div style={{ minWidth: 0 }}>
+        <div
+          style={{ minWidth: 0, ...(fills ? { display: 'flex', flexDirection: 'column' } : {}) }}
+        >
           <RecordingPlayer context={context} />
-          <Middle context={context} transcripts={transcripts} />
+          {/* The player keeps its height and this takes the rest. A transcript fills it and
+              scrolls inside itself; the three transcript-less states are shorter than it and sit
+              at the top, with `auto` for the short viewport where they are not. */}
+          <div
+            style={
+              fills
+                ? {
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflowY: 'auto',
+                  }
+                : undefined
+            }
+          >
+            <Middle context={context} transcripts={transcripts} fills={fills} />
+          </div>
         </div>
+        {/* The panel scrolls on its own rather than lengthening the page: it is a column of
+            details beside the transcript, and a tall one is not a reason for the player to leave
+            the screen. */}
         {!isPhone && !panel.collapsed && (
-          <aside aria-label={t('panel.label')}>
+          <aside
+            aria-label={t('panel.label')}
+            style={fills ? { minHeight: 0, overflowY: 'auto', overflowX: 'clip' } : undefined}
+          >
             <MetadataPanel context={context} transcripts={transcripts} />
           </aside>
         )}
@@ -185,7 +235,15 @@ export function RecordingView() {
  * and which of the three transcript-less states that is -- never asked for, running, failed -- is
  * on the recording (`transcription_state`).
  */
-function Middle({ context, transcripts }: { context: RecordingContext; transcripts: Transcripts }) {
+function Middle({
+  context,
+  transcripts,
+  fills,
+}: {
+  context: RecordingContext;
+  transcripts: Transcripts;
+  fills: boolean;
+}) {
   const { t } = useTranslation('recording');
   const recording = context.recording;
   if (recording === undefined) return null;
@@ -217,7 +275,7 @@ function Middle({ context, transcripts }: { context: RecordingContext; transcrip
         </div>
       );
     }
-    return <Transcript context={context} transcripts={transcripts} />;
+    return <Transcript context={context} transcripts={transcripts} fills={fills} />;
   }
 
   return <TranscriptionState context={context} state={state} />;
@@ -228,49 +286,33 @@ function Middle({ context, transcripts }: { context: RecordingContext; transcrip
  *
  * A link and not a history step: somebody who arrived from a search result has no library behind
  * them to go back to, and "back" on this screen means the library this recording is in.
+ *
+ * **One way back, not two.** The library's name is the control, with the chevron that says which
+ * direction it goes -- a second "Back to <library>" button opposite it named the same destination
+ * a second time and took the width of the line to do it.
  */
 function Whereabouts({ context }: { context: RecordingContext }) {
   const { t } = useTranslation('recording');
+  const navigate = useNavigate();
   const { library, categoryName } = context;
   if (library === undefined) return null;
 
+  const href = toLibrary(library.uuid);
+
   return (
-    <nav
-      aria-label={t('breadcrumb.label')}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: 'var(--space-4)',
-        marginBottom: 'var(--space-4)',
-      }}
-    >
-      <span
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-2)',
-          minWidth: 0,
-          fontFamily: 'var(--font-sans)',
-          fontSize: 'var(--type-ui-size-sm)',
-          color: 'var(--text-3)',
+    <div style={{ marginBottom: 'var(--space-4)' }}>
+      <Breadcrumb
+        name={library.name}
+        href={href}
+        detail={categoryName}
+        label={t('breadcrumb.label')}
+        onNavigate={(event) => {
+          if (!isPlainClick(event)) return;
+          event.preventDefault();
+          void navigate(href);
         }}
-      >
-        <Link to={toLibrary(library.uuid)} data-app="breadcrumb-library" data-hit-target>
-          {library.name}
-        </Link>
-        {categoryName !== undefined && (
-          <>
-            <span aria-hidden>/</span>
-            <span>{categoryName}</span>
-          </>
-        )}
-      </span>
-      <Link to={toLibrary(library.uuid)} data-app="breadcrumb-back" data-hit-target="">
-        <Icon name="chevron-left" size={16} />
-        {t('breadcrumb.back', { library: library.name })}
-      </Link>
-    </nav>
+      />
+    </div>
   );
 }
 

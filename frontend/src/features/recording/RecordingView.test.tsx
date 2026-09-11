@@ -44,8 +44,12 @@ function renderRecording(uuid: string = CARRER_NOU) {
 describe('where you are', () => {
   it('names the library the recording is in and links back to it', async () => {
     renderRecording();
-    const back = await screen.findByRole('link', { name: /Back to Àvia Teresa/ });
+    // The library's name is the only way back, and it is a real `href`: one control naming one
+    // destination, rather than that plus a "Back to <library>" button saying the same thing.
+    const where = await screen.findByRole('navigation', { name: 'Where this recording is' });
+    const back = await within(where).findByRole('link', { name: 'Àvia Teresa' });
     expect(back).toHaveAttribute('href', `/library/${AVIA}`);
+    expect(within(where).queryByRole('link', { name: /Back to/ })).toBeNull();
   });
 
   it('names the category as well, when the recording has one', async () => {
