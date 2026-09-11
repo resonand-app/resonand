@@ -91,6 +91,15 @@ export function PhonePlayer() {
           {recording.title}
         </button>
         <Icon name="chevron-down" size={17} style={{ transform: 'rotate(180deg)' }} />
+        <IconButton
+          icon="x"
+          variant="ghost"
+          label={t('action.close')}
+          onClick={() => {
+            usePlayback.getState().stop();
+          }}
+          style={{ color: 'var(--text-2)' }}
+        />
         {/* The hairline. Not a waveform, and not a control: it says how far through, and the
             expanded player is where seeking happens. */}
         <div

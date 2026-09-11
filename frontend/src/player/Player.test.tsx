@@ -86,7 +86,7 @@ describe('buffering', () => {
     show(<Player />);
     // The transport is present -- three controls, not a spinner -- and the position holds at the
     // start rather than jumping about while the file loads.
-    expect(screen.getByRole('button', { name: /play/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^play$/i })).toBeInTheDocument();
     expect(screen.getByText('00:00')).toBeInTheDocument();
   });
 
@@ -153,7 +153,7 @@ describe('a file that will not play', () => {
     playing();
     usePlayback.getState().report({ status: 'failed' });
     show(<Player />);
-    await userEvent.click(screen.getByRole('button', { name: /play/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^play$/i }));
     expect(usePlayback.getState().status).not.toBe('failed');
   });
 });
@@ -195,6 +195,25 @@ describe('on a phone', () => {
     show(<PhonePlayer />);
     await userEvent.click(screen.getByText('The house on Carrer Nou'));
     expect(screen.getByRole('button', { name: /back 15 seconds/i })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /stop playing/i }));
+    expect(usePlayback.getState().recording).toBeNull();
+  });
+});
+
+describe('closing it', () => {
+  it('stops the sound and takes the bar with it', async () => {
+    playing();
+    show(<Player />);
+    await userEvent.click(screen.getByRole('button', { name: /stop playing/i }));
+    // Nothing loaded is what makes the element let go of the file: `audio.ts` reads this and
+    // detaches the source, so a bar that is gone cannot still be playing.
+    expect(usePlayback.getState().recording).toBeNull();
+    expect(usePlayback.getState().status).toBe('idle');
+  });
+
+  it('can be closed while it is still loading', async () => {
+    usePlayback.getState().play(CARRER_NOU);
+    show(<Player />);
     await userEvent.click(screen.getByRole('button', { name: /stop playing/i }));
     expect(usePlayback.getState().recording).toBeNull();
   });

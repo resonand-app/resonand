@@ -82,11 +82,15 @@ export function Player({ onScreen }: PlayerProps) {
         onForward={() => {
           usePlayback.getState().nudge(15);
         }}
+        onClose={() => {
+          usePlayback.getState().stop();
+        }}
         labels={{
           play: t('action.play'),
           pause: t('action.pause'),
           back: t('action.back'),
           forward: t('action.forward'),
+          close: t('action.close'),
         }}
         aria-busy={status === 'buffering'}
       />

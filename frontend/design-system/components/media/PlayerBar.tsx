@@ -44,6 +44,8 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
    */
   onBack?: () => void;
   onForward?: () => void;
+  /** Stops playback and dismisses the bar. Absent draws no close control. */
+  onClose?: () => void;
   /**
    * The copy, for an application that has its own (`UI-22a`).
    *
@@ -55,6 +57,7 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
     pause?: string;
     back?: string;
     forward?: string;
+    close?: string;
   };
 }
 
@@ -88,6 +91,7 @@ export function PlayerBar({
   onToggle,
   onBack,
   onForward,
+  onClose,
   labels,
   style,
   ...rest
@@ -195,6 +199,16 @@ export function PlayerBar({
       >
         {speed}
       </span>
+      {onClose !== undefined && (
+        <IconButton
+          icon="x"
+          variant="ghost"
+          size={30}
+          label={labels?.close ?? 'Stop playing'}
+          onClick={onClose}
+          style={{ color: 'var(--text-2)' }}
+        />
+      )}
     </div>
   );
 }
