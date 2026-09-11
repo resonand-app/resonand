@@ -164,6 +164,16 @@ describe('the element', () => {
     expect(audio().getAttribute('src')).toBeNull();
   });
 
+  it('silences it on the way out rather than only dropping the source', () => {
+    // Closing the player is asked for while something is audible, and detaching a source the
+    // element is still playing leaves the sound running until the buffer empties.
+    const paused = vi.spyOn(audio(), 'pause');
+    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().report({ status: 'playing' });
+    usePlayback.getState().stop();
+    expect(paused).toHaveBeenCalled();
+  });
+
   it('says it failed rather than looking like it is playing silence', () => {
     // jsdom cannot decode audio, so `play()` rejects -- which is exactly the case being tested.
     vi.spyOn(audio(), 'play').mockRejectedValue(new Error('no decoder here'));

@@ -17,20 +17,23 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Icon, IconButton, Waveform } from '@/design-system';
-import type { Peaks } from '@/design-system';
 import { duration as asDuration, speed as asSpeed } from '@/i18n/format';
 
-import { RATES, playedFraction, usePlayback } from './store';
+import { RATES, advanceRate, playedFraction, usePlayback } from './store';
+import { usePlayingPeaks } from './use-playing-peaks';
 
 /** How far down a drag has to go before it counts as a dismissal rather than a tap. */
 const SWIPE_PX = 60;
 
-export function PhonePlayer({ peaks }: { peaks?: Peaks | undefined }) {
+export function PhonePlayer() {
   const { t } = useTranslation('player');
   const state = usePlayback();
   const [expanded, setExpanded] = useState(false);
   const [from, setFrom] = useState<number | null>(null);
   const { recording, status } = state;
+  // Asked for before the strip is opened, so expanding it draws the shape rather than the
+  // sentence that stands in for one.
+  const peaks = usePlayingPeaks(true);
 
   if (recording === null || status === 'idle') return null;
 
@@ -88,6 +91,15 @@ export function PhonePlayer({ peaks }: { peaks?: Peaks | undefined }) {
           {recording.title}
         </button>
         <Icon name="chevron-down" size={17} style={{ transform: 'rotate(180deg)' }} />
+        <IconButton
+          icon="x"
+          variant="ghost"
+          label={t('action.close')}
+          onClick={() => {
+            usePlayback.getState().stop();
+          }}
+          style={{ color: 'var(--text-2)' }}
+        />
         {/* The hairline. Not a waveform, and not a control: it says how far through, and the
             expanded player is where seeking happens. */}
         <div
@@ -151,7 +163,13 @@ export function PhonePlayer({ peaks }: { peaks?: Peaks | undefined }) {
       </div>
 
       {recording.hasWaveform && peaks !== undefined ? (
-        <Waveform peaks={peaks} size="detail" played={played} />
+        <Waveform
+          peaks={peaks}
+          size="detail"
+          played={played}
+          advance={advanceRate(state)}
+          playedAt={state.positionAt}
+        />
       ) : (
         // No peaks, no shape. A dashed rule and a duration is the honest answer (§3.1).
         <p style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>

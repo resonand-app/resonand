@@ -29,7 +29,7 @@ import { useTranslation } from 'react-i18next';
 import { BUCKETS, useWaveform } from '@/api/waveform';
 import { Button, IconButton, Menu, Waveform } from '@/design-system';
 import * as format from '@/i18n/format';
-import { RATES, playedFraction, usePlayback } from '@/player/store';
+import { RATES, advanceRate, playedFraction, usePlayback } from '@/player/store';
 
 import type { RecordingContext } from './data';
 
@@ -106,6 +106,8 @@ export function RecordingPlayer({ context }: { context: RecordingContext }) {
         size="detail"
         played={played}
         playhead
+        advance={isCurrent ? advanceRate(state) : 0}
+        playedAt={state.positionAt}
         pending={pending}
         duration={format.duration(knownMs)}
         onSeek={seekTo}

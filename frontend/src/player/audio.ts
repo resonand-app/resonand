@@ -24,7 +24,7 @@ import { post } from '@/api/client';
 import { usePlayback } from './store';
 import type { PlaybackState, Playing } from './store';
 
-/** How often the position is reported while playing. Four a second reads as continuous. */
+/** How often the position is reported while playing. A drawing carries it forward in between. */
 const REPORT_MS = 250;
 
 let element: HTMLAudioElement | null = null;

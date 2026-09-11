@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent, MouseEvent, SVGAttributes } from 'react';
 
+import { predicted } from './follow';
 import { amplitudeAt, bucketCount, resamplePeaks } from './peaks';
 import type { Peaks } from './peaks';
 import { HEIGHT_TOKEN } from './wave-sizes';
@@ -21,12 +22,15 @@ interface Geometry {
   playheadWidth: number;
 }
 
+/** What does not vary with the size, so the table below is only what does. */
+const SHARED = { gapRatio: 0.55, playheadWidth: 2 };
+
 const FALLBACK: Record<WaveSize, Geometry> = {
-  dense: { height: 20, barWidth: 2, gapRatio: 0.55, playheadWidth: 2 },
-  card: { height: 38, barWidth: 3, gapRatio: 0.55, playheadWidth: 2 },
-  record: { height: 52, barWidth: 3, gapRatio: 0.55, playheadWidth: 2 },
-  player: { height: 34, barWidth: 3, gapRatio: 0.55, playheadWidth: 2 },
-  detail: { height: 130, barWidth: 3, gapRatio: 0.55, playheadWidth: 2 },
+  dense: { ...SHARED, height: 20, barWidth: 2 },
+  card: { ...SHARED, height: 38, barWidth: 3 },
+  record: { ...SHARED, height: 52, barWidth: 3 },
+  player: { ...SHARED, height: 34, barWidth: 3 },
+  detail: { ...SHARED, height: 130, barWidth: 3 },
 };
 
 function readNumber(styles: CSSStyleDeclaration, token: string, fallback: number): number {
@@ -60,6 +64,22 @@ export interface WaveformProps extends Omit<SVGAttributes<SVGSVGElement>, 'onSee
   played?: number;
   /** Draws the playhead. On in the player and on audio detail. */
   playhead?: boolean;
+  /**
+   * How much of the recording a second of playback covers, or 0 when it is not playing.
+   *
+   * What makes `played` an anchor rather than an instruction: given this, the drawing works out
+   * where the position is on every frame instead of waiting to be told four times a second. A
+   * seek is a new anchor, so it still lands where it was asked for, immediately.
+   */
+  advance?: number;
+  /**
+   * When `played` was true, on `performance.now()`'s clock. Defaults to when it arrived here.
+   *
+   * The difference is the milliseconds between the element being read and this being drawn, and
+   * carrying the position forward from the wrong end of that gap steps the playhead backwards on
+   * every report -- the one movement nobody misses.
+   */
+  playedAt?: number | undefined;
   /** The peaks job has not run: renders a dashed rule and the duration, never a fake shape. */
   pending?: boolean;
   /** Shown beside the dashed rule when `pending`. The formatted duration, mono and tabular. */
@@ -108,6 +128,8 @@ export function Waveform({
   size = 'card',
   played = 0,
   playhead = false,
+  advance = 0,
+  playedAt,
   pending = false,
   duration,
   noWaveformLabel,
@@ -144,8 +166,75 @@ export function Waveform({
   }, [size]);
 
   const { height, barWidth, gapRatio, playheadWidth } = geometry;
+  const gap = barWidth * gapRatio;
+  const pitch = barWidth + gap;
+  const wanted = Math.max(6, Math.floor((width || 700) / pitch));
+  const data = useMemo(() => resamplePeaks(peaks ?? [], wanted), [peaks, wanted]);
+  const cols = Math.max(1, bucketCount(data));
+  const mid = height / 2;
+  const viewWidth = cols * pitch - gap;
 
-  if (pending) {
+  /* Held across renders because the position is reported four times a second and the bars do not
+     change when it does: at the detail size that is six hundred elements rebuilt to move a line. */
+  const bars = useMemo(() => {
+    const amp = mid * 0.92;
+    const draw = (fill: string) =>
+      Array.from({ length: cols }, (_, i) => {
+        /* The floor is the bar width, so a silent passage stays a row of dots rather than
+           disappearing into the midline (`UI-2c`). */
+        const barHeight = Math.max(barWidth, amplitudeAt(data, i) * amp * 2);
+        return (
+          <rect
+            key={i}
+            x={+(i * pitch).toFixed(2)}
+            y={+(mid - barHeight / 2).toFixed(2)}
+            width={barWidth}
+            height={+barHeight.toFixed(2)}
+            rx={barWidth / 2}
+            fill={fill}
+          />
+        );
+      });
+    return { dim: draw('var(--wave-dim)'), played: draw('var(--wave)') };
+  }, [data, cols, barWidth, pitch, mid]);
+
+  /* The two parts that move, written straight to the DOM: they are a transform each, and going
+     through React to set them would re-render the bars sixty times a second to no effect. */
+  const clip = useRef<SVGRectElement>(null);
+  const head = useRef<SVGRectElement>(null);
+  const furthest = useRef(0);
+  const reported = useRef(played);
+  useEffect(() => {
+    /* A report only ever moves forward while something plays, so a report behind the one before
+       it is a seek, and the drawing follows it back. A report behind the drawing is not: it is
+       noise in when the element was read -- `currentTime` is quantised to the audio callback,
+       which pairs a position with a moment a few milliseconds after it was true -- and drawing
+       it would flinch the playhead backwards, which is the one movement nobody misses. */
+    if (played < reported.current) furthest.current = played;
+    reported.current = played;
+    const paint = (fraction: number) => {
+      const at = Math.max(fraction, furthest.current);
+      furthest.current = at;
+      if (clip.current !== null) clip.current.style.transform = `scaleX(${String(at)})`;
+      if (head.current !== null) {
+        head.current.style.transform = `translateX(${String(at * viewWidth)}px)`;
+      }
+    };
+    paint(played);
+    if (advance <= 0) return;
+    const anchored = playedAt !== undefined && playedAt > 0 ? playedAt : performance.now();
+    let frame = requestAnimationFrame(function step(now: number) {
+      paint(predicted(played, (now - anchored) / 1000, advance));
+      frame = requestAnimationFrame(step);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [played, playedAt, advance, viewWidth]);
+
+  /* Peaks that hold no buckets are the same fact as no peaks job having run, and drawing them
+     would stretch a single bar the width of the surface. */
+  if (pending || bucketCount(peaks ?? []) === 0) {
     /* `peaks`, `played` and `playhead` are all ignored here, on purpose. A recording whose peaks
        job has not run cannot be made to draw a waveform by passing one. */
     return (
@@ -184,33 +273,6 @@ export function Waveform({
       </div>
     );
   }
-
-  const gap = barWidth * gapRatio;
-  const pitch = barWidth + gap;
-  const wanted = Math.max(6, Math.floor((width || 700) / pitch));
-  const data = resamplePeaks(peaks ?? [], wanted);
-  const cols = Math.max(1, bucketCount(data));
-  const mid = height / 2;
-  const amp = mid * 0.92;
-  const viewWidth = cols * pitch - gap;
-
-  const bars = (fill: string) =>
-    Array.from({ length: cols }, (_, i) => {
-      /* The floor is the bar width, so a silent passage stays a row of dots rather than
-         disappearing into the midline (`UI-2c`). */
-      const barHeight = Math.max(barWidth, amplitudeAt(data, i) * amp * 2);
-      return (
-        <rect
-          key={i}
-          x={+(i * pitch).toFixed(2)}
-          y={+(mid - barHeight / 2).toFixed(2)}
-          width={barWidth}
-          height={+barHeight.toFixed(2)}
-          rx={barWidth / 2}
-          fill={fill}
-        />
-      );
-    });
 
   const seekTo = (event: MouseEvent<HTMLDivElement>) => {
     if (onSeek === undefined) return;
@@ -258,23 +320,34 @@ export function Waveform({
         style={{ display: 'block', overflow: 'visible' }}
         {...rest}
       >
-        <g>{bars('var(--wave-dim)')}</g>
-        {played > 0 && (
+        <g>{bars.dim}</g>
+        {(played > 0 || advance > 0) && (
           <>
             <defs>
               <clipPath id={clipId}>
-                <rect x="0" y="0" width={viewWidth * played} height={height} />
+                {/* Scaled rather than resized: a transform is the one geometry a browser moves
+                    without laying the drawing out again. */}
+                <rect
+                  ref={clip}
+                  x="0"
+                  y="0"
+                  width={viewWidth}
+                  height={height}
+                  style={{ transform: `scaleX(${String(played)})`, transformOrigin: '0 0' }}
+                />
               </clipPath>
             </defs>
-            <g clipPath={`url(#${clipId})`}>{bars('var(--wave)')}</g>
+            <g clipPath={`url(#${clipId})`}>{bars.played}</g>
             {playhead && (
               <rect
-                x={viewWidth * played - playheadWidth / 2}
+                ref={head}
+                x={-playheadWidth / 2}
                 y="0"
                 width={playheadWidth}
                 height={height}
                 rx={playheadWidth / 2}
                 fill="var(--wave)"
+                style={{ transform: `translateX(${String(+(viewWidth * played).toFixed(2))}px)` }}
               />
             )}
           </>

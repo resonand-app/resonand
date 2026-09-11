@@ -57,6 +57,14 @@ export interface PlaybackState {
   positionMs: number;
   /** What the audio element reports, which can differ from the API's by a few milliseconds. */
   durationMs: number;
+  /**
+   * When `positionMs` was true, on the same clock as `requestAnimationFrame`.
+   *
+   * A position without a moment is a position that is already out of date by however long the
+   * report took to arrive -- and a drawing that carries it forward from the wrong moment steps
+   * backwards each time it is told where it is.
+   */
+  positionAt: number;
   rate: number;
   /** What a seek asked for, until the element reports arriving. Cleared by the next report. */
   seekingToMs: number | null;
@@ -84,6 +92,7 @@ const EMPTY = {
   status: 'idle',
   positionMs: 0,
   durationMs: 0,
+  positionAt: 0,
   seekingToMs: null,
 } as const;
 
@@ -99,7 +108,7 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
     }
     // Buffering rather than playing: the transport appears disabled and the position holds at
     // zero until the element says it is going, which is the truth for a three-hour file.
-    set({ ...EMPTY, recording, status: 'buffering' });
+    set({ ...EMPTY, recording, status: 'buffering', positionAt: performance.now() });
   },
 
   toggle: () => {
@@ -122,7 +131,7 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
     const target = Math.min(Math.max(0, ms), end || ms);
     // The asked-for position is shown immediately and the reported one takes over when it
     // arrives. A player that waited would move the handle back under the pointer.
-    set({ seekingToMs: target, positionMs: target });
+    set({ seekingToMs: target, positionMs: target, positionAt: performance.now() });
   },
 
   nudge: (seconds) => {
@@ -140,6 +149,9 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
   report: (update) => {
     set((state) => ({
       ...update,
+      // Stamped here, where the element was just read, rather than wherever this lands: a
+      // position is only as good as the moment it belongs to.
+      positionAt: update.positionMs === undefined ? state.positionAt : performance.now(),
       // A report of the position is the element arriving where it was sent, so the pending seek
       // is answered rather than kept -- otherwise every later report would be second-guessed.
       seekingToMs: update.positionMs === undefined ? state.seekingToMs : null,
@@ -150,6 +162,18 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
 /** Whether this recording is the one playing, which is what the detail view asks. */
 export function isPlaying(state: PlaybackState, uuid: string): boolean {
   return state.recording?.uuid === uuid && state.status === 'playing';
+}
+
+/**
+ * How much of a recording a second of playback covers, or 0 when it is not playing.
+ *
+ * What lets a drawing carry the position forward between reports instead of waiting to be told.
+ * The speed is in it, so a waveform never has to know that playback rates exist.
+ */
+export function advanceRate(state: PlaybackState): number {
+  if (state.status !== 'playing') return 0;
+  const end = state.durationMs || (state.recording?.durationMs ?? 0);
+  return end > 0 ? (state.rate * 1000) / end : 0;
 }
 
 /** How far through, 0-1, for a waveform or a progress line. Zero when nothing is loaded. */

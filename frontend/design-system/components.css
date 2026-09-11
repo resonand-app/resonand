@@ -781,6 +781,14 @@
   text-decoration: none;
 }
 
+/* The player's title is a link into what is playing, and looks like the title it is -- the same
+   arrangement as a card's, and no hover underline for the same reason: the whole bar opens the
+   recording, so a line under the title says the title is a narrower thing to aim at. */
+[data-ds='player-bar-title'] {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* CreateLibraryCard. It does not float, because it is not a thing yet -- so its hover is the
    surface step rather than an elevation one. */
 [data-ds='create-library-card'] {
