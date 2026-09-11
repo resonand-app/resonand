@@ -1,5 +1,8 @@
 {
   "title": "Library settings",
+  "breadcrumb": {
+    "label": "The library these settings belong to"
+  },
   "identity": {
     "name": "Name",
     "description": "Description",
