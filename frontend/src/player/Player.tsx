@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { PlayerBar } from '@/design-system';
 import { duration as asDuration, speed as asSpeed } from '@/i18n/format';
 
-import { playedFraction, usePlayback } from './store';
+import { advanceRate, playedFraction, usePlayback } from './store';
 import { usePlayingPeaks } from './use-playing-peaks';
 
 export interface PlayerProps {
@@ -64,6 +64,8 @@ export function Player({ onScreen }: PlayerProps) {
         duration={total}
         played={playedFraction(state)}
         playing={status === 'playing'}
+        advance={advanceRate(state)}
+        playedAt={state.positionAt}
         speed={asSpeed(state.rate)}
         onToggle={() => {
           if (status === 'failed') {

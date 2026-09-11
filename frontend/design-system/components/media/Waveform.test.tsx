@@ -9,7 +9,8 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import type { ReactElement } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { generatePeaks } from './generate-peaks';
 import { WAVE_SIZES } from './wave-sizes';
@@ -139,6 +140,96 @@ describe('Waveform', () => {
       const absent = render(<Waveform size="player" />).container.innerHTML;
       const { container } = render(<Waveform peaks={[]} size="player" />);
       expect(container.innerHTML).toBe(absent);
+    });
+  });
+
+  describe('following the position', () => {
+    /* Whether the motion looks fluid is a browser question -- jsdom lays nothing out and paints
+       nothing -- so what is held here is the wiring: a report is an anchor, and the frames
+       between two reports carry the position forward from it rather than waiting for the next. */
+    const moving = (container: HTMLElement) => ({
+      clip: container.querySelector('clipPath rect'),
+      head: [...container.querySelectorAll('rect')].at(-1),
+    });
+
+    /** Render with the frame clock held, so a frame can be delivered at a known moment. */
+    function withFrames(element: ReactElement, at = 1000) {
+      const frames: FrameRequestCallback[] = [];
+      vi.spyOn(performance, 'now').mockReturnValue(at);
+      vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) =>
+        frames.push(callback),
+      );
+      vi.stubGlobal('cancelAnimationFrame', () => undefined);
+      return { ...render(element), frames };
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+      vi.restoreAllMocks();
+    });
+
+    it('draws the reported position, and does not ease towards it', () => {
+      const { container } = render(
+        <Waveform peaks={PEAKS} size="detail" played={0.5} playhead advance={0.1} />,
+      );
+      const { clip, head } = moving(container);
+      expect(clip?.getAttribute('style')).toContain('scaleX(0.5)');
+      expect(head?.getAttribute('style')).toContain('translateX');
+      // Easing towards each report is what makes the motion swing when two arrive close
+      // together, and the reports are 20ms to 250ms apart.
+      expect(clip?.getAttribute('style')).not.toContain('transition');
+      expect(head?.getAttribute('style')).not.toContain('transition');
+    });
+
+    it('carries the position forward on a frame between two reports', () => {
+      const { container, frames } = withFrames(
+        <Waveform peaks={PEAKS} size="detail" played={0.5} playhead advance={0.1} />,
+      );
+      // Half a second after the report, at a tenth of the recording a second.
+      frames.at(-1)?.(1500);
+      expect(moving(container).clip?.getAttribute('style')).toContain('scaleX(0.55)');
+    });
+
+    it('holds rather than flinching when a report lands behind the drawing', () => {
+      // `currentTime` is quantised to the audio callback, so a report pairs a position with a
+      // moment a few milliseconds after it was true, and the anchor it makes can sit behind what
+      // is already drawn. Backwards is the one movement nobody misses.
+      const { container, rerender, frames } = withFrames(
+        <Waveform peaks={PEAKS} size="detail" played={0.5} playhead advance={0.1} playedAt={1000} />,
+      );
+      frames.at(-1)?.(1500);
+      rerender(
+        <Waveform peaks={PEAKS} size="detail" played={0.54} playhead advance={0.1} playedAt={1500} />,
+      );
+      expect(moving(container).clip?.getAttribute('style')).toContain('scaleX(0.55)');
+    });
+
+    it('goes back when the recording does', () => {
+      // The clamp above must not outlast a seek: a position that really moved backwards is drawn
+      // where it moved to, immediately.
+      const { container, rerender } = withFrames(
+        <Waveform peaks={PEAKS} size="detail" played={0.5} playhead advance={0.1} playedAt={1000} />,
+      );
+      rerender(
+        <Waveform peaks={PEAKS} size="detail" played={0.2} playhead advance={0.1} playedAt={1000} />,
+      );
+      expect(moving(container).clip?.getAttribute('style')).toContain('scaleX(0.2)');
+    });
+
+    it('asks for no frames at all when nothing is playing', () => {
+      const { frames } = withFrames(
+        <Waveform peaks={PEAKS} size="detail" played={0.5} playhead />,
+      );
+      expect(frames).toHaveLength(0);
+    });
+
+    it('draws the played layer from the start of a recording that is playing', () => {
+      // Nothing is played at 0:00, but the playhead is already moving, and a layer that only
+      // appeared once a bar had been played would appear a frame late every time.
+      const { container } = render(
+        <Waveform peaks={PEAKS} size="detail" played={0} playhead advance={0.1} />,
+      );
+      expect(container.querySelector('clipPath')).not.toBeNull();
     });
   });
 

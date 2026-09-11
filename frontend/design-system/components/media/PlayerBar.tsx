@@ -28,6 +28,10 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   /** Played fraction, 0-1. Must agree with the position label. */
   played?: number;
   playing?: boolean;
+  /** How much of the recording a second of playback covers, so the waveform can follow it. */
+  advance?: number;
+  /** When `played` was true, on `performance.now()`'s clock. */
+  playedAt?: number | undefined;
   /** Playback rate label, e.g. 1.0x, 1.25x. */
   speed?: string;
   onToggle?: () => void;
@@ -78,6 +82,8 @@ export function PlayerBar({
   duration = '',
   played = 0,
   playing = false,
+  advance = 0,
+  playedAt,
   speed = '1.0×',
   onToggle,
   onBack,
@@ -165,7 +171,16 @@ export function PlayerBar({
         <span style={{ ...MONO, color: 'var(--accent)' }}>{position}</span>
         {/* The slot holds its width either way, so the total does not move when a shape arrives. */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          {shape && <Waveform peaks={peaks} size="player" played={played} playhead />}
+          {shape && (
+            <Waveform
+              peaks={peaks}
+              size="player"
+              played={played}
+              playhead
+              advance={advance}
+              playedAt={playedAt}
+            />
+          )}
         </div>
         <span style={{ ...MONO, color: 'var(--text-3)' }}>{duration}</span>
       </div>

@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { Icon, IconButton, Waveform } from '@/design-system';
 import { duration as asDuration, speed as asSpeed } from '@/i18n/format';
 
-import { RATES, playedFraction, usePlayback } from './store';
+import { RATES, advanceRate, playedFraction, usePlayback } from './store';
 import { usePlayingPeaks } from './use-playing-peaks';
 
 /** How far down a drag has to go before it counts as a dismissal rather than a tap. */
@@ -154,7 +154,13 @@ export function PhonePlayer() {
       </div>
 
       {recording.hasWaveform && peaks !== undefined ? (
-        <Waveform peaks={peaks} size="detail" played={played} />
+        <Waveform
+          peaks={peaks}
+          size="detail"
+          played={played}
+          advance={advanceRate(state)}
+          playedAt={state.positionAt}
+        />
       ) : (
         // No peaks, no shape. A dashed rule and a duration is the honest answer (§3.1).
         <p style={{ color: 'var(--text-3)', fontFamily: 'var(--font-mono)' }}>
