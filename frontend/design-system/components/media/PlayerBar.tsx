@@ -15,6 +15,12 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   title?: string;
   /** Library name shown beneath the title. */
   library?: string;
+  /**
+   * The shape, when the bar is the surface drawing it.
+   *
+   * Absent collapses the waveform slot to the position and the total, which is what the bar shows
+   * while the recording being played is the one on screen or has no peaks yet.
+   */
   peaks?: Peaks | undefined;
   /** Formatted elapsed time, mono and tabular. */
   position?: string;
@@ -80,6 +86,7 @@ export function PlayerBar({
   style,
   ...rest
 }: PlayerBarProps) {
+  const shape = peaks !== undefined && peaks.length > 0;
   return (
     <div
       data-ds="player-bar"
@@ -156,8 +163,9 @@ export function PlayerBar({
       </div>
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
         <span style={{ ...MONO, color: 'var(--accent)' }}>{position}</span>
+        {/* The slot holds its width either way, so the total does not move when a shape arrives. */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Waveform peaks={peaks} size="player" played={played} playhead />
+          {shape && <Waveform peaks={peaks} size="player" played={played} playhead />}
         </div>
         <span style={{ ...MONO, color: 'var(--text-3)' }}>{duration}</span>
       </div>

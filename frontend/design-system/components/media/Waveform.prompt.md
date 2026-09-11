@@ -6,4 +6,4 @@ The signature element. Amplitude sampled into rounded bars with fully rounded ca
 <Waveform pending height={20} />
 ```
 
-Never draw a filled envelope, a stroked contour, or a bar chart with square caps. Never invent a shape for a recording whose peaks job has not run — use `pending`. The mark in `Logo` shares this geometry, so logo and data read as the same object.
+Never draw a filled envelope, a stroked contour, or a bar chart with square caps. Never invent a shape for a recording whose peaks job has not run — use `pending`, which is also what an empty `peaks` array draws. The mark in `Logo` shares this geometry, so logo and data read as the same object.

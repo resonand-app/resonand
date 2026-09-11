@@ -21,28 +21,29 @@
 import { useTranslation } from 'react-i18next';
 
 import { PlayerBar } from '@/design-system';
-import type { Peaks } from '@/design-system';
 import { duration as asDuration, speed as asSpeed } from '@/i18n/format';
 
 import { playedFraction, usePlayback } from './store';
+import { usePlayingPeaks } from './use-playing-peaks';
 
 export interface PlayerProps {
   /** The recording the view is showing, if it is showing one. */
   onScreen?: string | undefined;
-  /** The peaks, when the bar is the surface drawing them. */
-  peaks?: Peaks | undefined;
 }
 
-export function Player({ onScreen, peaks }: PlayerProps) {
+export function Player({ onScreen }: PlayerProps) {
   const { t } = useTranslation('player');
   const state = usePlayback();
   const { recording, status } = state;
+  const isOnScreen = onScreen !== undefined && onScreen === recording?.uuid;
+  // Not asked for while the detail view's waveform is the one on screen: the bar draws no second
+  // shape, so there is no second picture to fetch.
+  const peaks = usePlayingPeaks(!isOnScreen);
 
   // Absent, not empty (§3.1). A 64px bar with nothing in it is a control somebody keeps looking
   // at to work out what it is for, and the shell reflows without it.
   if (recording === null || status === 'idle') return null;
 
-  const isOnScreen = onScreen !== undefined && onScreen === recording.uuid;
   const position = asDuration(state.positionMs);
   const total = asDuration(state.durationMs || recording.durationMs);
 
@@ -56,9 +57,9 @@ export function Player({ onScreen, peaks }: PlayerProps) {
           original: recording.fromOriginal === true ? t('state.fromOriginal') : undefined,
           noWaveform: !recording.hasWaveform ? t('state.noWaveform') : undefined,
         })}
-        // No waveform when the peaks job has not run, and none when the recording is on screen:
-        // the first would be an invented shape, the second a second player.
-        {...(isOnScreen || !recording.hasWaveform ? {} : { peaks })}
+        // Absent collapses the slot to the position and the total, which is what the bar shows
+        // for a recording on screen or one whose peaks job has not run.
+        peaks={peaks}
         position={position}
         duration={total}
         played={playedFraction(state)}

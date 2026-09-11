@@ -17,20 +17,23 @@ import type { PointerEvent as ReactPointerEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Icon, IconButton, Waveform } from '@/design-system';
-import type { Peaks } from '@/design-system';
 import { duration as asDuration, speed as asSpeed } from '@/i18n/format';
 
 import { RATES, playedFraction, usePlayback } from './store';
+import { usePlayingPeaks } from './use-playing-peaks';
 
 /** How far down a drag has to go before it counts as a dismissal rather than a tap. */
 const SWIPE_PX = 60;
 
-export function PhonePlayer({ peaks }: { peaks?: Peaks | undefined }) {
+export function PhonePlayer() {
   const { t } = useTranslation('player');
   const state = usePlayback();
   const [expanded, setExpanded] = useState(false);
   const [from, setFrom] = useState<number | null>(null);
   const { recording, status } = state;
+  // Asked for before the strip is opened, so expanding it draws the shape rather than the
+  // sentence that stands in for one.
+  const peaks = usePlayingPeaks(true);
 
   if (recording === null || status === 'idle') return null;
 

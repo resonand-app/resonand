@@ -145,7 +145,9 @@ export function Waveform({
 
   const { height, barWidth, gapRatio, playheadWidth } = geometry;
 
-  if (pending) {
+  /* Peaks that hold no buckets are the same fact as no peaks job having run, and drawing them
+     would stretch a single bar the width of the surface. */
+  if (pending || bucketCount(peaks ?? []) === 0) {
     /* `peaks`, `played` and `playhead` are all ignored here, on purpose. A recording whose peaks
        job has not run cannot be made to draw a waveform by passing one. */
     return (

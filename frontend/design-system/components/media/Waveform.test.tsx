@@ -126,6 +126,22 @@ describe('Waveform', () => {
     });
   });
 
+  describe('no peaks at all', () => {
+    it('draws the rule rather than one bar stretched the width of the surface', () => {
+      // A reduction of nothing is one bucket, and one bucket in a 460px bar is a flat line with a
+      // playhead on it -- which reads as a broken waveform rather than as an absent one.
+      const { container } = render(<Waveform peaks={[]} size="player" played={0.4} playhead />);
+      expect(container.querySelectorAll('rect')).toHaveLength(0);
+      expect(container.querySelector('line')).not.toBeNull();
+    });
+
+    it('is the same drawing whether the peaks are absent or empty', () => {
+      const absent = render(<Waveform size="player" />).container.innerHTML;
+      const { container } = render(<Waveform peaks={[]} size="player" />);
+      expect(container.innerHTML).toBe(absent);
+    });
+  });
+
   describe('seeking', () => {
     it('is not a control unless it can seek', () => {
       const { container } = render(<Waveform peaks={PEAKS} size="record" />);
