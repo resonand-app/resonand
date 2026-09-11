@@ -34,7 +34,7 @@ import { get } from '@/api/client';
 import { keys } from '@/api/keys';
 import type { components } from '@/api/schema';
 import { LEVEL } from '@/features/library/data';
-import { Button, Dialog, Select } from '@/design-system';
+import { Button, Dialog, Modal, Select } from '@/design-system';
 
 type LibrarySummary = components['schemas']['LibrarySummary'];
 type ShareSummary = components['schemas']['ShareSummary'];
@@ -69,55 +69,59 @@ export function MoveDialog({ recordings, categoryName, onClose, onConfirm }: Mov
   );
   const chosen = available.find((one) => one.uuid === destination);
 
+  // `open` is constant because this is rendered only while open. `Modal` is the other half of a
+  // dialog: the scrim, the focus trap, `Esc`, and the centring.
   return (
-    <Dialog
-      title={t('title', { count: recordings.length })}
-      width={520}
-      onClose={onClose}
-      labels={{ close: t('common:action.close') }}
-      footer={
-        <>
-          <Button variant="ghost" onClick={onClose}>
-            {t('common:action.cancel')}
-          </Button>
-          {available.length > 0 && (
-            <Button
-              variant="primary"
-              disabled={chosen === undefined}
-              onClick={() => {
-                if (chosen !== undefined) onConfirm(chosen.uuid);
-              }}
-            >
-              {t('confirm', { count: recordings.length })}
+    <Modal open onClose={onClose}>
+      <Dialog
+        title={t('title', { count: recordings.length })}
+        width={520}
+        onClose={onClose}
+        labels={{ close: t('common:action.close') }}
+        footer={
+          <>
+            <Button variant="ghost" onClick={onClose}>
+              {t('common:action.cancel')}
             </Button>
-          )}
-        </>
-      }
-    >
-      {available.length === 0 ? (
-        // Say it, rather than showing a picker with nothing in it: an empty select reads as
-        // something that failed to load (§V8).
-        <p style={PROSE}>{t('nowhere')}</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          <Select
-            label={t('destination')}
-            value={destination}
-            placeholder={t('choose')}
-            options={available.map((one) => ({ value: one.uuid, label: one.name }))}
-            onChange={setDestination}
-          />
-          {chosen !== undefined && (
-            <Consequences
-              recordings={recordings}
-              source={source}
-              destination={chosen}
-              categoryName={categoryName}
+            {available.length > 0 && (
+              <Button
+                variant="primary"
+                disabled={chosen === undefined}
+                onClick={() => {
+                  if (chosen !== undefined) onConfirm(chosen.uuid);
+                }}
+              >
+                {t('confirm', { count: recordings.length })}
+              </Button>
+            )}
+          </>
+        }
+      >
+        {available.length === 0 ? (
+          // Say it, rather than showing a picker with nothing in it: an empty select reads as
+          // something that failed to load (§V8).
+          <p style={PROSE}>{t('nowhere')}</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+            <Select
+              label={t('destination')}
+              value={destination}
+              placeholder={t('choose')}
+              options={available.map((one) => ({ value: one.uuid, label: one.name }))}
+              onChange={setDestination}
             />
-          )}
-        </div>
-      )}
-    </Dialog>
+            {chosen !== undefined && (
+              <Consequences
+                recordings={recordings}
+                source={source}
+                destination={chosen}
+                categoryName={categoryName}
+              />
+            )}
+          </div>
+        )}
+      </Dialog>
+    </Modal>
   );
 }
 

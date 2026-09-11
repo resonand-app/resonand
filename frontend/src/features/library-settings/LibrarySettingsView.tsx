@@ -28,11 +28,13 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { colourOf } from '@/app/library-data';
-import { ColorSwatchPicker, InlineField, PageHeader, StateCard } from '@/design-system';
+import { isPlainClick } from '@/app/links';
+import { toLibrary } from '@/app/routes';
+import { Breadcrumb, ColorSwatchPicker, InlineField, PageHeader, StateCard } from '@/design-system';
 import { useLibrary } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
 
@@ -43,6 +45,7 @@ import { useCategoryEdits, useShareEdits, useUpdateLibrary } from './data';
 
 export function LibrarySettingsView() {
   const { t } = useTranslation('librarySettings');
+  const navigate = useNavigate();
   const { uuid = '' } = useParams();
   const context = useLibrary(uuid);
   const update = useUpdateLibrary(uuid);
@@ -56,8 +59,22 @@ export function LibrarySettingsView() {
   }
   if (library === undefined) return null;
 
+  const href = toLibrary(uuid);
+
   return (
     <section>
+      <div style={{ marginBottom: 'var(--space-4)' }}>
+        <Breadcrumb
+          name={library.name}
+          href={href}
+          label={t('breadcrumb.label')}
+          onNavigate={(event) => {
+            if (!isPlainClick(event)) return;
+            event.preventDefault();
+            void navigate(href);
+          }}
+        />
+      </div>
       <PageHeader
         title={library.name}
         before={

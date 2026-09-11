@@ -1,7 +1,6 @@
 {
   "breadcrumb": {
-    "label": "Where this recording is",
-    "back": "Back to {{library}}"
+    "label": "Where this recording is"
   },
   "essentials": {
     "uploadedBy": "Uploaded by {{name}}",
@@ -45,7 +44,6 @@
     "hide": "Hide the details",
     "title": "Title",
     "notes": "Notes",
-    "noNotes": "No notes",
     "recorded": "Recorded",
     "dateNotItsOwn": "From the upload, not the recording",
     "category": "Category",
@@ -76,9 +74,9 @@
   },
   "actions": {
     "download": "Download the original",
-    "share": "Share this library",
+    "share": "Share",
     "move": "Move to another library",
-    "trash": "Send to the trash",
+    "trash": "Trash",
     "trashTitle": "Send this recording to the trash?",
     "trashConsequence_one": "It can be restored for {{count}} day, and is then deleted for good.",
     "trashConsequence_other": "It can be restored for {{count}} days, and is then deleted for good."

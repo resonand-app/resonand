@@ -125,6 +125,8 @@ export type {
 } from './components/overlay/useAnchoredOverlay';
 
 // --- components/navigation (`UI-1h`) ----------------------------------------
+export { Breadcrumb } from './components/navigation/Breadcrumb';
+export type { BreadcrumbProps } from './components/navigation/Breadcrumb';
 export { Dialog } from './components/navigation/Dialog';
 export type { DialogProps } from './components/navigation/Dialog';
 export { Menu } from './components/navigation/Menu';

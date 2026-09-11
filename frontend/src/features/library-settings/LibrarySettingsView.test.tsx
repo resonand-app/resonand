@@ -3,7 +3,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -31,6 +31,19 @@ function show(uuid: string = AVIA) {
     </QueryClientProvider>,
   );
 }
+
+describe('getting back to the library', () => {
+  it('names the library and links to it', async () => {
+    show();
+    const where = await screen.findByRole('navigation', {
+      name: 'The library these settings belong to',
+    });
+    expect(within(where).getByRole('link', { name: 'Àvia Teresa' })).toHaveAttribute(
+      'href',
+      `/library/${AVIA}`,
+    );
+  });
+});
 
 describe('what the library is called', () => {
   it('renames it on blur, with no Save button to forget', async () => {

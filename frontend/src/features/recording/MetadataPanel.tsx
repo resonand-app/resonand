@@ -85,7 +85,6 @@ export function MetadataPanel({
       <InlineField
         label={t('panel.notes')}
         value={recording.notes ?? ''}
-        placeholder={t('panel.noNotes')}
         readOnly={readOnly}
         multiline
         onSave={(notes) => {

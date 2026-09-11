@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import {
   AvatarStack,
+  Breadcrumb,
   Button,
   CardSkeleton,
   Checkbox,
@@ -594,6 +595,14 @@ export default function Specimens() {
       </Section>
 
       <Section title="Navigation">
+        <Panel label="Breadcrumb" width={420}>
+          <Breadcrumb
+            name="Àvia Teresa"
+            href="/library/avia"
+            detail="Interviews"
+            label="Where this recording is"
+          />
+        </Panel>
         <Panel label="Sidebar" width={224}>
           <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} activeId="avia" />
         </Panel>

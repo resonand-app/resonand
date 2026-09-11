@@ -84,8 +84,8 @@ describe('what a level does not allow', () => {
     renderRecording();
     await screen.findByRole('link', { name: 'Download the original' });
     expect(screen.queryByRole('button', { name: 'Move to another library' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Send to the trash' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Share this library' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Trash' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
     // Absent, and not one disabled control anywhere on the screen (§3.5).
     expect(document.querySelectorAll('[disabled]')).toHaveLength(0);
   });
@@ -96,17 +96,17 @@ describe('what a level does not allow', () => {
     expect(
       await screen.findByRole('button', { name: 'Move to another library' }),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Send to the trash' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trash' })).toBeInTheDocument();
     // Sharing is granted on the library and needs 30 there. Offering it at 20 would be offering
     // a way into a screen the API refuses.
-    expect(screen.queryByRole('button', { name: 'Share this library' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
   });
 
   it('offers sharing at level 30, and it leads to the library that grants it', async () => {
     const user = userEvent.setup();
     at(30);
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: 'Share this library' }));
+    await user.click(await screen.findByRole('button', { name: 'Share' }));
     expect(await screen.findByText('library settings')).toBeInTheDocument();
   });
 });
@@ -115,7 +115,7 @@ describe('sending it to the trash', () => {
   it('says how long it can be restored for, from the instance own retention', async () => {
     const user = userEvent.setup();
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: 'Send to the trash' }));
+    await user.click(await screen.findByRole('button', { name: 'Trash' }));
     // 30 days in the fixtures, read from `/instance` rather than written into the interface.
     expect(await screen.findByText(/restored for 30 days/)).toBeInTheDocument();
   });
@@ -123,7 +123,7 @@ describe('sending it to the trash', () => {
   it('asks first, and asks with a dialog rather than a typed confirmation', async () => {
     const user = userEvent.setup();
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: 'Send to the trash' }));
+    await user.click(await screen.findByRole('button', { name: 'Trash' }));
     const dialog = await screen.findByRole('dialog');
     // Typing a name is V9's hard delete, where something is actually destroyed. This one is
     // reversible for a month, and asking for a typed name would be asking for the wrong thing.
@@ -134,9 +134,9 @@ describe('sending it to the trash', () => {
   it('trashes it and goes back to the library', async () => {
     const user = userEvent.setup();
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: 'Send to the trash' }));
+    await user.click(await screen.findByRole('button', { name: 'Trash' }));
     const dialog = await screen.findByRole('dialog');
-    await user.click(await within(dialog).findByRole('button', { name: 'Send to the trash' }));
+    await user.click(await within(dialog).findByRole('button', { name: 'Trash' }));
     await waitFor(() => {
       expect(screen.getByTestId('where').textContent).toBe(`/library/${AVIA}`);
     });

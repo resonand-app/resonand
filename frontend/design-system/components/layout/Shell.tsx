@@ -79,6 +79,8 @@ export function Shell({ nav, sidebar, children, player, tray }: ShellProps) {
           {/* The gutter is on a box inside the scrollport, not on `<main>`: a sticky offset is
               measured from the scroll container's padding box, so padding `<main>` would pin the
               dense list's header 28px down and leave a band for rows to scroll through. */}
+          {/* `components.css` makes this a column for a view whose root carries `data-fills`, so
+              a view that fits the screen can ask without every other view losing its page. */}
           <div data-ds="shell-page" style={{ padding: 'var(--page-padding)' }}>
             {children}
           </div>

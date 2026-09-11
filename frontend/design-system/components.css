@@ -193,8 +193,10 @@
    what `--accent-hover` is for, and why it is a token rather than a calculation -- and press
    takes `--accent-pressed`. A neutral variant raises one surface step instead: transparent to
    `--surface-2`, `--surface-2` to `--border`. */
+/* `text-decoration` because a Button is sometimes an `<a>`, and the shape reads the same. */
 [data-ds='button'] {
   cursor: pointer;
+  text-decoration: none;
 }
 
 [data-ds='button'][data-variant='primary'] {
@@ -472,6 +474,15 @@
 [data-ds='shell'] {
   background: var(--bg);
   color: var(--text);
+}
+
+/* A view that fits the screen rather than lengthening the page (`UI-11c`). `height` and not
+   `min-height`: a flex child can only be asked to fit a container whose height is settled. Views
+   that do not opt in keep their content-height page, and its bottom gutter with it. */
+[data-ds='shell-page']:has(> [data-fills]) {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 /* StateSlot. The filled card is a surface like any other; the dashed one is the system's single
@@ -961,6 +972,28 @@
 [data-ds='menu-row'][data-destructive='true']:hover:not(:disabled) {
   background: var(--state-failed-bg);
   color: var(--state-failed);
+}
+
+/* The breadcrumb's library name (`UI-11a`). No underline: the line reads as a location, and an
+   underline there makes a path look like prose with a link in it. */
+[data-ds='breadcrumb-link'] {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: -4px;
+  padding: 2px 5px 2px 1px;
+  border-radius: var(--radius-control);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    color var(--transition-state),
+    background var(--transition-state);
+}
+
+[data-ds='breadcrumb-link']:hover {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 /* TopNav's lockup, when it is the way home. No underline: the mark is the affordance. */
