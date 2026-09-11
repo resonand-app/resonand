@@ -165,7 +165,7 @@ function Row({
         display: 'flex',
         alignItems: 'center',
         gap: 'var(--space-2)',
-        paddingLeft: `calc(${String(depth)} * var(--space-5))`,
+        paddingLeft: `calc(${String(depth)} * var(--space-6))`,
       }}
     >
       <span style={{ flex: 1, minWidth: 0 }}>

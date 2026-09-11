@@ -325,5 +325,5 @@ const list = {
   listStyle: 'none',
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--space-5)',
+  gap: 'var(--space-6)',
 } as const;

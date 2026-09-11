@@ -68,7 +68,7 @@ export function SessionsPanel() {
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size)',
             fontWeight: 'var(--weight-semibold)',
-            color: 'var(--text-1)',
+            color: 'var(--text)',
           }}
         >
           {t('sessions.title')}
@@ -174,7 +174,7 @@ function SessionRow({ session, onRevoke }: { session: SessionSummary; onRevoke: 
         justifyContent: 'space-between',
         gap: 'var(--space-3)',
         padding: 'var(--space-3)',
-        borderRadius: 'var(--radius-card)',
+        borderRadius: 'var(--radius-panel)',
         background: 'var(--surface-2)',
       }}
     >
@@ -184,7 +184,7 @@ function SessionRow({ session, onRevoke }: { session: SessionSummary; onRevoke: 
             style={{
               fontFamily: 'var(--font-mono)',
               fontSize: 'var(--type-ui-size-sm)',
-              color: 'var(--text-1)',
+              color: 'var(--text)',
               overflowWrap: 'anywhere',
             }}
           >

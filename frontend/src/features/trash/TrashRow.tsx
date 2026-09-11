@@ -95,8 +95,8 @@ export function TrashRow({ entry, retention, actions }: TrashRowProps) {
             margin: 'var(--space-2) 0 0',
             // Indented and rule-marked, so a child reads as inside the library above it rather
             // than as the next thing in the list.
-            padding: '0 0 0 var(--space-5)',
-            borderLeft: '1px solid var(--border-1)',
+            padding: '0 0 0 var(--space-6)',
+            borderLeft: '1px solid var(--hairline)',
             marginLeft: 'var(--space-3)',
             listStyle: 'none',
           }}
@@ -218,7 +218,7 @@ function Row({
         justifyContent: 'space-between',
         gap: 'var(--space-3)',
         padding: 'var(--space-3)',
-        borderRadius: 'var(--radius-card)',
+        borderRadius: 'var(--radius-panel)',
         background: 'var(--surface-2)',
       }}
     >
@@ -246,9 +246,9 @@ function Row({
           <span
             style={{
               fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--type-meta-size)',
+              fontSize: 'var(--type-overline-size)',
               textTransform: 'uppercase',
-              letterSpacing: 'var(--tracking-meta)',
+              letterSpacing: 'var(--type-overline-tracking)',
               color: 'var(--text-3)',
             }}
           >
@@ -259,7 +259,7 @@ function Row({
           style={{
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size)',
-            color: 'var(--text-1)',
+            color: 'var(--text)',
             overflowWrap: 'anywhere',
           }}
         >

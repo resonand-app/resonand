@@ -109,7 +109,7 @@ export function PhonePlayer() {
             insetInline: 0,
             bottom: 0,
             height: 2,
-            background: 'var(--surface-3)',
+            background: 'var(--hairline)',
           }}
         >
           <div
@@ -178,7 +178,17 @@ export function PhonePlayer() {
       )}
 
       <div>
-        <h2 style={{ font: 'var(--type-title)', color: 'var(--text)', margin: 0 }}>
+        <h2
+          style={{
+            fontFamily: 'var(--font-sans)',
+            fontSize: 'var(--type-title-size)',
+            fontWeight: 'var(--type-title-weight)',
+            letterSpacing: 'var(--type-title-tracking)',
+            lineHeight: 'var(--type-title-leading)',
+            color: 'var(--text)',
+            margin: 0,
+          }}
+        >
           {recording.title}
         </h2>
         <p style={{ color: 'var(--text-2)', margin: 0 }}>{recording.library}</p>

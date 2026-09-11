@@ -117,7 +117,7 @@ export function SearchView() {
             display: 'flex',
             alignItems: 'center',
             gap: 'var(--space-3)',
-            marginTop: 'var(--space-5)',
+            marginTop: 'var(--space-6)',
           }}
         >
           <Button
@@ -155,7 +155,7 @@ export function SearchView() {
         </nav>
       )}
       {results.items.length > 0 && (
-        <p style={{ margin: 'var(--space-5) 0 0' }}>
+        <p style={{ margin: 'var(--space-6) 0 0' }}>
           <RecallNote />
         </p>
       )}

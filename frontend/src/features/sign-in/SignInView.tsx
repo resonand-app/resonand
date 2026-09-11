@@ -310,7 +310,7 @@ function Refusal({ error }: { error: unknown }) {
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--type-ui-size-sm)',
         lineHeight: 'var(--type-body-leading)',
-        color: 'var(--danger)',
+        color: 'var(--state-failed)',
         textWrap: 'pretty',
       }}
     >

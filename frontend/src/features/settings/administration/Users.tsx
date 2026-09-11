@@ -97,8 +97,8 @@ function UserRow({
         justifyContent: 'space-between',
         gap: 'var(--space-3)',
         padding: 'var(--space-3)',
-        borderRadius: 'var(--radius-card)',
-        background: 'var(--surface-1)',
+        borderRadius: 'var(--radius-panel)',
+        background: 'var(--surface-2)',
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-1)', minWidth: 0 }}>
@@ -107,7 +107,7 @@ function UserRow({
             style={{
               fontFamily: 'var(--font-sans)',
               fontSize: 'var(--type-ui-size)',
-              color: disabledAt === null ? 'var(--text-1)' : 'var(--text-3)',
+              color: disabledAt === null ? 'var(--text)' : 'var(--text-3)',
             }}
           >
             {user.display_name}
@@ -189,8 +189,8 @@ function NewAccount() {
         gap: 'var(--space-3)',
         maxWidth: 420,
         padding: 'var(--space-3)',
-        borderRadius: 'var(--radius-card)',
-        background: 'var(--surface-1)',
+        borderRadius: 'var(--radius-panel)',
+        background: 'var(--surface-2)',
       }}
       onSubmit={(event) => {
         event.preventDefault();

@@ -157,7 +157,7 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
               gap: 'var(--space-2)',
               padding: 'var(--space-6) var(--space-4)',
               borderRadius: 'var(--radius-panel)',
-              border: '1px dashed var(--hairline-strong)',
+              border: '1px dashed var(--border)',
               background: over ? 'var(--accent-soft)' : 'var(--surface-2)',
               cursor: 'pointer',
               textAlign: 'center',
@@ -260,7 +260,9 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
                     alignItems: 'center',
                     gap: 'var(--space-2)',
                     fontSize: 'var(--type-ui-size-sm)',
-                    color: isAccepted(file.name, instance) ? 'var(--text-2)' : 'var(--danger)',
+                    color: isAccepted(file.name, instance)
+                      ? 'var(--text-2)'
+                      : 'var(--state-failed)',
                   }}
                 >
                   <span
@@ -289,7 +291,13 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
           )}
 
           {refused.length > 0 && (
-            <p style={{ margin: 0, fontSize: 'var(--type-ui-size-sm)', color: 'var(--danger)' }}>
+            <p
+              style={{
+                margin: 0,
+                fontSize: 'var(--type-ui-size-sm)',
+                color: 'var(--state-failed)',
+              }}
+            >
               {t('dialog.refused', {
                 count: refused.length,
                 names: refused.map((file) => file.name).join(', '),

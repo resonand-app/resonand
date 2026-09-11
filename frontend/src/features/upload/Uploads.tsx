@@ -156,7 +156,7 @@ function FileRows({ files }: { files: readonly Upload[] }) {
                 fontFamily: 'var(--font-sans)',
                 fontSize: 'var(--type-ui-size-sm)',
                 lineHeight: 'var(--type-body-leading)',
-                color: 'var(--danger)',
+                color: 'var(--state-failed)',
                 textWrap: 'pretty',
               }}
             >

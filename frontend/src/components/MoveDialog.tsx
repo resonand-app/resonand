@@ -167,7 +167,7 @@ function Consequences({
 
   return (
     <ul
-      style={{ margin: 0, paddingLeft: 'var(--space-5)', display: 'grid', gap: 'var(--space-3)' }}
+      style={{ margin: 0, paddingLeft: 'var(--space-6)', display: 'grid', gap: 'var(--space-3)' }}
     >
       <li style={PROSE}>
         {from.isPending || to.isPending ? (

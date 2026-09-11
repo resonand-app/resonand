@@ -202,7 +202,7 @@ function Heading({ children }: { children: string }) {
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--type-ui-size)',
         fontWeight: 'var(--weight-semibold)',
-        color: 'var(--text-1)',
+        color: 'var(--text)',
       }}
     >
       {children}
