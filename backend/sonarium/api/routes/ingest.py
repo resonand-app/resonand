@@ -209,9 +209,7 @@ def download(
     return FileResponse(
         path,
         media_type=audio.mime or "application/octet-stream",
-        headers={
-            "content-disposition": _content_disposition(audio.original_filename or path.name)
-        },
+        headers={"content-disposition": _content_disposition(audio.original_filename or path.name)},
     )
 
 
