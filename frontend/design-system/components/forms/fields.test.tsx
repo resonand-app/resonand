@@ -43,6 +43,34 @@ describe('TextField', () => {
     render(<TextField error="You already have a library with this name." />);
     expect(screen.getByText('You already have a library with this name.')).toBeDefined();
   });
+
+  it('has no reveal toggle on a plain password field', () => {
+    // Only meaningful with both labels present -- otherwise it is a password field exactly as
+    // before, and nothing here should introduce a control with no accessible name.
+    render(<TextField type="password" value="secret1234" onChange={vi.fn()} />);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('reveals and hides a password without touching what was typed', async () => {
+    render(
+      <TextField
+        type="password"
+        value="secret1234"
+        showPasswordLabel="Show password"
+        hidePasswordLabel="Hide password"
+        onChange={vi.fn()}
+      />,
+    );
+    const input: HTMLInputElement = screen.getByDisplayValue('secret1234');
+    expect(input.type).toBe('password');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+    expect(input.type).toBe('text');
+    expect(input.value).toBe('secret1234');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide password' }));
+    expect(input.type).toBe('password');
+  });
 });
 
 describe('SearchField', () => {

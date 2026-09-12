@@ -9,6 +9,8 @@ import {
   CloudUpload,
   Download,
   EllipsisVertical,
+  Eye,
+  EyeOff,
   FileAudio,
   FileVideo,
   FolderInput,
@@ -63,7 +65,9 @@ import type { HTMLAttributes } from 'react';
  * account menu's theme row, which shows the theme somebody is in rather than the word "Theme".
  * `download` and `folder-input` are a recording's two actions that move it somewhere.
  * `file-audio` and `file-video` are the upload dialog's two kinds of chosen file, which is the
- * one place the distinction is drawn before a recording exists to draw it on.
+ * one place the distinction is drawn before a recording exists to draw it on. `eye` and
+ * `eye-off` are the sign-in password field's reveal toggle -- what it shows next depends on
+ * which state it is in, so the one control needs both.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -76,6 +80,8 @@ const GLYPHS = {
   clock: Clock,
   'cloud-upload': CloudUpload,
   download: Download,
+  eye: Eye,
+  'eye-off': EyeOff,
   'file-audio': FileAudio,
   'file-video': FileVideo,
   'folder-input': FolderInput,

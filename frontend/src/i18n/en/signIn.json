@@ -4,6 +4,8 @@
   "on": "on {{instance}}",
   "email": "Email",
   "password": "Password",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
   "submit": "Sign in",
   "version": "Version {{version}}",
   "firstRun": {
