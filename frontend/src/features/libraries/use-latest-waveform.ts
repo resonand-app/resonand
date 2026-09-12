@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
+import { intervalFor } from '@/api/settling';
 import { BUCKETS, useWaveform } from '@/api/waveform';
 import type { Peaks } from '@/api/waveform';
 
@@ -46,6 +47,9 @@ export function useLatestWaveform(
         query: { limit: 1, sort: 'created_at', direction: 'desc' },
       }),
     enabled: enabled && hasRecordings,
+    // `has_waveform` is false for exactly as long as the waveform job has not run, and the card
+    // reads that as "no shape yet". Without this it reads it forever (`FBK-3`).
+    refetchInterval: (one) => intervalFor(one.state.data?.items ?? []),
   });
 
   const recording = latest.data?.items[0];

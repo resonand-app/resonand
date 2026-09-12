@@ -15,7 +15,7 @@
  */
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { QueryKey, UseQueryResult } from '@tanstack/react-query';
+import type { Query, QueryKey, UseQueryResult } from '@tanstack/react-query';
 
 /** The envelope every list endpoint answers with. */
 export interface Page<Item> {
@@ -48,7 +48,11 @@ export interface PagedResult<Item> extends Omit<UseQueryResult<Page<Item>>, 'dat
 export function usePaged<Item>(
   key: QueryKey,
   fetchPage: () => Promise<Page<Item>>,
-  options: { enabled?: boolean } = {},
+  options: {
+    enabled?: boolean;
+    /** How often to ask again, read off the page itself. `false` for a list that is finished. */
+    refetchInterval?: (query: Query<Page<Item>>) => number | false;
+  } = {},
 ): PagedResult<Item> {
   const query = useQuery({
     queryKey: key,

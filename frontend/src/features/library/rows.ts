@@ -23,11 +23,13 @@
  */
 
 import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
+import type { Query } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
 import { PAGE_SIZE } from '@/api/paged';
 import type { Page } from '@/api/paged';
+import { intervalFor } from '@/api/settling';
 
 import type { Recording } from './recordings';
 
@@ -56,6 +58,9 @@ function pageQuery(uuid: string, query: Record<string, unknown>, page: number) {
     enabled: uuid !== '',
     // The rows somebody scrolled past are the rows they are about to scroll back over.
     staleTime: 60_000,
+    // Only the page that has something still being made on it asks again (`FBK-3`). Scrolling
+    // back over settled ground stays free.
+    refetchInterval: (one: Query<Page<Recording>>) => intervalFor(one.state.data?.items ?? []),
   };
 }
 
