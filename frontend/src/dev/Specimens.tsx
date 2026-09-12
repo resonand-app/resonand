@@ -100,6 +100,8 @@ const GLYPHS: IconName[] = [
   'loader',
   'check',
   'alert-circle',
+  'eye',
+  'eye-off',
 ];
 
 /** Sort orders, which are what `V3`'s filter bar actually offers (§4). */

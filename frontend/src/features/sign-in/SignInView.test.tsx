@@ -85,6 +85,20 @@ describe('getting in', () => {
     show();
     expect(await screen.findByRole('button', { name: 'Sign in' })).toBeDisabled();
   });
+
+  it('reveals a typed password without submitting the form', async () => {
+    show();
+    const password: HTMLInputElement = await screen.findByLabelText('Password');
+    await userEvent.type(password, PASSWORD);
+    expect(password.type).toBe('password');
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show password' }));
+    expect(password.type).toBe('text');
+    expect(password.value).toBe(PASSWORD);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide password' }));
+    expect(password.type).toBe('password');
+  });
 });
 
 describe('there is no way to make an account here', () => {
@@ -95,7 +109,10 @@ describe('there is no way to make an account here', () => {
     // v0, so none of its wording is copied forward and there is nothing else to press.
     expect(screen.queryByText(/create/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/account yet/i)).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    // The password field's reveal toggle is the other button here -- it is part of the one
+    // field, not a second path through the screen.
+    expect(screen.getByRole('button', { name: 'Show password' })).toBeVisible();
+    expect(screen.getAllByRole('button')).toHaveLength(2);
   });
 });
 

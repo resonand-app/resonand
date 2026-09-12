@@ -115,6 +115,8 @@ function SignIn({ onArrived }: { onArrived: () => void }) {
         name="password"
         autoComplete="current-password"
         value={password}
+        showPasswordLabel={t('showPassword')}
+        hidePasswordLabel={t('hidePassword')}
         onChange={(event) => {
           setPassword(event.target.value);
         }}
@@ -186,6 +188,8 @@ function FirstRun({ onArrived }: { onArrived: () => void }) {
         name="password"
         autoComplete="new-password"
         value={password}
+        showPasswordLabel={t('showPassword')}
+        hidePasswordLabel={t('hidePassword')}
         onChange={(event) => {
           setPassword(event.target.value);
         }}
