@@ -53,6 +53,8 @@ export const keys = {
 
   /** Administration. Not a sidebar entry, and not fetched unless somebody opens it. */
   jobs: (filters?: ListFilters) => ['admin', 'jobs', filters ?? {}] as const,
+  /** The tally alone, which moves while the queue does. Cheap where `systemStatus` is not. */
+  jobCounts: () => ['admin', 'jobs', 'counts'] as const,
   systemStatus: () => ['admin', 'status'] as const,
   provider: () => ['admin', 'transcription'] as const,
   users: () => ['admin', 'users'] as const,

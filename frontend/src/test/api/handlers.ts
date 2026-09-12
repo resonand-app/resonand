@@ -577,6 +577,19 @@ export const handlers: HttpHandler[] = [
     const jobs = state ? archive.jobs.filter((one) => one.state === state) : archive.jobs;
     return HttpResponse.json(page(jobs, url));
   }),
+  // Tallied off the same rows the list serves, so the counts and the queue under them cannot
+  // disagree in a test the way they used to on screen (`FBK-4`).
+  http.get('/api/admin/jobs/counts', () => {
+    const tally: Record<string, number> = {
+      pending: 0,
+      running: 0,
+      done: 0,
+      failed: 0,
+      cancelled: 0,
+    };
+    for (const job of archive.jobs) tally[job.state] = (tally[job.state] ?? 0) + 1;
+    return HttpResponse.json(tally);
+  }),
   http.post('/api/admin/jobs/:job_id/retry', ({ params }) =>
     found(archive.jobs.find((one) => String(one.id) === params.job_id)),
   ),
