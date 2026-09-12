@@ -16,9 +16,11 @@ why they are the only endpoints in the application that manage their own transac
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Annotated
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, UploadFile, status
 from sqlalchemy.orm import Session as DbSession
@@ -207,7 +209,9 @@ def download(
     return FileResponse(
         path,
         media_type=audio.mime or "application/octet-stream",
-        filename=audio.original_filename or path.name,
+        headers={
+            "content-disposition": _content_disposition(audio.original_filename or path.name)
+        },
     )
 
 
@@ -271,6 +275,24 @@ def _limited(file: UploadFile, limit: int) -> Iterator[bytes]:
                 "what you meant."
             )
         yield chunk
+
+
+_DISPOSITION_UNSAFE = re.compile(r"[^\x20-\x7e]|[\"\\\\]")
+
+
+def _content_disposition(filename: str, disposition_type: str = "attachment") -> str:
+    """Build a header that names the download everywhere, extension included.
+
+    Starlette's own ``FileResponse`` drops the plain ``filename=`` fallback the moment a name
+    needs any percent-encoding -- which is any name with a space in it, i.e. almost every real
+    recording. Clients that don't parse the RFC 5987 ``filename*=`` form are then left with
+    nothing, and fall back to the URL's last segment: "original", no extension.
+    """
+    ascii_fallback = _DISPOSITION_UNSAFE.sub("_", filename) or "download"
+    header = f'{disposition_type}; filename="{ascii_fallback}"'
+    if ascii_fallback != filename:
+        header += f"; filename*=utf-8''{quote(filename)}"
+    return header
 
 
 def _ranged(path: Path, range_header: str | None, media_type: str | None) -> Response:
