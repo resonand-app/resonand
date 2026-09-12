@@ -48,7 +48,7 @@ export function TranscriptionState({ context, state }: TranscriptionStateProps) 
   const egressLabels = useEgressLabels();
   const recording = context.recording;
   const destination = useDestination();
-  const status = useTranscriptionStatus(recording?.uuid ?? '', state !== 'done');
+  const status = useTranscriptionStatus(recording?.uuid ?? '', state);
   const transcribe = useTranscribe(recording?.uuid ?? '');
 
   if (recording === undefined || state === 'done') return null;
