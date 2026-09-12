@@ -15,7 +15,7 @@ import { invalidate, staleAfter } from './invalidate';
 import { keys } from './keys';
 import { usePaged } from './paged';
 import { ApiProblem } from './problem';
-import { RETRIES, createQueryClient, worthRetrying } from './query-client';
+import { HANDLED, RETRIES, createQueryClient, worthRetrying, worthReporting } from './query-client';
 
 function problem(status: number): ApiProblem {
   return new ApiProblem({ type: '/errors/x', title: 'T', detail: 'A sentence.', status });
@@ -60,6 +60,46 @@ describe('what is worth asking twice', () => {
       .query({ queryKey: keys.me(), queryFn: () => Promise.reject(problem(401)) })
       .catch(() => undefined);
     expect(ended).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('a write that failed', () => {
+  /** Run a mutation that fails, and answer what the client reported. */
+  async function failing(meta?: Record<string, unknown>): Promise<string[]> {
+    const said: string[] = [];
+    const client = createQueryClient(undefined, (detail) => said.push(detail));
+    await client
+      .getMutationCache()
+      .build(client, {
+        mutationFn: () => Promise.reject(problem(409)),
+        ...(meta === undefined ? {} : { meta }),
+      })
+      .execute(undefined)
+      .catch(() => undefined);
+    return said;
+  }
+
+  it('says so once, in the words the API wrote to be shown', async () => {
+    // Most of the writes in this product had no `onError` at all, so most of them failed in
+    // silence: a rename, a move and a category change all changed nothing and said nothing.
+    expect(await failing()).toEqual(['A sentence.']);
+  });
+
+  it('stays quiet where the view shows the refusal itself', async () => {
+    // Sign-in prints what was refused beside the fields it was refused for. A toast over it
+    // would be a second answer to a question that has already been answered.
+    expect(await failing(HANDLED)).toEqual([]);
+  });
+
+  it('leaves the end of a session to the guard that answers it', () => {
+    // A 401 is not a failed write. `UI-4a` is already leaving for the sign-in screen.
+    expect(worthReporting(problem(401), undefined)).toBe(false);
+    expect(worthReporting(problem(409), undefined)).toBe(true);
+    expect(worthReporting(problem(500), HANDLED)).toBe(false);
+  });
+
+  it('reports a failure that never reached the instance like any other', () => {
+    expect(worthReporting(new Error('offline'), undefined)).toBe(true);
   });
 });
 

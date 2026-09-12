@@ -26,6 +26,7 @@ import { useTranslation } from 'react-i18next';
 import { post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { isApiProblem } from '@/api/problem';
+import { HANDLED } from '@/api/query-client';
 import { Button, ColorSwatchPicker, Dialog, Modal, TextField } from '@/design-system';
 import type { LibraryColorName } from '@/design-system';
 
@@ -46,6 +47,8 @@ export function CreateLibraryDialog({ open, onClose }: CreateLibraryDialogProps)
   const create = useMutation({
     mutationFn: (library: { name: string; colour: LibraryColorName }) =>
       post('/api/libraries', { body: library }),
+    // A taken name belongs under the field, not in a toast over a dialog somebody is still in.
+    meta: HANDLED,
     onSuccess: async (library) => {
       await invalidate(client, { kind: 'library', library: library.uuid });
       close();

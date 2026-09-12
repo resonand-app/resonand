@@ -32,6 +32,7 @@ import { RequireSession } from './RequireSession';
 import { SessionExpiry } from './SessionExpiry';
 import { routes } from './routes';
 import { useSessionExpiry } from './session-expiry';
+import { raiseToast } from './toasts';
 
 const Specimens = import.meta.env.DEV ? lazy(() => import('@/dev/Specimens')) : null;
 
@@ -53,7 +54,13 @@ export function App() {
 /** Everything that needs a router around it, which is everything that talks to the API. */
 function Archive() {
   const expiry = useSessionExpiry();
-  const [client] = useState(() => createQueryClient(expiry.report));
+  // The store and not a hook: the mutation cache catches a failure from outside every component,
+  // and the region that draws it is mounted somewhere else entirely (`FBK-1`).
+  const [client] = useState(() =>
+    createQueryClient(expiry.report, (message) => {
+      raiseToast({ tone: 'failed', message });
+    }),
+  );
 
   return (
     <QueryClientProvider client={client}>
