@@ -223,6 +223,15 @@ describe('the phases a row used to spend in silence', () => {
     expect(screen.getByText('Storing')).toBeInTheDocument();
   });
 
+  it('marks a finished file with a tick rather than the word for it', () => {
+    // Thirty finished rows are thirty ticks instead of a column of the same word, and the bar
+    // beside it has already said the same thing. The name is still there to be heard.
+    useUploads.setState({ files: [row({ status: 'done', sent: 1000 })] });
+    show();
+    expect(screen.queryByText('Uploaded')).toBeNull();
+    expect(screen.getByRole('img', { name: 'Uploaded' })).toBeInTheDocument();
+  });
+
   it('refuses to be cleared while a file is still being read or still being stored', () => {
     for (const status of ['checking', 'storing'] as const) {
       useUploads.setState({ files: [row({ status })] });

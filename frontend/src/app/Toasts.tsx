@@ -11,14 +11,14 @@
 
 import { Toast, ToastRegion } from '@/design-system';
 import type { ToastEntry } from '@/design-system';
-import { usePlayback } from '@/player/store';
+import { playerShowing, usePlayback } from '@/player/store';
 
 import { FAILED_AFTER_MS, useToasts } from './toasts';
 
 export function Toasts() {
   const raised = useToasts((state) => state.toasts);
   const dismiss = useToasts((state) => state.dismiss);
-  const playerVisible = usePlayback((state) => state.recording !== null && state.status !== 'idle');
+  const playerVisible = usePlayback(playerShowing);
 
   const entries: ToastEntry[] = raised.map((one) => ({
     id: one.id,

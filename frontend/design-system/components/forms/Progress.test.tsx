@@ -44,8 +44,21 @@ describe('Progress', () => {
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
   });
 
-  it('shows the detail beside the label, in mono', () => {
+  it('shows the detail beside the bar, in mono', () => {
     render(<Progress value={0.1} label="Overall" detail="3 of 30 uploaded, 1 failed" />);
     expect(screen.getByText('3 of 30 uploaded, 1 failed')).toBeDefined();
+  });
+
+  it('takes a glyph for a detail, for an outcome with nothing left to count', () => {
+    // "Uploaded" as a word is the same information as a tick and four times the room. The
+    // accessible name comes with it, because the caller is the one that knows what it means.
+    render(
+      <Progress
+        value={1}
+        label="Entrevista àvia 03.m4a"
+        detail={<span role="img" aria-label="Uploaded" />}
+      />,
+    );
+    expect(screen.getByRole('img', { name: 'Uploaded' })).toBeDefined();
   });
 });

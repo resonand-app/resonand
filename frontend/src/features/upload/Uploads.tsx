@@ -22,12 +22,14 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
+import type { ReactNode } from 'react';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { invalidate } from '@/api/invalidate';
 import { UploadTray } from '@/components/UploadTray';
-import { Button, Progress } from '@/design-system';
+import { UPLOAD_ROW } from '@/components/upload-row';
+import { Button, Icon, Progress } from '@/design-system';
 import { bytes, percent } from '@/i18n/format';
 
 import { DuplicateNotice } from './DuplicateNotice';
@@ -123,7 +125,7 @@ function FileRows({ files }: { files: readonly Upload[] }) {
   const again = useUploads((state) => state.again);
 
   /** The right-hand side of a row: how far, or what happened. */
-  const detailOf = (upload: Upload): string => {
+  const detailOf = (upload: Upload): ReactNode => {
     // The phase is named beside the number while the number is still moving: "72%" alone does not
     // say whether this file is being read or being sent, and they take very different times.
     if (upload.status === 'checking') {
@@ -131,6 +133,28 @@ function FileRows({ files }: { files: readonly Upload[] }) {
     }
     if (upload.status === 'uploading') {
       return `${percent(fractionOf(upload))} · ${bytes(upload.size)}`;
+    }
+    // A tick for the one outcome a full bar has already said, so thirty finished rows read as
+    // thirty marks rather than a column of the same word. Everything else still needs its words.
+    if (upload.status === 'done') {
+      return (
+        <span
+          role="img"
+          aria-label={t('tray.status.done')}
+          style={{
+            display: 'grid',
+            placeItems: 'center',
+            width: 18,
+            height: 18,
+            borderRadius: 'var(--radius-pill)',
+            background: 'var(--state-done)',
+          }}
+        >
+          {/* The pair the contrast test already asserts, read the other way round: a filled disc
+              carries further down a column of rows than a stroke on the surface. */}
+          <Icon name="check" size={12} strokeWidth={2.4} color="var(--state-done-bg)" />
+        </span>
+      );
     }
     return t(`tray.status.${upload.status}`);
   };
@@ -162,6 +186,8 @@ function FileRows({ files }: { files: readonly Upload[] }) {
       {files.map((upload) => (
         <li
           key={upload.id}
+          // The tray counts these to stop at five rows, whatever height a failed one has grown to.
+          {...UPLOAD_ROW}
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
         >
           <Progress value={fractionOf(upload)} label={upload.name} detail={detailOf(upload)} />
