@@ -48,7 +48,8 @@ import type { SelectOption } from '@/design-system';
 import { bytes } from '@/i18n/format';
 import { useEgressLabels } from '@/components/egress-labels';
 
-import { isAccepted, isVideo } from './instance';
+import { ChosenFiles } from './ChosenFiles';
+import { isAccepted } from './instance';
 import { useUploads } from './uploads';
 
 export interface UploadDialogProps {
@@ -92,12 +93,20 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
 
   function take(files: FileList | null) {
     if (files === null) return;
+    // Copied here rather than inside the updater: a `FileList` is live, clearing the input below
+    // empties it, and React runs the updater after this handler has returned -- so the second
+    // folder somebody chose arrived as nothing at all.
+    const picked = Array.from(files);
     // Added rather than replaced: somebody choosing a second folder means both, and a picker
     // that forgot the first one is a picker they have to be careful with.
-    setChosen((was) => [...was, ...Array.from(files)]);
+    setChosen((was) => [...was, ...picked]);
   }
 
-  function drop(event: DragEvent<HTMLLabelElement>) {
+  function remove(index: number) {
+    setChosen((was) => was.filter((_, at) => at !== index));
+  }
+
+  function drop(event: DragEvent<HTMLDivElement>) {
     event.preventDefault();
     setOver(false);
     take(event.dataTransfer.files);
@@ -136,10 +145,12 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          {/* The drop zone is a label around the input, so the whole area is the control a
-              keyboard reaches and a pointer presses -- rather than a div with a click handler
-              beside a hidden field nothing announces. */}
-          <label
+          {/* The zone is the drop target and the chosen files sit inside it: what is about to
+              be uploaded belongs where it was dropped, not in a list further down the dialog.
+              The label around the input is still the control, so the prompt is what a keyboard
+              reaches and a pointer presses rather than a div with a click handler beside a
+              hidden field nothing announces. */}
+          <div
             data-app="drop-zone"
             data-over={over ? 'true' : undefined}
             onDragOver={(event) => {
@@ -153,38 +164,57 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              alignItems: 'center',
-              gap: 'var(--space-2)',
-              padding: 'var(--space-6) var(--space-4)',
+              gap: 'var(--space-3)',
+              padding: 'var(--space-3)',
               borderRadius: 'var(--radius-panel)',
-              border: '1px dashed var(--border)',
+              border: 'var(--border-hairline) dashed var(--border)',
               background: over ? 'var(--accent-soft)' : 'var(--surface-2)',
-              cursor: 'pointer',
-              textAlign: 'center',
             }}
           >
-            <Icon name="cloud-upload" size={26} color="var(--text-3)" />
-            <span style={{ fontSize: 'var(--type-ui-size)', color: 'var(--text)' }}>
-              {t('dialog.drop')}
-            </span>
-            <span style={{ fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
-              {t('dialog.limit', { size: bytes(instance?.max_upload_bytes) })}
-            </span>
-            <input
-              ref={picker}
-              type="file"
-              multiple
-              accept={instance?.accepted_extensions.join(',')}
-              onChange={(event) => {
-                take(event.target.files);
-                // Cleared so choosing the same file twice in a row is two events rather than one.
-                event.target.value = '';
+            {/* The prompt gives way to the files rather than disappearing: choosing a second
+                folder is the ordinary case, and it is the same control that does it. */}
+            <label
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 'var(--space-1)',
+                padding: chosen.length === 0 ? 'var(--space-4) var(--space-2)' : 'var(--space-1)',
+                cursor: 'pointer',
+                textAlign: 'center',
               }}
-              // Present and reachable, not `display: none`: the label is the visible control and
-              // the input is the one the browser opens a picker for, so it has to still be there.
-              style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
-            />
-          </label>
+            >
+              <Icon
+                name="cloud-upload"
+                size={chosen.length === 0 ? 26 : 20}
+                color="var(--text-3)"
+              />
+              <span style={{ fontSize: 'var(--type-ui-size)', color: 'var(--text)' }}>
+                {t('dialog.drop')}
+              </span>
+              <span style={{ fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
+                {t('dialog.limit', { size: bytes(instance?.max_upload_bytes) })}
+              </span>
+              <input
+                ref={picker}
+                type="file"
+                multiple
+                accept={instance?.accepted_extensions.join(',')}
+                onChange={(event) => {
+                  take(event.target.files);
+                  // Cleared so choosing the same file twice in a row is two events rather than one.
+                  event.target.value = '';
+                }}
+                // Present and reachable, not `display: none`: the label is the visible control and
+                // the input is the one the browser opens a picker for, so it has to still be there.
+                style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
+              />
+            </label>
+
+            {chosen.length > 0 && (
+              <ChosenFiles files={chosen} instance={instance} onRemove={remove} />
+            )}
+          </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
             <Select
@@ -236,58 +266,6 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
               )}
               <EgressNotice destination={goesTo} placement="dialog" labels={egressLabels} />
             </div>
-          )}
-
-          {chosen.length > 0 && (
-            <ul
-              aria-label={t('dialog.chosen')}
-              style={{
-                margin: 0,
-                padding: 0,
-                listStyle: 'none',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--space-2)',
-                maxHeight: 220,
-                overflowY: 'auto',
-              }}
-            >
-              {chosen.map((file, index) => (
-                <li
-                  key={`${file.name}-${String(index)}`}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 'var(--space-2)',
-                    fontSize: 'var(--type-ui-size-sm)',
-                    color: isAccepted(file.name, instance)
-                      ? 'var(--text-2)'
-                      : 'var(--state-failed)',
-                  }}
-                >
-                  <span
-                    style={{
-                      flex: 1,
-                      minWidth: 0,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {file.name}
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: 'var(--font-mono)',
-                      fontVariantNumeric: 'var(--type-numeric-variant)',
-                      color: 'var(--text-3)',
-                    }}
-                  >
-                    {isVideo(file.name, instance) ? t('dialog.asAudio') : bytes(file.size)}
-                  </span>
-                </li>
-              ))}
-            </ul>
           )}
 
           {refused.length > 0 && (
