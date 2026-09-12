@@ -12,6 +12,12 @@ import type { components } from '@/api/schema';
 
 export type InstanceState = components['schemas']['InstanceState'];
 
+/** The file's extension with its dot, lowercased, or "" when the name carries none. */
+function suffix(name: string): string {
+  const dot = name.lastIndexOf('.');
+  return dot < 1 ? '' : name.slice(dot).toLowerCase();
+}
+
 /**
  * Whether this instance ingests a file with this name.
  *
@@ -22,14 +28,22 @@ export type InstanceState = components['schemas']['InstanceState'];
  */
 export function isAccepted(name: string, instance: InstanceState | undefined): boolean {
   if (instance === undefined) return true;
-  const dot = name.lastIndexOf('.');
-  if (dot < 1) return false;
-  return instance.accepted_extensions.includes(name.slice(dot).toLowerCase());
+  const ext = suffix(name);
+  return ext !== '' && instance.accepted_extensions.includes(ext);
 }
 
 /** Whether this file is one of the video containers, which are kept whole and played as audio. */
 export function isVideo(name: string, instance: InstanceState | undefined): boolean {
-  const dot = name.lastIndexOf('.');
-  if (dot < 1 || instance === undefined) return false;
-  return instance.video_extensions.includes(name.slice(dot).toLowerCase());
+  if (instance === undefined) return false;
+  return instance.video_extensions.includes(suffix(name));
+}
+
+/**
+ * The extension as a label: "M4A", "MP4", or "" for a name without one.
+ *
+ * The dialog draws a file as a glyph and this line, because a name clipped to fit a tile loses
+ * its end -- which is exactly the part that says what the file is.
+ */
+export function extension(name: string): string {
+  return suffix(name).slice(1).toUpperCase();
 }

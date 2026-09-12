@@ -3,7 +3,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -157,6 +157,48 @@ describe('the dialog', () => {
     await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('notes.txt')]);
     expect(screen.getByText(/notes.txt is not a format this archive ingests/i)).toBeVisible();
     expect(screen.getByRole('button', { name: /^upload$/i })).toBeDisabled();
+  });
+
+  it('draws each chosen file in the zone, with the format its name may not survive', async () => {
+    // The name is clipped to fit a tile and the extension is the end of it, so the format is
+    // written out rather than left to the part that disappears.
+    show();
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [
+      file('una_conversa_molt_llarga_amb_lavia.m4a'),
+      file('nadal.mp4'),
+    ]);
+    const chosen = screen.getByRole('list', { name: /files to upload/i });
+    expect(within(chosen).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(chosen).getByText(/M4A/)).toBeInTheDocument();
+    expect(within(chosen).getByText(/MP4/)).toBeInTheDocument();
+  });
+
+  it('leaves a file out when its tile is pressed, which is the only way back', async () => {
+    show();
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [
+      file('avia.m4a'),
+      file('nadal.mp3'),
+    ]);
+    expect(screen.getByRole('button', { name: 'Upload 2 files' })).toBeEnabled();
+
+    await userEvent.click(screen.getByRole('button', { name: /leave avia\.m4a out/i }));
+    expect(screen.queryByRole('button', { name: /leave avia\.m4a out/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Upload 1 file' })).toBeEnabled();
+  });
+
+  it('takes the second of two files with the same name, since the tile is the file', async () => {
+    // Removal is by position rather than by name: two folders holding a `nadal.m4a` each is the
+    // ordinary case, and removing "the one called nadal.m4a" would remove both.
+    show();
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [
+      file('nadal.m4a', 1024),
+      file('nadal.m4a', 4096),
+    ]);
+    const [first] = screen.getAllByRole('button', { name: /leave nadal\.m4a out/i });
+    if (first === undefined) throw new Error('The zone drew no tile for nadal.m4a.');
+    await userEvent.click(first);
+    await userEvent.click(screen.getByRole('button', { name: 'Upload 1 file' }));
+    expect(useUploads.getState().files.map((one) => one.size)).toEqual([4096]);
   });
 
   it('hands the files over and closes, so closing it cannot stop them', async () => {

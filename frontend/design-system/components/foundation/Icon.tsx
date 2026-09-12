@@ -9,6 +9,8 @@ import {
   CloudUpload,
   Download,
   EllipsisVertical,
+  FileAudio,
+  FileVideo,
   FolderInput,
   HardDrive,
   LayoutGrid,
@@ -60,6 +62,8 @@ import type { HTMLAttributes } from 'react';
  * for the switch between the two densities of one library. `sun` is `moon`'s other half, for the
  * account menu's theme row, which shows the theme somebody is in rather than the word "Theme".
  * `download` and `folder-input` are a recording's two actions that move it somewhere.
+ * `file-audio` and `file-video` are the upload dialog's two kinds of chosen file, which is the
+ * one place the distinction is drawn before a recording exists to draw it on.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -72,6 +76,8 @@ const GLYPHS = {
   clock: Clock,
   'cloud-upload': CloudUpload,
   download: Download,
+  'file-audio': FileAudio,
+  'file-video': FileVideo,
   'folder-input': FolderInput,
   'hard-drive': HardDrive,
   library: Library,
