@@ -93,9 +93,13 @@ export function UploadDialog({ open, onClose, library }: UploadDialogProps) {
 
   function take(files: FileList | null) {
     if (files === null) return;
+    // Copied here rather than inside the updater: a `FileList` is live, clearing the input below
+    // empties it, and React runs the updater after this handler has returned -- so the second
+    // folder somebody chose arrived as nothing at all.
+    const picked = Array.from(files);
     // Added rather than replaced: somebody choosing a second folder means both, and a picker
     // that forgot the first one is a picker they have to be careful with.
-    setChosen((was) => [...was, ...Array.from(files)]);
+    setChosen((was) => [...was, ...picked]);
   }
 
   function remove(index: number) {
