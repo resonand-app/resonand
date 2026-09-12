@@ -35,6 +35,18 @@ import { useUploads } from './uploads';
 import type { Upload } from './uploads';
 
 /**
+ * How full the bar is, which is not one number (`FBK-5`).
+ *
+ * Hashing and sending are two passes over the same file and each has its own count. Drawing the
+ * sent bytes during the hash would pin the bar at nought for minutes, which is the shape of a
+ * frozen interface -- and it was, at the sizes this product accepts.
+ */
+function fractionOf(upload: Upload): number {
+  if (upload.size === 0) return 0;
+  return (upload.status === 'checking' ? upload.hashed : upload.sent) / upload.size;
+}
+
+/**
  * The one-line answer: "3 of 30 uploaded, 1 failed".
  *
  * Shown collapsed and expanded alike, and it names the failures rather than only counting the
@@ -111,10 +123,17 @@ function FileRows({ files }: { files: readonly Upload[] }) {
   const again = useUploads((state) => state.again);
 
   /** The right-hand side of a row: how far, or what happened. */
-  const detailOf = (upload: Upload): string =>
-    upload.status === 'uploading'
-      ? `${percent(upload.size === 0 ? 0 : upload.sent / upload.size)} · ${bytes(upload.size)}`
-      : t(`tray.status.${upload.status}`);
+  const detailOf = (upload: Upload): string => {
+    // The phase is named beside the number while the number is still moving: "72%" alone does not
+    // say whether this file is being read or being sent, and they take very different times.
+    if (upload.status === 'checking') {
+      return `${percent(fractionOf(upload))} · ${t('tray.status.checking')}`;
+    }
+    if (upload.status === 'uploading') {
+      return `${percent(fractionOf(upload))} · ${bytes(upload.size)}`;
+    }
+    return t(`tray.status.${upload.status}`);
+  };
 
   /** Why a file will not be sent, or was not, in the words that let somebody act on it. */
   const reason = (upload: Upload): string | undefined => {
@@ -145,11 +164,7 @@ function FileRows({ files }: { files: readonly Upload[] }) {
           key={upload.id}
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
         >
-          <Progress
-            value={upload.size === 0 ? 0 : upload.sent / upload.size}
-            label={upload.name}
-            detail={detailOf(upload)}
-          />
+          <Progress value={fractionOf(upload)} label={upload.name} detail={detailOf(upload)} />
           {reason(upload) !== undefined && (
             <span
               style={{

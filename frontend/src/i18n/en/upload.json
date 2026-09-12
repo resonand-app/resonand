@@ -35,6 +35,7 @@
       "checking": "Checking",
       "duplicate": "Already here",
       "uploading": "Uploading",
+      "storing": "Storing",
       "done": "Uploaded",
       "skipped": "Left out",
       "failed": "Did not upload",

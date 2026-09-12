@@ -69,4 +69,23 @@ describe('sha-256', () => {
     controller.abort();
     await expect(sha256Of(new Blob(['abc']), controller.signal)).rejects.toThrow(/abort/i);
   });
+
+  it('says how far it has read, because this phase is long enough to look like a crash', async () => {
+    // `FBK-5`: at the 8 GiB ceiling the tray sat at nought per cent for minutes with the word
+    // "checking" on it. The loop already knew; nobody was being told.
+    const size = 10 * 1024 * 1024;
+    const read: number[] = [];
+    await sha256Of(new File([new Uint8Array(size)], 'long.wav'), undefined, (at) => read.push(at));
+    expect(read.length).toBeGreaterThan(1);
+    expect([...read].sort((left, right) => left - right)).toEqual(read);
+    expect(read.at(-1)).toBe(size);
+  });
+
+  it('never reports having read more of a file than there is', async () => {
+    // The last chunk is short, and a count that overshot would draw a bar wider than its track.
+    const size = 5;
+    const read: number[] = [];
+    await sha256Of(new File([new Uint8Array(size)], 'tiny.wav'), undefined, (at) => read.push(at));
+    expect(read).toEqual([size]);
+  });
 });
