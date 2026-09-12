@@ -15,8 +15,22 @@ export interface ShellProps {
    * out what it is for.
    */
   player?: ReactNode;
-  /** The upload tray, docked above the player. `UI-35i`. */
+  /**
+   * The upload tray, over the view at the bottom right, above the player. `UI-35i`.
+   *
+   * **Out of the flow, like the toasts.** It reports on a batch somebody carries on working
+   * through, so it floats over the corner of the view rather than taking a band of the frame the
+   * whole page has to reflow around.
+   */
   tray?: ReactNode;
+  /**
+   * Whether the player is drawing anything, which `player` cannot answer.
+   *
+   * The frame is handed a player on every screen and the bar decides for itself whether it has a
+   * recording to show, so the presence of the prop says nothing about the height of the thing the
+   * tray has to clear. `ToastRegion` takes the same boolean for the same reason.
+   */
+  playerVisible?: boolean;
 }
 
 /**
@@ -37,7 +51,7 @@ export interface ShellProps {
  * is replaced rather than narrowed: four bottom tabs, a docked player strip, and sheets instead of
  * panels. `UI-4f` builds it, from §2.3's prose.
  */
-export function Shell({ nav, sidebar, children, player, tray }: ShellProps) {
+export function Shell({ nav, sidebar, children, player, tray, playerVisible = false }: ShellProps) {
   return (
     <div
       data-ds="shell"
@@ -86,7 +100,24 @@ export function Shell({ nav, sidebar, children, player, tray }: ShellProps) {
           </div>
         </main>
       </div>
-      {tray}
+      {tray !== undefined && (
+        <div
+          data-ds="shell-tray"
+          style={{
+            position: 'fixed',
+            right: 'var(--panel-gap)',
+            bottom: playerVisible
+              ? 'calc(var(--player-height) + var(--panel-gap) * 2)'
+              : 'var(--panel-gap)',
+            // A width and not a max-width: a fixed box with neither is shrink-to-fit, and the
+            // tray asking for `100%` of it would be asking itself how wide it is.
+            width: 'min(var(--tray-width), calc(100% - var(--panel-gap) * 2))',
+            zIndex: 'var(--z-tray)',
+          }}
+        >
+          {tray}
+        </div>
+      )}
       {player}
     </div>
   );

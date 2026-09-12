@@ -13,6 +13,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { Progress } from '@/design-system';
 
 import { UploadTray } from './UploadTray';
+import { UPLOAD_ROW } from './upload-row';
 
 describe('UploadTray', () => {
   it('says the same thing collapsed as expanded', () => {
@@ -56,6 +57,38 @@ describe('UploadTray', () => {
     render(<UploadTray summary="30 uploaded" collapsed onToggle={vi.fn()} onClose={onClose} />);
     await userEvent.click(screen.getByRole('button', { name: 'Close the tray' }));
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers one cross and not two', () => {
+    // The toggle is a chevron: two crosses are two ways to make the tray go away, and one of
+    // them is keeping the uploads. The glyph is `lucide`'s class because nothing else names it.
+    const { container } = render(
+      <UploadTray summary="30 uploaded" collapsed={false} onToggle={vi.fn()} onClose={vi.fn()} />,
+    );
+    expect(container.querySelectorAll('.lucide-x')).toHaveLength(1);
+  });
+
+  it('caps the list once a sixth file joins it', () => {
+    // Five rows and the sixth is scrolled to. jsdom measures everything as nought, so what is
+    // asserted is that a cap is written at all -- the height itself only exists in a browser.
+    const rows = (count: number) =>
+      Array.from({ length: count }, (_, index) => (
+        <div key={index} {...UPLOAD_ROW}>
+          <Progress value={0.5} label={`File ${String(index)}`} />
+        </div>
+      ));
+    const { container, rerender } = render(
+      <UploadTray summary="5 of 5 uploaded" collapsed={false} onToggle={vi.fn()}>
+        {rows(5)}
+      </UploadTray>,
+    );
+    expect(container.querySelector('[style*="--tray-rows:"]')).toBeNull();
+    rerender(
+      <UploadTray summary="5 of 6 uploaded" collapsed={false} onToggle={vi.fn()}>
+        {rows(6)}
+      </UploadTray>,
+    );
+    expect(container.querySelector('[style*="--tray-rows:"]')).not.toBeNull();
   });
 
   it('is a named region, because it outlives the view that started it', () => {

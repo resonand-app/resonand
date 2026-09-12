@@ -31,7 +31,7 @@ import { MediaSession } from '@/player/MediaSession';
 import { PhonePlayer } from '@/player/PhonePlayer';
 import { Player } from '@/player/Player';
 import { connect } from '@/player/audio';
-import { usePlayback } from '@/player/store';
+import { playerShowing, usePlayback } from '@/player/store';
 
 import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
@@ -67,6 +67,9 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   const trashCount = useTrashCount();
   const { collapsed, toggle } = useSidebarCollapse();
   const isPhone = useIsPhone();
+  // The bar's own answer, because the frame is handed a player whether or not there is one to
+  // draw: it is what the tray sits above, and what it drops to the gutter without.
+  const playerVisible = usePlayback(playerShowing);
   const [uploading, setUploading] = useState(false);
   // The upload dialog belongs to the frame, like the player and the tray: it is opened from the
   // nav on any screen, and what it starts has to outlive the screen it was started from
@@ -275,6 +278,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
           </>
         }
         tray={tray ?? <Uploads />}
+        playerVisible={playerVisible}
       >
         {children}
         {/* Inside the frame rather than inside a view: closing it must not be able to stop what it

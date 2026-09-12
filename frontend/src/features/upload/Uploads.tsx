@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 
 import { invalidate } from '@/api/invalidate';
 import { UploadTray } from '@/components/UploadTray';
+import { UPLOAD_ROW } from '@/components/upload-row';
 import { Button, Progress } from '@/design-system';
 import { bytes, percent } from '@/i18n/format';
 
@@ -162,6 +163,8 @@ function FileRows({ files }: { files: readonly Upload[] }) {
       {files.map((upload) => (
         <li
           key={upload.id}
+          // The tray counts these to stop at five rows, whatever height a failed one has grown to.
+          {...UPLOAD_ROW}
           style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
         >
           <Progress value={fractionOf(upload)} label={upload.name} detail={detailOf(upload)} />

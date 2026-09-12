@@ -159,6 +159,19 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
   },
 }));
 
+/**
+ * Whether there is a bar on screen at all.
+ *
+ * The player is absent rather than empty (`UI-5`), so this is not "is the frame given a player" --
+ * the frame is always given one and the bar decides for itself whether it has anything to draw.
+ * Everything that measures from the bottom of the screen -- the toasts, the upload tray -- asks
+ * this rather than keeping its own copy of the rule. The bars themselves keep their own guard,
+ * because theirs also narrows `recording` for the compiler and a call does not.
+ */
+export function playerShowing(state: PlaybackState): boolean {
+  return state.recording !== null && state.status !== 'idle';
+}
+
 /** Whether this recording is the one playing, which is what the detail view asks. */
 export function isPlaying(state: PlaybackState, uuid: string): boolean {
   return state.recording?.uuid === uuid && state.status === 'playing';

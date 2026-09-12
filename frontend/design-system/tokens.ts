@@ -170,6 +170,7 @@ export const TOKENS = [
   '--panel-padding',
   '--page-padding',
   '--grid-gap',
+  '--tray-width',
   '--sidebar-width',
   '--sidebar-width-collapsed',
   '--nav-height',
