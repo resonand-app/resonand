@@ -18,6 +18,7 @@ import { mockApi, server } from '@/test/api/server';
 
 import { UploadPanel, Uploads } from './Uploads';
 import { useUploads } from './uploads';
+import type { Upload } from './uploads';
 
 mockApi();
 
@@ -174,6 +175,60 @@ describe('the states of a file', () => {
     await waitFor(() => {
       expect(useUploads.getState().files[0]?.status).toBe('done');
     });
+  });
+});
+
+describe('the phases a row used to spend in silence', () => {
+  /** One row, put straight into the store: the phases are what is being drawn, not how. */
+  function row(fields: Partial<Upload>): Upload {
+    return {
+      id: '1-avia.m4a',
+      name: 'avia.m4a',
+      size: 1000,
+      library: PERSONAL,
+      transcribe: false,
+      status: 'waiting',
+      sent: 0,
+      hashed: 0,
+      ...fields,
+    };
+  }
+
+  beforeEach(() => {
+    useUploads.setState({ files: [], collapsed: false });
+  });
+
+  it('draws how much has been hashed, rather than nought per cent for minutes', () => {
+    // `FBK-5`: the duplicate check reads the whole file before a byte goes, and at 8 GiB that is
+    // minutes. A bar pinned at nought with the word "checking" on it is a frozen interface.
+    useUploads.setState({ files: [row({ status: 'checking', hashed: 400 })] });
+    show();
+    expect(screen.getByRole('progressbar', { name: 'avia.m4a' })).toHaveAttribute(
+      'aria-valuenow',
+      '40',
+    );
+    expect(screen.getByText(/40%.*Checking/)).toBeInTheDocument();
+  });
+
+  it('says the instance is storing it once there is nothing left to send', () => {
+    // The bar is full and the wait is not over: the request resolves when the instance has hashed
+    // the file, written it and created the recording. "Uploading, 100%" for two minutes reads as
+    // stuck, and the bar has nothing left to say.
+    useUploads.setState({ files: [row({ status: 'storing', sent: 1000 })] });
+    show();
+    expect(screen.getByRole('progressbar', { name: 'avia.m4a' })).toHaveAttribute(
+      'aria-valuenow',
+      '100',
+    );
+    expect(screen.getByText('Storing')).toBeInTheDocument();
+  });
+
+  it('refuses to be cleared while a file is still being read or still being stored', () => {
+    for (const status of ['checking', 'storing'] as const) {
+      useUploads.setState({ files: [row({ status })] });
+      useUploads.getState().clear();
+      expect(useUploads.getState().files).toHaveLength(1);
+    }
   });
 });
 

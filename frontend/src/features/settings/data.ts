@@ -17,6 +17,7 @@ import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { get, patch, post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
+import { HANDLED } from '@/api/query-client';
 import type { components } from '@/api/schema';
 
 type Schemas = components['schemas'];
@@ -28,6 +29,8 @@ export function useUpdateAccount(): UseMutationResult<unknown, unknown, UpdateMe
   const client = useQueryClient();
   return useMutation({
     mutationFn: (body: UpdateMe) => patch('/api/auth/me', { body }),
+    // The panel prints the refusal under the form it belongs to (`FBK-1`).
+    meta: HANDLED,
     onSuccess: async () => {
       await invalidate(client, { kind: 'account' });
     },
@@ -51,6 +54,7 @@ export function useChangePassword(): UseMutationResult<unknown, unknown, Passwor
   const client = useQueryClient();
   return useMutation({
     mutationFn: (body: PasswordChange) => post('/api/auth/password', { body }),
+    meta: HANDLED,
     onSuccess: async () => {
       await invalidate(client, { kind: 'session' });
     },

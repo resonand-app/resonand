@@ -29,7 +29,7 @@ import { count } from '@/i18n/format';
 import { instant, relative } from '@/i18n/time';
 
 import { AdminSection } from './AdminSection';
-import { QUEUE_ROWS, useJobActions, useQueue, useSystemStatus } from './data';
+import { QUEUE_ROWS, useJobActions, useQueue, useQueueCounts } from './data';
 import type { JobActions } from './data';
 
 /** The states the API reports, in the order an operator cares about them. */
@@ -43,9 +43,9 @@ export function Queue() {
   const limit = expanded ? QUEUE_ROWS.expanded : QUEUE_ROWS.default;
   const queue = useQueue(state, limit);
   const actions = useJobActions();
-  // The counts by state come from the status endpoint, which `INT-3e` also draws. One key, one
-  // request: react-query hands both sections the same answer rather than asking twice.
-  const counts = useSystemStatus().data?.jobs;
+  // Their own endpoint rather than the instance's status, because they move with the rows and
+  // that one measures the disk to answer (`FBK-4`).
+  const counts = useQueueCounts().data;
 
   return (
     <AdminSection title={t('queue.title')} description={t('queue.intro')}>

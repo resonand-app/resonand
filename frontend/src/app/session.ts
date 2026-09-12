@@ -16,6 +16,7 @@ import type { QueryClient, UseQueryResult } from '@tanstack/react-query';
 import { get, post, remove } from '@/api/client';
 import { keys } from '@/api/keys';
 import { ApiProblem } from '@/api/problem';
+import { HANDLED } from '@/api/query-client';
 import type { components } from '@/api/schema';
 
 export type Account = components['schemas']['Me'];
@@ -65,6 +66,8 @@ export function useSignIn() {
   return useMutation({
     mutationFn: (credentials: { email: string; password: string }) =>
       post('/api/auth/session', { body: credentials }),
+    // The form says what was refused, beside the fields it was refused for (`FBK-1`).
+    meta: HANDLED,
     onSuccess: (account) => {
       arrive(client, account);
     },
@@ -96,6 +99,7 @@ export function useBootstrap() {
   return useMutation({
     mutationFn: (account: { email: string; password: string; display_name: string }) =>
       post('/api/auth/bootstrap', { body: account }),
+    meta: HANDLED,
     onSuccess: (account) => {
       arrive(client, account);
     },
@@ -106,6 +110,9 @@ export function useSignOut() {
   const client = useQueryClient();
   return useMutation({
     mutationFn: () => remove('/api/auth/session'),
+    // Nothing to report: the session is discarded either way, so a failure here changes nothing
+    // a person could act on and the screen they end up on is the same one.
+    meta: HANDLED,
     onSettled: () => {
       // `onSettled` and not `onSuccess`: if signing out failed because the session was already
       // gone, staying signed in on this screen is the wrong answer to give.

@@ -90,6 +90,7 @@ export const TOKENS = [
   '--easing',
   '--transition-state',
   '--transition-panel',
+  '--duration-spin',
   '--focus-ring-width',
   '--focus-ring-offset',
   '--opacity-disabled',

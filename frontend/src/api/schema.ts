@@ -29,6 +29,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/jobs/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * How much work is in each state
+         * @description The tally alone, off the same table the rows come from (``FBK-4``).
+         *
+         *     Separate from ``/status`` because of what that endpoint costs: it walks every file under the
+         *     storage root and opens a second engine to read the schema revision, which is the right shape
+         *     for a page an operator opens and the wrong shape for anything with an interval on it. The
+         *     counts above the queue move while work is being done, so they need one that is cheap to ask.
+         */
+        get: operations["job_counts_api_admin_jobs_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/jobs/{job_id}/cancel": {
         parameters: {
             query?: never;
@@ -1909,6 +1934,28 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_counts_api_admin_jobs_counts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: number;
+                    };
                 };
             };
         };

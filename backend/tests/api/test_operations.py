@@ -131,6 +131,44 @@ def test_the_queue_is_not_visible_to_everybody(
     assert client.get("/admin/jobs").status_code == status.HTTP_403_FORBIDDEN
 
 
+def test_the_counts_agree_with_the_rows_they_sit_above(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``FBK-4``: the summary and the list are one table, and must not disagree on screen."""
+    job_id = _a_job(database, accounts, owner_library)
+    _a_job(database, accounts, owner_library)
+    with database.write_session() as session:
+        queue.fail(session, job_id, "broke", attempts=queue.MAX_ATTEMPTS)
+    sign_in(client, "admin")
+    counts = client.get("/admin/jobs/counts").json()
+    assert counts["failed"] == 1
+    assert (
+        counts["pending"] == client.get("/admin/jobs", params={"state": "pending"}).json()["total"]
+    )
+
+
+def test_the_counts_name_every_state_including_the_empty_ones(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """A state missing from the tally would draw as a gap rather than as a nought."""
+    sign_in(client, "admin")
+    counts = client.get("/admin/jobs/counts").json()
+    assert set(counts) >= {
+        queue.PENDING,
+        queue.RUNNING,
+        queue.DONE,
+        queue.FAILED,
+        queue.CANCELLED,
+    }
+
+
+def test_the_counts_are_not_visible_to_everybody(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    sign_in(client, "friend")
+    assert client.get("/admin/jobs/counts").status_code == status.HTTP_403_FORBIDDEN
+
+
 # --- The transcription provider -------------------------------------------
 
 

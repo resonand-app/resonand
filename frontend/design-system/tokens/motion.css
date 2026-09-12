@@ -5,6 +5,11 @@
   --transition-state: var(--duration-state) var(--easing);
   --transition-panel: var(--duration-panel) var(--easing);
 
+  /* One turn of the only glyph that spins. Slow enough to read as patience rather than as
+     urgency: what it reports is a job on a server that takes minutes, so it turns at about the
+     pace of a second hand rather than at the pace of something about to finish. */
+  --duration-spin: 2200ms;
+
   --focus-ring-width: var(--border-strong-width);
   --focus-ring-offset: 2px;
 

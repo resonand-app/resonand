@@ -2241,6 +2241,32 @@
         ]
       }
     },
+    "/api/admin/jobs/counts": {
+      "get": {
+        "description": "The tally alone, off the same table the rows come from (``FBK-4``).\n\nSeparate from ``/status`` because of what that endpoint costs: it walks every file under the\nstorage root and opens a second engine to read the schema revision, which is the right shape\nfor a page an operator opens and the wrong shape for anything with an interval on it. The\ncounts above the queue move while work is being done, so they need one that is cheap to ask.",
+        "operationId": "job_counts_api_admin_jobs_counts_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "integer"
+                  },
+                  "title": "Response Job Counts Api Admin Jobs Counts Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "How much work is in each state",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
     "/api/admin/jobs/{job_id}/cancel": {
       "post": {
         "description": "Cancel work that has not finished. A job already in flight is not interrupted.",

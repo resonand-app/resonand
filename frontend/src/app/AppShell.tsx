@@ -35,6 +35,7 @@ import { usePlayback } from '@/player/store';
 
 import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
+import { Toasts } from './Toasts';
 import { destinationOf, destinationTo, initialsOf, libraryIn } from './destinations';
 import { isPlainClick } from './links';
 import { useLibraries, useTrashCount } from './library-data';
@@ -138,27 +139,146 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   // so nothing in it is competing for a screen it was never drawn for.
   if (isPhone) {
     return (
-      <PhoneShell
-        {...(header === undefined ? {} : { header })}
+      <>
+        <PhoneShell
+          {...(header === undefined ? {} : { header })}
+          player={
+            <>
+              <MediaSession />
+              {player ?? <PhonePlayer />}
+            </>
+          }
+          upload={
+            tray ?? (
+              <UploadPanel
+                onAdd={() => {
+                  setUploadOpen(true);
+                }}
+              />
+            )
+          }
+          uploading={uploading}
+          onUploadTab={setUploading}
+        >
+          {children}
+          <UploadDialog
+            open={uploadOpen}
+            onClose={() => {
+              setUploadOpen(false);
+            }}
+            library={libraryIn(location.pathname)}
+          />
+        </PhoneShell>
+        <Toasts />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Shell
+        nav={
+          <TopNav
+            initials={initialsOf(account?.display_name)}
+            query={query}
+            onToggleSidebar={toggle}
+            onQueryChange={(typed) => {
+              setQuery(typed);
+              // On the search screen the field drives the results directly and there is no
+              // dropdown: a box of five hits drawn over the page that already lists them is one
+              // surface hiding another. Anywhere else, typing opens the quick hits and changes no
+              // address until somebody asks it to.
+              if (onSearch) void navigate(toSearch(typed), { replace: true });
+              else setHitsFor(typed.trim() === '' ? null : location.pathname);
+            }}
+            onQuerySubmit={() => {
+              setHitsFor(null);
+              void navigate(toSearch(query), { replace: onSearch });
+            }}
+            onUpload={() => {
+              onUpload?.();
+              setUploadOpen(true);
+            }}
+            onProfile={() => {
+              onProfile?.();
+              setProfileOpen((open) => !open);
+            }}
+            homeHref={routes.libraries}
+            onHome={(event) => {
+              if (!isPlainClick(event)) return;
+              event.preventDefault();
+              void navigate(routes.libraries);
+            }}
+            searchRef={search}
+            avatarRef={profile.anchorRef}
+            labels={{
+              search: t('nav.search'),
+              sidebar: t('nav.sidebar'),
+              upload: t('nav.upload'),
+              account: t('nav.account'),
+              home: t('nav.home'),
+            }}
+            accountMenu={
+              profileOpen ? (
+                <Profile
+                  surface={profile}
+                  onClose={() => {
+                    setProfileOpen(false);
+                  }}
+                />
+              ) : null
+            }
+          >
+            {hitsOpen && !onSearch && (
+              <QuickHits
+                query={query}
+                onOpen={(uuid) => {
+                  setHitsFor(null);
+                  void navigate(toRecording(uuid));
+                }}
+                onSeeAll={() => {
+                  setHitsFor(null);
+                  void navigate(toSearch(query));
+                }}
+              />
+            )}
+          </TopNav>
+        }
+        sidebar={
+          <Sidebar
+            own={own}
+            // Absent rather than empty (§2.2): a group saying nobody has shared anything with you,
+            // on every screen, is a thing to read every time.
+            {...(shared.length > 0 ? { shared } : {})}
+            {...(trashCount > 0 ? { trashCount } : {})}
+            collapsed={collapsed}
+            labels={{
+              libraries: t('sidebar.libraries'),
+              search: t('sidebar.search'),
+              yours: t('sidebar.yours'),
+              shared: t('sidebar.shared'),
+              trash: t('sidebar.trash'),
+              settings: t('sidebar.settings'),
+            }}
+            activeId={destinationOf(location.pathname)}
+            onSelect={(id) => {
+              void navigate(destinationTo(id));
+            }}
+          />
+        }
         player={
           <>
             <MediaSession />
-            {player ?? <PhonePlayer />}
+            {/* Which recording the view is showing, so the bar can drop its waveform while the
+              detail view's own one is on screen (`UI-11b`, §3.1). */}
+            {player ?? <Player onScreen={recordingIn(location.pathname)} />}
           </>
         }
-        upload={
-          tray ?? (
-            <UploadPanel
-              onAdd={() => {
-                setUploadOpen(true);
-              }}
-            />
-          )
-        }
-        uploading={uploading}
-        onUploadTab={setUploading}
+        tray={tray ?? <Uploads />}
       >
         {children}
+        {/* Inside the frame rather than inside a view: closing it must not be able to stop what it
+            started, and neither must navigating away from wherever it was opened. */}
         <UploadDialog
           open={uploadOpen}
           onClose={() => {
@@ -166,121 +286,10 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
           }}
           library={libraryIn(location.pathname)}
         />
-      </PhoneShell>
-    );
-  }
-
-  return (
-    <Shell
-      nav={
-        <TopNav
-          initials={initialsOf(account?.display_name)}
-          query={query}
-          onToggleSidebar={toggle}
-          onQueryChange={(typed) => {
-            setQuery(typed);
-            // On the search screen the field drives the results directly and there is no
-            // dropdown: a box of five hits drawn over the page that already lists them is one
-            // surface hiding another. Anywhere else, typing opens the quick hits and changes no
-            // address until somebody asks it to.
-            if (onSearch) void navigate(toSearch(typed), { replace: true });
-            else setHitsFor(typed.trim() === '' ? null : location.pathname);
-          }}
-          onQuerySubmit={() => {
-            setHitsFor(null);
-            void navigate(toSearch(query), { replace: onSearch });
-          }}
-          onUpload={() => {
-            onUpload?.();
-            setUploadOpen(true);
-          }}
-          onProfile={() => {
-            onProfile?.();
-            setProfileOpen((open) => !open);
-          }}
-          homeHref={routes.libraries}
-          onHome={(event) => {
-            if (!isPlainClick(event)) return;
-            event.preventDefault();
-            void navigate(routes.libraries);
-          }}
-          searchRef={search}
-          avatarRef={profile.anchorRef}
-          labels={{
-            search: t('nav.search'),
-            sidebar: t('nav.sidebar'),
-            upload: t('nav.upload'),
-            account: t('nav.account'),
-            home: t('nav.home'),
-          }}
-          accountMenu={
-            profileOpen ? (
-              <Profile
-                surface={profile}
-                onClose={() => {
-                  setProfileOpen(false);
-                }}
-              />
-            ) : null
-          }
-        >
-          {hitsOpen && !onSearch && (
-            <QuickHits
-              query={query}
-              onOpen={(uuid) => {
-                setHitsFor(null);
-                void navigate(toRecording(uuid));
-              }}
-              onSeeAll={() => {
-                setHitsFor(null);
-                void navigate(toSearch(query));
-              }}
-            />
-          )}
-        </TopNav>
-      }
-      sidebar={
-        <Sidebar
-          own={own}
-          // Absent rather than empty (§2.2): a group saying nobody has shared anything with you,
-          // on every screen, is a thing to read every time.
-          {...(shared.length > 0 ? { shared } : {})}
-          {...(trashCount > 0 ? { trashCount } : {})}
-          collapsed={collapsed}
-          labels={{
-            libraries: t('sidebar.libraries'),
-            search: t('sidebar.search'),
-            yours: t('sidebar.yours'),
-            shared: t('sidebar.shared'),
-            trash: t('sidebar.trash'),
-            settings: t('sidebar.settings'),
-          }}
-          activeId={destinationOf(location.pathname)}
-          onSelect={(id) => {
-            void navigate(destinationTo(id));
-          }}
-        />
-      }
-      player={
-        <>
-          <MediaSession />
-          {/* Which recording the view is showing, so the bar can drop its waveform while the
-              detail view's own one is on screen (`UI-11b`, §3.1). */}
-          {player ?? <Player onScreen={recordingIn(location.pathname)} />}
-        </>
-      }
-      tray={tray ?? <Uploads />}
-    >
-      {children}
-      {/* Inside the frame rather than inside a view: closing it must not be able to stop what it
-          started, and neither must navigating away from wherever it was opened. */}
-      <UploadDialog
-        open={uploadOpen}
-        onClose={() => {
-          setUploadOpen(false);
-        }}
-        library={libraryIn(location.pathname)}
-      />
-    </Shell>
+      </Shell>
+      {/* Beside the frame, not inside it: the region is fixed to the viewport and the one box on
+          the page that scrolls is the wrong parent for it (`FBK-1`, `UI-35f`). */}
+      <Toasts />
+    </>
   );
 }

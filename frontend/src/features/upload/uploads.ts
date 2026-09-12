@@ -64,12 +64,29 @@ export type UploadStatus =
   /** This exact file is already here. Waiting for somebody to say what to do about it. */
   | 'duplicate'
   | 'uploading'
+  /**
+   * Every byte sent, and the instance has not answered yet (`FBK-5`).
+   *
+   * Its own status rather than the tail of `uploading`, because it is a different wait and it is
+   * not short: the request resolves when the instance has hashed the file, written it to storage
+   * and created the recording. A row that says "uploading, 100%" for two minutes is a row that
+   * looks stuck, and the bar cannot say anything more -- there is nothing left to send.
+   */
+  | 'storing'
   | 'done'
   /** Deliberately not uploaded: the copy already here was restored, or the warning was heeded. */
   | 'skipped'
   /** Bigger than this instance accepts. Never sent, and the row says the actual limit. */
   | 'too-large'
   | 'failed';
+
+/** The statuses that mean bytes are still moving, or about to. Nothing may be cleared past one. */
+const IN_FLIGHT: readonly UploadStatus[] = ['waiting', 'checking', 'uploading', 'storing'];
+
+/** Whether this file is still on its way, which is what forbids clearing the tray (`FBK-5`). */
+export function isInFlight(status: UploadStatus): boolean {
+  return IN_FLIGHT.includes(status);
+}
 
 export interface Upload {
   /** Stable for the life of the tray. The name is not: two files can be called the same thing. */
@@ -83,6 +100,8 @@ export interface Upload {
   status: UploadStatus;
   /** How much has left this machine, in bytes. */
   sent: number;
+  /** How much of it has been hashed, in bytes, while the duplicate check runs (`FBK-5`). */
+  hashed: number;
   /** What the instance said, when it refused. §1.9's `detail`, shown rather than replaced. */
   error?: string | undefined;
   /** The recording it became, once it is one. */
@@ -142,6 +161,7 @@ export const useUploads = create<UploadsState>((set, get) => ({
         // files it is one of them, and the other twenty-nine still go.
         status: limit !== undefined && file.size > limit ? 'too-large' : 'waiting',
         sent: 0,
+        hashed: 0,
         maxBytes: limit,
       };
     });
@@ -164,7 +184,7 @@ export const useUploads = create<UploadsState>((set, get) => ({
     const file = held.get(id);
     held.delete(id);
     if (file === undefined) return;
-    update(id, { status: 'waiting' });
+    update(id, { status: 'waiting', hashed: 0 });
     // Marked as decided, so the duplicate check does not stop it a second time on the way past.
     pending.push({ file, id, anyway: true });
     void drain();
@@ -174,13 +194,13 @@ export const useUploads = create<UploadsState>((set, get) => ({
     const file = held.get(id);
     if (get().files.find((one) => one.id === id)?.status !== 'failed' || file === undefined) return;
     held.delete(id);
-    update(id, { status: 'waiting', sent: 0, error: undefined });
+    update(id, { status: 'waiting', sent: 0, hashed: 0, error: undefined });
     pending.push({ file, id, anyway: true });
     void drain();
   },
 
   clear: () => {
-    if (get().files.some((one) => one.status === 'waiting' || one.status === 'uploading')) return;
+    if (get().files.some((one) => isInFlight(one.status))) return;
     set({ files: [] });
   },
 
@@ -222,7 +242,9 @@ async function drain(): Promise<void> {
         if (next.anyway !== true && (await warn(next.id, next.file))) continue;
         update(next.id, { status: 'uploading', sent: 0 });
         const recording = await send(row.library, next.file, row.transcribe, (sent) => {
-          update(next.id, { sent });
+          // The last progress event is the last byte handed to the socket, not the answer. What
+          // follows is the instance's own work, and the row says so rather than sitting full.
+          update(next.id, sent >= row.size ? { sent, status: 'storing' } : { sent });
         });
         await categorise(recording.uuid, row.categoryId);
         update(next.id, { status: 'done', sent: row.size, uuid: recording.uuid });
@@ -259,10 +281,12 @@ async function drain(): Promise<void> {
  * recording because the courtesy failed would be the interface serving itself.
  */
 async function warn(id: string, file: File): Promise<boolean> {
-  update(id, { status: 'checking' });
+  update(id, { status: 'checking', hashed: 0 });
   let found: DuplicateWarning[];
   try {
-    const sha256 = await sha256Of(file);
+    const sha256 = await sha256Of(file, undefined, (hashed) => {
+      update(id, { hashed });
+    });
     found = await get('/api/audio/duplicates/{sha256}', { path: { sha256 } });
   } catch {
     return false;

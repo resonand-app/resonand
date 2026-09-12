@@ -163,12 +163,22 @@ const CHUNK = 4 * 1024 * 1024;
  *
  * `signal` is honoured because a queue of thirty files somebody cancelled should stop hashing the
  * twenty-ninth.
+ *
+ * **`onRead` exists because this phase is long enough to look like a crash** (`FBK-5`). At the
+ * 8 GiB ceiling the tray used to sit at nought per cent for minutes with the word "checking" on
+ * it, which is the shape of a frozen interface. The loop already knows how far it has read; all
+ * that was missing was somebody to tell.
  */
-export async function sha256Of(file: Blob, signal?: AbortSignal): Promise<string> {
+export async function sha256Of(
+  file: Blob,
+  signal?: AbortSignal,
+  onRead?: (read: number) => void,
+): Promise<string> {
   const hash = new Sha256();
   for (let at = 0; at < file.size; at += CHUNK) {
     if (signal?.aborted === true) throw new DOMException('Aborted', 'AbortError');
     hash.update(new Uint8Array(await file.slice(at, at + CHUNK).arrayBuffer()));
+    onRead?.(Math.min(file.size, at + CHUNK));
   }
   return hash.digest();
 }

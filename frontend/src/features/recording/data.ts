@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
+import { intervalForOne } from '@/api/settling';
 import type { components } from '@/api/schema';
 import { LEVEL } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
@@ -70,6 +71,9 @@ export function useRecording(uuid: string): RecordingContext {
     queryKey: keys.recording(uuid),
     queryFn: () => get('/api/audio/{audio_uuid}', { path: { audio_uuid: uuid } }),
     enabled: uuid !== '',
+    // A recording opened the moment it was uploaded fills in its duration, its technical details
+    // and its waveform without a reload (`FBK-3`).
+    refetchInterval: (one) => intervalForOne(one.state.data),
   });
   const libraries = useQuery({
     queryKey: keys.libraries(),

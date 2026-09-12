@@ -19,11 +19,13 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { get, post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
 import type { components } from '@/api/schema';
+import type { TranscriptionState } from '@/design-system';
 
 export type TranscriptionDestination = components['schemas']['TranscriptionDestination'];
 export type TranscriptionStatus = components['schemas']['TranscriptionStatus'];
@@ -51,19 +53,42 @@ export function useDestination(): UseQueryResult<TranscriptionDestination> {
  * Only asked for when there is something to say: a recording with a transcript is `done`, and the
  * three facts this carries -- how long it has been running, which attempt, what went wrong -- are
  * about the states that do not have one.
+ *
+ * **It takes the state the screen is drawing, and its job is to disagree with it** (`FBK-2`). The
+ * four states are rendered from `transcription_state` on the recording, which is a different query
+ * and one nothing was refetching -- so the poll below used to run to completion and tell nobody,
+ * and a transcription that finished left the card saying "transcribing" until a reload. When the
+ * two disagree this one is the newer of them, and saying so through `invalidate` reaches the
+ * recording, its transcript, its versions and every list that draws a badge for it.
+ *
+ * Comparing the two rather than watching for a transition is deliberate: arriving at a recording
+ * whose card was stale means the first answer is already `done`, with no transition to catch.
  */
 export function useTranscriptionStatus(
   uuid: string,
-  enabled: boolean,
+  showing: TranscriptionState,
 ): UseQueryResult<TranscriptionStatus> {
-  return useQuery({
+  const client = useQueryClient();
+  // A recording with a transcript has nothing left to report, and the endpoint is not asked.
+  const enabled = showing !== 'done' && uuid !== '';
+  const query = useQuery({
     queryKey: keys.transcription(uuid),
     queryFn: () => get('/api/audio/{audio_uuid}/transcription', { path: { audio_uuid: uuid } }),
-    enabled: enabled && uuid !== '',
+    enabled,
     // A transcription that is running finishes while somebody watches, and there is no push. The
     // window is short enough to notice and long enough not to poll a provider's queue.
-    refetchInterval: (query) => (query.state.data?.state === 'running' ? 10_000 : false),
+    refetchInterval: (one) => (one.state.data?.state === 'running' ? 10_000 : false),
   });
+
+  const reported = query.data?.state;
+  useEffect(() => {
+    if (!enabled || reported === undefined || reported === showing) return;
+    void invalidate(client, { kind: 'transcription', recording: uuid });
+    // Once, and not in a loop: the refetch this starts makes `showing` agree with `reported`,
+    // and if it cannot -- an instance that has gone away -- nothing here has changed to re-run on.
+  }, [client, enabled, reported, showing, uuid]);
+
+  return query;
 }
 
 export type Transcribe = UseMutationResult<Job, unknown, void>;

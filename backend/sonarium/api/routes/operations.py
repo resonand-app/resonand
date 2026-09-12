@@ -76,6 +76,18 @@ def list_jobs(
     )
 
 
+@router.get("/jobs/counts", summary="How much work is in each state")
+def job_counts(session: ReadSession) -> dict[str, int]:
+    """The tally alone, off the same table the rows come from (``FBK-4``).
+
+    Separate from ``/status`` because of what that endpoint costs: it walks every file under the
+    storage root and opens a second engine to read the schema revision, which is the right shape
+    for a page an operator opens and the wrong shape for anything with an interval on it. The
+    counts above the queue move while work is being done, so they need one that is cheap to ask.
+    """
+    return queue.counts(session)
+
+
 @router.post("/jobs/{job_id}/retry", summary="Try a failed job again")
 def retry_job(job_id: int, session: WriteSession) -> dict[str, str]:
     """Put a failed or cancelled job back on the queue, with its attempts reset.

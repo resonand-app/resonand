@@ -106,11 +106,37 @@ export function useTestProvider(): UseMutationResult<Schemas['ProviderStatus'], 
   });
 }
 
-/** What the instance itself reports: versions, storage, the job counts, the revision (`INT-3e`). */
+/** How often the queue asks again. The rows and the counts over them share it (`FBK-4`). */
+export const QUEUE_POLL_MS = 5_000;
+
+/**
+ * What the instance itself reports: versions, storage, the job counts, the revision (`INT-3e`).
+ *
+ * **Asked once, and deliberately never on an interval** (`FBK-4`). It walks every file under the
+ * storage root to separate the originals from the derivatives, and opens a second engine to read
+ * the schema revision. That is the right shape for a page an operator opens and the wrong shape
+ * for a ticker; the one number on it that moves while somebody watches has `useQueueCounts`.
+ */
 export function useSystemStatus(): UseQueryResult<Schemas['SystemStatus']> {
   return useQuery({
     queryKey: keys.systemStatus(),
     queryFn: () => get('/api/admin/status'),
+  });
+}
+
+/**
+ * The queue's tally, at the pace of the rows it sits above (`FBK-4`, `INT-3d`).
+ *
+ * The counts came off `useSystemStatus` and so were fetched once and never again: the rows below
+ * them moved every five seconds while the summary over them stayed at whatever it said when the
+ * panel opened. Two numbers describing one table, disagreeing on screen, is worse than either of
+ * them being slow.
+ */
+export function useQueueCounts(): UseQueryResult<Record<string, number>> {
+  return useQuery({
+    queryKey: keys.jobCounts(),
+    queryFn: () => get('/api/admin/jobs/counts'),
+    refetchInterval: QUEUE_POLL_MS,
   });
 }
 
@@ -155,7 +181,7 @@ export function useQueue(state: string | undefined, limit: number): Queue {
         query: state === undefined ? { limit } : { state, limit },
       }),
     // A queue is the one thing in the product that is moving while somebody watches it.
-    refetchInterval: 5_000,
+    refetchInterval: QUEUE_POLL_MS,
     // Asking for more rows should extend the list, not blank it: the rows already on screen
     // are the first rows of the answer being fetched, and flashing a spinner over them would
     // make "show more" look like "start again".

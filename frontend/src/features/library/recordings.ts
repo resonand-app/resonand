@@ -18,6 +18,7 @@ import { get } from '@/api/client';
 import { keys } from '@/api/keys';
 import { usePaged } from '@/api/paged';
 import type { PagedResult } from '@/api/paged';
+import { intervalFor } from '@/api/settling';
 import type { components } from '@/api/schema';
 import type { Filters as UrlFilters } from '@/app/url-state';
 import { TRANSCRIPTION_STATE_NAMES } from '@/design-system';
@@ -61,7 +62,13 @@ export function useRecordings(
         path: { library_uuid: uuid },
         query,
       }),
-    { enabled: uuid !== '' },
+    {
+      enabled: uuid !== '',
+      // A card uploaded into a grid somebody is looking at grows its duration and its shape where
+      // it stands, and the grid stops asking the moment nothing on it is still being made
+      // (`FBK-3`).
+      refetchInterval: (one) => intervalFor(one.state.data?.items ?? []),
+    },
   );
 }
 

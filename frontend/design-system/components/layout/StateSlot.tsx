@@ -18,6 +18,15 @@ export interface StateCardProps {
   /** A quieter line under the action. Retention, a count, a reason. */
   footnote?: ReactNode;
   /**
+   * Whether the thing this card describes is running right now (`FBK-6`).
+   *
+   * It turns the glyph, and it is the one animation in the system that is not a transition. Use it
+   * only where work is genuinely in flight somewhere else and will stop -- a transcription in a
+   * provider's queue -- never for a screen that is merely loading, which is what the skeletons are
+   * for and which deliberately does not move.
+   */
+  busy?: boolean;
+  /**
    * A dashed edge instead of a filled surface.
    *
    * For "nothing yet" only. The dashed edge is the system's one border that is not a divider, and
@@ -40,7 +49,7 @@ export interface StateCardProps {
  * The copy rules are the product's: sentence case, no exclamation mark, no apology, and never a
  * sad drawing. An empty library is an invitation to act, and the action is in the card.
  */
-export function StateCard({ icon, title, body, action, footnote, dashed }: StateCardProps) {
+export function StateCard({ icon, title, body, action, footnote, dashed, busy }: StateCardProps) {
   return (
     <div
       data-ds="state-card"
@@ -59,6 +68,7 @@ export function StateCard({ icon, title, body, action, footnote, dashed }: State
       {icon !== undefined && (
         <span
           data-ds="state-card-glyph"
+          data-busy={busy === true ? 'true' : undefined}
           aria-hidden
           style={{
             display: 'grid',
