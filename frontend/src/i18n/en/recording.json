@@ -92,6 +92,7 @@
       "title": "Transcribing",
       "working": "Finding out how it is going...",
       "queued": "Waiting to start",
+      "justStarted": "Started less than a minute ago",
       "since": "Started {{when}}",
       "attempt_one": "attempt {{count}}",
       "attempt_other": "attempt {{count}}",

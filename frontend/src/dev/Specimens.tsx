@@ -701,6 +701,14 @@ export default function Specimens() {
             />
           </div>
         </Panel>
+        <Panel label="StateCard · busy, the one glyph that turns" width="100%">
+          <StateCard
+            icon="loader"
+            busy
+            title="Transcribing"
+            body="Started 2 minutes ago · on whisper"
+          />
+        </Panel>
         <Panel label="Skeletons · the shape of the thing that is coming" width="100%">
           <div
             style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: 'var(--grid-gap)' }}

@@ -502,6 +502,28 @@
   color: var(--accent-on-soft);
 }
 
+/* The glyph turns while work is genuinely running somewhere else, and nothing else in the system
+   does (`FBK-6`). The rule below about skeletons stands and this is not a hole in it: a skeleton
+   that shimmers animates the *absence* of an answer, on every screen, for everybody, for ever,
+   while this reports a job on a server that is running right now and will stop when it stops. It
+   claims no percentage -- that is still `UI-15b`'s refusal, and a bar would still be a lie. What
+   it claims is that the card is alive, which is true for exactly as long as it turns. */
+@keyframes sonarium-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+[data-ds='state-card-glyph'][data-busy='true'] svg {
+  animation: sonarium-spin var(--duration-spin) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-ds='state-card-glyph'][data-busy='true'] svg {
+    animation: none;
+  }
+}
+
 /* Skeletons. `--empty-fill` and nothing else: no shimmer, no pulse, no movement. The transcript
    following playback is the only thing in this product that moves on its own, and a loading state
    that animated would be the second -- on every screen, for everybody, for ever. */

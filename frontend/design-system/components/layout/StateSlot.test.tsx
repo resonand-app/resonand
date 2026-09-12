@@ -58,6 +58,23 @@ describe('StateCard', () => {
   });
 });
 
+describe('the one glyph that turns', () => {
+  it('marks the card as busy so the stylesheet can turn its glyph', () => {
+    // `FBK-6`: the animation belongs to `components.css` -- an inline `animation` would beat every
+    // rule the stylesheet can write, including the one that stops it under reduced motion.
+    const { container } = render(<StateCard icon="loader" busy title="Transcribing" />);
+    const glyph = container.querySelector<HTMLElement>('[data-ds="state-card-glyph"]');
+    expect(glyph).toHaveAttribute('data-busy', 'true');
+    expect(glyph?.style.animation).toBe('');
+  });
+
+  it('stands still unless it was asked to turn', () => {
+    // Every other state card in the product is one of these, and none of them moves.
+    const { container } = render(<StateCard icon="library" title="No recordings yet" />);
+    expect(container.querySelector('[data-ds="state-card-glyph"]')).not.toHaveAttribute('data-busy');
+  });
+});
+
 describe('the skeletons', () => {
   it('are the shape of the thing that is coming', () => {
     // A card skeleton that is a grey rectangle is a page that jumps when the data arrives.

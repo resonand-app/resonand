@@ -10,10 +10,10 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
@@ -117,6 +117,42 @@ describe('a transcription that is running', () => {
     );
     renderRecording(CANCONS);
     expect(await screen.findByText(/Waiting to start/)).toBeInTheDocument();
+  });
+
+  it('turns its glyph, because a still card is the picture a stalled job draws', async () => {
+    // `FBK-6`. The animation itself belongs to the stylesheet; what the component owes is the
+    // attribute that says this job is alive.
+    const { container } = renderRecording(CANCONS);
+    await screen.findByText('Transcribing');
+    expect(container.querySelector('[data-ds="state-card-glyph"]')).toHaveAttribute(
+      'data-busy',
+      'true',
+    );
+  });
+
+  it('advances the elapsed time on its own, without the instance saying anything new', async () => {
+    // The bug `FBK-6` fixes: the poll answers the same four fields every ten seconds, structural
+    // sharing keeps the object identical, tracked properties mean no re-render, and "Started less
+    // than a minute ago" stayed on screen for the whole transcription.
+    // The clock has to be fake before the card mounts, because the interval it sets is the thing
+    // under test. `shouldAdvanceTime` keeps the request layer moving while it is.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const startedAt = new Date(Date.now() - 5_000).toISOString();
+      archive.jobs = archive.jobs.map((one) =>
+        one.audio_uuid === CANCONS ? { ...one, started_at: startedAt } : one,
+      );
+      renderRecording(CANCONS);
+      expect(await screen.findByText(/Started less than a minute ago/)).toBeInTheDocument();
+
+      // Nothing about the instance's answer changes here. Only the clock moves.
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2 * 60_000);
+      });
+      expect(await screen.findByText(/Started 2 minutes ago/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 
