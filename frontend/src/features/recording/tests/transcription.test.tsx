@@ -23,7 +23,7 @@ import { createQueryClient } from '@/api/query-client';
 import { CANCONS, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
-import { useTranscriptionStatus } from '../transcription';
+import { useTranscriptionSettled, useTranscriptionStatus } from '../transcription';
 
 mockApi();
 
@@ -84,5 +84,81 @@ describe('a transcription that has moved on', () => {
     });
     expect(result.current.fetchStatus).toBe('idle');
     expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+  });
+});
+
+/**
+ * The race the poll above cannot win, and the reason a finished transcription showed nothing.
+ *
+ * The status endpoint is asked every ten seconds and the recording every thirty, so either can be
+ * the one that learns a job finished. When it is the recording, `transcription_state` flips to
+ * `done`, that flip disables the status query, and the effect above never runs -- which left a
+ * screen that had stopped saying "Transcribing" with a transcript it had fetched once, been
+ * 404ed for, and never asked about again.
+ */
+describe('a recording that learned it first', () => {
+  it('tells the cache when the state it is drawing changed under it', async () => {
+    const client = showing('running');
+    const { rerender } = renderHook(
+      ({ state }: { state: string }) => {
+        useTranscriptionSettled(CANCONS, state);
+      },
+      { wrapper: wrapper(client), initialProps: { state: 'running' } },
+    );
+
+    rerender({ state: 'done' });
+
+    await waitFor(() => {
+      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(true);
+    });
+  });
+
+  it('says nothing on the first render, which is an arrival and not a change', async () => {
+    const client = showing('done');
+    renderHook(
+      () => {
+        useTranscriptionSettled(CANCONS, 'done');
+      },
+      { wrapper: wrapper(client) },
+    );
+
+    await waitFor(() => {
+      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+    });
+  });
+
+  it('says nothing when a poll comes back saying the same thing', async () => {
+    // Every thirty seconds, forever, on an archive at rest. An invalidation per poll would
+    // refetch the recording, its transcript, its versions and every list that draws a badge.
+    const client = showing('done');
+    const { rerender } = renderHook(
+      ({ state }: { state: string }) => {
+        useTranscriptionSettled(CANCONS, state);
+      },
+      { wrapper: wrapper(client), initialProps: { state: 'done' } },
+    );
+
+    rerender({ state: 'done' });
+
+    await waitFor(() => {
+      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+    });
+  });
+
+  it('waits for the recording to arrive rather than treating its absence as a state', async () => {
+    const client = showing('running');
+    const { rerender } = renderHook<string | undefined, { state: string | undefined }>(
+      ({ state }) => {
+        useTranscriptionSettled(CANCONS, state);
+        return state;
+      },
+      { wrapper: wrapper(client), initialProps: { state: undefined } },
+    );
+
+    rerender({ state: 'running' });
+
+    await waitFor(() => {
+      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+    });
   });
 });

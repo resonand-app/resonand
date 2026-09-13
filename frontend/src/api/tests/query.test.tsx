@@ -1,12 +1,14 @@
 /**
  * The cache's rules (`UI-3c`).
  *
- * Three things are worth a test here and the rest is TanStack's own: that a refusal is not
- * retried, that a list knows its height before it has its rows, and that a change invalidates
- * what it should and nothing else.
+ * Four things are worth a test here and the rest is TanStack's own: that a refusal is not
+ * retried, that a list knows its height before it has its rows, that a change invalidates what it
+ * should and nothing else, and that the mark it leaves on a view nobody is looking at is still
+ * there when somebody looks.
  */
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, partialMatchKey, useQuery } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
@@ -188,6 +190,14 @@ describe('what a change makes stale', () => {
     expect(stale).toEqual([keys.me()]);
   });
 
+  it('reaches every autocomplete and not only the one that asked for nothing', () => {
+    // A prefix match compares strings for equality, so `tags('')` is one query and not a family.
+    // A recording whose tags changed has to reach the popover somebody typed `me` into.
+    const stale = staleAfter({ kind: 'recording', recording: 'r' });
+    expect(stale).toContainEqual(keys.allTags());
+    expect(partialMatchKey(keys.tags('me'), keys.allTags())).toBe(true);
+  });
+
   it('refetches what it marked stale, and only that', async () => {
     const client = testClient();
     const libraries = vi.fn(() => Promise.resolve(['one']));
@@ -197,5 +207,59 @@ describe('what a change makes stale', () => {
     await invalidate(client, { kind: 'library' });
     expect(client.getQueryState(keys.libraries())?.isInvalidated).toBe(true);
     expect(client.getQueryState(keys.me())?.isInvalidated).toBe(false);
+  });
+});
+
+/**
+ * The other half of an invalidation, and the one that was missing (`UI-3c`).
+ *
+ * `invalidateQueries` can only refetch what is on screen. A recording renamed on its own screen
+ * invalidates the library list behind it -- which is unmounted, so it is marked and not fetched --
+ * and `refetchOnMount` is what decides whether the mark means anything when somebody navigates
+ * back. With it off, nothing ever asked again and the card kept the old name until a reload.
+ */
+describe('a change made while the view it affects is not on screen', () => {
+  it('is fetched again when that view comes back', async () => {
+    const client = createQueryClient();
+    const list = vi.fn(() => Promise.resolve(['old name']));
+    const view = renderHook(() => useQuery({ queryKey: keys.libraryAudio('l'), queryFn: list }), {
+      wrapper: wrapper(client),
+    });
+    await waitFor(() => {
+      expect(list).toHaveBeenCalledTimes(1);
+    });
+
+    // Somebody opened a recording: the list is unmounted, and the rename lands on nothing.
+    view.unmount();
+    await invalidate(client, { kind: 'recording', recording: 'r', library: 'l' });
+    expect(list).toHaveBeenCalledTimes(1);
+
+    renderHook(() => useQuery({ queryKey: keys.libraryAudio('l'), queryFn: list }), {
+      wrapper: wrapper(client),
+    });
+    await waitFor(() => {
+      expect(list).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  it('does not re-ask for something still fresh, which is what the window is for', async () => {
+    const client = createQueryClient();
+    const list = vi.fn(() => Promise.resolve(['rows']));
+    const view = renderHook(() => useQuery({ queryKey: keys.libraryAudio('l'), queryFn: list }), {
+      wrapper: wrapper(client),
+    });
+    await waitFor(() => {
+      expect(list).toHaveBeenCalledTimes(1);
+    });
+
+    view.unmount();
+    const again = renderHook(() => useQuery({ queryKey: keys.libraryAudio('l'), queryFn: list }), {
+      wrapper: wrapper(client),
+    });
+
+    await waitFor(() => {
+      expect(again.result.current.data).toEqual(['rows']);
+    });
+    expect(list).toHaveBeenCalledTimes(1);
   });
 });

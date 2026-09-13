@@ -41,6 +41,14 @@ export const keys = {
   /** The whole archive, filtered. */
   search: (filters?: ListFilters) => ['search', filters ?? {}] as const,
   searchAbout: () => ['search', 'about'] as const,
+  /**
+   * Every autocomplete's answer, and one of them.
+   *
+   * A prefix match compares strings for equality, so `tags('')` reaches the query that asked for
+   * nothing and none of the ones somebody typed into. A change to a recording's tags has to
+   * reach all of them.
+   */
+  allTags: () => ['tags'] as const,
   tags: (prefix: string) => ['tags', prefix] as const,
 
   /** What is deleted, and how long it has left. */

@@ -19,7 +19,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { get, post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
@@ -89,6 +89,31 @@ export function useTranscriptionStatus(
   }, [client, enabled, reported, showing, uuid]);
 
   return query;
+}
+
+/**
+ * The same reconciliation from the other side: the recording is what noticed (`FBK-2`).
+ *
+ * The status endpoint is asked every ten seconds and the recording every thirty, so either of
+ * them can be the one that learns a job finished. When it is the recording,
+ * `transcription_state` flips to `done` and that flip disables the query above -- so the effect
+ * there cannot be the only place the two are reconciled.
+ *
+ * The transition is the trigger rather than a comparison against a constant, and that is what
+ * makes it fire once: the invalidation refetches the recording, which answers the same thing,
+ * and there is no second change left to react to.
+ */
+export function useTranscriptionSettled(uuid: string, state: string | undefined): void {
+  const client = useQueryClient();
+  const previous = useRef(state);
+  useEffect(() => {
+    const before = previous.current;
+    previous.current = state;
+    // The first render has nothing to compare against, and a recording still loading has no
+    // state to have changed.
+    if (before === undefined || state === undefined || before === state) return;
+    void invalidate(client, { kind: 'transcription', recording: uuid });
+  }, [client, state, uuid]);
 }
 
 export type Transcribe = UseMutationResult<Job, unknown, void>;

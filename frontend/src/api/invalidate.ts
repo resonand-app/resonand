@@ -61,7 +61,7 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
       return [
         keys.recording(change.recording),
         keys.search(),
-        keys.tags(''),
+        keys.allTags(),
         ...(change.library ? [keys.library(change.library)] : []),
       ];
     case 'recording-moved':

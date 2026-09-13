@@ -26,6 +26,8 @@ import type { components } from '@/api/contract/schema';
 import { LEVEL } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
 
+import { useTranscriptionSettled } from './transcription';
+
 export type RecordingDetail = components['schemas']['AudioDetail'];
 export type LibrarySummary = components['schemas']['LibrarySummary'];
 
@@ -81,6 +83,10 @@ export function useRecording(uuid: string): RecordingContext {
   });
   const libraryUuid = recording.data?.library_uuid ?? '';
   const categories = useCategories(libraryUuid);
+  // Whichever poll answers first learns that a transcription finished, and this one updates no
+  // key but its own -- the transcript, the versions and the card behind this screen are others
+  // (`FBK-2`).
+  useTranscriptionSettled(uuid, recording.data?.transcription_state);
 
   const level = recording.data?.level ?? LEVEL.read;
   const trashed = recording.data?.deleted_at !== null && recording.data !== undefined;
