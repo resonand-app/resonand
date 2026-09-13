@@ -104,9 +104,12 @@ export function createQueryClient(
         // came back to a tab after a transcription ran. Reconnecting is the same argument.
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
-        // Refetching on every mount would make the sidebar reload each time a route changed,
-        // which is exactly the flicker the staleness window exists to avoid.
-        refetchOnMount: false,
+        // Not "refetch on every mount": a fresh query is served from the cache, so the staleness
+        // window above is what keeps the sidebar from reloading on every route change. This is
+        // the half of `invalidate` that reaches a view which was unmounted when the change
+        // landed -- marking it stale is all the cache can do from there, and mounting is the
+        // only moment left to act on the mark.
+        refetchOnMount: true,
       },
       mutations: {
         // A write is never repeated on its own. Whether asking twice is safe is a question about
