@@ -46,7 +46,7 @@ import { useDestination } from '@/features/recording/transcription';
 import { Button, Dialog, EgressNotice, Icon, Modal, Select, Switch } from '@/design-system';
 import type { SelectOption } from '@/design-system';
 import { bytes } from '@/i18n/format';
-import { useEgressLabels } from '@/components/egress-labels';
+import { useEgressLabels } from '@/i18n/egress-labels';
 
 import { ChosenFiles } from './ChosenFiles';
 import { isAccepted } from './instance';
