@@ -562,7 +562,6 @@ export default function Specimens() {
               name="Àvia Teresa"
               meta="37 recordings · 24 h 12 min"
               colour="var(--library-clay)"
-              peaks={PEAKS}
               onOpen={() => undefined}
             />
             <CreateLibraryCard />
@@ -575,7 +574,7 @@ export default function Specimens() {
             state="done"
             tags={['memòria', 'català']}
             peaks={PEAKS}
-            played={0.375}
+            playing
           />
         </Panel>
         <Panel label="RecordingRow" width={520}>

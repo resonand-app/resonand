@@ -112,6 +112,18 @@ describe('correcting a field', () => {
     });
   });
 
+  it('leaves an empty notes field empty rather than captioning it', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: /Recorded at the kitchen table/ }));
+    await user.clear(screen.getByRole('textbox', { name: 'Notes' }));
+    await user.tab();
+    // Named by its overline, because with nothing in it there is no text to be named by -- and
+    // a sentence about being empty is not a note, it is the interface talking to itself.
+    const empty = await screen.findByRole('button', { name: 'Notes' });
+    expect(empty.textContent).toBe('');
+  });
+
   it('refuses to send an empty title, because a recording has to be called something', async () => {
     const user = userEvent.setup();
     const bodies = recorded();

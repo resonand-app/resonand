@@ -62,6 +62,15 @@ export interface WaveformProps extends Omit<SVGAttributes<SVGSVGElement>, 'onSee
   size?: WaveSize;
   /** Played fraction, 0-1. Played bars take `--wave`, the rest `--wave-dim`. */
   played?: number;
+  /**
+   * Draw the whole shape in `--wave` rather than `--wave-dim`, and do nothing else.
+   *
+   * How a surface says "this is the one playing" without drawing a second playhead (`UI-6c`):
+   * the picture is lit, not filled. A card uses it because the player at the foot of the shell
+   * is where playback has a position, and two things drawing that position is what makes people
+   * believe there are two players.
+   */
+  lit?: boolean;
   /** Draws the playhead. On in the player and on audio detail. */
   playhead?: boolean;
   /**
@@ -127,6 +136,7 @@ export function Waveform({
   peaks,
   size = 'card',
   played = 0,
+  lit = false,
   playhead = false,
   advance = 0,
   playedAt,
@@ -195,7 +205,7 @@ export function Waveform({
           />
         );
       });
-    return { dim: draw('var(--wave-dim)'), played: draw('var(--wave)') };
+    return { dim: draw('var(--wave-dim)'), wave: draw('var(--wave)') };
   }, [data, cols, barWidth, pitch, mid]);
 
   /* The two parts that move, written straight to the DOM: they are a transform each, and going
@@ -253,7 +263,7 @@ export function Waveform({
             y1={height / 2}
             x2="100"
             y2={height / 2}
-            stroke="var(--wave-dim)"
+            stroke={lit ? 'var(--wave)' : 'var(--wave-dim)'}
             strokeWidth="1.4"
             strokeLinecap="round"
             strokeDasharray="2 5"
@@ -320,7 +330,7 @@ export function Waveform({
         style={{ display: 'block', overflow: 'visible' }}
         {...rest}
       >
-        <g>{bars.dim}</g>
+        <g>{lit ? bars.wave : bars.dim}</g>
         {(played > 0 || advance > 0) && (
           <>
             <defs>
@@ -337,7 +347,7 @@ export function Waveform({
                 />
               </clipPath>
             </defs>
-            <g clipPath={`url(#${clipId})`}>{bars.played}</g>
+            <g clipPath={`url(#${clipId})`}>{bars.wave}</g>
             {playhead && (
               <rect
                 ref={head}

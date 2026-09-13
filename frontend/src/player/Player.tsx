@@ -25,7 +25,7 @@ import { toRecording } from '@/app/routes';
 import { PlayerBar } from '@/design-system';
 import { duration as asDuration, speed as asSpeed } from '@/i18n/format';
 
-import { advanceRate, playedFraction, usePlayback } from './store';
+import { RATES, advanceRate, playedFraction, usePlayback } from './store';
 import { usePlayingPeaks } from './use-playing-peaks';
 
 export interface PlayerProps {
@@ -75,6 +75,13 @@ export function Player({ onScreen }: PlayerProps) {
         advance={advanceRate(state)}
         playedAt={state.positionAt}
         speed={asSpeed(state.rate)}
+        // Cycling and not a menu: the bar has one line of room, and §1.4's six rates are a
+        // short enough ring to get back to 1.0x by pressing again. The detail view's player is
+        // where the whole list is offered.
+        onSpeed={() => {
+          const at = RATES.indexOf(state.rate as (typeof RATES)[number]);
+          usePlayback.getState().setRate(RATES[(at + 1) % RATES.length] ?? 1);
+        }}
         onToggle={() => {
           if (status === 'failed') {
             // Retrying is playing it again from where it stopped, which is what "try again" means
@@ -99,6 +106,7 @@ export function Player({ onScreen }: PlayerProps) {
           back: t('action.back'),
           forward: t('action.forward'),
           close: t('action.close'),
+          speed: t('action.speed'),
         }}
         aria-busy={status === 'buffering'}
       />

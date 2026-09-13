@@ -1,8 +1,6 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 
 import { IconButton } from '../forms/IconButton';
-import type { Peaks } from '../media/peaks';
-import { Waveform } from '../media/Waveform';
 
 export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
   name: string;
@@ -21,11 +19,6 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
   meta?: string;
   /** The library colour the user picked, as a `var(--library-*)` reference. */
   colour?: string;
-  /** Peaks of the library's most recent recording. */
-  peaks?: Peaks | undefined;
-  played?: number;
-  /** True when the most recent recording has no peaks yet. */
-  pending?: boolean;
   onOpen?: () => void;
   /**
    * What goes in the top-right corner, where the overflow control is.
@@ -42,8 +35,6 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
    * would otherwise offer a screen reader nine buttons called "Options".
    */
   labels?: {
-    /** What the waveform says before the peaks job has run. */
-    noWaveform?: string;
     options?: (name: string) => string;
   };
 }
@@ -51,9 +42,9 @@ export interface LibraryCardProps extends HTMLAttributes<HTMLElement> {
 /**
  * A library on the landing page: a solid raised surface, and no gradient.
  *
- * The waveform along the bottom is the library's most recent recording, which is the only thing
- * on the card that is not a number -- a library that has been added to lately looks different
- * from one that has not, without anything having to say so.
+ * **There is no waveform on it.** One drew the shape of the library's most recent recording,
+ * which said nothing about the library: a card is a name, a count and a running time, and the
+ * picture beside them was a shape nobody could read, bought with two extra requests per card.
  *
  * **The title is the open affordance; `onOpen` is a mouse convenience over the whole card.**
  * `href` renders the title as a link, so opening a library is reachable by keyboard, announced as
@@ -74,9 +65,6 @@ export function LibraryCard({
   byline,
   meta,
   colour = 'var(--library-clay)',
-  peaks,
-  played = 0,
-  pending = false,
   onOpen,
   actions,
   labels,
@@ -187,15 +175,6 @@ export function LibraryCard({
       >
         {meta}
       </span>
-      <div style={{ marginTop: 'auto' }}>
-        <Waveform
-          peaks={peaks}
-          size="card"
-          played={played}
-          pending={pending}
-          noWaveformLabel={labels?.noWaveform}
-        />
-      </div>
     </article>
   );
 }

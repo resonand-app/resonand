@@ -92,6 +92,24 @@ describe('playing', () => {
     show(<Player />);
     expect(screen.getByText('1.5x')).toBeInTheDocument();
   });
+
+  it('changes the speed when the speed is pressed, and stays where it is', async () => {
+    playing();
+    show(<Player />);
+    await userEvent.click(screen.getByRole('button', { name: 'Playback speed' }));
+    expect(usePlayback.getState().rate).toBe(1.25);
+    // It was drawn as a bare `<span>`, so the one thing pressing it did was fall through to the
+    // bar's own "open what is playing" -- asking for 1.25x took you off the page instead.
+    expect(screen.queryByText('the recording view')).toBeNull();
+  });
+
+  it('comes back round to 1.0x rather than stopping at the fastest', async () => {
+    playing();
+    usePlayback.getState().setRate(2);
+    show(<Player />);
+    await userEvent.click(screen.getByRole('button', { name: 'Playback speed' }));
+    expect(usePlayback.getState().rate).toBe(0.75);
+  });
 });
 
 describe('buffering', () => {

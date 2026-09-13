@@ -23,7 +23,6 @@ import { useNavigate } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { toLibrary, toLibrarySettings } from '@/app/routes';
-import { useAfterPaint } from '@/app/use-after-paint';
 import {
   Button,
   CardSkeleton,
@@ -40,7 +39,6 @@ import { colourOf } from '@/app/library-data';
 import { useLibraryList } from './data';
 import type { LibrarySummary } from './data';
 import { CreateLibraryDialog } from './CreateLibraryDialog';
-import { useLatestWaveform } from './use-latest-waveform';
 
 /**
  * The four levels, as the short name a byline has room for.
@@ -55,7 +53,6 @@ const LEVEL_NAMES: Record<number, string> = { 10: 'read', 20: 'edit', 30: 'manag
 export function LibrariesView() {
   const { t } = useTranslation('libraries');
   const { own, shared, recordings, durationMs, isPending, error, refetch } = useLibraryList();
-  const painted = useAfterPaint();
   const newAccount = shared.length === 0 && own.length === 1 && own[0]?.audio_count === 0;
   const [creating, setCreating] = useState(false);
 
@@ -81,9 +78,7 @@ export function LibrariesView() {
             {isPending ? (
               <Skeletons />
             ) : (
-              own.map((library) => (
-                <Card key={library.uuid} library={library} waveforms={painted} />
-              ))
+              own.map((library) => <Card key={library.uuid} library={library} />)
             )}
           </Grid>
           {newAccount && <FirstRun />}
@@ -114,7 +109,7 @@ export function LibrariesView() {
           </h2>
           <Grid>
             {shared.map((library) => (
-              <Card key={library.uuid} library={library} waveforms={painted} byline />
+              <Card key={library.uuid} library={library} byline />
             ))}
           </Grid>
         </section>
@@ -124,25 +119,22 @@ export function LibrariesView() {
 }
 
 /**
- * One library, with everything the summary already carries and the one thing it does not.
+ * One library, drawn entirely from the list request that drew the grid.
  *
- * The counts and the colour come out of the list request that drew the grid; the waveform is a
- * second and a third request per card, so it is deferred and the card renders `pending` until it
- * lands (§V2). Nothing on the card waits for it.
+ * Everything on it -- the name, the colour, the count, the running time -- is on the summary, so
+ * a card makes no request of its own. It used to make two, for a waveform of the library's most
+ * recent recording that said nothing about the library (`UI-31b`).
  */
 export function Card({
   library,
-  waveforms,
   byline = false,
 }: {
   library: LibrarySummary;
-  waveforms: boolean;
   /** Name the owner and what you may do here. For a library somebody else shared. */
   byline?: boolean;
 }) {
   const { t } = useTranslation('libraries');
   const navigate = useNavigate();
-  const { peaks, pending } = useLatestWaveform(library, waveforms);
 
   return (
     <LibraryCard
@@ -174,11 +166,8 @@ export function Card({
           }}
         />
       }
-      peaks={peaks}
-      pending={pending}
       labels={{
         options: (name) => t('card.options', { name }),
-        noWaveform: t('player:state.noWaveform'),
       }}
     />
   );

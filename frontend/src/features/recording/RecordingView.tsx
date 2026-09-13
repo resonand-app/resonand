@@ -192,7 +192,14 @@ export function RecordingView() {
         {!isPhone && !panel.collapsed && (
           <aside
             aria-label={t('panel.label')}
-            style={fills ? { minHeight: 0, overflowY: 'auto', overflowX: 'clip' } : undefined}
+            style={{
+              // The column's own gutter, and it has to be here rather than on the panel: a field
+              // draws its focus ring outside its box, so with the fields flush to both edges the
+              // ring escaped left over the waveform and was clipped away on the right. It is also
+              // what keeps the pencils clear of the scrollbar this column grows when it overflows.
+              paddingInline: 'var(--space-2)',
+              ...(fills ? { minHeight: 0, overflowY: 'auto', overflowX: 'clip' } : {}),
+            }}
           >
             <MetadataPanel context={context} transcripts={transcripts} />
           </aside>

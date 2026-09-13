@@ -62,10 +62,15 @@ export interface RecordingCardProps
    * It marks the card and turns the play control into a pause, because the control that started
    * the sound is the one somebody reaches for to stop it. The mark is not a colour alone: the
    * card takes the accent ring, which is legible next to a selected card and in both themes.
+   *
+   * **The shape is lit, not filled.** The card's waveform takes the accent while this is the
+   * recording being played, and otherwise does nothing: the player at the foot of the shell is
+   * the one drawing where a recording has got to, and a grid of waveforms filling in behind it
+   * is the same fact said a dozen times (`UI-6c`).
    */
   playing?: boolean;
+  /** The shape of the recording. A picture of what is in the file, and it does not move. */
   peaks?: Peaks | undefined;
-  played?: number;
   pending?: boolean;
   onPlay?: () => void;
   /**
@@ -123,7 +128,6 @@ export function RecordingCard({
   href,
   labels,
   peaks,
-  played = 0,
   pending = false,
   onPlay,
   onOpen,
@@ -223,11 +227,12 @@ export function RecordingCard({
           />
         </span>
       </div>
+      {/* Lit while this is the one playing, and static either way: the shape of the recording,
+          never a second playhead (see `playing`). */}
       <Waveform
         peaks={peaks}
         size="record"
-        played={played}
-        playhead={played > 0}
+        lit={playing}
         pending={pending}
         noWaveformLabel={labels?.noWaveform}
       />

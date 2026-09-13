@@ -11,6 +11,16 @@ const MONO: CSSProperties = {
   fontVariantNumeric: 'var(--type-numeric-variant)',
 };
 
+/** The same pill either way, so wiring the rate up does not redraw the bar. */
+const SPEED_PILL: CSSProperties = {
+  ...MONO,
+  flex: '0 0 auto',
+  color: 'var(--text-2)',
+  background: 'var(--surface-2)',
+  borderRadius: 'var(--radius-pill)',
+  padding: '6px 12px',
+};
+
 export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   title?: string;
   /**
@@ -42,6 +52,14 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
   playedAt?: number | undefined;
   /** Playback rate label, e.g. 1.0x, 1.25x. */
   speed?: string;
+  /**
+   * Change the rate, which is what makes the speed a control rather than a readout.
+   *
+   * It was drawn as a bare `<span>` and wired to nothing, so the one place clicking it went was
+   * the bar's own `onOpen` -- asking for 1.25x took you to the recording. Absent, it stays a
+   * readout and keeps its clicks out of `onOpen` all the same.
+   */
+  onSpeed?: () => void;
   onToggle?: () => void;
   /**
    * The two skips, which were drawn and not wired (`UI-5c`).
@@ -68,6 +86,8 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
     back?: string;
     forward?: string;
     close?: string;
+    /** Names the speed control, which shows a rate rather than saying what it is. */
+    speed?: string;
   };
 }
 
@@ -99,6 +119,7 @@ export function PlayerBar({
   advance = 0,
   playedAt,
   speed = '1.0×',
+  onSpeed,
   onToggle,
   onBack,
   onForward,
@@ -225,17 +246,22 @@ export function PlayerBar({
         </div>
         <span style={{ ...MONO, color: 'var(--text-3)' }}>{duration}</span>
       </div>
-      <span
-        style={{
-          ...MONO,
-          color: 'var(--text-2)',
-          background: 'var(--surface-2)',
-          borderRadius: 'var(--radius-pill)',
-          padding: '6px 12px',
-        }}
-      >
-        {speed}
-      </span>
+      {/* The pill is the control where there is one to be. A `<span>` here is what let a click
+          on it reach the bar's `onOpen` and navigate away instead. */}
+      {onSpeed === undefined ? (
+        <span style={SPEED_PILL}>{speed}</span>
+      ) : (
+        <button
+          type="button"
+          data-ds="player-speed"
+          data-hit-target=""
+          aria-label={labels?.speed ?? 'Playback speed'}
+          onClick={onSpeed}
+          style={{ ...SPEED_PILL, border: 'none', cursor: 'pointer' }}
+        >
+          {speed}
+        </button>
+      )}
       {onClose !== undefined && (
         <IconButton
           icon="x"
