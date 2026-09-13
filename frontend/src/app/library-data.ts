@@ -13,7 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import { LIBRARY_COLORS } from '@/design-system';
 import type { LibraryColorName, SidebarLibrary } from '@/design-system';
 

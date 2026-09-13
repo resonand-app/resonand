@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 import { merge } from './data';
 

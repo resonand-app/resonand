@@ -32,7 +32,7 @@ import { useTranslation } from 'react-i18next';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import { LEVEL } from '@/features/library/data';
 import { Button, Dialog, Modal, Select } from '@/design-system';
 

@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { get, patch, post } from '@/api/client';
 import { ApiProblem } from '@/api/problem';
 
-import openapi from '@/api/openapi.json';
+import openapi from '@/api/contract/openapi.json';
 
 import { AVIA, CANCONS, CARRER_NOU, PERSONAL, archive } from './archive';
 import { handlers } from './handlers';

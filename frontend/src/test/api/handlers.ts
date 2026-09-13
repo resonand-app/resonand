@@ -18,7 +18,7 @@
 import { HttpResponse, http } from 'msw';
 import type { HttpHandler } from 'msw';
 
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 import { GABRIEL, LOGIN_ATTEMPTS_PER_MINUTE, MARTA, archive, detailOf } from './archive';
 

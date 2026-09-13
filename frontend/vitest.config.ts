@@ -59,7 +59,7 @@ export default mergeConfig(
           // The generated API surface (`UI-3a`). It is types and nothing else, so it compiles to
           // no statements at all -- and what has to be true of it is not a percentage but that it
           // is reproducible, which `api-schema.node.test.ts` asserts directly.
-          'src/api/schema.ts',
+          'src/api/contract/**',
         ],
         // A floor, not a target. It is deliberately below where the code sits so that it
         // fails on a real regression rather than on the ordinary shape of a commit -- a

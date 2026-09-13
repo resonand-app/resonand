@@ -14,7 +14,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { AVIA, CARRER_NOU, PERSONAL, archive } from '@/test/api/archive';

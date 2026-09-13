@@ -17,7 +17,7 @@ import { get, post, remove } from '@/api/client';
 import { keys } from '@/api/keys';
 import { ApiProblem } from '@/api/problem';
 import { HANDLED } from '@/api/query-client';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 export type Account = components['schemas']['Me'];
 export type Instance = components['schemas']['InstanceState'];

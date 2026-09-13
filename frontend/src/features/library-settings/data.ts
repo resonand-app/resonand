@@ -17,7 +17,7 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import { get, patch, post, put, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 type Schemas = components['schemas'];
 export type UpdateLibrary = Schemas['UpdateLibrary'];

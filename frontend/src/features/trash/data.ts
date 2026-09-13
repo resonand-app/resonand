@@ -27,7 +27,7 @@ import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
 import { usePaged } from '@/api/paged';
 import type { PagedResult } from '@/api/paged';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 type Schemas = components['schemas'];
 export type TrashedLibrary = Schemas['LibrarySummary'];

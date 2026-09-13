@@ -27,7 +27,7 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import { patch } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 import type { RecordingDetail } from './data';
 

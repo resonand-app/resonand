@@ -29,5 +29,4 @@ design-system/**/*.d.ts
 # `sonarium openapi` on one side of the repository and `npm run api:types` on the other -- and
 # both are checked by comparing the committed file to what the generator produces today. A
 # formatter in between would make that comparison a comparison of two formatters.
-src/api/openapi.json
-src/api/schema.ts
+src/api/contract/

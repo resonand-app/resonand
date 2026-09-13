@@ -18,7 +18,7 @@ import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 import { get, post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 type Schemas = components['schemas'];
 export type AdminUser = Schemas['AdminUser'];

@@ -37,7 +37,9 @@ from sonarium.jobs.worker import Worker, drain
 from sonarium.media import storage
 from sonarium.transcription.registry import build_provider
 
-SNAPSHOT = Path(__file__).resolve().parents[3] / "frontend" / "src" / "api" / "openapi.json"
+SNAPSHOT = (
+    Path(__file__).resolve().parents[3] / "frontend" / "src" / "api" / "contract" / "openapi.json"
+)
 """Where the interface keeps its copy of the document (``UI-3a``).
 
 Derived from this file's own location so the command works from either half of the repository,

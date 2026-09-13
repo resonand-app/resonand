@@ -21,7 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
 import { isApiProblem } from '@/api/problem';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 export type TranscriptDetail = components['schemas']['TranscriptDetail'];
 export type TranscriptSummary = components['schemas']['TranscriptSummary'];

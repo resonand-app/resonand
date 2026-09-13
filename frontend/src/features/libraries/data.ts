@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import { useSession } from '@/app/session';
 
 export type LibrarySummary = components['schemas']['LibrarySummary'];

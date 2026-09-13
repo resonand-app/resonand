@@ -21,7 +21,7 @@
 import { useCallback, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 export type TranscriptionState = components['schemas']['TranscriptionState'];
 export type SortField = components['schemas']['SortField'];

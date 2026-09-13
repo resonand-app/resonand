@@ -19,7 +19,7 @@ import { get } from '@/api/client';
 import { keys } from '@/api/keys';
 import { usePaged } from '@/api/paged';
 import type { PagedResult } from '@/api/paged';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import type { Filters } from '@/app/url-state';
 
 export type SearchResult = components['schemas']['SearchResult'];

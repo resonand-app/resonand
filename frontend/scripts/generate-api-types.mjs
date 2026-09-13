@@ -16,8 +16,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import openapiTS, { astToString } from 'openapi-typescript';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-export const DOCUMENT = join(ROOT, 'src', 'api', 'openapi.json');
-export const OUTPUT = join(ROOT, 'src', 'api', 'schema.ts');
+export const DOCUMENT = join(ROOT, 'src', 'api', 'contract', 'openapi.json');
+export const OUTPUT = join(ROOT, 'src', 'api', 'contract', 'schema.ts');
 
 export const BANNER = `/**
  * The API's shape, as types (\`UI-3a\`).
