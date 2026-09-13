@@ -43,7 +43,7 @@ import { queryIn, recordingIn, routes, toRecording, toSearch } from './routes';
 import { useSession } from './session';
 import { SEEK_SECONDS, SKIP_SECONDS } from './keyboard';
 import { useIsPhone } from './use-is-phone';
-import { useKeyboard } from './useKeyboard';
+import { useKeyboard } from './use-keyboard';
 import { useSidebarCollapse } from './use-sidebar-collapse';
 
 export interface AppShellProps {

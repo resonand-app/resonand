@@ -4,7 +4,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { Icon } from '../foundation/Icon';
 import type { IconName } from '../foundation/Icon';
 import { IconButton } from '../forms/IconButton';
-import { useAnchoredOverlay } from '../overlay/useAnchoredOverlay';
+import { useAnchoredOverlay } from '../overlay/use-anchored-overlay';
 
 export interface MenuItem {
   /** Unique within one menu. Also what `onSelect` is told. */

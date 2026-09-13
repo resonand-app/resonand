@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { useAnchoredOverlay } from './useAnchoredOverlay';
+import { useAnchoredOverlay } from './use-anchored-overlay';
 
 export interface ModalProps {
   open: boolean;

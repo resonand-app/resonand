@@ -1,0 +1,15 @@
+# Local development override -- not part of the published deployment.
+#
+# The image named in docker-compose.yml is not published yet, so `docker compose pull` fails with
+# a registry `denied`. This override builds it from the repository instead. Compose picks this
+# file up automatically alongside docker-compose.yml.
+#
+#   docker compose up -d --build
+
+services:
+  sonarium:
+    image: sonarium:local
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    pull_policy: never

@@ -11,8 +11,8 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
 import { BINDINGS, SEEK_SECONDS, SKIP_SECONDS, commandFor, isTyping } from './keyboard';
-import type { Actions } from './useKeyboard';
-import { useKeyboard } from './useKeyboard';
+import type { Actions } from './use-keyboard';
+import { useKeyboard } from './use-keyboard';
 
 /** A key press, as the document sees one. */
 function press(

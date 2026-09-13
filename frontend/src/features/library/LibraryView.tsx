@@ -34,7 +34,7 @@ import { useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { PAGE_SIZE } from '@/api/paged';
-import { useKeyboard } from '@/app/useKeyboard';
+import { useKeyboard } from '@/app/use-keyboard';
 import { isFiltered, useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
 import { useAfterPaint } from '@/app/use-after-paint';

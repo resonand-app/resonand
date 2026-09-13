@@ -17,8 +17,8 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { useAnchoredOverlay } from './useAnchoredOverlay';
-import type { Placement } from './useAnchoredOverlay';
+import { useAnchoredOverlay } from './use-anchored-overlay';
+import type { Placement } from './use-anchored-overlay';
 
 /** A minimal consumer: a trigger, a surface, two things to focus inside it. */
 function Harness({

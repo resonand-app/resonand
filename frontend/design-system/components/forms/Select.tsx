@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
 import { Icon } from '../foundation/Icon';
-import { useAnchoredOverlay } from '../overlay/useAnchoredOverlay';
+import { useAnchoredOverlay } from '../overlay/use-anchored-overlay';
 
 export interface SelectOption<Value extends string = string> {
   value: Value;
