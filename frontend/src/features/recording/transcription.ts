@@ -24,7 +24,7 @@ import { useEffect } from 'react';
 import { get, post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import type { TranscriptionState } from '@/design-system';
 
 export type TranscriptionDestination = components['schemas']['TranscriptionDestination'];

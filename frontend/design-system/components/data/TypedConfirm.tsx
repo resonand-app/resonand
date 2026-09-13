@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { Button } from '../forms/Button';
 import { matchesName } from './name-match';
 import { TextField } from '../forms/TextField';
-import { useAnchoredOverlay } from '../overlay/useAnchoredOverlay';
+import { useAnchoredOverlay } from '../overlay/use-anchored-overlay';
 
 export interface TypedConfirmProps {
   /** The exact name that has to be typed. Shown twice: in the title and in the label. */

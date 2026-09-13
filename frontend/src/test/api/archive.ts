@@ -14,7 +14,7 @@
  * -- which is the only thing that keeps a mock honest over a year.
  */
 
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 type Schemas = components['schemas'];
 

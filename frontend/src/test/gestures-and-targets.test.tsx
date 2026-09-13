@@ -27,10 +27,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { usePlayback } from '@/player/store';
 import { mockApi } from '@/test/api/server';
 import { CARRER_NOU } from '@/test/api/archive';
-import { PHONE, VIEWS, mountView } from '@/test/views';
+import { PHONE, VIEWS, mountView } from '@/test/support/views';
 
 import { KNOWN_SMALL_TARGETS, KNOWN_SMALL_TARGETS_IN_VIEWS } from './focus-and-targets';
-import { WHOLE_SYSTEM } from './timeouts';
+import { WHOLE_SYSTEM } from './support/timeouts';
 
 mockApi();
 

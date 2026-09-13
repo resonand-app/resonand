@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import type { PointerEvent, ReactNode } from 'react';
 
 import { usePrefersReducedMotion } from '../../theme/reduced-motion';
-import { useAnchoredOverlay } from '../overlay/useAnchoredOverlay';
+import { useAnchoredOverlay } from '../overlay/use-anchored-overlay';
 
 /** How far down a drag has to get before letting go dismisses rather than springs back. */
 const DISMISS_AT = 64;

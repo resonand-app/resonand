@@ -37,6 +37,24 @@ import {
   FONT_PATTERN,
 } from './scripts/token-adherence.mjs';
 
+/**
+ * The design system is entered through its barrel and nowhere else (`UI-1c`).
+ *
+ * Hoisted because two configurations need it: the application, and the tests that sit in a
+ * `tests/` folder beside what they cover. They differ only in whether `../` is allowed, and two
+ * copies of this pattern would be two rules the moment somebody edited one.
+ */
+const DESIGN_SYSTEM_BARREL = {
+  group: [
+    '@/design-system/*',
+    '@/design-system/**',
+    '!@/design-system/styles.css',
+    '!@/design-system/*.css?raw',
+  ],
+  message:
+    'Import from `@/design-system`, not from a file inside it. The two exceptions are `@/design-system/styles.css` from the entry point and a `?raw` stylesheet from a test.',
+};
+
 export default defineConfig(
   globalIgnores([
     'dist/**',
@@ -55,10 +73,11 @@ export default defineConfig(
     // The click-through kit: React 18 and Babel in a browser, and provenance rather than a
     // starting point (`UI-1l`).
     'design-system/ui_kits/**',
-    // The typed API surface, written by `npm run api:types` out of the committed document
-    // (`UI-3a`). Linting a generated file reports the generator's style as the author's
-    // mistakes, and the only fix available is to stop generating it.
-    'src/api/schema.ts',
+    // The contract (`UI-3a`): the committed document and the types generated from it. Neither
+    // is hand-written -- `sonarium openapi` writes one and `npm run api:types` the other -- and
+    // linting a generated file reports the generator's style as the author's mistakes, with the
+    // only available fix being to stop generating it.
+    'src/api/contract/**',
   ]),
 
   // --- Everything ---------------------------------------------------------
@@ -101,6 +120,7 @@ export default defineConfig(
   // --- The application ----------------------------------------------------
   {
     files: ['src/**'],
+    ignores: ['src/**/tests/**'],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -112,27 +132,7 @@ export default defineConfig(
               group: ['../*'],
               message: 'Reach up with the `@/` alias rather than with `../`.',
             },
-            {
-              // `UI-1c`'s criterion, as a rule rather than as a sentence. The barrel is what
-              // lets a component move between family folders without a hundred call sites
-              // moving with it, and a barrel nobody is held to is a longer path to the same
-              // file.
-              // `styles.css` is the one thing outside it: it is linked once, from the entry
-              // point, and deliberately not re-exported (see design-system/index.ts).
-              // A `?raw` stylesheet is the other, added by `UI-32a`: it is not a component
-              // reached past the barrel, it is a stylesheet read as text, and the only thing
-              // that does it is `interaction-layer.test.tsx` -- which holds every component to
-              // what `components.css` claims to own, and would otherwise have to keep a second
-              // copy of those claims beside it.
-              group: [
-                '@/design-system/*',
-                '@/design-system/**',
-                '!@/design-system/styles.css',
-                '!@/design-system/*.css?raw',
-              ],
-              message:
-                'Import from `@/design-system`, not from a file inside it. The two exceptions are `@/design-system/styles.css` from the entry point and a `?raw` stylesheet from a test.',
-            },
+            DESIGN_SYSTEM_BARREL,
           ],
         },
       ],
@@ -169,6 +169,22 @@ export default defineConfig(
             'This attribute is read by a person or by a screen reader, so it is copy: put it in `src/i18n/en/` and pass `t(...)`.',
         },
       ],
+    },
+  },
+
+  // --- A test reaching the thing it tests ----------------------------------
+  //
+  // Tests sit in a `tests/` folder inside the folder they cover, so what is listed above them is
+  // source and nothing else. The `../` ban exists because a path that climbs out of its folder
+  // breaks when either end moves; this is the one that cannot, because the folder is always a
+  // direct child of its subject's and the two are moved, renamed and deleted together. Spelling
+  // out the full route to a file three lines away would be the worse half of that trade.
+  //
+  // The barrel still holds: a test reaches the design system the way the application does.
+  {
+    files: ['src/**/tests/**'],
+    rules: {
+      'no-restricted-imports': ['error', { patterns: [DESIGN_SYSTEM_BARREL] }],
     },
   },
 

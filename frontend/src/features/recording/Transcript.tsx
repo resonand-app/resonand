@@ -43,7 +43,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useKeyboard } from '@/app/useKeyboard';
+import { useKeyboard } from '@/app/use-keyboard';
 import { Button, TranscriptLine, usePrefersReducedMotion } from '@/design-system';
 import * as format from '@/i18n/format';
 import { usePlayback } from '@/player/store';

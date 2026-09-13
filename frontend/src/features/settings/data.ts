@@ -18,7 +18,7 @@ import { get, patch, post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
 import { HANDLED } from '@/api/query-client';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 type Schemas = components['schemas'];
 export type UpdateMe = Schemas['UpdateMe'];

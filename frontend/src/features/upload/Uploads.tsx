@@ -27,8 +27,8 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { invalidate } from '@/api/invalidate';
-import { UploadTray } from '@/components/UploadTray';
-import { UPLOAD_ROW } from '@/components/upload-row';
+import { UploadTray } from './UploadTray';
+import { UPLOAD_ROW } from './upload-row';
 import { Button, Icon, Progress } from '@/design-system';
 import { bytes, percent } from '@/i18n/format';
 

@@ -22,7 +22,7 @@ import { useQuery } from '@tanstack/react-query';
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
 import { intervalForOne } from '@/api/settling';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import { LEVEL } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
 

@@ -19,7 +19,7 @@ import { keys } from '@/api/keys';
 import { usePaged } from '@/api/paged';
 import type { PagedResult } from '@/api/paged';
 import { intervalFor } from '@/api/settling';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 import type { Filters as UrlFilters } from '@/app/url-state';
 import { TRANSCRIPTION_STATE_NAMES } from '@/design-system';
 import type { TranscriptionState } from '@/design-system';

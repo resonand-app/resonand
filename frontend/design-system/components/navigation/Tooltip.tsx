@@ -1,8 +1,8 @@
 import { cloneElement, isValidElement, useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 
-import { useAnchoredOverlay } from '../overlay/useAnchoredOverlay';
-import type { Placement } from '../overlay/useAnchoredOverlay';
+import { useAnchoredOverlay } from '../overlay/use-anchored-overlay';
+import type { Placement } from '../overlay/use-anchored-overlay';
 
 /** How long a pointer has to rest before a tooltip appears. */
 const DWELL_MS = 400;

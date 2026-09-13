@@ -116,13 +116,13 @@ export type { StateCardProps } from './components/layout/StateSlot';
 // does not flip when it runs out of room and does not close on Escape.
 export { Modal } from './components/overlay/Modal';
 export type { ModalProps } from './components/overlay/Modal';
-export { useAnchoredOverlay } from './components/overlay/useAnchoredOverlay';
+export { useAnchoredOverlay } from './components/overlay/use-anchored-overlay';
 export type {
   Alignment,
   AnchoredOverlay,
   AnchoredOverlayOptions,
   Placement,
-} from './components/overlay/useAnchoredOverlay';
+} from './components/overlay/use-anchored-overlay';
 
 // --- components/navigation (`UI-1h`) ----------------------------------------
 export { Breadcrumb } from './components/navigation/Breadcrumb';

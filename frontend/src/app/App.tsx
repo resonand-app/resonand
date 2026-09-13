@@ -26,10 +26,10 @@ import { SettingsView } from '@/features/settings/SettingsView';
 import { TrashView } from '@/features/trash/TrashView';
 import { SignInView } from '@/features/sign-in/SignInView';
 
-import { AppShell } from './AppShell';
-import { NotFound } from './NotFound';
-import { RequireSession } from './RequireSession';
-import { SessionExpiry } from './SessionExpiry';
+import { AppShell } from './shell/AppShell';
+import { NotFound } from './shell/NotFound';
+import { RequireSession } from './shell/RequireSession';
+import { SessionExpiry } from './shell/SessionExpiry';
 import { routes } from './routes';
 import { useSessionExpiry } from './session-expiry';
 import { raiseToast } from './toasts';

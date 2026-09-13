@@ -28,7 +28,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useAllLibraries } from '@/app/library-data';
-import { useIsPhone } from '@/app/use-is-phone';
+import { useIsPhone } from '@/app/hooks/use-is-phone';
 import { isFiltered, useUrlState } from '@/app/url-state';
 import { FilterBar } from '@/components/FilterBar';
 import { CategoryPicker } from '@/features/library/CategoryPicker';

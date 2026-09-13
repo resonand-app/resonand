@@ -21,10 +21,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { mockApi } from '@/test/api/server';
-import { describeViolations, violationsIn } from '@/test/axe';
-import { VIEWS, mountView } from '@/test/views';
+import { describeViolations, violationsIn } from '@/test/support/axe';
+import { VIEWS, mountView } from '@/test/support/views';
 
-import { WHOLE_SYSTEM } from './timeouts';
+import { WHOLE_SYSTEM } from './support/timeouts';
 
 mockApi();
 

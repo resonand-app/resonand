@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { isApiProblem } from '@/api/problem';
 import { Button, EgressNotice, KeyValueList, StateCard } from '@/design-system';
 import type { KeyValueRow } from '@/design-system';
-import { useEgressLabels } from '@/components/egress-labels';
+import { useEgressLabels } from '@/i18n/egress-labels';
 
 import { AdminSection } from './AdminSection';
 import { useProvider, useTestProvider } from './data';

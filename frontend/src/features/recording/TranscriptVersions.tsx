@@ -27,7 +27,7 @@ import { post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { Button, EgressNotice } from '@/design-system';
 import { instant } from '@/i18n/time';
-import { useEgressLabels } from '@/components/egress-labels';
+import { useEgressLabels } from '@/i18n/egress-labels';
 
 import type { RecordingContext } from './data';
 import { useDestination, useTranscribe } from './transcription';

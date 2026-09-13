@@ -8,7 +8,7 @@
  * instance's facts -- there is no second query here, and no constant to go stale.
  */
 
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 export type InstanceState = components['schemas']['InstanceState'];
 

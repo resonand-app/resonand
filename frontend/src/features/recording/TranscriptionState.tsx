@@ -36,9 +36,9 @@
 import { useTranslation } from 'react-i18next';
 
 import { Button, EgressNotice, StateCard } from '@/design-system';
-import { useNow } from '@/app/use-now';
+import { useNow } from '@/app/hooks/use-now';
 import { relative } from '@/i18n/time';
-import { useEgressLabels } from '@/components/egress-labels';
+import { useEgressLabels } from '@/i18n/egress-labels';
 
 import type { RecordingContext } from './data';
 import { useDestination, useTranscribe, useTranscriptionStatus } from './transcription';

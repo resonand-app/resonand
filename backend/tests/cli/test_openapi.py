@@ -67,4 +67,4 @@ def test_a_missing_snapshot_fails_the_check_rather_than_writing_one(tmp_path: Pa
 def test_the_snapshot_lives_where_the_interface_reads_it() -> None:
     """The default is derived from this file's location, so it is worth asserting it lands."""
     assert SNAPSHOT.is_file()
-    assert SNAPSHOT.parts[-4:] == ("frontend", "src", "api", "openapi.json")
+    assert SNAPSHOT.parts[-5:] == ("frontend", "src", "api", "contract", "openapi.json")

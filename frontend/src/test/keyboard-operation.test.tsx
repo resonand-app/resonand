@@ -27,9 +27,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { SEEK_SECONDS, SKIP_SECONDS } from '@/app/keyboard';
 import { usePlayback } from '@/player/store';
 import { mockApi } from '@/test/api/server';
-import { VIEWS, mountView } from '@/test/views';
+import { VIEWS, mountView } from '@/test/support/views';
 
-import { WHOLE_SYSTEM } from './timeouts';
+import { WHOLE_SYSTEM } from './support/timeouts';
 
 mockApi();
 

@@ -77,7 +77,7 @@ jobs:
 
       - name: The published document matches the committed snapshot
         working-directory: backend
-        # UI-3a: the interface generates its typed client from `frontend/src/api/openapi.json`,
+        # UI-3a: the interface generates its typed client from `frontend/src/api/contract/openapi.json`,
         # so a change to any endpoint that lands without refreshing it leaves the interface
         # typed against an API that no longer exists. This is the half of the check the backend
         # owns; the frontend's own test holds the types to the snapshot.

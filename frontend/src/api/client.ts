@@ -23,7 +23,7 @@
  */
 
 import { ApiProblem, problemFrom, unreachable } from './problem';
-import type { paths } from './schema';
+import type { paths } from './contract/schema';
 
 /**
  * What every path is relative to.

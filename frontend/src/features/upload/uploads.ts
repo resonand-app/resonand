@@ -26,7 +26,7 @@ import { create } from 'zustand';
 
 import { get, patch } from '@/api/client';
 import { ApiProblem, problemFrom, unreachable } from '@/api/problem';
-import type { components } from '@/api/schema';
+import type { components } from '@/api/contract/schema';
 
 import { sha256Of } from './sha256';
 
