@@ -260,6 +260,64 @@ describe('opening what is playing', () => {
   });
 });
 
+describe('seeking from the bar', () => {
+  /* §3.1 calls the bar's waveform seekable, and it was drawn and wired to nothing -- while the
+     bar already kept clicks on it out of `onOpen`, so the widest target in the player was a
+     strip that swallowed a pointer and did nothing with it. */
+  const box = { left: 0, width: 200, top: 0, height: 34, right: 200, bottom: 34, x: 0, y: 0 };
+
+  /** The bar with its waveform drawn -- the peaks are a request, so it arrives a tick later. */
+  async function withWaveform() {
+    playing();
+    const { container } = show(<Player />);
+    let wave: HTMLElement | null = null;
+    await waitFor(() => {
+      wave = shape(container) as HTMLElement | null;
+      expect(wave).not.toBeNull();
+    });
+    const found = wave as unknown as HTMLElement;
+    // The drawing's box, not the wrapper's: a seek is measured where the playhead's own
+    // coordinates are, and jsdom lays neither of them out.
+    const svg = found.querySelector('svg');
+    if (svg !== null) svg.getBoundingClientRect = () => box as DOMRect;
+    return found;
+  }
+
+  it('is a control, named and reachable from a keyboard', async () => {
+    const wave = await withWaveform();
+    expect(wave).toHaveAttribute('role', 'slider');
+    expect(wave).toHaveAttribute('tabindex', '0');
+    expect(wave.getAttribute('aria-label')).toContain(CARRER_NOU.title);
+  });
+
+  it('seeks to where the bar was pressed', async () => {
+    const wave = await withWaveform();
+    await userEvent.pointer({ target: wave, coords: { clientX: 150 }, keys: '[MouseLeft]' });
+    // Three quarters through a 48:12 recording, and the same store the detail view reads.
+    expect(usePlayback.getState().positionMs).toBe(2_169_000);
+  });
+
+  it('does not open the recording when the waveform is what was pressed', async () => {
+    const wave = await withWaveform();
+    await userEvent.pointer({ target: wave, coords: { clientX: 150 }, keys: '[MouseLeft]' });
+    expect(screen.queryByText('the recording view')).toBeNull();
+  });
+
+  it('shows where a drag is going rather than where the sound still is', async () => {
+    const wave = await withWaveform();
+    const user = userEvent.setup();
+    await user.pointer([
+      { keys: '[MouseLeft>]', target: wave, coords: { clientX: 20 } },
+      { target: wave, coords: { clientX: 100 } },
+    ]);
+    // Half of 48:12, in the position beside the waveform -- while the sound is still at 18:04.
+    expect(screen.getByText('24:06')).toBeInTheDocument();
+    expect(usePlayback.getState().positionMs).toBe(1_084_000);
+    await user.pointer([{ keys: '[/MouseLeft]', target: wave, coords: { clientX: 100 } }]);
+    expect(usePlayback.getState().positionMs).toBe(1_446_000);
+  });
+});
+
 describe('closing it', () => {
   it('stops the sound and takes the bar with it', async () => {
     playing();

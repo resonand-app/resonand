@@ -75,6 +75,11 @@ export function connect(): () => void {
   };
 
   media.addEventListener('timeupdate', tick);
+  // Where it stopped and where it landed, both read from the element. Pausing without one of
+  // these freezes the position at the last routine report, which is up to a quarter of a second
+  // behind the sound -- and a seek while paused produces no routine report at all.
+  media.addEventListener('pause', tick);
+  media.addEventListener('seeked', tick);
   media.addEventListener('loadedmetadata', onLoaded);
   media.addEventListener('durationchange', onLoaded);
   media.addEventListener('ended', onEnded);
@@ -93,6 +98,8 @@ export function connect(): () => void {
   return () => {
     clearInterval(ticking);
     media.removeEventListener('timeupdate', tick);
+    media.removeEventListener('pause', tick);
+    media.removeEventListener('seeked', tick);
     media.removeEventListener('loadedmetadata', onLoaded);
     media.removeEventListener('durationchange', onLoaded);
     media.removeEventListener('ended', onEnded);
@@ -132,7 +139,12 @@ function apply(media: HTMLAudioElement, state: PlaybackState): void {
   }
 
   const shouldPlay = state.status === 'playing' || state.status === 'buffering';
-  if (shouldPlay && media.paused) start(media);
+  // Never `play()` an element sitting at its end: that is what restarts a recording from the
+  // beginning. An element that has ended has already paused itself, and the `ended` report that
+  // says so arrives a task later -- so any update landing in between (a position read at the
+  // end, a rate, anything) would find `playing` and a paused element and start it over. Ending
+  // is `paused` at the end (§3.1), and getting back to the start is asking for it.
+  if (shouldPlay && media.paused && !media.ended) start(media);
   if (!shouldPlay && !media.paused) media.pause();
 }
 

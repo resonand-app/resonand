@@ -5,10 +5,15 @@
  * the bar on every route and has no reason to know that a waveform is a second request, and a
  * `peaks` prop threaded down from there is a prop nothing fills in.
  *
- * `BUCKETS.card` rather than a count of its own. The bar draws about a hundred bars and the phone
- * player about eighty, so 160 is more than either can show -- and it is the count the cards and
- * the rows already hold, which makes playing a recording from a list a cache hit rather than a
- * request for the same picture at a different size.
+ * **`BUCKETS.detail`, because the bar is wider than it was taken to be.** This asked for
+ * `BUCKETS.card` on the grounds that the bar draws about a hundred bars, so 160 would be more
+ * than it could show, and asking for the count the cards already hold made playing from a list a
+ * cache hit. The bar's waveform is `flex: 1`, though: at 1220px it has room for 262 bars at the
+ * token pitch, and peaks are never interpolated up (`UI-2a`) -- so it drew 160, spanning 742px of
+ * a 1220px slot, with the rest of the surface empty. That is a picture that stops before its
+ * recording does, and now that the bar is a seek control it is also 478px of it that lands on
+ * either end. The cost is a request when playback starts from a list rather than from the
+ * recording, which is a few kilobytes for a control that reaches the whole recording.
  */
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
@@ -23,7 +28,7 @@ export function usePlayingPeaks(wanted: boolean): Peaks | undefined {
   // 404 is never made.
   const { peaks } = useWaveform(
     recording?.uuid ?? '',
-    BUCKETS.card,
+    BUCKETS.detail,
     wanted && recording?.hasWaveform === true,
   );
   // Answered rather than just left unasked: a query that is disabled still hands back whatever a

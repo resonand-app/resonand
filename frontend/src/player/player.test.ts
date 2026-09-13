@@ -52,6 +52,42 @@ describe('one state, two presentations', () => {
     expect(usePlayback.getState().positionMs).toBe(600_000);
   });
 
+  it('re-anchors the clock on every way back into playing', () => {
+    /* The surfaces carry the position forward from `positionAt`, so a resume that left the old
+       moment in place told every drawing to add the length of the pause to the position. A
+       five-second pause in a thirteen-second recording put the playhead forty percent past the
+       sound -- and because a drawing ahead of its report holds rather than flinching, it stayed
+       there. The anchor is the fix; both halves are tested because both were wrong. */
+    for (const resume of [
+      () => {
+        usePlayback.getState().resume();
+      },
+      () => {
+        usePlayback.getState().toggle();
+      },
+      () => {
+        usePlayback.getState().play(CARRER_NOU);
+      },
+      () => {
+        usePlayback.getState().report({ status: 'playing' });
+      },
+    ]) {
+      usePlayback.getState().play(CARRER_NOU);
+      vi.spyOn(performance, 'now').mockReturnValue(1000);
+      usePlayback.getState().report({ status: 'playing', durationMs: 13_333, positionMs: 5000 });
+      usePlayback.getState().pause();
+      vi.spyOn(performance, 'now').mockReturnValue(6000);
+      resume();
+      expect(usePlayback.getState().status).toBe('playing');
+      // The position it resumed at, paired with the moment it resumed -- not the moment five
+      // seconds earlier when the sound was last heard.
+      expect(usePlayback.getState().positionMs).toBe(5000);
+      expect(usePlayback.getState().positionAt).toBe(6000);
+      vi.restoreAllMocks();
+      usePlayback.getState().stop();
+    }
+  });
+
   it('starts from the beginning when a different recording is played', () => {
     const { play, report } = usePlayback.getState();
     play(CARRER_NOU);
@@ -172,6 +208,22 @@ describe('the element', () => {
     usePlayback.getState().report({ status: 'playing' });
     usePlayback.getState().stop();
     expect(paused).toHaveBeenCalled();
+  });
+
+  it('does not start a recording over because something landed while it sat at its end', () => {
+    /* Ending is `paused` at the end (§3.1), and the `ended` report that says so arrives a task
+       after the element has already paused itself. Anything landing in that gap -- the position
+       read at the end, a rate, a seek answering -- finds `playing` and a paused element, and
+       playing a finished element starts it from zero. Seeking to the very end did exactly that:
+       it wrapped round to the beginning and played on. */
+    const played = vi.spyOn(audio(), 'play');
+    vi.spyOn(audio(), 'ended', 'get').mockReturnValue(true);
+    usePlayback.getState().play(CARRER_NOU);
+    played.mockClear();
+    // The element reporting where it is, while the store still believes it is playing.
+    usePlayback.getState().report({ status: 'playing' });
+    usePlayback.getState().report({ positionMs: CARRER_NOU.durationMs });
+    expect(played).not.toHaveBeenCalled();
   });
 
   it('says it failed rather than looking like it is playing silence', () => {

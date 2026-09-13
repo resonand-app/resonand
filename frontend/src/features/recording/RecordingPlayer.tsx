@@ -8,8 +8,11 @@
  * apart is what makes people believe there are two players.
  *
  * **The waveform is the seek control.** At 130px there is room for a real one: the peaks come
- * from the downsampled endpoint at `BUCKETS.detail`, the playhead is drawn, and a click or an
- * arrow key seeks (`Waveform` owns both, and reports a fraction). Seeking is the browser's --
+ * from the downsampled endpoint at `BUCKETS.detail`, the playhead is drawn, and a press, a drag
+ * or an arrow key seeks (`Waveform` owns all three, and reports a fraction). A drag moves the
+ * playhead and this panel's position readout as it goes, and asks the sound to move only when it
+ * is released: seeing where you are about to land is the whole reason to drag rather than click,
+ * and a seek per pointer move is a `Range` request per pointer move. Seeking is the browser's --
  * `GET /audio/{uuid}/stream` honours `Range`, so jumping into the last minute of a three-hour
  * file fetches that minute (`UI-5b`).
  *
@@ -24,6 +27,7 @@
  * ones.
  */
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
@@ -40,6 +44,9 @@ export function RecordingPlayer({ context }: { context: RecordingContext }) {
   const { t } = useTranslation('recording');
   const recording = context.recording;
   const state = usePlayback();
+  // Where a drag on the waveform is, so the readout under it follows the playhead instead of
+  // staying where the sound is. A drag is for choosing a moment, and the number is how it is read.
+  const [preview, setPreview] = useState<number | null>(null);
   const isCurrent = state.recording?.uuid === recording?.uuid;
   const { peaks, pending } = useWaveform(
     recording?.uuid ?? '',
@@ -111,6 +118,7 @@ export function RecordingPlayer({ context }: { context: RecordingContext }) {
         pending={pending}
         duration={format.duration(knownMs)}
         onSeek={seekTo}
+        onPreview={setPreview}
         label={t('player.seek', { title: recording.title })}
       />
       {pending && (
@@ -174,7 +182,9 @@ export function RecordingPlayer({ context }: { context: RecordingContext }) {
           {/* The position first and in the accent, the total after it and quieter: one of the
               two changes four times a second and the other never does. */}
           <span style={{ color: 'var(--accent)' }}>
-            {format.duration(isCurrent ? state.positionMs : 0)}
+            {format.duration(
+              preview === null ? (isCurrent ? state.positionMs : 0) : preview * durationMs,
+            )}
           </span>
           {` / ${format.duration(knownMs)}`}
         </span>

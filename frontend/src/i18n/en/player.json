@@ -15,6 +15,7 @@
     "close": "Stop playing",
     "expand": "Open the player",
     "collapse": "Close the player",
-    "speed": "Playback speed"
+    "speed": "Playback speed",
+    "seek": "Seek in {{title}}"
   }
 }
