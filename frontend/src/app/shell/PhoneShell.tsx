@@ -24,9 +24,9 @@ import { useLocation, useNavigate } from 'react-router';
 import { Icon } from '@/design-system';
 import type { IconName } from '@/design-system';
 
-import { routes } from './routes';
-import { tabOf } from './tabs';
-import type { PhoneTab } from './tabs';
+import { routes } from '@/app/routes';
+import { tabOf } from '@/app/tabs';
+import type { PhoneTab } from '@/app/tabs';
 
 export interface PhoneShellProps {
   children: ReactNode;

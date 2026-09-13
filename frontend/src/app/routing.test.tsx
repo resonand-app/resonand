@@ -16,9 +16,9 @@ import { createQueryClient } from '@/api/query-client';
 
 import { AVIA, CARRER_NOU } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
-import { NotBuiltYet } from './NotBuiltYet';
-import { NotFound } from './NotFound';
-import { RequireSession } from './RequireSession';
+import { NotBuiltYet } from './shell/NotBuiltYet';
+import { NotFound } from './shell/NotFound';
+import { RequireSession } from './shell/RequireSession';
 import { recordingIn, routes, toLibrary, toLibrarySettings, toRecording, toSearch } from './routes';
 
 mockApi();

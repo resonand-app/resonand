@@ -15,9 +15,9 @@ import { createQueryClient } from '@/api/query-client';
 import { mockApi } from '@/test/api/server';
 
 import { AppShell } from './AppShell';
-import { PHONE_BREAKPOINT } from './use-is-phone';
-import { routes, toLibrary } from './routes';
-import { tabOf } from './tabs';
+import { PHONE_BREAKPOINT } from '@/app/hooks/use-is-phone';
+import { routes, toLibrary } from '@/app/routes';
+import { tabOf } from '@/app/tabs';
 
 mockApi();
 

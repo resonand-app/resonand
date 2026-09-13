@@ -23,7 +23,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useIsPhone } from '@/app/use-is-phone';
+import { useIsPhone } from '@/app/hooks/use-is-phone';
 import { isFiltered, useUrlState } from '@/app/url-state';
 import { FilterBar } from '@/components/FilterBar';
 import { Button, Sheet } from '@/design-system';

@@ -9,7 +9,7 @@
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { MINUTE_TICK_MS, useNow } from './use-now';
+import { MINUTE_TICK_MS, useNow } from '@/app/hooks/use-now';
 
 beforeEach(() => {
   vi.useFakeTimers();

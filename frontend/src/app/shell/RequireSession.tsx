@@ -17,8 +17,8 @@
 
 import { Navigate, Outlet, useLocation } from 'react-router';
 
-import { routes } from './routes';
-import { useSession } from './session';
+import { routes } from '@/app/routes';
+import { useSession } from '@/app/session';
 
 export function RequireSession() {
   const location = useLocation();

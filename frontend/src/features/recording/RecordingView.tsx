@@ -67,7 +67,7 @@ import {
   Sheet,
   StateCard,
 } from '@/design-system';
-import { useIsPhone } from '@/app/use-is-phone';
+import { useIsPhone } from '@/app/hooks/use-is-phone';
 import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 

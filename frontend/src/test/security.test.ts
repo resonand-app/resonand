@@ -100,7 +100,7 @@ describe('no token in a URL that persists', () => {
     const storing = matching(/\b(?:localStorage|sessionStorage)\s*\.\s*setItem\s*\(/);
     expect(storing).toEqual([
       'design-system/theme/theme.ts',
-      'src/app/use-sidebar-collapse.ts',
+      'src/app/hooks/use-sidebar-collapse.ts',
       'src/features/recording/use-panel.ts',
     ]);
   });

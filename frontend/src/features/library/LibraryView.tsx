@@ -37,7 +37,7 @@ import { PAGE_SIZE } from '@/api/paged';
 import { useKeyboard } from '@/app/use-keyboard';
 import { isFiltered, useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
-import { useAfterPaint } from '@/app/use-after-paint';
+import { useAfterPaint } from '@/app/hooks/use-after-paint';
 
 import { LibraryFilters } from './LibraryFilters';
 import { ListFailed, Loading, NothingMatched, NothingYet } from './LibraryStates';

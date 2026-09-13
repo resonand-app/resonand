@@ -15,8 +15,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
-import { isPublic, routes } from './routes';
-import type { Expiry } from './session-expiry';
+import { isPublic, routes } from '@/app/routes';
+import type { Expiry } from '@/app/session-expiry';
 
 export function SessionExpiry({ expiry }: { expiry: Expiry }) {
   const navigate = useNavigate();

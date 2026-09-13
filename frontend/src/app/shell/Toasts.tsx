@@ -13,7 +13,7 @@ import { Toast, ToastRegion } from '@/design-system';
 import type { ToastEntry } from '@/design-system';
 import { playerShowing, usePlayback } from '@/player/store';
 
-import { FAILED_AFTER_MS, useToasts } from './toasts';
+import { FAILED_AFTER_MS, useToasts } from '@/app/toasts';
 
 export function Toasts() {
   const raised = useToasts((state) => state.toasts);

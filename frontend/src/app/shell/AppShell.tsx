@@ -36,15 +36,15 @@ import { playerShowing, usePlayback } from '@/player/store';
 import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
 import { Toasts } from './Toasts';
-import { destinationOf, destinationTo, initialsOf, libraryIn } from './destinations';
-import { isPlainClick } from './links';
-import { useLibraries, useTrashCount } from './library-data';
-import { queryIn, recordingIn, routes, toRecording, toSearch } from './routes';
-import { useSession } from './session';
-import { SEEK_SECONDS, SKIP_SECONDS } from './keyboard';
-import { useIsPhone } from './use-is-phone';
-import { useKeyboard } from './use-keyboard';
-import { useSidebarCollapse } from './use-sidebar-collapse';
+import { destinationOf, destinationTo, initialsOf, libraryIn } from '@/app/destinations';
+import { isPlainClick } from '@/app/links';
+import { useLibraries, useTrashCount } from '@/app/library-data';
+import { queryIn, recordingIn, routes, toRecording, toSearch } from '@/app/routes';
+import { useSession } from '@/app/session';
+import { SEEK_SECONDS, SKIP_SECONDS } from '@/app/keyboard';
+import { useIsPhone } from '@/app/hooks/use-is-phone';
+import { useKeyboard } from '@/app/use-keyboard';
+import { useSidebarCollapse } from '@/app/hooks/use-sidebar-collapse';
 
 export interface AppShellProps {
   children: ReactNode;

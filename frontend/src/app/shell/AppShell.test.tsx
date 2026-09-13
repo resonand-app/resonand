@@ -19,8 +19,8 @@ import { ATENEU, AVIA, GABRIEL, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { AppShell } from './AppShell';
-import { destinationOf, destinationTo, initialsOf } from './destinations';
-import { routes, toLibrary } from './routes';
+import { destinationOf, destinationTo, initialsOf } from '@/app/destinations';
+import { routes, toLibrary } from '@/app/routes';
 
 mockApi();
 

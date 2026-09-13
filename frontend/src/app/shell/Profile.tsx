@@ -19,9 +19,9 @@ import { useNavigate } from 'react-router';
 import { ProfileMenu, useTheme } from '@/design-system';
 import type { AnchoredOverlay } from '@/design-system';
 
-import { initialsOf } from './destinations';
-import { routes } from './routes';
-import { useSession, useSignOut } from './session';
+import { initialsOf } from '@/app/destinations';
+import { routes } from '@/app/routes';
+import { useSession, useSignOut } from '@/app/session';
 
 export interface ProfileProps {
   onClose: () => void;

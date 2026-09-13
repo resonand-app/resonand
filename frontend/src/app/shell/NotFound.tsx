@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router';
 
 import { Button, StateCard } from '@/design-system';
 
-import { routes } from './routes';
+import { routes } from '@/app/routes';
 
 export function NotFound() {
   const { t } = useTranslation('shell');

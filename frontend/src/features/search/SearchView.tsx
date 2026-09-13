@@ -27,7 +27,7 @@ import { useTranslation } from 'react-i18next';
 
 import { PAGE_SIZE } from '@/api/paged';
 import { useAllLibraries } from '@/app/library-data';
-import { useIsPhone } from '@/app/use-is-phone';
+import { useIsPhone } from '@/app/hooks/use-is-phone';
 import { useUrlState } from '@/app/url-state';
 import { Button, PageHeader, SearchField } from '@/design-system';
 import { count as formatCount } from '@/i18n/format';
