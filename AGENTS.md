@@ -45,6 +45,9 @@ Layered, and the dependency runs one way:
 - `jobs/` — the in-process queue and its worker.
 - `cli/` — the Typer app `pyproject.toml` installs as `sonarium`.
 - `migrations/` — the Alembic tree, shipped inside the package so a container migrates itself.
+- `archive.py` — export and re-import, and the only module at the package root: it reaches across
+  `db` and `media` and answers to the CLI alone, so it belongs to no one layer. Its test mirrors
+  it at `tests/test_archive.py`.
 
 `backend/tests/` mirrors this layout, one directory per package.
 
@@ -54,13 +57,22 @@ Layered, and the dependency runs one way:
   truth for every value; `components/` is grouped by family, each shipping a `.prompt.md` saying
   when *not* to use it; `index.ts` is the only public entrance; `guidelines/` are standalone
   specimen cards a designer can open with no bundler in the way.
-- `src/api/` — the typed client, generated from the committed OpenAPI document.
-- `src/app/` — the spine: routing, the two shells, session, keyboard commands, URL state.
-- `src/features/` — one folder per view, holding its data-bound components and view logic.
-- `src/components/` — composites used by more than one feature.
+- `src/api/` — the hand-written client. `contract/` beside it holds the committed OpenAPI
+  document and the types generated from it; nothing in there is edited by hand, which is why
+  ESLint, Prettier and coverage each exclude it with one glob.
+- `src/app/` — the spine: routing, session, keyboard commands, URL state. `shell/` is the chrome
+  those modules are wired into, reached from nowhere else; `hooks/` the ones any feature may use.
+- `src/features/` — one folder per view, holding its data-bound components and view logic. A
+  folder directly under `features/` is a route and owns a `*View.tsx`; a folder nested inside one
+  is a part of that view rather than a destination — `settings/administration/` is a tab.
+- `src/components/` — composites used by more than one feature, plus the pair that is tested as
+  one: `FilterBar` and the `BulkBar` that replaces it have to be the same height.
 - `src/player/` — the player, which outlives every navigation and so lives in the shell.
-- `src/i18n/` — i18next setup and `en/*.json`. Every user-visible string is here.
-- `src/test/` — the msw handlers, and the tests whose subject is the repository itself.
+- `src/i18n/` — i18next setup, `en/*.json`, and the hooks that hand a component its copy. Every
+  user-visible string is here.
+- `src/test/` — the tests whose subject is the repository itself, the msw handlers in `api/`, and
+  in `support/` the modules that exist only to be imported by a test. A module with a test named
+  after it is a subject and stays beside it.
 - `src/dev/` — `#/specimens`. Development only.
 
 ### The plans, and the ones that are not here
