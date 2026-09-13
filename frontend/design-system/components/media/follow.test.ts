@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { predicted } from './follow';
+import { held, predicted } from './follow';
 
 describe('predicted', () => {
   it('is where the report put it at the moment of the report', () => {
@@ -29,5 +29,34 @@ describe('predicted', () => {
     // back when the next report arrived -- a playhead that jumps backwards.
     expect(predicted(0.99, 5, 0.1)).toBe(1);
     expect(predicted(0.01, 5, -0.1)).toBe(0);
+  });
+});
+
+describe('held', () => {
+  it('keeps the drawing where it is when a report lands a hair behind it', () => {
+    // A tenth of the recording a second, and a report 40ms stale: the drawing is right and the
+    // report is the one that is late.
+    expect(held(0.504, 0.5, 0.1)).toBe(0.504);
+  });
+
+  it('follows a report that is ahead of the drawing', () => {
+    expect(held(0.5, 0.52, 0.1)).toBe(0.52);
+  });
+
+  it('snaps to the report when the drawing has run away from it', () => {
+    // The failure this exists for: a resume carried the position forward from an anchor that
+    // stopped being true during the pause, so the drawing sat four tenths of the recording past
+    // the sound. Holding that is holding a wrong answer for as long as playback lasts.
+    expect(held(0.8, 0.4, 0.1)).toBe(0.4);
+  });
+
+  it('holds nothing at all when nothing is playing', () => {
+    // Standing still, the report is the only thing that knows anything, so it always wins --
+    // which is what makes the drawing exact the moment a pause freezes it.
+    expect(held(0.504, 0.5, 0)).toBe(0.5);
+  });
+
+  it('goes back when the recording does', () => {
+    expect(held(0.9, 0.1, 0.1)).toBe(0.1);
   });
 });

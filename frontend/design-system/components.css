@@ -852,10 +852,18 @@
   background: var(--surface-2);
 }
 
-/* Waveform. Seekable only on the detail size, and the cursor is the only affordance it gets --
-   the bars are the data and nothing is drawn over them. */
+/* Waveform. The cursor is the only affordance it gets -- the bars are the data and nothing is
+   drawn over them -- and `touch-action` is what lets a drag be a seek: without it a finger that
+   meant to scrub scrolls the view instead, and the seek never happens. While a drag is in
+   progress the cursor says so, because the playhead is following the pointer rather than the
+   sound and that is worth one frame of feedback. */
 [data-ds='waveform'][data-seekable='true'] {
   cursor: pointer;
+  touch-action: none;
+}
+
+[data-ds='waveform'][data-scrubbing='true'] {
+  cursor: grabbing;
 }
 
 /* ==========================================================================

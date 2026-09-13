@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { CSSProperties, KeyboardEvent, MouseEvent, SVGAttributes } from 'react';
+import type { CSSProperties, KeyboardEvent, PointerEvent, SVGAttributes } from 'react';
 
-import { predicted } from './follow';
+import { held, predicted } from './follow';
 import { amplitudeAt, bucketCount, resamplePeaks } from './peaks';
 import type { Peaks } from './peaks';
 import { HEIGHT_TOKEN } from './wave-sizes';
@@ -55,6 +55,21 @@ function readGeometry(element: Element, size: WaveSize): Geometry {
   };
 }
 
+/**
+ * Keep the moves coming after the pointer leaves the drawing.
+ *
+ * Guarded because capture is a convenience and not the seek: a pointer the browser no longer
+ * considers down throws rather than returning, and jsdom has no capture at all. Without it a
+ * drag simply stops updating at the edge, which is worse than a seek that fails.
+ */
+function capture(element: Element, pointerId: number): void {
+  try {
+    element.setPointerCapture(pointerId);
+  } catch {
+    // The drag goes on without it.
+  }
+}
+
 export interface WaveformProps extends Omit<SVGAttributes<SVGSVGElement>, 'onSeek'> {
   /** Stored peaks: interleaved min/max, one pair per bucket, each -1…1. */
   peaks?: Peaks | undefined;
@@ -100,8 +115,22 @@ export interface WaveformProps extends Omit<SVGAttributes<SVGSVGElement>, 'onSee
    * string reached three card surfaces untranslated because the fallback looked like a detail.
    */
   noWaveformLabel?: string | undefined;
-  /** Click and arrow keys seek. Only the detail view passes this. */
+  /**
+   * Where the seek landed, 0-1. A click, a drag released, or an arrow key.
+   *
+   * Passing it is what turns the drawing into a control: without it the waveform is a picture,
+   * and a picture that took a pointer would be a control nobody could reach from a keyboard.
+   */
   onSeek?: ((fraction: number) => void) | undefined;
+  /**
+   * Where a drag is, while it is still a drag, and `null` when it ends.
+   *
+   * The drawing already follows the pointer on its own -- this is for the surfaces that show the
+   * position as a number beside it. A playhead under the pointer next to a readout frozen where
+   * the sound is reads as two positions, and the point of the drag is to see where you are going
+   * before you commit to it.
+   */
+  onPreview?: ((fraction: number | null) => void) | undefined;
   /** Names the control when it can be seeked. */
   label?: string | undefined;
   /** Wrapper style. The rest of the props go to the `<svg>`. */
@@ -144,6 +173,7 @@ export function Waveform({
   duration,
   noWaveformLabel,
   onSeek,
+  onPreview,
   label,
   style,
   ...rest
@@ -155,6 +185,8 @@ export function Waveform({
   const host = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [geometry, setGeometry] = useState<Geometry>(() => FALLBACK[size]);
+  /** Where a drag has the position, 0-1, or `null` when nothing is being dragged. */
+  const [scrub, setScrub] = useState<number | null>(null);
 
   /* Bar count follows the rendered width, so an 88px row and a 1000px detail view get the same
      bar pitch rather than the same bar count squeezed to fit. The geometry is re-read alongside
@@ -210,37 +242,43 @@ export function Waveform({
 
   /* The two parts that move, written straight to the DOM: they are a transform each, and going
      through React to set them would re-render the bars sixty times a second to no effect. */
+  const drawing = useRef<SVGSVGElement>(null);
   const clip = useRef<SVGRectElement>(null);
   const head = useRef<SVGRectElement>(null);
-  const furthest = useRef(0);
-  const reported = useRef(played);
+  /** Where the drawing actually is, which is not `played` on any frame between two reports. */
+  const drawn = useRef(played);
   useEffect(() => {
-    /* A report only ever moves forward while something plays, so a report behind the one before
-       it is a seek, and the drawing follows it back. A report behind the drawing is not: it is
-       noise in when the element was read -- `currentTime` is quantised to the audio callback,
-       which pairs a position with a moment a few milliseconds after it was true -- and drawing
-       it would flinch the playhead backwards, which is the one movement nobody misses. */
-    if (played < reported.current) furthest.current = played;
-    reported.current = played;
-    const paint = (fraction: number) => {
-      const at = Math.max(fraction, furthest.current);
-      furthest.current = at;
-      if (clip.current !== null) clip.current.style.transform = `scaleX(${String(at)})`;
+    const draw = (fraction: number) => {
+      drawn.current = fraction;
+      if (clip.current !== null) clip.current.style.transform = `scaleX(${String(fraction)})`;
       if (head.current !== null) {
-        head.current.style.transform = `translateX(${String(at * viewWidth)}px)`;
+        head.current.style.transform = `translateX(${String(fraction * viewWidth)}px)`;
       }
     };
-    paint(played);
+
+    /* A drag is where the position is going, and nothing else gets a say while it lasts: the
+       playhead belongs under the pointer, and a prediction carrying on underneath would drag it
+       away from the finger holding it. */
+    if (scrub !== null) {
+      draw(scrub);
+      return;
+    }
+
+    // `held` is the whole rule about reports that land behind the drawing, and it is bounded.
+    const from = held(drawn.current, played, advance);
+    draw(from);
     if (advance <= 0) return;
     const anchored = playedAt !== undefined && playedAt > 0 ? playedAt : performance.now();
     let frame = requestAnimationFrame(function step(now: number) {
-      paint(predicted(played, (now - anchored) / 1000, advance));
+      // Never behind where this report started drawing, so a frame cannot undo the hold -- and
+      // never held beyond it, because the floor is recomputed from the next report.
+      draw(Math.max(from, predicted(played, (now - anchored) / 1000, advance)));
       frame = requestAnimationFrame(step);
     });
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [played, playedAt, advance, viewWidth]);
+  }, [played, playedAt, advance, viewWidth, scrub]);
 
   /* Peaks that hold no buckets are the same fact as no peaks job having run, and drawing them
      would stretch a single bar the width of the surface. */
@@ -284,11 +322,63 @@ export function Waveform({
     );
   }
 
-  const seekTo = (event: MouseEvent<HTMLDivElement>) => {
-    if (onSeek === undefined) return;
-    const box = event.currentTarget.getBoundingClientRect();
-    if (box.width === 0) return;
-    onSeek(Math.min(1, Math.max(0, (event.clientX - box.left) / box.width)));
+  /**
+   * Where along the drawing a pointer is, 0-1.
+   *
+   * Measured against the drawing and not against the box around it, because those are not the
+   * same width. The playhead moves in the `viewBox`'s units, and the `viewBox` is exactly as wide
+   * as the bars it holds -- which is narrower than the surface whenever the recording has fewer
+   * buckets than there is room for bars, since peaks are never interpolated up. Measuring the
+   * surface put the pointer and the playhead in two different coordinate systems: three pixels
+   * apart in the detail view, and two hundred and thirty-nine in the bar.
+   */
+  const fractionAt = (event: PointerEvent<HTMLDivElement>): number | null => {
+    if (drawing.current === null) return null;
+    const box = drawing.current.getBoundingClientRect();
+    // `meet` fits the drawing inside the element and never magnifies it here, because the element
+    // is given the viewBox's own height -- so the drawn width is the smaller of the two.
+    const drawn = Math.min(viewWidth, box.width);
+    if (drawn === 0) return null;
+    return Math.min(1, Math.max(0, (event.clientX - box.left) / drawn));
+  };
+
+  /* Press, drag, release -- rather than a click, which is only delivered when the button comes
+     back up. A waveform that took clicks alone gave nothing back for as long as the button was
+     held, so the drag people were already making looked like a control that had stopped
+     responding. Pressing is what starts it, because a seek is over the moment it is released and
+     there is nothing to cancel by dragging away. */
+  const startScrub = (event: PointerEvent<HTMLDivElement>) => {
+    if (onSeek === undefined || event.button !== 0) return;
+    const at = fractionAt(event);
+    if (at === null) return;
+    // The drag keeps receiving moves after it leaves the drawing, which is what makes the ends
+    // reachable: a pointer that has to stay inside a 34px bar is a pointer that cannot reach 0.
+    capture(event.currentTarget, event.pointerId);
+    setScrub(at);
+    onPreview?.(at);
+  };
+
+  const moveScrub = (event: PointerEvent<HTMLDivElement>) => {
+    if (scrub === null) return;
+    const at = fractionAt(event);
+    if (at === null) return;
+    setScrub(at);
+    onPreview?.(at);
+  };
+
+  const endScrub = (event: PointerEvent<HTMLDivElement>) => {
+    if (onSeek === undefined || scrub === null) return;
+    const at = fractionAt(event) ?? scrub;
+    setScrub(null);
+    onPreview?.(null);
+    onSeek(at);
+  };
+
+  /** A drag the system took away -- a call arriving, the tab going. It asked for no seek. */
+  const cancelScrub = () => {
+    if (scrub === null) return;
+    setScrub(null);
+    onPreview?.(null);
   };
 
   const seekByKey = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -311,22 +401,34 @@ export function Waveform({
   return (
     <div
       ref={host}
-      onClick={seekable ? seekTo : undefined}
+      onPointerDown={seekable ? startScrub : undefined}
+      onPointerMove={seekable ? moveScrub : undefined}
+      onPointerUp={seekable ? endScrub : undefined}
+      onPointerCancel={seekable ? cancelScrub : undefined}
       onKeyDown={seekable ? seekByKey : undefined}
       role={seekable ? 'slider' : undefined}
       tabIndex={seekable ? 0 : undefined}
       aria-label={seekable ? (label ?? 'Seek') : undefined}
       aria-valuemin={seekable ? 0 : undefined}
       aria-valuemax={seekable ? 100 : undefined}
-      aria-valuenow={seekable ? Math.round(played * 100) : undefined}
+      // What a drag is asking for, while it is asking: a slider that announced the sound's
+      // position during a drag would tell a screen reader the opposite of what it is doing.
+      aria-valuenow={seekable ? Math.round((scrub ?? played) * 100) : undefined}
       data-ds="waveform"
       data-seekable={seekable ? 'true' : undefined}
+      data-scrubbing={scrub === null ? undefined : 'true'}
       style={{ width: '100%', ...style }}
     >
       <svg
+        ref={drawing}
         width="100%"
         height={height}
         viewBox={`0 0 ${String(viewWidth)} ${String(height)}`}
+        /* Anchored left rather than centred, which is what the default does. A drawing narrower
+           than its element was being centred, so its left edge -- position zero -- sat half the
+           difference in from the edge a pointer is measured from. Stated here rather than left to
+           a default, because the seek arithmetic above depends on which edge it is. */
+        preserveAspectRatio="xMinYMid meet"
         style={{ display: 'block', overflow: 'visible' }}
         {...rest}
       >

@@ -70,6 +70,17 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
    */
   onBack?: () => void;
   onForward?: () => void;
+  /**
+   * Seek by pressing or dragging the bar's waveform (§3.1: the bar's waveform is seekable).
+   *
+   * It was drawn and wired to nothing, and the bar already kept clicks on it out of `onOpen` --
+   * so the widest thing in the player was a strip that took a pointer and did nothing with it.
+   * Absent, the waveform stays a picture, which is what the bar draws on a surface with no
+   * position to move.
+   */
+  onSeek?: (fraction: number) => void;
+  /** Where a drag on the waveform is, so `position` can show it. `null` when the drag ends. */
+  onPreview?: (fraction: number | null) => void;
   /** Stops playback and dismisses the bar. Absent draws no close control. */
   onClose?: () => void;
   /** Opens what is playing. The bar's own controls keep their clicks out of it. */
@@ -88,6 +99,8 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
     close?: string;
     /** Names the speed control, which shows a rate rather than saying what it is. */
     speed?: string;
+    /** Names the waveform when `onSeek` makes it a control. */
+    seek?: string;
   };
 }
 
@@ -123,6 +136,8 @@ export function PlayerBar({
   onToggle,
   onBack,
   onForward,
+  onSeek,
+  onPreview,
   onClose,
   onOpen,
   labels,
@@ -241,6 +256,9 @@ export function PlayerBar({
               playhead
               advance={advance}
               playedAt={playedAt}
+              onSeek={onSeek}
+              onPreview={onPreview}
+              label={labels?.seek ?? 'Seek'}
             />
           )}
         </div>

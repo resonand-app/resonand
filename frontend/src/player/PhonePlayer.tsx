@@ -7,7 +7,9 @@
  *
  * **Tapping it expands to a full-screen player** with the waveform, the transport, the ±15 s
  * skips and speed. Swiping down collapses it, and so does the close control, because a gesture
- * with no visible equivalent is a gesture somebody has to be told about.
+ * with no visible equivalent is a gesture somebody has to be told about. The waveform there
+ * seeks, and a drag on it is a seek rather than a swipe -- a scrub read as a dismissal would
+ * close the player somebody was in the middle of using.
  *
  * It is the same store as the desktop bar (`UI-5a`). Nothing here has its own position.
  */
@@ -128,6 +130,15 @@ export function PhonePlayer() {
     <div
       data-app="phone-player-full"
       onPointerDown={(event: ReactPointerEvent) => {
+        // A drag that starts on the waveform is a seek. Reading it as a swipe as well would
+        // dismiss the player somebody was in the middle of scrubbing.
+        if (
+          event.target instanceof Element &&
+          event.target.closest('[data-ds="waveform"]') !== null
+        ) {
+          setFrom(null);
+          return;
+        }
         setFrom(event.clientY);
       }}
       onPointerUp={(event: ReactPointerEvent) => {
@@ -167,8 +178,14 @@ export function PhonePlayer() {
           peaks={peaks}
           size="detail"
           played={played}
+          playhead
           advance={advanceRate(state)}
           playedAt={state.positionAt}
+          onSeek={(fraction) => {
+            const end = state.durationMs || (recording.durationMs ?? 0);
+            if (end > 0) usePlayback.getState().seek(Math.round(fraction * end));
+          }}
+          label={t('action.seek', { title: recording.title })}
         />
       ) : (
         // No peaks, no shape. A dashed rule and a duration is the honest answer (§3.1).

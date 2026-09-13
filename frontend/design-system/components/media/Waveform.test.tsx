@@ -27,6 +27,18 @@ function reduceTo(values: number[], points: number): number[] {
   });
 }
 
+/**
+ * Give the drawing a box, since jsdom lays nothing out.
+ *
+ * The `<svg>` and not the wrapper: a seek is measured against the drawing, because the drawing is
+ * where the playhead's own coordinates are.
+ */
+function boxIs(slider: HTMLElement, width: number): void {
+  const svg = slider.querySelector('svg');
+  const box = { left: 0, width, top: 0, height: 130, right: width, bottom: 130, x: 0, y: 0 };
+  if (svg !== null) svg.getBoundingClientRect = () => box as DOMRect;
+}
+
 /** Every bar's height as a fraction of the drawing's own height: the silhouette, scale removed. */
 function silhouette(container: HTMLElement): number[] {
   const svg = container.querySelector('svg');
@@ -243,9 +255,9 @@ describe('Waveform', () => {
       const onSeek = vi.fn();
       render(<Waveform peaks={PEAKS} size="detail" onSeek={onSeek} label="Seek" />);
       const slider = screen.getByRole('slider');
-      // jsdom lays nothing out, so the box is supplied.
-      slider.getBoundingClientRect = () =>
-        ({ left: 0, width: 200, top: 0, height: 130, right: 200, bottom: 130, x: 0, y: 0 }) as DOMRect;
+      // jsdom lays nothing out, so the box is supplied -- and it is the drawing's box, because
+      // that is the one the seek is measured against.
+      boxIs(slider, 200);
       await userEvent.pointer({ target: slider, coords: { clientX: 50 }, keys: '[MouseLeft]' });
       expect(onSeek).toHaveBeenCalledWith(0.25);
     });
@@ -264,6 +276,77 @@ describe('Waveform', () => {
       expect(onSeek).toHaveBeenLastCalledWith(0);
       await userEvent.keyboard('{End}');
       expect(onSeek).toHaveBeenLastCalledWith(1);
+    });
+
+    it('follows the pointer while the button is held, and seeks when it is let go', async () => {
+      /* A click is only delivered when the button comes back up, so a waveform wired to clicks
+         alone gave nothing back for as long as somebody held it -- which is the whole of a drag.
+         The drawing follows the pointer from the press; the seek is the release. */
+      const onSeek = vi.fn();
+      const onPreview = vi.fn();
+      const { container } = render(
+        <Waveform
+          peaks={PEAKS}
+          size="detail"
+          played={0.1}
+          playhead
+          onSeek={onSeek}
+          onPreview={onPreview}
+          label="Seek"
+        />,
+      );
+      const slider = screen.getByRole('slider');
+      // jsdom lays nothing out, so the box is supplied -- and it is the drawing's box, because
+      // that is the one the seek is measured against.
+      boxIs(slider, 200);
+
+      // One session, so the press in the first call is still held during the second.
+      const user = userEvent.setup();
+      await user.pointer([
+        { keys: '[MouseLeft>]', target: slider, coords: { clientX: 20 } },
+        { target: slider, coords: { clientX: 150 } },
+      ]);
+      // Held, not released: the sound has not been asked to move, and the drawing has.
+      expect(onSeek).not.toHaveBeenCalled();
+      expect(onPreview).toHaveBeenLastCalledWith(0.75);
+      expect(container.querySelector('clipPath rect')?.getAttribute('style')).toContain(
+        'scaleX(0.75)',
+      );
+      expect(slider.getAttribute('aria-valuenow')).toBe('75');
+
+      await user.pointer([{ keys: '[/MouseLeft]', target: slider, coords: { clientX: 150 } }]);
+      expect(onSeek).toHaveBeenCalledTimes(1);
+      expect(onSeek).toHaveBeenCalledWith(0.75);
+      // The drag is over, so the position is the sound's again.
+      expect(onPreview).toHaveBeenLastCalledWith(null);
+    });
+
+    it('asks for nothing when a drag is taken away rather than released', async () => {
+      const onSeek = vi.fn();
+      render(<Waveform peaks={PEAKS} size="detail" onSeek={onSeek} label="Seek" />);
+      const slider = screen.getByRole('slider');
+      boxIs(slider, 200);
+      await userEvent.pointer([{ keys: '[MouseLeft>]', target: slider, coords: { clientX: 50 } }]);
+      slider.dispatchEvent(new Event('pointercancel', { bubbles: true }));
+      expect(onSeek).not.toHaveBeenCalled();
+    });
+
+    it('measures the drawing and not the box around it', async () => {
+      /* The two are different widths whenever the recording has fewer buckets than the surface
+         has room for bars, because peaks are never interpolated up -- so the drawing is as wide
+         as its bars and the surface is as wide as the layout gives it. The playhead moves in the
+         drawing's units, so a seek measured against the surface lands somewhere else: three
+         pixels out in the detail view and two hundred and thirty-nine in the player bar. */
+      const onSeek = vi.fn();
+      render(<Waveform peaks={PEAKS} size="detail" onSeek={onSeek} label="Seek" />);
+      const slider = screen.getByRole('slider');
+      const wide = { left: 0, width: 400, top: 0, height: 130, right: 400, bottom: 130, x: 0, y: 0 };
+      slider.getBoundingClientRect = () => wide as DOMRect;
+      // The drawing is half the surface, anchored at its left edge.
+      boxIs(slider, 200);
+      await userEvent.pointer({ target: slider, coords: { clientX: 100 }, keys: '[MouseLeft]' });
+      // Halfway along the drawing, not a quarter of the way along the surface.
+      expect(onSeek).toHaveBeenCalledWith(0.5);
     });
 
     it('says where it is', () => {

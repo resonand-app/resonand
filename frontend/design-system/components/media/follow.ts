@@ -26,3 +26,31 @@
 export function predicted(played: number, seconds: number, advance: number): number {
   return Math.min(1, Math.max(0, played + seconds * advance));
 }
+
+/**
+ * How long a drawing may stay ahead of a report before the report wins.
+ *
+ * One report interval with room to spare. Inside it the drawing is ahead because it carried the
+ * position forward correctly and the report is the stale one; beyond it the drawing is ahead
+ * because it was carried forward from the wrong moment, and no amount of waiting fixes that.
+ */
+const HOLD_MS = 400;
+
+/**
+ * Where to draw when a report lands behind what is already drawn.
+ *
+ * A report can sit a few milliseconds behind the drawing without being wrong: `currentTime` is
+ * quantised to the audio callback, so a position arrives paired with a moment slightly after it
+ * was true. Following it back flinches the playhead, which is the one movement nobody misses --
+ * so across that gap the drawing holds.
+ *
+ * **The hold is bounded, and that is the whole point.** An unbounded one keeps whatever the
+ * drawing reached, including a position predicted from an anchor that stopped being true --
+ * which is what stranded the playhead for the length of every pause, with the sound playing on
+ * underneath it. Further ahead than one report's worth of travel is not quantisation, it is a
+ * drawing that has run away from the sound, and the sound wins.
+ */
+export function held(drawn: number, played: number, advance: number): number {
+  const ahead = drawn - played;
+  return ahead > 0 && ahead <= advance * (HOLD_MS / 1000) ? drawn : played;
+}

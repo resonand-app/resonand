@@ -102,7 +102,7 @@ export const KNOWN_SMALL_TARGETS: TargetExemption[] = [
   },
   {
     component: 'waveform',
-    why: 'Only the detail size takes an `onSeek`, and that size is 130px tall by token (`--wave-height-detail`). The four smaller ones are not interactive at all.',
+    why: 'Two sizes take an `onSeek`. The detail one is 130px tall by token (`--wave-height-detail`). The player one is 34px, and is the bar\'s full-bleed waveform slot -- several hundred pixels wide beside a 38px play control, which is the "34px visual, wide row" case `menu-row` and `search-hit` are here for. §3.1 requires that one to be seekable at that height. The other three sizes are not interactive at all.',
   },
   {
     component: 'select-menu',

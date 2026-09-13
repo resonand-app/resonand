@@ -18,6 +18,7 @@
  * and still-being-processed is a quiet line rather than a warning.
  */
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -37,6 +38,9 @@ export function Player({ onScreen }: PlayerProps) {
   const { t } = useTranslation('player');
   const navigate = useNavigate();
   const state = usePlayback();
+  // Where a drag on the bar's waveform is, so the position beside it says where the drag is
+  // going rather than where the sound still is.
+  const [preview, setPreview] = useState<number | null>(null);
   const { recording, status } = state;
   const isOnScreen = onScreen !== undefined && onScreen === recording?.uuid;
   // Not asked for while the detail view's waveform is the one on screen: the bar draws no second
@@ -47,7 +51,8 @@ export function Player({ onScreen }: PlayerProps) {
   // at to work out what it is for, and the shell reflows without it.
   if (recording === null || status === 'idle') return null;
 
-  const position = asDuration(state.positionMs);
+  const end = state.durationMs || (recording.durationMs ?? 0);
+  const position = asDuration(preview === null ? state.positionMs : preview * end);
   const total = asDuration(state.durationMs || recording.durationMs);
 
   return (
@@ -91,6 +96,11 @@ export function Player({ onScreen }: PlayerProps) {
           }
           usePlayback.getState().toggle();
         }}
+        // §3.1's waveform in the bar is seekable, and it is the widest target in the player.
+        onSeek={(fraction) => {
+          if (end > 0) usePlayback.getState().seek(Math.round(fraction * end));
+        }}
+        onPreview={setPreview}
         onBack={() => {
           usePlayback.getState().nudge(-15);
         }}
@@ -107,6 +117,7 @@ export function Player({ onScreen }: PlayerProps) {
           forward: t('action.forward'),
           close: t('action.close'),
           speed: t('action.speed'),
+          seek: t('action.seek', { title: recording.title }),
         }}
         aria-busy={status === 'buffering'}
       />

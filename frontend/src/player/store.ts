@@ -96,6 +96,23 @@ const EMPTY = {
   seekingToMs: null,
 } as const;
 
+/**
+ * Playing again, from now.
+ *
+ * The moment matters as much as the status. `positionMs` is an anchor and the surfaces carry it
+ * forward from `positionAt`, so resuming without re-stamping the moment tells every drawing to
+ * add the length of the pause to the position -- a five-second pause in a thirteen-second
+ * recording put the playhead forty percent past the sound, and it stayed there.
+ */
+function resumed(): Pick<PlaybackState, 'status' | 'positionAt'> {
+  return { status: 'playing', positionAt: performance.now() };
+}
+
+/** Whether a report is the element starting to play, which is the other way back into motion. */
+function starting(state: PlaybackState, update: Partial<PlaybackState>): boolean {
+  return update.status === 'playing' && state.status !== 'playing';
+}
+
 export const usePlayback = create<PlaybackState>((set, get) => ({
   ...EMPTY,
   rate: 1,
@@ -103,7 +120,7 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
   play: (recording) => {
     const current = get();
     if (current.recording?.uuid === recording.uuid && current.status === 'paused') {
-      set({ status: 'playing' });
+      set(resumed());
       return;
     }
     // Buffering rather than playing: the transport appears disabled and the position holds at
@@ -114,7 +131,7 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
   toggle: () => {
     const { status } = get();
     if (status === 'playing') set({ status: 'paused' });
-    else if (status === 'paused' || status === 'failed') set({ status: 'playing' });
+    else if (status === 'paused' || status === 'failed') set(resumed());
   },
 
   pause: () => {
@@ -122,7 +139,7 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
   },
 
   resume: () => {
-    if (get().status === 'paused') set({ status: 'playing' });
+    if (get().status === 'paused') set(resumed());
   },
 
   seek: (ms) => {
@@ -150,8 +167,12 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
     set((state) => ({
       ...update,
       // Stamped here, where the element was just read, rather than wherever this lands: a
-      // position is only as good as the moment it belongs to.
-      positionAt: update.positionMs === undefined ? state.positionAt : performance.now(),
+      // position is only as good as the moment it belongs to. A report that says it is playing
+      // without saying where re-stamps it too, for the reason `resumed` exists.
+      positionAt:
+        update.positionMs === undefined && !starting(state, update)
+          ? state.positionAt
+          : performance.now(),
       // A report of the position is the element arriving where it was sent, so the pending seek
       // is answered rather than kept -- otherwise every later report would be second-guessed.
       seekingToMs: update.positionMs === undefined ? state.seekingToMs : null,
