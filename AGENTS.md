@@ -71,8 +71,13 @@ Layered, and the dependency runs one way:
 - `src/i18n/` — i18next setup, `en/*.json`, and the hooks that hand a component its copy. Every
   user-visible string is here.
 - `src/test/` — the tests whose subject is the repository itself, the msw handlers in `api/`, and
-  in `support/` the modules that exist only to be imported by a test. A module with a test named
-  after it is a subject and stays beside it.
+  in `support/` the modules that exist only to be imported by a test.
+- **Tests under `src/` live in a `tests/` folder inside the folder they cover**, so a listing
+  shows the thing and not the thing plus its tests. They reach their subject with `../`, which
+  ESLint allows there and nowhere else: the folder is always a direct child of its subject's, so
+  the two move together. `design-system/` keeps its tests flat -- a component there is
+  `Component.tsx`, `Component.prompt.md` and `Component.test.tsx`, and splitting the set would
+  leave the prompt behind.
 - `src/dev/` — `#/specimens`. Development only.
 
 ### The plans, and the ones that are not here

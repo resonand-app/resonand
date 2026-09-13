@@ -28,8 +28,15 @@ export default mergeConfig(
       globals: false,
       setupFiles: [fileURLToPath(new URL('./src/test/support/setup.ts', import.meta.url))],
       // Both trees. `design-system/` is the application's component source (`DEC-21`), so a
-      // component's test sits beside the component rather than in a parallel folder under
-      // `src/` that has to be kept in step with it by hand.
+      // component's test sits with the component rather than in a parallel folder under `src/`
+      // that has to be kept in step with it by hand.
+      //
+      // Under `src/` "with" means a `tests/` folder inside the folder it covers, so that what a
+      // feature lists is the feature and not twice the feature. It is still local -- it moves,
+      // renames and dies with what it tests, which is the whole objection to a parallel tree --
+      // and this glob needs no knowledge of it, because a test is known by its name and not by
+      // where it sits. The design system keeps its tests flat: there a component is a set of
+      // three files, and `.prompt.md` is the one that would be left behind.
       include: ['src/**/*.{test,spec}.{ts,tsx}', 'design-system/**/*.{test,spec}.{ts,tsx}'],
       // No stylesheet is processed or injected -- a component test asserts what a component
       // renders, not what a browser would paint it -- with one exception, added by `UI-32a`:
