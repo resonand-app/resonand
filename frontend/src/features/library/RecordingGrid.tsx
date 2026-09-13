@@ -28,7 +28,7 @@ import { toRecording } from '@/app/routes';
 import { RecordingCard } from '@/design-system';
 import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
-import { playedFraction, usePlayback } from '@/player/store';
+import { usePlayback } from '@/player/store';
 
 import { transcriptionState } from './recordings';
 import { useLongPress } from './use-long-press';
@@ -98,12 +98,11 @@ function Card({
 }) {
   const { t, i18n } = useTranslation('library');
   const navigate = useNavigate();
-  // Subscribed narrowly: a card re-renders when it becomes the playing one, and the position is
-  // read only by the card that is playing. Subscribing every card to `positionMs` would re-render
-  // a screenful of cards several times a second.
+  // Subscribed to which recording is playing and nothing else. The card's waveform is static and
+  // the ring is the whole mark, so no card has any reason to know the position -- which is what
+  // stops a screenful of them re-rendering several times a second.
   const isCurrent = usePlayback((state) => state.recording?.uuid === recording.uuid);
   const isPlaying = usePlayback((state) => isCurrent && state.status === 'playing');
-  const played = usePlayback((state) => (isCurrent ? playedFraction(state) : 0));
   // `has_waveform` is the flag, never an empty blob guessed at (§3.5): the request that would
   // 404 is not made, and the card draws a dashed rule until the peaks job has run.
   const { peaks, pending } = useWaveform(
@@ -143,7 +142,6 @@ function Card({
       sharedIndividually={recording.is_shared_individually}
       peaks={peaks}
       pending={pending}
-      played={played}
       playing={isPlaying}
       {...(selection === undefined
         ? {}

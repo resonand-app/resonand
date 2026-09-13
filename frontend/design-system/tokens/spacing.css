@@ -24,7 +24,11 @@
   --player-height: 64px;
 
   --card-width: 320px;
-  --card-height: 188px;
+  /* 150 and not 188 since the library card lost its waveform: exactly the 38px that drawing
+     took, so every other measure on the card is the one that was signed off. It holds the
+     tallest card -- a shared library, which carries a byline the owned one does not -- with
+     the same slack above it that the waveform left. */
+  --card-height: 150px;
   /* Administration's cards, which are not recording cards. The track has to hold a job row --
      a kind, a uuid, an error and two buttons -- so it is wider than --card-width, and it is
      what decides that the grid is two columns at a desktop width and one below ~880px. */

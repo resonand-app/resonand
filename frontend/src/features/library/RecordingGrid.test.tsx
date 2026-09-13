@@ -191,6 +191,51 @@ describe('playing from a card', () => {
     expect(other).not.toHaveAttribute('data-playing');
   });
 
+  it('lights the card waveform without letting it follow the playback', async () => {
+    renderLibrary();
+    const card = await cardFor('The house on Carrer Nou');
+    await waitFor(() => {
+      expect(card.querySelector('[data-ds="waveform"]')).not.toBeNull();
+    });
+    usePlayback.getState().play({
+      uuid: CARRER_NOU,
+      title: 'The house on Carrer Nou',
+      library: 'Àvia Teresa',
+      durationMs: 2_892_000,
+      hasWaveform: true,
+    });
+    usePlayback.getState().report({ status: 'playing', positionMs: 1_084_000 });
+    await waitFor(() => {
+      expect(card).toHaveAttribute('data-playing', 'true');
+    });
+    // Lit: every bar in the accent, rather than the accent creeping across them.
+    const bars = [...card.querySelectorAll('[data-ds="waveform"] rect')];
+    expect(bars.length).toBeGreaterThan(0);
+    expect(bars.every((bar) => bar.getAttribute('fill') === 'var(--wave)')).toBe(true);
+    // The bar at the foot of the shell is the one that draws where a recording has got to. A
+    // grid of waveforms filling in behind it says the same thing a dozen times.
+    expect(card.querySelector('clipPath')).toBeNull();
+  });
+
+  it('leaves every other card dim, so the lit one is the one that is playing', async () => {
+    renderLibrary();
+    const other = await cardFor('Sopar de Nadal 1998');
+    await waitFor(() => {
+      expect(other.querySelector('[data-ds="waveform"]')).not.toBeNull();
+    });
+    usePlayback.getState().play({
+      uuid: CARRER_NOU,
+      title: 'The house on Carrer Nou',
+      library: 'Àvia Teresa',
+      durationMs: 2_892_000,
+      hasWaveform: true,
+    });
+    usePlayback.getState().report({ status: 'playing', positionMs: 1_084_000 });
+    const bars = [...other.querySelectorAll('[data-ds="waveform"] rect')];
+    expect(bars.length).toBeGreaterThan(0);
+    expect(bars.every((bar) => bar.getAttribute('fill') === 'var(--wave-dim)')).toBe(true);
+  });
+
   it('turns the control that started the sound into the one that stops it', async () => {
     const user = userEvent.setup();
     renderLibrary();

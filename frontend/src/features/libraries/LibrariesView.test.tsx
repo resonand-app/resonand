@@ -17,7 +17,7 @@ import { describe, expect, it } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { toLibrary } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { ATENEU, AVIA, NOTA, PERSONAL, archive } from '@/test/api/archive';
+import { ATENEU, AVIA, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { LibrariesView } from './LibrariesView';
@@ -129,44 +129,22 @@ describe('a card', () => {
     expect(within(card).getByRole('button', { name: 'Options for Àvia Teresa' })).toBeVisible();
   });
 
-  it('draws no waveform until one has been fetched, and never an invented one', async () => {
+  it('draws no waveform: the shape of one recording is not a fact about the library', async () => {
     renderView();
     const card = await cardFor('Àvia Teresa');
-    // `pending` while the two deferred requests are in flight: a dashed rule, not a shape.
     expect(card.querySelector('[data-ds="waveform"]')).toBeNull();
-    await waitFor(() => {
-      expect(card.querySelector('[data-ds="waveform"]')).not.toBeNull();
-    });
   });
 
-  it('asks for nothing at all for a library with no recordings', async () => {
-    archive.libraries = archive.libraries.map((one) =>
-      one.uuid === AVIA ? { ...one, audio_count: 0, total_duration_ms: 0 } : one,
-    );
+  it('is drawn entirely from the list request, and asks for nothing of its own', async () => {
     const asked: string[] = [];
     server.events.on('request:start', ({ request }) => asked.push(request.url));
     renderView();
     await cardFor('Àvia Teresa');
-    // The personal library still asks, which is what makes the absence below a decision rather
-    // than a page that never got as far as fetching anything.
-    await waitFor(() => {
-      expect(asked.some((url) => url.includes(`/libraries/${PERSONAL}/audio`))).toBe(true);
-    });
-    // `audio_count` already answers "is there a most recent recording", so it is not asked.
-    expect(asked.some((url) => url.includes(`/libraries/${AVIA}/audio`))).toBe(false);
-  });
-
-  it('asks for no peaks for a recording whose waveform job has not run', async () => {
-    const asked: string[] = [];
-    server.events.on('request:start', ({ request }) => asked.push(request.url));
-    renderView();
     await cardFor('Personal');
-    // The most recent thing in the personal library is a voice note still being processed, and
-    // `has_waveform` says so on the summary -- so the request that would 404 is never made.
-    await waitFor(() => {
-      expect(asked.some((url) => url.includes(`/libraries/${PERSONAL}/audio`))).toBe(true);
-    });
-    expect(asked.some((url) => url.includes(`/audio/${NOTA}/waveform`))).toBe(false);
+    // Neither of the two the waveform cost: which recording is the most recent, then its peaks.
+    expect(asked.some((url) => url.includes(`/libraries/${AVIA}/audio`))).toBe(false);
+    expect(asked.some((url) => url.includes(`/libraries/${PERSONAL}/audio`))).toBe(false);
+    expect(asked.some((url) => url.includes('/waveform'))).toBe(false);
   });
 });
 

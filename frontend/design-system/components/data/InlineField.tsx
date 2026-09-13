@@ -10,7 +10,12 @@ export interface InlineFieldProps {
   onSave: (value: string) => void;
   /** The 10px mono overline above it: RECORDED, CATEGORY, TITLE. */
   label?: string;
-  /** Shown in place of an empty value. "No notes", "Untitled". */
+  /**
+   * Shown in place of an empty value. "No notes", "Untitled".
+   *
+   * Optional on purpose: a field whose emptiness is self-evident under its own overline reads
+   * better empty than filled with a sentence about being empty.
+   */
   placeholder?: string;
   /**
    * **Read-only because of permission**, which is a different thing from disabled.
@@ -176,6 +181,10 @@ export function InlineField({
         type="button"
         data-ds="inline-field"
         data-hit-target=""
+        // A field with nothing in it and no placeholder has no text to be named by, and an
+        // unnamed button is one a screen reader announces as "button". The label names it only
+        // then: where there is a value, the value is what should be read out.
+        aria-label={shown === '' ? label : undefined}
         onClick={start}
         onFocus={start}
         style={{
