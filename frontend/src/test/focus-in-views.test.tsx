@@ -30,10 +30,10 @@ import { describe, expect, it } from 'vitest';
 
 import CSS from '@/design-system/components.css?raw';
 import { mockApi } from '@/test/api/server';
-import { VIEWS, mountView } from '@/test/views';
+import { VIEWS, mountView } from '@/test/support/views';
 
 import { focusRules } from './focus-and-targets';
-import { WHOLE_SYSTEM } from './timeouts';
+import { WHOLE_SYSTEM } from './support/timeouts';
 
 mockApi();
 

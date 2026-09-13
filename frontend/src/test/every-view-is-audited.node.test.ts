@@ -47,7 +47,7 @@ function onDisk(): string[] {
  * pattern this plain: it is the one place in the harness where a path is written down.
  */
 function audited(): string[] {
-  const harness = readFileSync(resolve(SOURCE, 'test/views.tsx'), 'utf8');
+  const harness = readFileSync(resolve(SOURCE, 'test/support/views.tsx'), 'utf8');
   return [...harness.matchAll(/^\s*module:\s*'([^']+)',$/gm)].map((match) => match[1] ?? '').sort();
 }
 

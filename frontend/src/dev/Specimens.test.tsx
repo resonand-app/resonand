@@ -14,7 +14,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { WHOLE_SYSTEM } from '@/test/timeouts';
+import { WHOLE_SYSTEM } from '@/test/support/timeouts';
 
 import { ThemeProvider } from '@/design-system';
 

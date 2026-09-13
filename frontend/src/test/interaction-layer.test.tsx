@@ -21,7 +21,7 @@
 import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { WHOLE_SYSTEM } from './timeouts';
+import { WHOLE_SYSTEM } from './support/timeouts';
 
 import { ThemeProvider } from '@/design-system';
 /* The stylesheets as text. `?raw` rather than `readFileSync`: a test that renders belongs to the

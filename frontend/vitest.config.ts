@@ -26,7 +26,7 @@ export default mergeConfig(
       // its own vocabulary comes from is one the type checker and ESLint can both read without
       // a second global namespace to be told about.
       globals: false,
-      setupFiles: [fileURLToPath(new URL('./src/test/setup.ts', import.meta.url))],
+      setupFiles: [fileURLToPath(new URL('./src/test/support/setup.ts', import.meta.url))],
       // Both trees. `design-system/` is the application's component source (`DEC-21`), so a
       // component's test sits beside the component rather than in a parallel folder under
       // `src/` that has to be kept in step with it by hand.
