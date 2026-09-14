@@ -15,10 +15,10 @@ import { TopNav } from './TopNav';
 
 describe('TopNav', () => {
   it('shows the query it is given, and follows it when it changes', () => {
-    const { rerender } = render(<TopNav query="teresa" />);
-    expect(screen.getByRole('textbox')).toHaveValue('teresa');
-    rerender(<TopNav query="carrer nou" />);
-    expect(screen.getByRole('textbox')).toHaveValue('carrer nou');
+    const { rerender } = render(<TopNav query="rehearsal" />);
+    expect(screen.getByRole('textbox')).toHaveValue('rehearsal');
+    rerender(<TopNav query="field recording" />);
+    expect(screen.getByRole('textbox')).toHaveValue('field recording');
   });
 
   it('reports typing even when nobody passed a query', async () => {
@@ -32,7 +32,7 @@ describe('TopNav', () => {
     // React's own warning for a controlled field nobody is listening to. It is a console message
     // rather than a failure, so it would otherwise scroll past in CI for the life of the project.
     const warn = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    render(<TopNav query="teresa" />);
+    render(<TopNav query="rehearsal" />);
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });

@@ -20,7 +20,8 @@ export interface ChipProps extends HTMLAttributes<HTMLElement> {
 /**
  * A tag or filter pill.
  *
- * Tags are user content and are shown verbatim -- accents, Catalan, whatever was typed. The chip
+ * Tags are user content and are shown verbatim -- accents, any language, whatever was typed. The
+ * chip
  * does not truncate, capitalise or otherwise improve them.
  *
  * It is inert as a tag and interactive as a filter, which is one component in two places -- so

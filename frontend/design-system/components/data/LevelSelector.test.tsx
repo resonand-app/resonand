@@ -23,13 +23,13 @@ const LEVELS = [
 
 describe('LevelSelector', () => {
   it('renders the words the API sent, not words of its own', () => {
-    render(<LevelSelector label="What Marta can do" levels={LEVELS} value={20} onChange={vi.fn()} />);
+    render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={20} onChange={vi.fn()} />);
     expect(screen.getByText('listen and read the transcript, and change nothing.')).toBeDefined();
     expect(screen.getByText('change titles, categories and tags, but not share.')).toBeDefined();
   });
 
   it('drops owner rather than drawing it disabled', () => {
-    render(<LevelSelector label="What Marta can do" levels={LEVELS} value={20} onChange={vi.fn()} />);
+    render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={20} onChange={vi.fn()} />);
     // Ownership is not a grant -- the backend reads it off `library.owner_id` and a CHECK refuses
     // a share row carrying it -- so an option nobody can ever pick is not in the list.
     expect(screen.getAllByRole('radio')).toHaveLength(3);
@@ -37,7 +37,7 @@ describe('LevelSelector', () => {
   });
 
   it('keeps the wording visible rather than behind anything', () => {
-    render(<LevelSelector label="What Marta can do" levels={LEVELS} value={10} onChange={vi.fn()} />);
+    render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={10} onChange={vi.fn()} />);
     // No hover, no focus, no tooltip: the sentence is on the page when the page is.
     expect(screen.getByText('listen and read the transcript, and change nothing.')).toBeVisible();
   });
@@ -47,7 +47,7 @@ describe('LevelSelector', () => {
     // be able to lose half a sentence.
     render(
       <LevelSelector
-        label="What Marta can do"
+        label="What Sam Rivera can do"
         levels={[{ level: 10, description: 'Listen and change nothing' }]}
         value={10}
         onChange={vi.fn()}
@@ -57,13 +57,13 @@ describe('LevelSelector', () => {
   });
 
   it('says which level is granted', () => {
-    render(<LevelSelector label="What Marta can do" levels={LEVELS} value={30} onChange={vi.fn()} />);
+    render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={30} onChange={vi.fn()} />);
     expect(screen.getByRole('radio', { checked: true })).toHaveTextContent('Can manage');
   });
 
   it('is one tab stop, and the arrows choose', async () => {
     const onChange = vi.fn();
-    render(<LevelSelector label="What Marta can do" levels={LEVELS} value={20} onChange={onChange} />);
+    render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={20} onChange={onChange} />);
     const chosen = screen.getByRole('radio', { checked: true });
     expect(chosen).toHaveAttribute('tabindex', '0');
     chosen.focus();
@@ -73,13 +73,13 @@ describe('LevelSelector', () => {
 
   it('chooses on a click', async () => {
     const onChange = vi.fn();
-    render(<LevelSelector label="What Marta can do" levels={LEVELS} value={10} onChange={onChange} />);
+    render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={10} onChange={onChange} />);
     await userEvent.click(screen.getByRole('radio', { name: /Can manage/ }));
     expect(onChange).toHaveBeenCalledWith(30);
   });
 
   it('is a named group, because "read" alone means nothing', () => {
-    render(<LevelSelector label="What Marta can do" levels={LEVELS} value={10} onChange={vi.fn()} />);
-    expect(screen.getByRole('radiogroup', { name: 'What Marta can do' })).toBeDefined();
+    render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={10} onChange={vi.fn()} />);
+    expect(screen.getByRole('radiogroup', { name: 'What Sam Rivera can do' })).toBeDefined();
   });
 });

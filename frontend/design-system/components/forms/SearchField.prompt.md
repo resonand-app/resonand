@@ -2,5 +2,5 @@ The one search field in the product: centred in the top nav, max-width 540px. Ty
 
 ```jsx
 <SearchField style={{ maxWidth: 540 }} />
-<SearchField value="carrer nou" focused />
+<SearchField value="field recording" focused />
 ```

@@ -6,7 +6,7 @@ import { IconButton } from '../forms/IconButton';
 export interface ToastProps {
   /** `done` is one line and a tick; `failed` is multi-line and carries actions. */
   tone?: 'done' | 'failed';
-  /** What happened, in numbers. "12 recordings moved to Àvia Teresa". */
+  /** What happened, in numbers. "12 recordings moved to Field recordings". */
   children: ReactNode;
   /** Buttons for a failure: a retry, and a way to put it away. */
   actions?: ReactNode;

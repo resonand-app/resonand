@@ -188,8 +188,8 @@ export function RecordingCard({
               fontSize: 'var(--type-body-size)',
               letterSpacing: '-0.005em',
               color: 'var(--text)',
-              // A title wraps rather than being cut: "Interview with grandma Teresa -- the house
-              // on Carrer Nou" is an ordinary title, and an ellipsis in the middle of it is a
+              // A title wraps rather than being cut: "Field recording, long take -- the house
+              // on Field notes" is an ordinary title, and an ellipsis in the middle of it is a
               // recording somebody cannot identify (§V3).
               textWrap: 'pretty',
             }}

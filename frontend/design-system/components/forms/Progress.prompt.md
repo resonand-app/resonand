@@ -1,9 +1,9 @@
 Per-file upload progress, and nothing else.
 
 ```jsx
-<Progress value={0.64} label="Entrevista àvia 03.m4a" detail="64% · 284 MB" />
+<Progress value={0.64} label="field-recording-03.m4a" detail="64% · 284 MB" />
 <Progress value={0.1} label="Overall" detail="3 of 30 uploaded, 1 failed" />
-<Progress value={1} label="Entrevista àvia 03.m4a" detail={<Done />} />
+<Progress value={1} label="field-recording-03.m4a" detail={<Done />} />
 ```
 
 The name is on its own line with the bar under it, and the `detail` sits beside both and centred

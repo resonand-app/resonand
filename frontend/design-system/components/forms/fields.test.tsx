@@ -75,10 +75,10 @@ describe('TextField', () => {
 
 describe('SearchField', () => {
   it('follows `value` when it changes', () => {
-    const { rerender } = render(<SearchField value="teresa" onChange={vi.fn()} />);
-    expect(screen.getByRole('textbox')).toHaveValue('teresa');
-    rerender(<SearchField value="carrer nou" onChange={vi.fn()} />);
-    expect(screen.getByRole('textbox')).toHaveValue('carrer nou');
+    const { rerender } = render(<SearchField value="rehearsal" onChange={vi.fn()} />);
+    expect(screen.getByRole('textbox')).toHaveValue('rehearsal');
+    rerender(<SearchField value="field recording" onChange={vi.fn()} />);
+    expect(screen.getByRole('textbox')).toHaveValue('field recording');
   });
 
   it('hides the keyboard hint when there is none to give', () => {

@@ -2,9 +2,9 @@
  * The action cannot fire before the match (`UI-34m`'s criterion), and the match itself.
  *
  * The comparison is the interesting half. The prototype used a bare `===`, which takes none of the
- * four decisions this needs to take -- and the names in this archive are Catalan, so every one of
- * them shows up in practice: `À` has two Unicode spellings, phone keyboards add trailing spaces,
- * shift is a typing convention, and an accent is part of the word.
+ * four decisions this needs to take -- and a library name is whatever somebody typed, so every one
+ * of them shows up in practice: `Á` has two Unicode spellings, phone keyboards add trailing
+ * spaces, shift is a typing convention, and an accent is part of the word.
  */
 
 import { render, screen } from '@testing-library/react';
@@ -18,7 +18,7 @@ function open(onConfirm = vi.fn(), onCancel = vi.fn()) {
   render(
     <TypedConfirm
       open
-      name="Àvia Teresa"
+      name="Álbum"
       consequence="84 recordings, 12 h 40 min of audio and their transcripts"
       onConfirm={onConfirm}
       onCancel={onCancel}
@@ -31,33 +31,33 @@ const confirmButton = () => screen.getByRole('button', { name: 'Delete permanent
 
 describe('matchesName', () => {
   it('accepts the name as typed', () => {
-    expect(matchesName('Àvia Teresa', 'Àvia Teresa')).toBe(true);
+    expect(matchesName('Álbum', 'Álbum')).toBe(true);
   });
 
   it('accepts a different case, because shift is not part of the name', () => {
-    expect(matchesName('àvia teresa', 'Àvia Teresa')).toBe(true);
+    expect(matchesName('álbum', 'Álbum')).toBe(true);
   });
 
   it('accepts either Unicode spelling of the same letter', () => {
-    // `À` as one code point, and as `A` plus a combining grave. They are the same word on screen
+    // `Á` as one code point, and as `A` plus a combining acute. They are the same word on screen
     // and a macOS keyboard and a Linux one do not always produce the same one -- two strings that
     // look identical and compare unequal is the worst failure a typed confirmation can have.
-    expect(matchesName('Àvia Teresa', 'Àvia Teresa')).toBe(true);
+    expect(matchesName('A\u0301lbum', 'Álbum')).toBe(true);
   });
 
   it('accepts a stray space from a phone keyboard', () => {
-    expect(matchesName('  Àvia Teresa ', 'Àvia Teresa')).toBe(true);
+    expect(matchesName('  Álbum ', 'Álbum')).toBe(true);
   });
 
   it('refuses a missing accent, because an accent is part of the word', () => {
     // The one place in the product where being strict costs a retype and being lax costs a
     // library.
-    expect(matchesName('Avia Teresa', 'Àvia Teresa')).toBe(false);
+    expect(matchesName('Album', 'Álbum')).toBe(false);
   });
 
   it('refuses a different name, and refuses nothing at all', () => {
-    expect(matchesName('Àvia', 'Àvia Teresa')).toBe(false);
-    expect(matchesName('', 'Àvia Teresa')).toBe(false);
+    expect(matchesName('Field recordings', 'Álbum')).toBe(false);
+    expect(matchesName('', 'Álbum')).toBe(false);
     // An empty name must never be matchable by an empty box.
     expect(matchesName('', '')).toBe(false);
   });
@@ -77,7 +77,7 @@ describe('TypedConfirm', () => {
 
   it('fires once the name is typed', async () => {
     const { onConfirm } = open();
-    await userEvent.type(screen.getByRole('textbox'), 'Àvia Teresa');
+    await userEvent.type(screen.getByRole('textbox'), 'Álbum');
     expect(confirmButton()).toBeEnabled();
     await userEvent.click(confirmButton());
     expect(onConfirm).toHaveBeenCalledTimes(1);
@@ -85,7 +85,7 @@ describe('TypedConfirm', () => {
 
   it('goes back to inert if the name stops matching', async () => {
     open();
-    await userEvent.type(screen.getByRole('textbox'), 'Àvia Teresa');
+    await userEvent.type(screen.getByRole('textbox'), 'Álbum');
     expect(confirmButton()).toBeEnabled();
     await userEvent.type(screen.getByRole('textbox'), 'x');
     expect(confirmButton()).toBeDisabled();
@@ -111,7 +111,7 @@ describe('TypedConfirm', () => {
     render(
       <TypedConfirm
         open={false}
-        name="Àvia Teresa"
+        name="Álbum"
         consequence="84 recordings"
         onConfirm={vi.fn()}
         onCancel={vi.fn()}

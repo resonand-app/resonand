@@ -40,8 +40,8 @@ describe('Checkbox', () => {
   });
 
   it('has a name, because it has no words', () => {
-    render(<Checkbox checked={false} onChange={vi.fn()} label="Select Sopar de Nadal 1998" />);
-    expect(screen.getByRole('checkbox', { name: 'Select Sopar de Nadal 1998' })).toBeDefined();
+    render(<Checkbox checked={false} onChange={vi.fn()} label="Select Digitised cassette" />);
+    expect(screen.getByRole('checkbox', { name: 'Select Digitised cassette' })).toBeDefined();
   });
 
   it('draws a glyph for both filled states and nothing for empty', () => {

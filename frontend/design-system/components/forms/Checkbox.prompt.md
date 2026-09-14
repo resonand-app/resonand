@@ -1,7 +1,7 @@
 Multiple selection on cards and in dense rows.
 
 ```jsx
-<Checkbox checked={selected} onChange={setSelected} label="Select Sopar de Nadal 1998" />
+<Checkbox checked={selected} onChange={setSelected} label="Select Digitised cassette" />
 <Checkbox checked="mixed" onChange={selectAll} label="Select all" size="row" />
 ```
 

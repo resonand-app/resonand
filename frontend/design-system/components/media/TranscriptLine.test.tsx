@@ -18,7 +18,7 @@ describe('TranscriptLine', () => {
     const onClick = vi.fn();
     render(
       <TranscriptLine at="18:04" onClick={onClick}>
-        i l&apos;àvia deia que la casa era d&apos;abans de la guerra
+        the third segment mentions rehearsal, which is the word search is asked for
       </TranscriptLine>,
     );
     const line = screen.getByRole('button');

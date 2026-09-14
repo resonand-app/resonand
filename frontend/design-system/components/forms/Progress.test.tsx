@@ -19,14 +19,14 @@ describe('Progress', () => {
   it('has no indeterminate mode to reach for', () => {
     render(
       // @ts-expect-error -- there is no `indeterminate` prop, and this line is the test.
-      <Progress value={0.5} label="Entrevista àvia 03.m4a" indeterminate />,
+      <Progress value={0.5} label="field-recording-03.m4a" indeterminate />,
     );
     expect(screen.getByRole('progressbar')).toBeDefined();
   });
 
   it('reports how far along it is, as a number somebody can hear', () => {
-    render(<Progress value={0.64} label="Entrevista àvia 03.m4a" detail="64% · 284 MB" />);
-    const bar = screen.getByRole('progressbar', { name: 'Entrevista àvia 03.m4a' });
+    render(<Progress value={0.64} label="field-recording-03.m4a" detail="64% · 284 MB" />);
+    const bar = screen.getByRole('progressbar', { name: 'field-recording-03.m4a' });
     expect(bar).toHaveAttribute('aria-valuenow', '64');
     expect(bar).toHaveAttribute('aria-valuemin', '0');
     expect(bar).toHaveAttribute('aria-valuemax', '100');
@@ -55,7 +55,7 @@ describe('Progress', () => {
     render(
       <Progress
         value={1}
-        label="Entrevista àvia 03.m4a"
+        label="field-recording-03.m4a"
         detail={<span role="img" aria-label="Uploaded" />}
       />,
     );

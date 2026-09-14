@@ -1,6 +1,6 @@
 # Sonarium Design System
 
-Sonarium is a personal audio archive: you upload recordings, they get transcribed, and you can then search across everything you have ever recorded by what was said in it. Recordings live in **libraries** the user creates, names and colours themselves; a library can be kept private or shared with specific people. The product's two hard promises shape the whole interface — **nothing is shared until you share it**, and **nothing is destroyed without being told what will be lost**.
+Sonarium is a personal audio archive: you upload recordings, they get transcribed, and you can then search across everything you have ever recorded by what was said in it. Field recordings live in **libraries** the user creates, names and colours themselves; a library can be kept private or shared with specific people. The product's two hard promises shape the whole interface — **nothing is shared until you share it**, and **nothing is destroyed without being told what will be lost**.
 
 This system was designed from scratch for v0. There was no prior visual language, no existing app, and no logo.
 
@@ -131,7 +131,7 @@ Three of the components carry an absence that is part of the design, and each sa
 - ~~**Geist is loaded from Google Fonts**, not shipped.~~ **Closed by `UI-1a`.** Both faces ship as subset woff2 in `assets/fonts/`, Latin and Latin Extended, no italics — 84 KB for all four files. They come from `@fontsource-variable/geist` and its mono twin, and the version is written in `tokens/fonts.css`, which is the only place it exists. Nothing here reaches the network.
 - ~~**Icons are Lucide, loaded from a CDN.**~~ **Closed by `UI-1b`.** Bundled and tree-shaken — see ICONOGRAPHY. The substitution itself still stands: no icon set was supplied, and `Icon` is still the one file that changes if one arrives.
 - **The system is complete; the interface is not.** Thirty-four components and six composites, drawn and built. What does not exist yet is a single view: `frontend/src/` holds the application's four composites, the specimen page and a hello. Phase D puts a router, a client and a shell around them.
-- **Sample content is invented**, written to be plausible for a Catalan family-archive user. It now lives in the application's `src/dev/specimen-data.ts` rather than in this folder — component defaults are deliberately empty, so a forgotten prop reads as missing rather than as somebody else's recording.
+- **Sample content is invented** and deliberately generic — a library is "Field recordings", a recording is "Field recording, long take". It lives in the application's `src/dev/specimen-data.ts` rather than in this folder — component defaults are deliberately empty, so a forgotten prop reads as missing rather than as somebody else's recording.
 
 ### The UI kit is provenance, not a starting point
 

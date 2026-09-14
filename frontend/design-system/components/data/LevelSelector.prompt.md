@@ -2,7 +2,7 @@ Can read / Can edit / Can manage, as radio rows with the plain wording visible.
 
 ```jsx
 <LevelSelector
-  label="What Marta can do"
+  label="What Sam Rivera can do"
   levels={shares.levels}          {/* level + level_description, from the API */}
   value={share.level}
   onChange={setLevel}

@@ -2,7 +2,7 @@
 
 ```jsx
 <StateCard icon="library" title="No recordings yet" body="Upload audio to get started." action={<Button variant="primary" icon="upload">Upload audio</Button>} dashed />
-<StateCard icon="search" title="No recordings match memòria" action={<Button variant="secondary">Clear the filter</Button>} />
+<StateCard icon="search" title="No recordings match field" action={<Button variant="secondary">Clear the filter</Button>} />
 <StateCard icon="loader" busy title="Transcribing" body="Started 2 minutes ago · on whisper" />
 <CardSkeleton />  <RowSkeleton />
 ```
