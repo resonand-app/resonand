@@ -17,7 +17,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { CARRER_NOU, NOTA } from '@/test/api/archive';
+import { FIELD_TAKE, VOICE_NOTE } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -51,7 +51,7 @@ async function open(user: ReturnType<typeof userEvent.setup>) {
   await user.click(await screen.findByText('Technical'));
 }
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -99,7 +99,7 @@ describe('the section', () => {
   });
 
   it('says a field is not known yet rather than leaving the row blank', async () => {
-    renderRecording(NOTA);
+    renderRecording(VOICE_NOTE);
     await screen.findByText('Technical');
     // The probe has not run on this one. An empty row reads as a value that failed to load.
     expect(screen.getAllByText('Not known yet').length).toBeGreaterThan(0);

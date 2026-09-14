@@ -20,9 +20,9 @@ const category = (
 
 describe('the tree', () => {
   it('nests children under their parent', () => {
-    const tree = treeOf([category(1, 'Entrevistes'), category(2, 'Àvia', 1)]);
+    const tree = treeOf([category(1, 'Interviews'), category(2, 'Álbum', 1)]);
     expect(tree).toHaveLength(1);
-    expect(tree[0]?.children[0]?.category.name).toBe('Àvia');
+    expect(tree[0]?.children[0]?.category.name).toBe('Álbum');
     expect(tree[0]?.children[0]?.depth).toBe(1);
   });
 
@@ -34,8 +34,8 @@ describe('the tree', () => {
   it('falls back to the name when two share a position', () => {
     // Two categories can share a position after a re-parent, and a list that reorders itself
     // between renders is a list nobody can click accurately.
-    const tree = treeOf([category(1, 'Zulu'), category(2, 'Àvia')]);
-    expect(tree.map((node) => node.category.name)).toEqual(['Àvia', 'Zulu']);
+    const tree = treeOf([category(1, 'Zulu'), category(2, 'Álbum')]);
+    expect(tree.map((node) => node.category.name)).toEqual(['Álbum', 'Zulu']);
   });
 
   it('drops a category whose parent chain never reaches the root', () => {
@@ -49,12 +49,12 @@ describe('the tree', () => {
   it('flattens to the order the rows are drawn in, parents before their children', () => {
     const rows = inDrawnOrder(
       treeOf([
-        category(1, 'Entrevistes'),
-        category(2, 'Àvia', 1),
-        category(3, 'Reunions', null, 1),
+        category(1, 'Interviews'),
+        category(2, 'Álbum', 1),
+        category(3, 'Meetings', null, 1),
       ]),
     );
-    expect(rows.map((row) => row.category.name)).toEqual(['Entrevistes', 'Àvia', 'Reunions']);
+    expect(rows.map((row) => row.category.name)).toEqual(['Interviews', 'Álbum', 'Meetings']);
     expect(rows.map((row) => row.depth)).toEqual([0, 1, 0]);
   });
 });

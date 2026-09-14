@@ -45,7 +45,7 @@ export interface ResultsProps {
 export function Results({ results }: ResultsProps) {
   const navigate = useNavigate();
   // Results span libraries, which is the difference between this screen and a library's grid: a
-  // recording has to say where it lives, because "Sopar de Nadal" means one thing in the family
+  // recording has to say where it lives, because "Rehearsal" means one thing in the family
   // archive and another in somebody's field recordings.
   const libraries = useAllLibraries();
   const names = new Map(libraries.map((library) => [library.uuid, library.name]));

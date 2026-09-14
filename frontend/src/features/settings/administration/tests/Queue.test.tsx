@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { CANCONS, archive } from '@/test/api/archive';
+import { REHEARSAL, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { Queue } from '../Queue';
@@ -54,7 +54,7 @@ describe('a job waiting on a backoff', () => {
         id: 21,
         kind: 'transcribe',
         state: 'pending',
-        audio_uuid: CANCONS,
+        audio_uuid: REHEARSAL,
         attempts: 2,
         error: null,
         created_at: '2026-03-12T09:00:00Z',
@@ -75,7 +75,7 @@ describe('a finished job', () => {
         id: 30,
         kind: 'probe',
         state: 'done',
-        audio_uuid: CANCONS,
+        audio_uuid: REHEARSAL,
         attempts: 1,
         error: null,
         created_at: '2026-03-12T09:00:00Z',
@@ -106,7 +106,7 @@ describe('four hundred jobs after a bulk import', () => {
       id: 1000 + index,
       kind: 'waveform',
       state: 'pending',
-      audio_uuid: CANCONS,
+      audio_uuid: REHEARSAL,
       attempts: 1,
       error: null,
       created_at: '2026-03-12T09:00:00Z',
@@ -124,7 +124,7 @@ describe('four hundred jobs after a bulk import', () => {
       id: 1000 + index,
       kind: 'waveform',
       state: 'pending',
-      audio_uuid: CANCONS,
+      audio_uuid: REHEARSAL,
       attempts: 1,
       error: null,
       created_at: '2026-03-12T09:00:00Z',
@@ -147,7 +147,7 @@ describe('four hundred jobs after a bulk import', () => {
       id: 1000 + index,
       kind: 'waveform',
       state: 'pending',
-      audio_uuid: CANCONS,
+      audio_uuid: REHEARSAL,
       attempts: 1,
       error: null,
       created_at: '2026-03-12T09:00:00Z',

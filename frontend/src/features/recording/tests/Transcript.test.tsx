@@ -20,7 +20,7 @@ import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { usePlayback } from '@/player/store';
-import { CARRER_NOU, NADAL, archive } from '@/test/api/archive';
+import { FIELD_TAKE, CASSETTE, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -53,7 +53,7 @@ function Where() {
   return <div data-testid="where">{location.pathname}</div>;
 }
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -84,15 +84,15 @@ describe('the lines', () => {
   it('draws the segments with the moment each one starts at', async () => {
     measured();
     renderRecording();
-    expect(await screen.findByText(/My mother was born in the village/)).toBeInTheDocument();
+    expect(await screen.findByText(/The first segment of the transcript/)).toBeInTheDocument();
     // 17:31, the first segment's `start_ms`, as a position a person reads rather than a length.
     expect(screen.getByText('17:31')).toBeInTheDocument();
   });
 
   it('is not there at all for a recording with no transcript', async () => {
     measured();
-    renderRecording(NADAL);
-    await screen.findByRole('heading', { name: 'Sopar de Nadal 1998' });
+    renderRecording(CASSETTE);
+    await screen.findByRole('heading', { name: 'Digitised cassette' });
     expect(lines()).toHaveLength(0);
   });
 
@@ -106,7 +106,7 @@ describe('the lines', () => {
   it('offers nothing that suggests the transcript can be edited', async () => {
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     // A pencil, a text cursor or a "suggest a correction" would promise the manual editor that
     // is a later milestone (`UI-12d`).
     expect(document.querySelector('input')).toBeNull();
@@ -116,14 +116,14 @@ describe('the lines', () => {
   });
 
   it('prefixes a line with its speaker when there is one, and shifts nothing when there is not', async () => {
-    const transcript = archive.transcripts[CARRER_NOU];
+    const transcript = archive.transcripts[FIELD_TAKE];
     if (transcript === undefined) throw new Error('The fixture has no transcript.');
     archive.transcripts = {
       ...archive.transcripts,
-      [CARRER_NOU]: {
+      [FIELD_TAKE]: {
         ...transcript,
         segments: transcript.segments.map((segment, index) =>
-          index === 0 ? { ...segment, speaker: 'Teresa' } : segment,
+          index === 0 ? { ...segment, speaker: 'Speaker A' } : segment,
         ),
       },
     };
@@ -131,8 +131,8 @@ describe('the lines', () => {
     renderRecording();
     // `speaker` is usually null in v0, so it is accommodated and not depended on: the labelled
     // line gets a name and every other line keeps its own left edge.
-    expect(await screen.findByText('Teresa')).toBeInTheDocument();
-    expect(screen.getByText(/I remember the stairs were always cold/)).toBeInTheDocument();
+    expect(await screen.findByText('Speaker A')).toBeInTheDocument();
+    expect(screen.getByText(/The second segment/)).toBeInTheDocument();
   });
 });
 
@@ -140,17 +140,17 @@ describe('the active line', () => {
   it('is the one the position is inside, and there is exactly one', async () => {
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     // 18:04 in the fixtures is the second segment: 17:31 + 13 s + 20 s.
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
     usePlayback.getState().report({ status: 'playing', positionMs: 1_066_000 });
-    const active = await screen.findByText(/I remember the stairs were always cold/);
+    const active = await screen.findByText(/The second segment/);
     expect(active.closest('[data-ds="transcript-line"]')).toHaveAttribute('data-active', 'true');
     expect(activeLines()).toHaveLength(1);
   });
@@ -158,11 +158,11 @@ describe('the active line', () => {
   it('is nowhere before the first segment starts', async () => {
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
@@ -174,7 +174,7 @@ describe('the active line', () => {
   it('is nowhere at all while another recording is the one playing', async () => {
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     usePlayback.getState().play({
       uuid: 'some-other-recording',
       title: 'Something else',
@@ -192,25 +192,25 @@ describe('clicking a line', () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await user.click(await screen.findByText(/We stayed until the year my grandfather died/));
+    await user.click(await screen.findByText(/The fourth segment is a short one/));
     // The fourth segment: 17:31 + 3 × 13 s.
     expect(usePlayback.getState().positionMs).toBe(1_090_000);
-    expect(usePlayback.getState().recording?.uuid).toBe(CARRER_NOU);
+    expect(usePlayback.getState().recording?.uuid).toBe(FIELD_TAKE);
   });
 
   it('does not leave the screen', async () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await user.click(await screen.findByText(/After that nobody wanted to go back/));
-    expect(screen.getByTestId('where').textContent).toBe(toRecording(CARRER_NOU));
+    await user.click(await screen.findByText(/The fifth segment is the one a click seeks to/));
+    expect(screen.getByTestId('where').textContent).toBe(toRecording(FIELD_TAKE));
   });
 
   it('works from the keyboard, because a seek is not a mouse gesture', async () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    const line = await screen.findByText(/The building is still there/);
+    const line = await screen.findByText(/The sixth segment/);
     const control = line.closest('[data-ds="transcript-line"]');
     if (control === null) throw new Error('A line that seeks is not a control.');
     (control as HTMLElement).focus();
@@ -224,7 +224,7 @@ describe('following the audio', () => {
   it('offers to follow again after somebody scrolls, in a band rather than a toast', async () => {
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     const scroller = document.querySelector('[data-app="transcript-scroller"]');
     if (scroller === null) throw new Error('The transcript has no scroller.');
     expect(screen.queryByText(/stopped following the audio/)).toBeNull();
@@ -239,7 +239,7 @@ describe('following the audio', () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     const scroller = document.querySelector('[data-app="transcript-scroller"]');
     if (scroller === null) throw new Error('The transcript has no scroller.');
     fireEvent.scroll(scroller);
@@ -251,12 +251,12 @@ describe('following the audio', () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     const scroller = document.querySelector('[data-app="transcript-scroller"]');
     if (scroller === null) throw new Error('The transcript has no scroller.');
     fireEvent.scroll(scroller);
     await screen.findByText(/stopped following the audio/);
-    await user.click(screen.getByText(/After that nobody wanted to go back/));
+    await user.click(screen.getByText(/The fifth segment is the one a click seeks to/));
     expect(screen.queryByText(/stopped following the audio/)).toBeNull();
   });
 });
@@ -265,9 +265,9 @@ describe('moving between segments', () => {
   /** Put the position inside a segment, which is what the arrows step from. */
   function playingAt(positionMs: number) {
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
@@ -278,7 +278,7 @@ describe('moving between segments', () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     playingAt(1_066_000);
     await user.keyboard('{ArrowDown}');
     // The third segment. `↓` is a seek and not a focus move: the position is the only cursor on
@@ -290,7 +290,7 @@ describe('moving between segments', () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     playingAt(1_066_000);
     await user.keyboard('{ArrowUp}');
     expect(usePlayback.getState().positionMs).toBe(1_051_000);
@@ -300,7 +300,7 @@ describe('moving between segments', () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     playingAt(4_000);
     await user.keyboard('{ArrowDown}');
     expect(usePlayback.getState().positionMs).toBe(1_051_000);
@@ -310,7 +310,7 @@ describe('moving between segments', () => {
     const user = userEvent.setup();
     measured();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     playingAt(1_051_000);
     await user.keyboard('{ArrowUp}');
     // A transcript that jumped from its first line to its last would be a seek nobody asked for.
@@ -323,12 +323,12 @@ describe('moving between segments', () => {
   it('leaves the arrows to the browser where there is no transcript', async () => {
     const user = userEvent.setup();
     measured();
-    renderRecording(NADAL);
-    await screen.findByRole('heading', { name: 'Sopar de Nadal 1998' });
+    renderRecording(CASSETTE);
+    await screen.findByRole('heading', { name: 'Digitised cassette' });
     usePlayback.getState().play({
-      uuid: NADAL,
-      title: 'Sopar de Nadal 1998',
-      library: 'Àvia Teresa',
+      uuid: CASSETTE,
+      title: 'Digitised cassette',
+      library: 'Field recordings',
       durationMs: 727_000,
       hasWaveform: true,
     });
@@ -392,11 +392,11 @@ describe('when the device asks for less movement', () => {
     prefers(true);
     const asked = scrollable();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
@@ -413,11 +413,11 @@ describe('when the device asks for less movement', () => {
     prefers(false);
     const asked = scrollable();
     renderRecording();
-    await screen.findByText(/My mother was born in the village/);
+    await screen.findByText(/The first segment of the transcript/);
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });

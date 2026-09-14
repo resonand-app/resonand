@@ -20,7 +20,7 @@ import { describe, expect, it } from 'vitest';
 
 import { keys } from '@/api/keys';
 import { createQueryClient } from '@/api/query-client';
-import { CANCONS, archive } from '@/test/api/archive';
+import { REHEARSAL, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { useTranscriptionSettled, useTranscriptionStatus } from '../transcription';
@@ -43,8 +43,8 @@ function wrapper(client: QueryClient) {
 function showing(state: string): QueryClient {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
-  const recording = archive.recordings.find((one) => one.uuid === CANCONS);
-  client.setQueryData([...keys.recording(CANCONS)], { ...recording, transcription_state: state });
+  const recording = archive.recordings.find((one) => one.uuid === REHEARSAL);
+  client.setQueryData([...keys.recording(REHEARSAL)], { ...recording, transcription_state: state });
   return client;
 }
 
@@ -54,36 +54,36 @@ describe('a transcription that has moved on', () => {
     // at a recording from a stale list is this exact case, and there is no transition to catch --
     // the very first answer already disagrees.
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CANCONS ? { ...one, transcription_state: 'done' } : one,
+      one.uuid === REHEARSAL ? { ...one, transcription_state: 'done' } : one,
     );
     const client = showing('running');
-    renderHook(() => useTranscriptionStatus(CANCONS, 'running'), { wrapper: wrapper(client) });
+    renderHook(() => useTranscriptionStatus(REHEARSAL, 'running'), { wrapper: wrapper(client) });
 
     await waitFor(() => {
-      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(true);
+      expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(true);
     });
   });
 
   it('leaves the recording alone while the two agree', async () => {
     const client = showing('running');
-    const { result } = renderHook(() => useTranscriptionStatus(CANCONS, 'running'), {
+    const { result } = renderHook(() => useTranscriptionStatus(REHEARSAL, 'running'), {
       wrapper: wrapper(client),
     });
 
     await waitFor(() => {
       expect(result.current.data?.state).toBe('running');
     });
-    expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+    expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(false);
   });
 
   it('asks the instance nothing about a recording that already has its transcript', () => {
     // `done` is the one state with nothing left to report, so the endpoint is not called at all.
     const client = showing('done');
-    const { result } = renderHook(() => useTranscriptionStatus(CANCONS, 'done'), {
+    const { result } = renderHook(() => useTranscriptionStatus(REHEARSAL, 'done'), {
       wrapper: wrapper(client),
     });
     expect(result.current.fetchStatus).toBe('idle');
-    expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+    expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(false);
   });
 });
 
@@ -101,7 +101,7 @@ describe('a recording that learned it first', () => {
     const client = showing('running');
     const { rerender } = renderHook(
       ({ state }: { state: string }) => {
-        useTranscriptionSettled(CANCONS, state);
+        useTranscriptionSettled(REHEARSAL, state);
       },
       { wrapper: wrapper(client), initialProps: { state: 'running' } },
     );
@@ -109,7 +109,7 @@ describe('a recording that learned it first', () => {
     rerender({ state: 'done' });
 
     await waitFor(() => {
-      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(true);
+      expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(true);
     });
   });
 
@@ -117,13 +117,13 @@ describe('a recording that learned it first', () => {
     const client = showing('done');
     renderHook(
       () => {
-        useTranscriptionSettled(CANCONS, 'done');
+        useTranscriptionSettled(REHEARSAL, 'done');
       },
       { wrapper: wrapper(client) },
     );
 
     await waitFor(() => {
-      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+      expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(false);
     });
   });
 
@@ -133,7 +133,7 @@ describe('a recording that learned it first', () => {
     const client = showing('done');
     const { rerender } = renderHook(
       ({ state }: { state: string }) => {
-        useTranscriptionSettled(CANCONS, state);
+        useTranscriptionSettled(REHEARSAL, state);
       },
       { wrapper: wrapper(client), initialProps: { state: 'done' } },
     );
@@ -141,7 +141,7 @@ describe('a recording that learned it first', () => {
     rerender({ state: 'done' });
 
     await waitFor(() => {
-      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+      expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(false);
     });
   });
 
@@ -149,7 +149,7 @@ describe('a recording that learned it first', () => {
     const client = showing('running');
     const { rerender } = renderHook<string | undefined, { state: string | undefined }>(
       ({ state }) => {
-        useTranscriptionSettled(CANCONS, state);
+        useTranscriptionSettled(REHEARSAL, state);
         return state;
       },
       { wrapper: wrapper(client), initialProps: { state: undefined } },
@@ -158,7 +158,7 @@ describe('a recording that learned it first', () => {
     rerender({ state: 'running' });
 
     await waitFor(() => {
-      expect(client.getQueryState([...keys.recording(CANCONS)])?.isInvalidated).toBe(false);
+      expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(false);
     });
   });
 });

@@ -13,7 +13,7 @@ import { HttpResponse, http } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
-import { CARRER_NOU, PERSONAL } from '@/test/api/archive';
+import { FIELD_TAKE, PERSONAL } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { DuplicateNotice } from '../DuplicateNotice';
@@ -27,8 +27,8 @@ function alreadyHere(over: { in_trash: boolean }) {
     http.get('/api/audio/duplicates/:sha256', () =>
       HttpResponse.json([
         {
-          uuid: CARRER_NOU,
-          title: 'The house on Carrer Nou',
+          uuid: FIELD_TAKE,
+          title: 'Field recording, long take',
           library_uuid: PERSONAL,
           in_trash: over.in_trash,
         },
@@ -87,7 +87,7 @@ describe('a byte-identical file', () => {
     useUploads.getState().add([file()], { library: PERSONAL });
     await statusOf();
     showNotice();
-    expect(screen.getByText(/already here, as "The house on Carrer Nou"/i)).toBeVisible();
+    expect(screen.getByText(/already here, as "Field recording, long take"/i)).toBeVisible();
   });
 
   it('offers to restore the copy in the trash instead of storing a second one', async () => {

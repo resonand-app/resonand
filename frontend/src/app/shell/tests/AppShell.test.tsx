@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { ATENEU, AVIA, GABRIEL, PERSONAL, archive } from '@/test/api/archive';
+import { MEETINGS, RECORDINGS, ALEX, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { AppShell } from '../AppShell';
@@ -70,7 +70,7 @@ describe('the sidebar', () => {
   it('shows the libraries you own, personal first', async () => {
     renderShell();
     const personal = await screen.findByText('Personal');
-    const avia = screen.getByText('Àvia Teresa');
+    const avia = screen.getByText('Field recordings');
     // Personal is first because it is where a recording goes when nobody chose, not because of
     // how it happens to sort.
     expect(personal.compareDocumentPosition(avia)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
@@ -78,7 +78,7 @@ describe('the sidebar', () => {
 
   it('puts what somebody else owns in its own group', async () => {
     renderShell();
-    expect(await screen.findByText('Reunions Ateneu')).toBeInTheDocument();
+    expect(await screen.findByText('Meetings')).toBeInTheDocument();
     expect(screen.getByText(/shared with you/i)).toBeInTheDocument();
   });
 
@@ -87,7 +87,7 @@ describe('the sidebar', () => {
     // screen (§2.2).
     server.use(
       http.get('/api/libraries', () =>
-        HttpResponse.json(archive.libraries.filter((one) => one.owner.id === GABRIEL.id)),
+        HttpResponse.json(archive.libraries.filter((one) => one.owner.id === ALEX.id)),
       ),
     );
     renderShell();
@@ -104,17 +104,17 @@ describe('the sidebar', () => {
 
   it('goes where an entry points', async () => {
     renderShell();
-    await userEvent.click(await screen.findByText('Àvia Teresa'));
+    await userEvent.click(await screen.findByText('Field recordings'));
     await waitFor(() => {
-      expect(screen.getByTestId('where')).toHaveTextContent(toLibrary(AVIA));
+      expect(screen.getByTestId('where')).toHaveTextContent(toLibrary(RECORDINGS));
     });
   });
 });
 
 describe('which destination is lit', () => {
   it('is the library, on a library and on its settings', () => {
-    expect(destinationOf(toLibrary(AVIA))).toBe(AVIA);
-    expect(destinationOf(`${toLibrary(AVIA)}/settings`)).toBe(AVIA);
+    expect(destinationOf(toLibrary(RECORDINGS))).toBe(RECORDINGS);
+    expect(destinationOf(`${toLibrary(RECORDINGS)}/settings`)).toBe(RECORDINGS);
   });
 
   it('is nothing on a recording, which belongs to a library the URL does not name', () => {
@@ -135,7 +135,7 @@ describe('the top nav', () => {
     // was, because a history entry per letter is a back button nobody can use.
     renderShell();
     const field = await screen.findByPlaceholderText('Search everything');
-    await userEvent.type(field, 'Nadal');
+    await userEvent.type(field, 'Cassette');
     // One recording in the archive is called that, and the see-all row counts honestly rather
     // than saying "results" over a single one.
     expect(await screen.findByText(/all 1 result for/i)).toBeInTheDocument();
@@ -146,24 +146,24 @@ describe('the top nav', () => {
   it('leaves for the full results on Enter, carrying the query (`UI-16a`)', async () => {
     renderShell();
     const field = await screen.findByPlaceholderText('Search everything');
-    await userEvent.type(field, 'Nadal{Enter}');
+    await userEvent.type(field, 'Cassette{Enter}');
     await waitFor(() => {
-      expect(screen.getByTestId('where')).toHaveTextContent('q=Nadal');
+      expect(screen.getByTestId('where')).toHaveTextContent('q=Cassette');
     });
   });
 
   it('identifies the account by initials, because there are no avatar images anywhere', () => {
-    expect(initialsOf('Gabriel Costa')).toBe('GC');
-    expect(initialsOf('Gabriel')).toBe('G');
+    expect(initialsOf('Alex Morgan')).toBe('AM');
+    expect(initialsOf('Alex')).toBe('A');
     expect(initialsOf(undefined)).toBe('');
   });
 });
 
 describe('a library shared with you', () => {
   it('is reachable, and is not in the group of the ones you own', async () => {
-    renderShell(toLibrary(ATENEU));
-    expect(await screen.findByText('Reunions Ateneu')).toBeInTheDocument();
-    expect(destinationOf(toLibrary(ATENEU))).toBe(ATENEU);
+    renderShell(toLibrary(MEETINGS));
+    expect(await screen.findByText('Meetings')).toBeInTheDocument();
+    expect(destinationOf(toLibrary(MEETINGS))).toBe(MEETINGS);
   });
 });
 
@@ -191,8 +191,8 @@ describe('the account menu', () => {
     renderShell();
     await userEvent.click(await screen.findByRole('button', { name: 'Your account' }));
     const menu = await screen.findByRole('menu');
-    expect(within(menu).getByText('Gabriel')).toBeInTheDocument();
-    expect(within(menu).getByText('gabriel@example.test')).toBeInTheDocument();
+    expect(within(menu).getByText('Alex Morgan')).toBeInTheDocument();
+    expect(within(menu).getByText('alex@example.test')).toBeInTheDocument();
   });
 
   it('carries the theme, Settings and sign out, and nothing else', async () => {
@@ -241,7 +241,7 @@ describe('the account menu', () => {
 
 describe('the lockup', () => {
   it('is the way back to the libraries, and gets there without leaving the router', async () => {
-    renderShell(toLibrary(AVIA));
+    renderShell(toLibrary(RECORDINGS));
     const home = await screen.findByRole('link', { name: /back to your libraries/ });
     expect(home).toHaveAttribute('href', routes.libraries);
     await userEvent.click(home);

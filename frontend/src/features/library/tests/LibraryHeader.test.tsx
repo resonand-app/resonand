@@ -13,7 +13,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { ATENEU, AVIA, archive } from '@/test/api/archive';
+import { MEETINGS, RECORDINGS, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 import { toLibrary } from '@/app/routes';
 
@@ -39,43 +39,45 @@ function renderLibrary(uuid: string) {
 
 describe('the header', () => {
   it('carries the name, the count and the total', async () => {
-    renderLibrary(AVIA);
-    expect(await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 })).toBeVisible();
+    renderLibrary(RECORDINGS);
+    expect(
+      await screen.findByRole('heading', { name: 'Field recordings', level: 1 }),
+    ).toBeVisible();
     expect(screen.getByText(/3 recordings · 2.h.04.min/u)).toBeVisible();
   });
 
   it('names the owner only when the owner is somebody else', async () => {
-    renderLibrary(ATENEU);
-    expect(await screen.findByText(/^Marta · /)).toBeVisible();
-    renderLibrary(AVIA);
-    expect(await screen.findByRole('heading', { name: 'Àvia Teresa' })).toBeVisible();
-    expect(screen.queryByText(/^Gabriel · /)).toBeNull();
+    renderLibrary(MEETINGS);
+    expect(await screen.findByText(/^Sam Rivera · /)).toBeVisible();
+    renderLibrary(RECORDINGS);
+    expect(await screen.findByRole('heading', { name: 'Field recordings' })).toBeVisible();
+    expect(screen.queryByText(/^Alex Morgan · /)).toBeNull();
   });
 
   it('offers Settings to somebody who can manage the library', async () => {
-    renderLibrary(AVIA);
+    renderLibrary(RECORDINGS);
     expect(await screen.findByRole('button', { name: /Settings/ })).toBeVisible();
   });
 
   it('leaves Settings out below manage rather than showing it disabled', async () => {
-    // Level 20 on the Ateneu library in the fixtures: enough to edit a recording, not enough to
+    // Level 20 on the Meetings library in the fixtures: enough to edit a recording, not enough to
     // reach the settings view. A disabled button reads as a bug; its absence reads as a decision.
-    renderLibrary(ATENEU);
-    await screen.findByRole('heading', { name: 'Reunions Ateneu' });
+    renderLibrary(MEETINGS);
+    await screen.findByRole('heading', { name: 'Meetings' });
     expect(screen.queryByRole('button', { name: /Settings/ })).toBeNull();
   });
 
   it('says once, quietly, that a library can only be read', async () => {
     archive.libraries = archive.libraries.map((one) =>
-      one.uuid === ATENEU ? { ...one, level: 10 } : one,
+      one.uuid === MEETINGS ? { ...one, level: 10 } : one,
     );
-    renderLibrary(ATENEU);
+    renderLibrary(MEETINGS);
     expect(await screen.findByText('You can read this library.')).toBeVisible();
   });
 
   it('says nothing about read-only when there is nothing to say', async () => {
-    renderLibrary(AVIA);
-    await screen.findByRole('heading', { name: 'Àvia Teresa' });
+    renderLibrary(RECORDINGS);
+    await screen.findByRole('heading', { name: 'Field recordings' });
     expect(screen.queryByText('You can read this library.')).toBeNull();
   });
 });

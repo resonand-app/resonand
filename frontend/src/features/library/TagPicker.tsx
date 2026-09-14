@@ -8,7 +8,7 @@
  *
  * **A chip is a filter, not a tag on a recording.** Removing one narrows the list less; it never
  * edits anything. The chips are buttons that say so, and the tags themselves are shown verbatim,
- * accents and all (§1.5) -- `memòria` is a word somebody typed, not a slug.
+ * accents and all (§1.5) -- `field` is a word somebody typed, not a slug.
  *
  * The API matches on a prefix, so the field is a prefix search rather than a fuzzy one. Saying
  * that plainly in the placeholder is cheaper than explaining why "moria" finds nothing.

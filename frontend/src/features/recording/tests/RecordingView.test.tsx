@@ -18,14 +18,14 @@ import { describe, expect, it } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { AVIA, CARRER_NOU, NADAL, archive } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE, CASSETTE, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
 
 mockApi();
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -47,21 +47,21 @@ describe('where you are', () => {
     // The library's name is the only way back, and it is a real `href`: one control naming one
     // destination, rather than that plus a "Back to <library>" button saying the same thing.
     const where = await screen.findByRole('navigation', { name: 'Where this recording is' });
-    const back = await within(where).findByRole('link', { name: 'Àvia Teresa' });
-    expect(back).toHaveAttribute('href', `/library/${AVIA}`);
+    const back = await within(where).findByRole('link', { name: 'Field recordings' });
+    expect(back).toHaveAttribute('href', `/library/${RECORDINGS}`);
     expect(within(where).queryByRole('link', { name: /Back to/ })).toBeNull();
   });
 
   it('names the category as well, when the recording has one', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, category_id: 1 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, category_id: 1 } : one,
     );
     renderRecording();
     // Resolved from the library's flat list, which is the only place the name exists: the
     // recording carries the id. Scoped to the breadcrumb, because the panel names it too.
     const where = await screen.findByRole('navigation', { name: 'Where this recording is' });
     await waitFor(() => {
-      expect(within(where).getByText('Converses')).toBeInTheDocument();
+      expect(within(where).getByText('Interviews')).toBeInTheDocument();
     });
   });
 });
@@ -69,16 +69,16 @@ describe('where you are', () => {
 describe('the essentials line', () => {
   it('carries the recording own date, its length, who uploaded it and which transcript', async () => {
     renderRecording();
-    const title = await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    const title = await screen.findByRole('heading', { name: 'Field recording, long take' });
     const meta = title.parentElement?.parentElement?.textContent ?? '';
     expect(meta).toMatch(/48:12/);
-    expect(meta).toMatch(/Uploaded by Gabriel/);
+    expect(meta).toMatch(/Uploaded by Alex Morgan/);
     expect(meta).toMatch(/Transcript v1/);
   });
 
   it('renders the recording own time as written, never in the reader timezone', async () => {
     renderRecording();
-    const title = await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    const title = await screen.findByRole('heading', { name: 'Field recording, long take' });
     // `2026-03-12T18:22:00` with a +01:00 offset. Half six in the evening wherever the test
     // runs -- the numbers in the string, in the reader's language but not their timezone (§1.3).
     // Read off the essentials line rather than the document: the panel says it too (`UI-13b`).
@@ -86,15 +86,15 @@ describe('the essentials line', () => {
   });
 
   it('says the date is the upload when the recording has none of its own', async () => {
-    renderRecording(NADAL);
+    renderRecording(CASSETTE);
     // A cassette digitised decades later. Passing the digitisation date off as the recording's
     // would be the archive making a claim about when something happened.
     expect(await screen.findByText(/The recording's own date is not known/)).toBeInTheDocument();
   });
 
   it('says nothing about a transcript version for a recording with no transcript', async () => {
-    renderRecording(NADAL);
-    await screen.findByRole('heading', { name: 'Sopar de Nadal 1998' });
+    renderRecording(CASSETTE);
+    await screen.findByRole('heading', { name: 'Digitised cassette' });
     expect(screen.queryByText(/Transcript v/)).toBeNull();
   });
 });

@@ -20,7 +20,7 @@ function library(uuid: string, deletedAt: string): Schemas['LibrarySummary'] {
     name: uuid,
     description: null,
     is_personal: false,
-    owner: { id: 1, display_name: 'Gabriel', email: 'gabriel@example.test' },
+    owner: { id: 1, display_name: 'Alex Morgan', email: 'alex@example.test' },
     level: 40,
     colour: 'amber',
     audio_count: 3,

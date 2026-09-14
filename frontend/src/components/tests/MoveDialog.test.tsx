@@ -19,7 +19,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { ATENEU, AVIA, CARRER_NOU, NADAL, PERSONAL, archive } from '@/test/api/archive';
+import { MEETINGS, RECORDINGS, FIELD_TAKE, CASSETTE, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { MoveDialog } from '../MoveDialog';
@@ -27,29 +27,29 @@ import type { Movable } from '../MoveDialog';
 
 mockApi();
 
-const CARRER: Movable = {
-  uuid: CARRER_NOU,
-  title: 'The house on Carrer Nou',
-  library_uuid: AVIA,
+const FIELD_RECORDING: Movable = {
+  uuid: FIELD_TAKE,
+  title: 'Field recording, long take',
+  library_uuid: RECORDINGS,
   category_id: 1,
 };
 
-const NADAL_RECORDING: Movable = {
-  uuid: NADAL,
-  title: 'Sopar de Nadal 1998',
-  library_uuid: AVIA,
+const CASSETTE_RECORDING: Movable = {
+  uuid: CASSETTE,
+  title: 'Digitised cassette',
+  library_uuid: RECORDINGS,
   category_id: null,
 };
 
 function renderDialog(
-  recordings: Movable[] = [CARRER],
+  recordings: Movable[] = [FIELD_RECORDING],
   onConfirm = vi.fn<(uuid: string) => void>(),
 ) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   const names = new Map([
-    [1, 'Converses'],
-    [2, 'Cançons'],
+    [1, 'Interviews'],
+    [2, 'Fieldwork'],
   ]);
   render(
     <QueryClientProvider client={client}>
@@ -79,25 +79,25 @@ describe('where it can go', () => {
     const user = userEvent.setup();
     renderDialog();
     await user.click(await screen.findByRole('combobox', { name: 'Move to' }));
-    // `Personal` is the account's own and `Reunions Ateneu` is shared at level 20, so both are
-    // destinations. `Àvia Teresa` is where the recording already is.
+    // `Personal` is the account's own and `Meetings` is shared at level 20, so both are
+    // destinations. `Field recordings` is where the recording already is.
     expect(await screen.findByRole('option', { name: 'Personal' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Reunions Ateneu' })).toBeInTheDocument();
-    expect(screen.queryByRole('option', { name: 'Àvia Teresa' })).toBeNull();
+    expect(screen.getByRole('option', { name: 'Meetings' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Field recordings' })).toBeNull();
   });
 
   it('leaves out a library you can only read', async () => {
     archive.libraries = archive.libraries.map((one) =>
-      one.uuid === ATENEU ? { ...one, level: 10 } : one,
+      one.uuid === MEETINGS ? { ...one, level: 10 } : one,
     );
     const user = userEvent.setup();
     renderDialog();
     await user.click(await screen.findByRole('combobox', { name: 'Move to' }));
-    expect(screen.queryByRole('option', { name: 'Reunions Ateneu' })).toBeNull();
+    expect(screen.queryByRole('option', { name: 'Meetings' })).toBeNull();
   });
 
   it('says there is nowhere to go rather than showing an empty picker', async () => {
-    archive.libraries = archive.libraries.filter((one) => one.uuid === AVIA);
+    archive.libraries = archive.libraries.filter((one) => one.uuid === RECORDINGS);
     renderDialog();
     // An empty select reads as something that failed to load (§V8).
     expect(await screen.findByText(/There is nowhere to move this to/)).toBeInTheDocument();
@@ -126,18 +126,20 @@ describe('what it says will happen', () => {
     const user = userEvent.setup();
     renderDialog();
     await choose(user, 'Personal');
-    // `Àvia Teresa` is shared with Marta and `Personal` is not, so Marta loses access. Nobody
-    // gains it: both belong to Gabriel.
-    expect(await screen.findByText(/Marta will no longer be able to see it/)).toBeInTheDocument();
+    // `Field recordings` is shared with Sam Rivera and `Personal` is not, so Sam Rivera loses access. Nobody
+    // gains it: both belong to Alex Morgan.
+    expect(
+      await screen.findByText(/Sam Rivera will no longer be able to see it/),
+    ).toBeInTheDocument();
   });
 
   it('names who gains it when the destination is shared more widely', async () => {
-    archive.shares = { ...archive.shares, [AVIA]: [] };
+    archive.shares = { ...archive.shares, [RECORDINGS]: [] };
     archive.shares = {
       ...archive.shares,
       [PERSONAL]: [
         {
-          grantee: { id: 2, display_name: 'Marta', email: 'marta@example.test' },
+          grantee: { id: 2, display_name: 'Sam Rivera', email: 'sam@example.test' },
           level: 20,
           level_description: 'Can add recordings and edit their details.',
           granted_by: 1,
@@ -148,11 +150,11 @@ describe('what it says will happen', () => {
     const user = userEvent.setup();
     renderDialog();
     await choose(user, 'Personal');
-    expect(await screen.findByText(/Marta will be able to see it/)).toBeInTheDocument();
+    expect(await screen.findByText(/Sam Rivera will be able to see it/)).toBeInTheDocument();
   });
 
   it('says so plainly when the same people can see it either way', async () => {
-    archive.shares = { ...archive.shares, [AVIA]: [] };
+    archive.shares = { ...archive.shares, [RECORDINGS]: [] };
     const user = userEvent.setup();
     renderDialog();
     await choose(user, 'Personal');
@@ -164,12 +166,12 @@ describe('what it says will happen', () => {
     renderDialog();
     await choose(user, 'Personal');
     // Named, not warned about: the choice is between a known cost and the move.
-    expect(await screen.findByText(/It loses its category, Converses/)).toBeInTheDocument();
+    expect(await screen.findByText(/It loses its category, Interviews/)).toBeInTheDocument();
   });
 
   it('says there is no category to lose when there is not one', async () => {
     const user = userEvent.setup();
-    renderDialog([NADAL_RECORDING]);
+    renderDialog([CASSETTE_RECORDING]);
     await choose(user, 'Personal');
     expect(await screen.findByText(/It has no category to lose/)).toBeInTheDocument();
   });
@@ -194,12 +196,14 @@ describe('what it says will happen', () => {
 describe('a whole selection', () => {
   it('states the consequences once for the set rather than per recording', async () => {
     const user = userEvent.setup();
-    renderDialog([CARRER, NADAL_RECORDING]);
+    renderDialog([FIELD_RECORDING, CASSETTE_RECORDING]);
     expect(await screen.findByRole('dialog', { name: 'Move 2 recordings' })).toBeInTheDocument();
     await choose(user, 'Personal');
     // One sentence about the categories, naming the one that is actually lost, and no list of
     // titles: it has to survive a selection of two hundred.
-    expect(await screen.findByText(/They lose their categories \(Converses\)/)).toBeInTheDocument();
-    expect(screen.queryByText('Sopar de Nadal 1998')).toBeNull();
+    expect(
+      await screen.findByText(/They lose their categories \(Interviews\)/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('Digitised cassette')).toBeNull();
   });
 });

@@ -64,7 +64,7 @@ export function useLibraryList(): LibraryList {
  * The personal library first, then by name.
  *
  * First because it is where a recording goes when nobody chose, not because it happens to sort
- * that way -- and `localeCompare` for the rest, because an archive with `Àvia Teresa` in it
+ * that way -- and `localeCompare` for the rest, because an archive with `Field recordings` in it
  * sorts wrongly under a byte comparison.
  */
 function personalFirst(left: LibrarySummary, right: LibrarySummary): number {

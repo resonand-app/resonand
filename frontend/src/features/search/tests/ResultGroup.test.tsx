@@ -14,20 +14,20 @@ import { describe, expect, it, vi } from 'vitest';
 import { ResultGroup } from '../ResultGroup';
 
 const MATCHES = [
-  { id: 1, at: '18:01', text: 'I la casa de Carrer Nou tenia un balcó.' },
-  { id: 2, at: '18:04', text: 'La iaia hi estenia la roba.' },
-  { id: 3, at: '18:11', text: 'Això era abans de la guerra.' },
-  { id: 4, at: '19:40', text: 'El mercat era al capdavall del carrer.' },
-  { id: 5, at: '22:02', text: 'Hi anàvem cada dissabte.' },
+  { id: 1, at: '18:01', text: 'The first segment of the transcript.' },
+  { id: 2, at: '18:04', text: 'The second segment, a little longer than the first.' },
+  { id: 3, at: '18:11', text: 'The third segment mentions rehearsal.' },
+  { id: 4, at: '19:40', text: 'The fourth segment is a short one.' },
+  { id: 5, at: '22:02', text: 'The fifth segment is the one a click seeks to.' },
 ];
 
 describe('ResultGroup', () => {
   it('shows three matches and counts the rest', () => {
     render(
-      <ResultGroup title="Entrevista amb l’àvia Teresa" matches={MATCHES} onShowAll={vi.fn()} />,
+      <ResultGroup title="Field recording, long take" matches={MATCHES} onShowAll={vi.fn()} />,
     );
-    expect(screen.getByText('La iaia hi estenia la roba.')).toBeDefined();
-    expect(screen.queryByText('Hi anàvem cada dissabte.')).toBeNull();
+    expect(screen.getByText('The second segment, a little longer than the first.')).toBeDefined();
+    expect(screen.queryByText('The fifth segment is the one a click seeks to.')).toBeNull();
     expect(screen.getByRole('button', { name: '+2 more in this recording' })).toBeDefined();
   });
 
@@ -60,7 +60,7 @@ describe('ResultGroup', () => {
   it('plays from a match without leaving the results', async () => {
     const onPlay = vi.fn();
     render(<ResultGroup title="Entrevista" matches={MATCHES} onPlay={onPlay} />);
-    await userEvent.click(screen.getByText('La iaia hi estenia la roba.'));
+    await userEvent.click(screen.getByText('The second segment, a little longer than the first.'));
     expect(onPlay).toHaveBeenCalledWith(MATCHES[1]);
   });
 
@@ -68,6 +68,10 @@ describe('ResultGroup', () => {
     // A read-only list of matches is not a list of buttons: a tab stop per line would make the
     // results unnavigable long before it made them usable.
     render(<ResultGroup title="Entrevista" matches={MATCHES} />);
-    expect(screen.getByText('La iaia hi estenia la roba.').closest('[role="button"]')).toBeNull();
+    expect(
+      screen
+        .getByText('The second segment, a little longer than the first.')
+        .closest('[role="button"]'),
+    ).toBeNull();
   });
 });

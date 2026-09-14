@@ -36,15 +36,15 @@ function show() {
 describe('the list', () => {
   it('marks who runs the instance and who is already disabled', async () => {
     show();
-    expect(await screen.findByText('Gabriel')).toBeVisible();
+    expect(await screen.findByText('Alex Morgan')).toBeVisible();
     expect(screen.getByText('Administrator')).toBeVisible();
     expect(screen.getByText(/^Disabled /)).toBeVisible();
   });
 
   it('offers one direction per account, not both', async () => {
     show();
-    await screen.findByText('Gabriel');
-    // Gabriel is active and Marta is disabled, so exactly one of each verb is on screen.
+    await screen.findByText('Alex Morgan');
+    // Alex Morgan is active and Sam Rivera is disabled, so exactly one of each verb is on screen.
     expect(screen.getAllByRole('button', { name: 'Disable' })).toHaveLength(1);
     expect(screen.getAllByRole('button', { name: 'Re-enable' })).toHaveLength(1);
   });
@@ -54,7 +54,7 @@ describe('the list', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Disable' }));
     await waitFor(() => {
       expect(
-        archive.users.find((one) => one.display_name === 'Gabriel')?.disabled_at,
+        archive.users.find((one) => one.display_name === 'Alex Morgan')?.disabled_at,
       ).not.toBeNull();
     });
     expect(await screen.findAllByRole('button', { name: 'Re-enable' })).toHaveLength(2);
@@ -64,7 +64,9 @@ describe('the list', () => {
     show();
     await userEvent.click(await screen.findByRole('button', { name: 'Re-enable' }));
     await waitFor(() => {
-      expect(archive.users.find((one) => one.display_name === 'Marta')?.disabled_at).toBeNull();
+      expect(
+        archive.users.find((one) => one.display_name === 'Sam Rivera')?.disabled_at,
+      ).toBeNull();
     });
   });
 });
@@ -78,7 +80,7 @@ describe('deleting an account', () => {
             type: '/errors/invalid_request',
             title: 'Invalid request',
             detail:
-              'Gabriel owns 2 libraries and 84 recordings. Deleting the account would take them ' +
+              'Alex Morgan owns 2 libraries and 84 recordings. Deleting the account would take them ' +
               'with it, and transferring ownership is not built yet. Disable the account instead: ' +
               'it keeps the recordings and stops the person signing in.',
             status: 400,
@@ -90,7 +92,7 @@ describe('deleting an account', () => {
     );
     show();
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Delete the account for Gabriel' }),
+      await screen.findByRole('button', { name: 'Delete the account for Alex Morgan' }),
     );
     const refusal = await screen.findByRole('alert');
     expect(refusal).toHaveTextContent(/owns 2 libraries and 84 recordings/);
@@ -100,10 +102,10 @@ describe('deleting an account', () => {
   it('removes an account that has nothing in the way', async () => {
     show();
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Delete the account for Marta' }),
+      await screen.findByRole('button', { name: 'Delete the account for Sam Rivera' }),
     );
     await waitFor(() => {
-      expect(archive.users.some((one) => one.display_name === 'Marta')).toBe(false);
+      expect(archive.users.some((one) => one.display_name === 'Sam Rivera')).toBe(false);
     });
   });
 });

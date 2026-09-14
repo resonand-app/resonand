@@ -9,7 +9,7 @@ import { HttpResponse, http } from 'msw';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
-import { ATENEU, AVIA, PERSONAL, archive } from '@/test/api/archive';
+import { MEETINGS, RECORDINGS, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { UploadDialog } from '../UploadDialog';
@@ -39,10 +39,10 @@ describe('the destination', () => {
   });
 
   it('defaults to the library somebody came from', async () => {
-    show(vi.fn(), AVIA);
+    show(vi.fn(), RECORDINGS);
     const select = await screen.findByRole('combobox', { name: /into which library/i });
     await waitFor(() => {
-      expect(select).toHaveTextContent('Àvia Teresa');
+      expect(select).toHaveTextContent('Field recordings');
     });
   });
 
@@ -51,29 +51,29 @@ describe('the destination', () => {
     server.use(
       http.get('/api/libraries', () =>
         HttpResponse.json(
-          archive.libraries.map((one) => (one.uuid === ATENEU ? { ...one, level: 10 } : one)),
+          archive.libraries.map((one) => (one.uuid === MEETINGS ? { ...one, level: 10 } : one)),
         ),
       ),
     );
-    show(vi.fn(), ATENEU);
+    show(vi.fn(), MEETINGS);
     await userEvent.click(await screen.findByRole('combobox', { name: /into which library/i }));
     await screen.findByRole('option', { name: 'Personal' });
-    expect(screen.queryByRole('option', { name: 'Reunions Ateneu' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Meetings' })).not.toBeInTheDocument();
   });
 
   it('carries the chosen category to every file in the batch', async () => {
-    show(vi.fn(), AVIA);
+    show(vi.fn(), RECORDINGS);
     await userEvent.click(await screen.findByRole('combobox', { name: /^category$/i }));
-    await userEvent.click(await screen.findByRole('option', { name: 'Converses' }));
-    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('avia.m4a')]);
+    await userEvent.click(await screen.findByRole('option', { name: 'Interviews' }));
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('interview.m4a')]);
     await userEvent.click(screen.getByRole('button', { name: 'Upload 1 file' }));
     expect(useUploads.getState().files[0]?.categoryId).toBe(1);
   });
 
   it('drops the category when the library changes, since the id means nothing there', async () => {
-    show(vi.fn(), AVIA);
+    show(vi.fn(), RECORDINGS);
     await userEvent.click(await screen.findByRole('combobox', { name: /^category$/i }));
-    await userEvent.click(await screen.findByRole('option', { name: 'Converses' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Interviews' }));
     await userEvent.click(screen.getByRole('combobox', { name: /into which library/i }));
     await userEvent.click(await screen.findByRole('option', { name: 'Personal' }));
     expect(screen.getByRole('combobox', { name: /^category$/i })).toHaveTextContent('No category');
@@ -120,7 +120,7 @@ describe('asking for a transcription', () => {
 
   it('carries the answer to the queue, and only when it was asked for', async () => {
     show();
-    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('avia.m4a')]);
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('interview.m4a')]);
     await userEvent.click(await screen.findByRole('switch', { name: /transcribe/i }));
     await userEvent.click(screen.getByRole('button', { name: 'Upload 1 file' }));
     expect(useUploads.getState().files[0]?.transcribe).toBe(true);
@@ -147,8 +147,8 @@ describe('the dialog', () => {
   it('takes several files, and keeps the ones chosen first', async () => {
     show();
     const picker = screen.getByLabelText<HTMLInputElement>(/drop files here/i);
-    await userEvent.upload(picker, [file('avia.m4a'), file('nadal.mp3')]);
-    await userEvent.upload(picker, [file('assaig.wav')]);
+    await userEvent.upload(picker, [file('interview.m4a'), file('take-two.mp3')]);
+    await userEvent.upload(picker, [file('rehearsal.wav')]);
     expect(screen.getByRole('button', { name: 'Upload 3 files' })).toBeEnabled();
   });
 
@@ -164,8 +164,8 @@ describe('the dialog', () => {
     // written out rather than left to the part that disappears.
     show();
     await userEvent.upload(screen.getByLabelText(/drop files here/i), [
-      file('una_conversa_molt_llarga_amb_lavia.m4a'),
-      file('nadal.mp4'),
+      file('una_conversa_molt_llarga_amb_linterview.m4a'),
+      file('take-two.mp4'),
     ]);
     const chosen = screen.getByRole('list', { name: /files to upload/i });
     expect(within(chosen).getAllByRole('listitem')).toHaveLength(2);
@@ -176,26 +176,28 @@ describe('the dialog', () => {
   it('leaves a file out when its tile is pressed, which is the only way back', async () => {
     show();
     await userEvent.upload(screen.getByLabelText(/drop files here/i), [
-      file('avia.m4a'),
-      file('nadal.mp3'),
+      file('interview.m4a'),
+      file('take-two.mp3'),
     ]);
     expect(screen.getByRole('button', { name: 'Upload 2 files' })).toBeEnabled();
 
-    await userEvent.click(screen.getByRole('button', { name: /leave avia\.m4a out/i }));
-    expect(screen.queryByRole('button', { name: /leave avia\.m4a out/i })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /leave interview\.m4a out/i }));
+    expect(
+      screen.queryByRole('button', { name: /leave interview\.m4a out/i }),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Upload 1 file' })).toBeEnabled();
   });
 
   it('takes the second of two files with the same name, since the tile is the file', async () => {
-    // Removal is by position rather than by name: two folders holding a `nadal.m4a` each is the
-    // ordinary case, and removing "the one called nadal.m4a" would remove both.
+    // Removal is by position rather than by name: two folders holding a `take-two.m4a` each is the
+    // ordinary case, and removing "the one called take-two.m4a" would remove both.
     show();
     await userEvent.upload(screen.getByLabelText(/drop files here/i), [
-      file('nadal.m4a', 1024),
-      file('nadal.m4a', 4096),
+      file('take-two.m4a', 1024),
+      file('take-two.m4a', 4096),
     ]);
-    const [first] = screen.getAllByRole('button', { name: /leave nadal\.m4a out/i });
-    if (first === undefined) throw new Error('The zone drew no tile for nadal.m4a.');
+    const [first] = screen.getAllByRole('button', { name: /leave take-two\.m4a out/i });
+    if (first === undefined) throw new Error('The zone drew no tile for take-two.m4a.');
     await userEvent.click(first);
     await userEvent.click(screen.getByRole('button', { name: 'Upload 1 file' }));
     expect(useUploads.getState().files.map((one) => one.size)).toEqual([4096]);
@@ -204,9 +206,9 @@ describe('the dialog', () => {
   it('hands the files over and closes, so closing it cannot stop them', async () => {
     const onClose = vi.fn();
     show(onClose);
-    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('avia.m4a')]);
+    await userEvent.upload(screen.getByLabelText(/drop files here/i), [file('interview.m4a')]);
     await userEvent.click(screen.getByRole('button', { name: 'Upload 1 file' }));
     expect(onClose).toHaveBeenCalled();
-    expect(useUploads.getState().files.map((one) => one.name)).toContain('avia.m4a');
+    expect(useUploads.getState().files.map((one) => one.name)).toContain('interview.m4a');
   });
 });

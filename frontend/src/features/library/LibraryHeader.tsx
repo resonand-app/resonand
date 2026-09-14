@@ -4,7 +4,7 @@
  * The library's name is the one piece of display type on the screen, and under it a mono line
  * that is the same arithmetic the landing page does: the count and the total, counted and not
  * rounded. When somebody else owns it, their name leads that line -- a library called "Reunions
- * Ateneu" is a different object depending on whose it is, and the answer belongs beside the title
+ * Meetings" is a different object depending on whose it is, and the answer belongs beside the title
  * rather than three lines down.
  *
  * **Settings is here only when it can be reached.** Level 30 and above; absent rather than

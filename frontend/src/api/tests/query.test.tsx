@@ -201,7 +201,7 @@ describe('what a change makes stale', () => {
   it('refetches what it marked stale, and only that', async () => {
     const client = testClient();
     const libraries = vi.fn(() => Promise.resolve(['one']));
-    const account = vi.fn(() => Promise.resolve({ display_name: 'Gabriel' }));
+    const account = vi.fn(() => Promise.resolve({ display_name: 'Alex Morgan' }));
     await client.query({ queryKey: keys.libraries(), queryFn: libraries });
     await client.query({ queryKey: keys.me(), queryFn: account });
     await invalidate(client, { kind: 'library' });

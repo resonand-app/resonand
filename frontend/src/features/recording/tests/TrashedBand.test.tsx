@@ -17,7 +17,7 @@ import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { usePlayback } from '@/player/store';
-import { CARRER_NOU, archive } from '@/test/api/archive';
+import { FIELD_TAKE, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -28,11 +28,11 @@ mockApi();
 beforeEach(() => {
   const deleted = new Date(Date.now() - 8 * 86_400_000).toISOString();
   archive.recordings = archive.recordings.map((one) =>
-    one.uuid === CARRER_NOU ? { ...one, deleted_at: deleted } : one,
+    one.uuid === FIELD_TAKE ? { ...one, deleted_at: deleted } : one,
   );
 });
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -70,7 +70,7 @@ describe('the band', () => {
 
   it('replaces the read-only line rather than sitting above it', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
     );
     renderRecording();
     await screen.findByText(/This recording is in the trash/);
@@ -84,7 +84,7 @@ describe('what it still does', () => {
     const user = userEvent.setup();
     renderRecording();
     await user.click(await screen.findByRole('button', { name: 'Play' }));
-    expect(usePlayback.getState().recording?.uuid).toBe(CARRER_NOU);
+    expect(usePlayback.getState().recording?.uuid).toBe(FIELD_TAKE);
     usePlayback.getState().stop();
   });
 
@@ -93,14 +93,14 @@ describe('what it still does', () => {
     renderRecording();
     await user.click(await screen.findByRole('button', { name: 'Put it back' }));
     await waitFor(() => {
-      expect(archive.recordings.find((one) => one.uuid === CARRER_NOU)?.deleted_at).toBeNull();
+      expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.deleted_at).toBeNull();
     });
     expect(screen.queryByText(/This recording is in the trash/)).toBeNull();
   });
 
   it('offers no way back to somebody who could only read it', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
     );
     renderRecording();
     await screen.findByText(/This recording is in the trash/);
@@ -114,7 +114,7 @@ describe('what it does not do', () => {
     await screen.findByText(/This recording is in the trash/);
     // Not a permission: the level is 40 here. Being in the trash is a state, and the fields draw
     // themselves as facts rather than as disabled controls (§3.5).
-    expect(screen.queryByRole('button', { name: /The house on Carrer Nou/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Field recording, long take/ })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Add a tag' })).toBeNull();
     expect(document.querySelectorAll('[disabled]')).toHaveLength(0);
   });

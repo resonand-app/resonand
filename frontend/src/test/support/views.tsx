@@ -32,7 +32,7 @@ import { AppRoutes } from '@/app/App';
 import { routes, toLibrary, toLibrarySettings, toRecording, toSearch } from '@/app/routes';
 import { THEME_STORAGE_KEY, ThemeProvider, type ResolvedTheme } from '@/design-system';
 import { createI18n } from '@/i18n';
-import { AVIA, CARRER_NOU } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE } from '@/test/api/archive';
 
 /** A screen from the specification's §7, with what it takes to get one on the page. */
 export interface ViewUnderTest {
@@ -94,13 +94,13 @@ export const VIEWS: readonly ViewUnderTest[] = [
   {
     name: 'V3 - A library',
     module: 'features/library/LibraryView.tsx',
-    at: toLibrary(AVIA),
-    settled: 'The house on Carrer Nou',
+    at: toLibrary(RECORDINGS),
+    settled: 'Field recording, long take',
   },
   {
     name: 'V5 - A recording',
     module: 'features/recording/RecordingView.tsx',
-    at: toRecording(CARRER_NOU),
+    at: toRecording(FIELD_TAKE),
     // The title is both the heading and the value in the metadata panel, so settle on the
     // transcript instead -- which is the part that arrives last anyway.
     settled: 'Click a line to jump there.',
@@ -110,13 +110,13 @@ export const VIEWS: readonly ViewUnderTest[] = [
     module: 'features/search/SearchView.tsx',
     // A query the mock index actually answers, because the state worth auditing is a page of
     // results and not the empty one.
-    at: toSearch('carrer'),
-    settled: /la casa del carrer Nou/,
+    at: toSearch('rehearsal'),
+    settled: /the third segment mentions rehearsal/,
   },
   {
     name: 'V7 - Library settings',
     module: 'features/library-settings/LibrarySettingsView.tsx',
-    at: toLibrarySettings(AVIA),
+    at: toLibrarySettings(RECORDINGS),
     settled: 'Library settings',
   },
   {

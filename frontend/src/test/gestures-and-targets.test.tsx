@@ -26,7 +26,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { usePlayback } from '@/player/store';
 import { mockApi } from '@/test/api/server';
-import { CARRER_NOU } from '@/test/api/archive';
+import { FIELD_TAKE } from '@/test/api/archive';
 import { PHONE, VIEWS, mountView } from '@/test/support/views';
 
 import { KNOWN_SMALL_TARGETS, KNOWN_SMALL_TARGETS_IN_VIEWS } from './focus-and-targets';
@@ -125,9 +125,9 @@ describe('swipe down collapses the player', WHOLE_SYSTEM, () => {
     // Loaded through the store rather than by pressing play: what is under test is the gesture,
     // and getting audio going is `UI-23b`'s subject a file away.
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
@@ -140,7 +140,7 @@ describe('swipe down collapses the player', WHOLE_SYSTEM, () => {
       if (found === null) throw new Error('The docked player strip is not there.');
       return found;
     });
-    await user.click(within(strip).getByRole('button', { name: /The house on Carrer Nou/ }));
+    await user.click(within(strip).getByRole('button', { name: /Field recording, long take/ }));
 
     const full = document.querySelector<HTMLElement>('[data-app="phone-player-full"]');
     expect(full, 'The player did not expand.').not.toBeNull();

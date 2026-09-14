@@ -29,12 +29,12 @@ function roundTrip(query: string): string {
 describe('what the URL carries', () => {
   it('keeps every filter a list can be narrowed by', () => {
     const query =
-      'q=carrer&category_id=2&tag=memoria&tag=catala&transcription_state=done' +
+      'q=rehearsal&category_id=2&tag=field&tag=outdoor&transcription_state=done' +
       '&transcription_state=failed&recorded_from=2026-01-01&recorded_to=2026-03-31' +
       '&min_duration_ms=60000&max_duration_ms=3600000&sort=title&direction=asc&view=list';
     const parameters = new URLSearchParams(roundTrip(query));
-    expect(parameters.get('q')).toBe('carrer');
-    expect(parameters.getAll('tag')).toEqual(['memoria', 'catala']);
+    expect(parameters.get('q')).toBe('rehearsal');
+    expect(parameters.getAll('tag')).toEqual(['field', 'outdoor']);
     expect(parameters.getAll('transcription_state')).toEqual(['done', 'failed']);
     expect(parameters.get('sort')).toBe('title');
     expect(parameters.get('direction')).toBe('asc');
@@ -91,8 +91,8 @@ describe('what the API is asked', () => {
     // "No recordings yet" and "nothing matches this filter" are different states with different
     // ways out (§3.5).
     expect(isFiltered(filtersFrom(new URLSearchParams('view=list')))).toBe(false);
-    expect(isFiltered(filtersFrom(new URLSearchParams('tag=memoria')))).toBe(true);
-    expect(isFiltered(filtersFrom(new URLSearchParams('q=vermut')))).toBe(true);
+    expect(isFiltered(filtersFrom(new URLSearchParams('tag=field')))).toBe(true);
+    expect(isFiltered(filtersFrom(new URLSearchParams('q=rehearsal')))).toBe(true);
   });
 });
 
@@ -142,18 +142,18 @@ describe('changing a filter', () => {
 
   it('keeps the filters it was not asked to change', () => {
     // Sorting a filtered list must not clear the filter, which is the bug this shape prevents.
-    const list = drive('?tag=memoria');
+    const list = drive('?tag=field');
     list.set({ sort: 'title' });
-    expect(list.where).toContain('tag=memoria');
+    expect(list.where).toContain('tag=field');
     expect(list.where).toContain('sort=title');
   });
 
   it('clears the filters and keeps what is not one', () => {
-    const list = drive('?q=vermut&view=list&tag=memoria&transcription_state=done');
+    const list = drive('?q=rehearsal&view=list&tag=field&transcription_state=done');
     list.clear();
     expect(list.where).not.toContain('tag=');
     expect(list.where).not.toContain('transcription_state=');
-    expect(list.where).toContain('q=vermut');
+    expect(list.where).toContain('q=rehearsal');
     expect(list.where).toContain('view=list');
   });
 
@@ -170,11 +170,11 @@ describe('leaving and coming back', () => {
     // pushes: opening a recording is the navigation, so back is the way back to the filter --
     // not an undo of the last keystroke in the filter bar.
     const list = drive('');
-    list.set({ states: ['done'], tags: ['memoria'] });
+    list.set({ states: ['done'], tags: ['field'] });
     list.go('/recording/abc');
     expect(list.where).toContain('/recording/abc');
     list.go(-1);
     expect(list.where).toContain('transcription_state=done');
-    expect(list.where).toContain('tag=memoria');
+    expect(list.where).toContain('tag=field');
   });
 });

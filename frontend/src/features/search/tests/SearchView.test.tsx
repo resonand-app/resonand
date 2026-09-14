@@ -75,7 +75,7 @@ describe('the four states', () => {
         return HttpResponse.json({ items: [], total: 0, limit: 50, offset: 0 });
       }),
     );
-    show(toSearch('vermut'));
+    show(toSearch('rehearsal'));
     expect(await screen.findByRole('status', { name: /loading/i })).toBeVisible();
   });
 
@@ -117,7 +117,7 @@ describe('the four states', () => {
         ),
       ),
     );
-    show(toSearch('vermut'));
+    show(toSearch('rehearsal'));
     expect(await screen.findByText('The index is being rebuilt.')).toBeVisible();
     expect(screen.getByRole('button', { name: /try again/i })).toBeInTheDocument();
   });
@@ -125,8 +125,8 @@ describe('the four states', () => {
 
 describe('the title block', () => {
   it('says the query, and how many recordings and how many matches it found', async () => {
-    show(toSearch('Nadal'));
-    expect(await screen.findByRole('heading', { name: 'Nadal' })).toBeInTheDocument();
+    show(toSearch('Cassette'));
+    expect(await screen.findByRole('heading', { name: 'Cassette' })).toBeInTheDocument();
     // Two different numbers: one recording matched, and two matches were found inside it.
     expect(await screen.findByText(/1 recording · 2 matches/)).toBeInTheDocument();
   });
@@ -157,8 +157,8 @@ describe('paging through three hundred', () => {
   });
 
   it('is not offered at all when everything found is on the screen', async () => {
-    show(toSearch('Nadal'));
-    expect(await screen.findByRole('heading', { name: 'Nadal' })).toBeInTheDocument();
+    show(toSearch('Cassette'));
+    expect(await screen.findByRole('heading', { name: 'Cassette' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: /pages/i })).not.toBeInTheDocument();
   });
 });

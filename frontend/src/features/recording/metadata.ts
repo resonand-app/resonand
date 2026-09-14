@@ -13,7 +13,7 @@
  *
  * **Tags go as names and not as slugs.** The backend owns normalisation and the first writer owns
  * a tag's display name, so what is sent is the canonical name the autocomplete offered rather
- * than the one somebody typed -- otherwise `Memòria` typed twice with different accents becomes
+ * than the one somebody typed -- otherwise `Interview` typed twice with different accents becomes
  * one tag whose display name is whichever spelling was saved last.
  *
  * The cache is told what changed rather than which keys to drop: a corrected title is a different

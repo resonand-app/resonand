@@ -16,7 +16,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { toLibrary } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { AVIA, CARRER_NOU, PERSONAL, archive } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE, PERSONAL, archive } from '@/test/api/archive';
 import { usePlayback } from '@/player/store';
 import { mockApi, server } from '@/test/api/server';
 
@@ -36,7 +36,7 @@ function Where() {
   return <div data-testid="where">{location.pathname + location.search}</div>;
 }
 
-function renderLibrary(uuid: string = AVIA) {
+function renderLibrary(uuid: string = RECORDINGS) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -64,18 +64,18 @@ async function cardFor(title: string): Promise<HTMLElement> {
 describe('a card', () => {
   it('opens the recording from its title, by keyboard', async () => {
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
-    expect(within(card).getByRole('link', { name: 'The house on Carrer Nou' })).toHaveAttribute(
+    const card = await cardFor('Field recording, long take');
+    expect(within(card).getByRole('link', { name: 'Field recording, long take' })).toHaveAttribute(
       'href',
-      `/recording/${CARRER_NOU}`,
+      `/recording/${FIELD_TAKE}`,
     );
   });
 
   it('plays without leaving the grid, from a control named after the recording', async () => {
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     expect(
-      within(card).getByRole('button', { name: 'Play The house on Carrer Nou' }),
+      within(card).getByRole('button', { name: 'Play Field recording, long take' }),
     ).toBeVisible();
   });
 
@@ -83,15 +83,15 @@ describe('a card', () => {
     renderLibrary();
     // Amber and red are not enough: somebody who cannot tell them apart still has to be able to
     // tell "in progress" from "failed".
+    expect(within(await cardFor('Rehearsal, second take')).getByText('Transcribing')).toBeVisible();
     expect(
-      within(await cardFor('Cançons que cantava la mare')).getByText('Transcribing'),
+      within(await cardFor('Field recording, long take')).getByText('Transcribed'),
     ).toBeVisible();
-    expect(within(await cardFor('The house on Carrer Nou')).getByText('Transcribed')).toBeVisible();
   });
 
   it('shows the duration and the recording own date, as written', async () => {
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     // 48:12, and half six on the evening of 12 March -- the clock reading where the recording
     // was made. `recorded_at` is 18:22 with a +01:00 offset, and it renders as 6:22 PM whatever
     // timezone the reader or the test runner is in (§1.3).
@@ -103,57 +103,59 @@ describe('a card', () => {
     renderLibrary();
     // A cassette digitised decades later: `recorded_at` is null, so the card shows the upload
     // instant -- which is a real date in the reader's own timezone, unlike the one above.
-    const card = await cardFor('Sopar de Nadal 1998');
+    const card = await cardFor('Digitised cassette');
     expect(within(card).getByText(/12:07/)).toBeVisible();
     expect(within(card).getByText(/2026/)).toBeVisible();
   });
 
   it('carries the tags, and turns the rest into a count', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU
+      one.uuid === FIELD_TAKE
         ? {
             ...one,
             tags: [
-              { id: 1, name: 'memòria', slug: 'memoria' },
-              { id: 2, name: 'català', slug: 'catala' },
-              { id: 3, name: 'família', slug: 'familia' },
-              { id: 4, name: 'música', slug: 'musica' },
+              { id: 1, name: 'field', slug: 'field' },
+              { id: 2, name: 'outdoor', slug: 'outdoor' },
+              { id: 3, name: 'music', slug: 'music' },
+              { id: 4, name: 'interview', slug: 'interview' },
               { id: 5, name: 'cases', slug: 'cases' },
             ],
           }
         : one,
     );
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     // Three, then a count: a card is 320px and every card in a grid has to be the same height.
-    expect(within(card).getByText('memòria')).toBeVisible();
+    expect(within(card).getByText('field')).toBeVisible();
     expect(within(card).getByText('+2')).toBeVisible();
     expect(within(card).queryByText('cases')).toBeNull();
   });
 
   it('names the category the library gave the recording', async () => {
-    archive.categories[AVIA] = [{ id: 7, parent_id: null, name: 'Entrevistes', position: 0 }];
+    archive.categories[RECORDINGS] = [{ id: 7, parent_id: null, name: 'Interviews', position: 0 }];
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, category_id: 7 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, category_id: 7 } : one,
     );
     renderLibrary();
-    expect(within(await cardFor('The house on Carrer Nou')).getByText('Entrevistes')).toBeVisible();
+    expect(
+      within(await cardFor('Field recording, long take')).getByText('Interviews'),
+    ).toBeVisible();
   });
 
   it('draws no waveform for a recording whose peaks job has not run', async () => {
     renderLibrary(PERSONAL);
     // `Nota de veu` is still being processed: `has_waveform` is false, so the request that would
     // 404 is never made and the card draws a dashed rule rather than an invented shape (§3.5).
-    const card = await cardFor('Nota de veu 12 mar');
+    const card = await cardFor('Short voice note');
     await waitFor(() => {
-      expect(screen.getByText('Assaig 4 de febrer')).toBeInTheDocument();
+      expect(screen.getByText('Interview 02, raw')).toBeInTheDocument();
     });
     expect(card.querySelector('[data-ds="waveform"]')).toBeNull();
   });
 
   it('draws a waveform once the peaks have arrived', async () => {
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await waitFor(() => {
       expect(card.querySelector('[data-ds="waveform"]')).not.toBeNull();
     });
@@ -164,23 +166,23 @@ describe('playing from a card', () => {
   it('plays without leaving the grid', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await user.click(within(card).getByRole('button', { name: /^Play/ }));
     // The route is unchanged and the player has the recording: the grid is still on screen, which
     // is the whole point of a play button on a card.
-    expect(usePlayback.getState().recording?.uuid).toBe(CARRER_NOU);
-    expect(usePlayback.getState().recording?.library).toBe('Àvia Teresa');
-    expect(screen.getByRole('heading', { name: 'Àvia Teresa', level: 1 })).toBeVisible();
+    expect(usePlayback.getState().recording?.uuid).toBe(FIELD_TAKE);
+    expect(usePlayback.getState().recording?.library).toBe('Field recordings');
+    expect(screen.getByRole('heading', { name: 'Field recordings', level: 1 })).toBeVisible();
   });
 
   it('marks the card that is playing, and only that one', async () => {
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
-    const other = await cardFor('Sopar de Nadal 1998');
+    const card = await cardFor('Field recording, long take');
+    const other = await cardFor('Digitised cassette');
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
@@ -193,14 +195,14 @@ describe('playing from a card', () => {
 
   it('lights the card waveform without letting it follow the playback', async () => {
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await waitFor(() => {
       expect(card.querySelector('[data-ds="waveform"]')).not.toBeNull();
     });
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
@@ -219,14 +221,14 @@ describe('playing from a card', () => {
 
   it('leaves every other card dim, so the lit one is the one that is playing', async () => {
     renderLibrary();
-    const other = await cardFor('Sopar de Nadal 1998');
+    const other = await cardFor('Digitised cassette');
     await waitFor(() => {
       expect(other.querySelector('[data-ds="waveform"]')).not.toBeNull();
     });
     usePlayback.getState().play({
-      uuid: CARRER_NOU,
-      title: 'The house on Carrer Nou',
-      library: 'Àvia Teresa',
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
       durationMs: 2_892_000,
       hasWaveform: true,
     });
@@ -239,7 +241,7 @@ describe('playing from a card', () => {
   it('turns the control that started the sound into the one that stops it', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await user.click(within(card).getByRole('button', { name: /^Play/ }));
     usePlayback.getState().report({ status: 'playing' });
     const pause = await within(card).findByRole('button', { name: /^Pause/ });
@@ -250,13 +252,13 @@ describe('playing from a card', () => {
 
 describe('the category filter', () => {
   it('holds the tree, indented, with one selectable at a time', async () => {
-    archive.categories[AVIA] = [
-      { id: 1, parent_id: null, name: 'Entrevistes', position: 0 },
-      { id: 2, parent_id: 1, name: 'Àvia', position: 0 },
+    archive.categories[RECORDINGS] = [
+      { id: 1, parent_id: null, name: 'Interviews', position: 0 },
+      { id: 2, parent_id: 1, name: 'Álbum', position: 0 },
     ];
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: /Any category/ }));
     const group = await screen.findByRole('radiogroup', { name: 'Category' });
     // Radios and not checkboxes: a recording has at most one category.
@@ -265,22 +267,22 @@ describe('the category filter', () => {
   });
 
   it('puts the chosen category in the URL, so a filtered library can be linked to', async () => {
-    archive.categories[AVIA] = [{ id: 7, parent_id: null, name: 'Entrevistes', position: 0 }];
+    archive.categories[RECORDINGS] = [{ id: 7, parent_id: null, name: 'Interviews', position: 0 }];
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: /Any category/ }));
-    await user.click(await screen.findByRole('radio', { name: 'Entrevistes' }));
+    await user.click(await screen.findByRole('radio', { name: 'Interviews' }));
     // The control now names the filter, and the address carries it.
-    expect(await screen.findByRole('button', { name: /Entrevistes/ })).toBeVisible();
+    expect(await screen.findByRole('button', { name: /Interviews/ })).toBeVisible();
     expect(screen.getByTestId('where').textContent).toContain('category_id=7');
   });
 
   it('says so when a library has no categories rather than showing an empty popover', async () => {
-    archive.categories[AVIA] = [];
+    archive.categories[RECORDINGS] = [];
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: /Any category/ }));
     expect(await screen.findByText(/no categories yet/)).toBeVisible();
   });
@@ -290,21 +292,21 @@ describe('the tag filter', () => {
   it('suggests tags from the instance and puts the chosen one in the URL', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Tag' }));
     // The suggestions are already ACL-filtered by the backend, so anything offered is a tag this
     // account may see -- the interface does not filter them again.
-    await user.click(await screen.findByRole('button', { name: /memòria/ }));
-    expect(screen.getByTestId('where').textContent).toContain('tag=memoria');
+    await user.click(await screen.findByRole('button', { name: /field/ }));
+    expect(screen.getByTestId('where').textContent).toContain('tag=field');
   });
 
   it('shows what is on as a chip that can be taken off again', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Tag' }));
-    await user.click(await screen.findByRole('button', { name: /memòria/ }));
-    const remove = await screen.findByRole('button', { name: /Stop filtering by memoria/ });
+    await user.click(await screen.findByRole('button', { name: /field/ }));
+    const remove = await screen.findByRole('button', { name: /Stop filtering by field/ });
     await user.click(remove);
     expect(screen.getByTestId('where').textContent).not.toContain('tag=');
   });
@@ -312,20 +314,20 @@ describe('the tag filter', () => {
   it('does not offer a tag that is already narrowing the list', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Tag' }));
-    await user.click(await screen.findByRole('button', { name: /memòria/ }));
+    await user.click(await screen.findByRole('button', { name: /field/ }));
     await user.click(screen.getByRole('button', { name: 'Tag' }));
     const list = await screen.findByRole('list', { name: 'Tags' });
     // A suggestion for a filter already applied is a row that does nothing.
-    expect(within(list).queryByRole('button', { name: /memòria/ })).toBeNull();
+    expect(within(list).queryByRole('button', { name: /field/ })).toBeNull();
   });
 });
 
 describe('the transcription state toggles', () => {
   it('says the same four words the badges do', async () => {
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     const group = screen.getByRole('group', { name: 'Transcript state' });
     // The badge on a card and the toggle in the bar read the same vocabulary, so the filter and
     // the thing it filters cannot describe the same state differently.
@@ -337,7 +339,7 @@ describe('the transcription state toggles', () => {
   it('are one choice, so picking a state drops the one before it', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Transcribed' }));
     await user.click(screen.getByRole('button', { name: 'Transcribing' }));
     // The four are the states one recording can be in, so filtering by two of them at once is a
@@ -358,7 +360,7 @@ describe('the transcription state toggles', () => {
   it('leaves the parameter out entirely when none is on', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Transcribed' }));
     await user.click(screen.getByRole('button', { name: 'Transcribed' }));
     // None on means every state, which is why there is no "all" toggle -- and why the parameter
@@ -371,7 +373,7 @@ describe('the sort and the density', () => {
   it('puts a changed sort in the URL and leaves the default out of it', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     // Recorded, newest first, is the API's own default: an unfiltered library has a clean address.
     expect(screen.getByTestId('where').textContent).not.toContain('sort=');
     await user.click(screen.getByRole('button', { name: 'Sort oldest and shortest first' }));
@@ -381,7 +383,7 @@ describe('the sort and the density', () => {
   it('switches to the dense list, and says so in the address', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'List' }));
     expect(screen.getByTestId('where').textContent).toContain('view=list');
     expect(await screen.findByRole('table', { name: 'Recordings' })).toBeInTheDocument();
@@ -410,7 +412,7 @@ describe('the filter bar on a phone', () => {
   it('collapses the whole bar into one button', async () => {
     narrow();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     // Four controls wrapping onto three lines would be most of a 375px screen before a recording
     // is drawn, so none of them is on the row.
     expect(screen.getByRole('button', { name: 'Filter' })).toBeVisible();
@@ -421,7 +423,7 @@ describe('the filter bar on a phone', () => {
     narrow();
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Filter' }));
     const sheet = await screen.findByRole('dialog', { name: 'Narrow this library' });
     expect(within(sheet).getByRole('button', { name: /Any category/ })).toBeVisible();
@@ -432,7 +434,7 @@ describe('the filter bar on a phone', () => {
     narrow();
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Filter' }));
     const sheet = await screen.findByRole('dialog');
     await user.click(within(sheet).getByRole('button', { name: 'Transcribed' }));
@@ -442,7 +444,7 @@ describe('the filter bar on a phone', () => {
   it('keeps the density switch on the row, because it is not a filter', async () => {
     narrow();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     expect(screen.getByRole('group', { name: 'How to show them' })).toBeVisible();
   });
 });
@@ -451,7 +453,7 @@ describe('selecting recordings', () => {
   it('turns the filter bar into a bulk bar rather than showing both', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
     // A selection is a mode: the question on screen becomes what to do with these, not which
     // others to find. Both bars are the same height, so nothing moved.
@@ -462,8 +464,8 @@ describe('selecting recordings', () => {
   it('counts a selection rather than naming it', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    const first = await cardFor('The house on Carrer Nou');
-    const second = await cardFor('Sopar de Nadal 1998');
+    const first = await cardFor('Field recording, long take');
+    const second = await cardFor('Digitised cassette');
     await user.click(within(first).getByRole('checkbox', { name: /^Select/ }));
     await user.click(within(second).getByRole('checkbox', { name: /^Select/ }));
     // It has to survive a selection of two hundred, and two hundred titles is a paragraph where
@@ -474,7 +476,7 @@ describe('selecting recordings', () => {
   it('offers a way out, and the way out clears it', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
     await user.click(screen.getByRole('button', { name: 'Clear' }));
     expect(await screen.findByRole('button', { name: /Any category/ })).toBeVisible();
@@ -482,10 +484,10 @@ describe('selecting recordings', () => {
 
   it('has no checkboxes at all on a library you can only read', async () => {
     archive.libraries = archive.libraries.map((one) =>
-      one.uuid === AVIA ? { ...one, level: 10 } : one,
+      one.uuid === RECORDINGS ? { ...one, level: 10 } : one,
     );
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     // Absent rather than disabled: a grid of ticked-off checkboxes leading to a dead bar reads as
     // a bug, and their absence reads as a decision (§3.5).
     expect(within(card).queryByRole('checkbox')).toBeNull();
@@ -494,7 +496,7 @@ describe('selecting recordings', () => {
   it('says whether every card in view is selected, or only some', async () => {
     const user = userEvent.setup();
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
     const all = screen.getByRole('checkbox', { name: 'Select everything here' });
     expect(all).toHaveAttribute('aria-checked', 'mixed');
@@ -524,7 +526,7 @@ describe('a bulk action where some fail', () => {
   }
 
   async function selectAllThenTrash(user: ReturnType<typeof userEvent.setup>) {
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
     await user.click(screen.getByRole('checkbox', { name: 'Select everything here' }));
     await user.click(screen.getByRole('button', { name: 'More for the selection' }));
@@ -532,7 +534,7 @@ describe('a bulk action where some fail', () => {
   }
 
   it('reports what worked and what did not, in the API own words', async () => {
-    refuse(CARRER_NOU);
+    refuse(FIELD_TAKE);
     const user = userEvent.setup();
     renderLibrary();
     await selectAllThenTrash(user);
@@ -541,7 +543,7 @@ describe('a bulk action where some fail', () => {
   });
 
   it('leaves the failures selected, so the retry is one click', async () => {
-    refuse(CARRER_NOU);
+    refuse(FIELD_TAKE);
     const user = userEvent.setup();
     renderLibrary();
     await selectAllThenTrash(user);
@@ -574,14 +576,14 @@ describe('the two empty states', () => {
     // A tag nothing in this library carries: the suggestions come from the whole archive, so a
     // tag that matches nothing here is an ordinary thing to pick.
     archive.recordings = archive.recordings.map((one) =>
-      one.library_uuid === AVIA ? { ...one, tags: [] } : one,
+      one.library_uuid === RECORDINGS ? { ...one, tags: [] } : one,
     );
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Tag' }));
-    // `música` is on a recording in another library, so this filter matches nothing here.
-    await user.click(await screen.findByRole('button', { name: /música/ }));
+    // `interview` is on a recording in another library, so this filter matches nothing here.
+    await user.click(await screen.findByRole('button', { name: /interview/ }));
     // Confusing these two is the classic mistake: one is a new library, the other a mistyped tag.
     expect(await screen.findByText(/Nothing matches that/)).toBeVisible();
     expect(screen.queryByText(/Nothing in this library yet/)).toBeNull();
@@ -589,25 +591,25 @@ describe('the two empty states', () => {
 
   it('names the filter, offers to clear it, and says how many are really there', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.library_uuid === AVIA ? { ...one, tags: [] } : one,
+      one.library_uuid === RECORDINGS ? { ...one, tags: [] } : one,
     );
     const user = userEvent.setup();
     renderLibrary();
-    await screen.findByRole('heading', { name: 'Àvia Teresa', level: 1 });
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
     await user.click(screen.getByRole('button', { name: 'Tag' }));
-    await user.click(await screen.findByRole('button', { name: /música/ }));
+    await user.click(await screen.findByRole('button', { name: /interview/ }));
     await screen.findByText(/Nothing matches that/);
     // The useful fact is that the library is not empty, only hidden -- and which filter hid it.
-    expect(screen.getByText(/#musica/)).toBeVisible();
+    expect(screen.getByText(/#interview/)).toBeVisible();
     expect(screen.getByText(/There are 3 recordings in this library/)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Clear the filters' }));
-    expect(await cardFor('The house on Carrer Nou')).toBeInTheDocument();
+    expect(await cardFor('Field recording, long take')).toBeInTheDocument();
   });
 
   it('tells somebody who cannot upload why it is empty, without offering them an action', async () => {
     archive.recordings = [];
     archive.libraries = archive.libraries.map((one) =>
-      one.uuid === AVIA ? { ...one, level: 10 } : one,
+      one.uuid === RECORDINGS ? { ...one, level: 10 } : one,
     );
     renderLibrary();
     expect(await screen.findByText(/has not put anything in it yet/)).toBeVisible();
@@ -617,7 +619,7 @@ describe('the two empty states', () => {
 describe('a library you can only read', () => {
   function readOnly() {
     archive.libraries = archive.libraries.map((one) =>
-      one.uuid === AVIA ? { ...one, level: 10 } : one,
+      one.uuid === RECORDINGS ? { ...one, level: 10 } : one,
     );
   }
 
@@ -628,14 +630,14 @@ describe('a library you can only read', () => {
     // The filters, the sort, the densities and play all stay: what changes is what you can alter.
     expect(screen.getByRole('button', { name: /Any category/ })).toBeVisible();
     expect(screen.getByRole('group', { name: 'How to show them' })).toBeVisible();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     expect(within(card).getByRole('button', { name: /^Play/ })).toBeVisible();
   });
 
   it('drops what cannot be done rather than disabling it', async () => {
     readOnly();
     renderLibrary();
-    const card = await cardFor('The house on Carrer Nou');
+    const card = await cardFor('Field recording, long take');
     // Absent, not disabled -- a disabled row of controls reads as a bug (§3.5).
     expect(within(card).queryByRole('checkbox')).toBeNull();
     expect(screen.queryByRole('button', { name: /Settings/ })).toBeNull();

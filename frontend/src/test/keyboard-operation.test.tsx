@@ -110,7 +110,7 @@ describe('moving through a transcript', WHOLE_SYSTEM, () => {
   it('jumps to the line a keyboard has landed on', async () => {
     const user = userEvent.setup();
     await mountView(RECORDING);
-    const line = (await screen.findByText(/The building is still there/)).closest<HTMLElement>(
+    const line = (await screen.findByText(/The sixth segment/)).closest<HTMLElement>(
       '[data-ds="transcript-line"]',
     );
     if (line === null) throw new Error('A line that seeks is not a control.');
@@ -182,7 +182,7 @@ describe('while somebody is typing', WHOLE_SYSTEM, () => {
     // `/` focuses search, which is itself one of the bindings -- so this asserts the escape from
     // the page into a field is a keyboard journey as well.
     await user.keyboard('/');
-    await user.keyboard(' casa');
+    await user.keyboard(' third');
 
     expect(usePlayback.getState().status).toBe('playing');
     expect(positionMs()).toBe(where);
@@ -196,7 +196,7 @@ describe('while somebody is typing', WHOLE_SYSTEM, () => {
     const where = positionMs();
 
     await user.keyboard('/');
-    await user.keyboard('casa{ArrowLeft}{ArrowLeft}');
+    await user.keyboard('third{ArrowLeft}{ArrowLeft}');
 
     expect(positionMs()).toBe(where);
   });
