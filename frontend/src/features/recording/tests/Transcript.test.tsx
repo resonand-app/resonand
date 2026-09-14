@@ -47,6 +47,18 @@ function measured(height = 720) {
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(height);
 }
 
+/**
+ * The one scrollport on the screen (`UI-11g`).
+ *
+ * The player panel and the lines are inside it together, so a scroll here is the scroll that
+ * releases following -- the transcript has no scroller of its own to fire one on.
+ */
+function scroller(): Element {
+  const column = document.querySelector('[data-app="recording-scroller"]');
+  if (column === null) throw new Error('The recording has no scroller.');
+  return column;
+}
+
 /** The address, so a test can assert that seeking did not navigate. */
 function Where() {
   const location = useLocation();
@@ -225,10 +237,8 @@ describe('following the audio', () => {
     measured();
     renderRecording();
     await screen.findByText(/The first segment of the transcript/);
-    const scroller = document.querySelector('[data-app="transcript-scroller"]');
-    if (scroller === null) throw new Error('The transcript has no scroller.');
     expect(screen.queryByText(/stopped following the audio/)).toBeNull();
-    fireEvent.scroll(scroller);
+    fireEvent.scroll(scroller());
     // A band, and it stays: the person it is for is reading, and a message that has already
     // faded is a feature they never find (`UI-12b`).
     expect(await screen.findByText(/stopped following the audio/)).toBeInTheDocument();
@@ -240,9 +250,7 @@ describe('following the audio', () => {
     measured();
     renderRecording();
     await screen.findByText(/The first segment of the transcript/);
-    const scroller = document.querySelector('[data-app="transcript-scroller"]');
-    if (scroller === null) throw new Error('The transcript has no scroller.');
-    fireEvent.scroll(scroller);
+    fireEvent.scroll(scroller());
     await user.click(await screen.findByRole('button', { name: 'Follow again' }));
     expect(screen.queryByText(/stopped following the audio/)).toBeNull();
   });
@@ -252,9 +260,7 @@ describe('following the audio', () => {
     measured();
     renderRecording();
     await screen.findByText(/The first segment of the transcript/);
-    const scroller = document.querySelector('[data-app="transcript-scroller"]');
-    if (scroller === null) throw new Error('The transcript has no scroller.');
-    fireEvent.scroll(scroller);
+    fireEvent.scroll(scroller());
     await screen.findByText(/stopped following the audio/);
     await user.click(screen.getByText(/The fifth segment is the one a click seeks to/));
     expect(screen.queryByText(/stopped following the audio/)).toBeNull();

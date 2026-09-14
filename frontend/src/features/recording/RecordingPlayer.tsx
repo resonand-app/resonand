@@ -4,8 +4,15 @@
  * **It is the same playback state as the bar in the shell**, not a second player (`UI-5a`, §3.1).
  * There is one position, one duration and one rate, and both surfaces read them -- which is why
  * nothing here holds state of its own and every control writes to the store. The bar drops its
- * own waveform while this one is on screen, because two waveforms at two scales drifting a frame
- * apart is what makes people believe there are two players.
+ * own waveform while this one is on screen and takes the shape back the moment this one has faded
+ * out of the column (`UI-11g`, `UI-11h`), because two waveforms at two scales drifting a frame
+ * apart is what makes people believe there are two players -- and because a bar with no shape at
+ * all, under a transcript that has scrolled the waveform away, is a player missing half of itself.
+ *
+ * **The panel scrolls away with the transcript rather than holding the top of the screen**
+ * (`UI-11g`). It is the first thing the screen shows and it stops being the point the moment
+ * somebody starts reading: on a short screen it was 130px of picture over four lines of
+ * transcript. Scrolled, it fades; what is left is the transcript in the whole section.
  *
  * **The waveform is the seek control.** At 130px there is room for a real one: the peaks come
  * from the downsampled endpoint at `BUCKETS.detail`, the playhead is drawn, and a press, a drag
@@ -28,6 +35,7 @@
  */
 
 import { useState } from 'react';
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
@@ -36,11 +44,23 @@ import * as format from '@/i18n/format';
 import { RATES, advanceRate, playedFraction, usePlayback } from '@/player/store';
 
 import type { RecordingContext } from './data';
+import { useWaveformFade } from './use-waveform-fade';
 
 /** How far the two skip controls move. §1.8's fifteen seconds, the same as `⇧←` and `⇧→`. */
 const SKIP_SECONDS = 15;
 
-export function RecordingPlayer({ context }: { context: RecordingContext }) {
+export interface RecordingPlayerProps {
+  context: RecordingContext;
+  /**
+   * The column this panel scrolls inside, when the view has one.
+   *
+   * What the fade is measured against, and so what decides which surface draws the waveform.
+   * Absent on the phone, where the panel does not scroll away.
+   */
+  scroller?: RefObject<HTMLElement | null>;
+}
+
+export function RecordingPlayer({ context, scroller }: RecordingPlayerProps) {
   const { t } = useTranslation('recording');
   const recording = context.recording;
   const state = usePlayback();
@@ -53,6 +73,7 @@ export function RecordingPlayer({ context }: { context: RecordingContext }) {
     BUCKETS.detail,
     recording?.has_waveform === true,
   );
+  const panel = useWaveformFade(scroller, recording?.uuid);
 
   if (recording === undefined) return null;
 
@@ -95,6 +116,7 @@ export function RecordingPlayer({ context }: { context: RecordingContext }) {
 
   return (
     <section
+      ref={panel}
       data-app="detail-player"
       aria-label={t('player.label')}
       style={{

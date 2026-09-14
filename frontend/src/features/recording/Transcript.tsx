@@ -24,7 +24,13 @@
  *
  * **The scroll follows playback and releases the moment somebody scrolls** (`UI-12b`), which is
  * `use-follow.ts` -- and it is offered back through a band that stays until it is used, never a
- * toast that vanishes before it is read.
+ * toast that vanishes before it is read. The band is pinned to the top of the section, because
+ * the thing it is offered about is a scroll that has taken it a thousand lines away.
+ *
+ * **On the desktop it opens no scrollport of its own** (`UI-11g`). The player panel and the lines
+ * are one scrolling section, so the waveform can be scrolled away and the transcript left the
+ * whole column; the virtualiser is told how far down that scroller the lines begin, and measures
+ * everything from there. On the phone there is no column height to share and it scrolls itself.
  *
  * **`↑` and `↓` move between segments by seeking to them** (`UI-12c`, §1.8), which is the same act
  * as clicking a line and not a second kind of navigation: the position is the only cursor on this
@@ -40,7 +46,8 @@
  */
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useKeyboard } from '@/app/use-keyboard';
@@ -67,22 +74,50 @@ export interface TranscriptProps {
   transcripts: Transcripts;
   /** Take the height the column has left. False on the phone, which has none to give. */
   fills?: boolean;
+  /**
+   * The column's scroller, which the player panel is inside as well (`UI-11g`).
+   *
+   * The transcript opens no scrollport of its own when it is given one: a scroller inside a
+   * scroller is a wheel that moves whichever of the two the pointer is over. Without it -- the
+   * phone -- the transcript scrolls itself at a height of its own.
+   */
+  scroller?: RefObject<HTMLDivElement | null>;
 }
 
-export function Transcript({ context, transcripts, fills = false }: TranscriptProps) {
+export function Transcript({ context, transcripts, fills = false, scroller }: TranscriptProps) {
   // The virtualiser measures live DOM nodes and returns different results from the same inputs,
   // which is what the React Compiler is entitled to assume does not happen -- the same directive
   // and the same reason as `RecordingList`.
   'use no memo';
 
   const { t } = useTranslation('recording');
-  const scroller = useRef<HTMLDivElement>(null);
+  const own = useRef<HTMLDivElement>(null);
+  const scrolling = scroller ?? own;
+  const list = useRef<HTMLDivElement>(null);
   const reduced = usePrefersReducedMotion();
   // The scroll is the one thing in the product that moves by itself, and no stylesheet can reach
   // inside a `scrollTo` -- so the preference is read here and asked for by name (`UI-32c`).
-  const follow = useFollow(scroller, !reduced);
+  const follow = useFollow(scrolling, !reduced);
   const recording = context.recording;
   const segments = transcripts.active?.segments ?? [];
+  // Where the lines start inside the scroller: the player above them, and the heading. Measured
+  // every render rather than observed, because everything above the list can change its height --
+  // the transport rewrapping, the peaks arriving, the follow band appearing -- and that is not
+  // one element to watch.
+  const [margin, setMargin] = useState(0);
+  // No dependency list on purpose: anything above the lines can change its height -- the
+  // transport rewrapping, the peaks arriving, the follow band appearing -- and this measurement
+  // is what says whether it has. It settles on the render that agrees with it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    const lines = list.current;
+    const column = scrolling.current;
+    if (lines === null || column === null) return;
+    const offset = Math.round(
+      lines.getBoundingClientRect().top - column.getBoundingClientRect().top + column.scrollTop,
+    );
+    setMargin((was) => (was === offset ? was : offset));
+  });
 
   const isCurrent = usePlayback((state) => state.recording?.uuid === recording?.uuid);
   // Subscribed as an index rather than as a position: this is the one number the transcript
@@ -92,9 +127,10 @@ export function Transcript({ context, transcripts, fills = false }: TranscriptPr
   // eslint-disable-next-line react-hooks/incompatible-library -- see the directive above
   const virtualiser = useVirtualizer({
     count: segments.length,
-    getScrollElement: () => scroller.current,
+    getScrollElement: () => scrolling.current,
     estimateSize: () => ESTIMATED_LINE,
     overscan: OVERSCAN,
+    scrollMargin: margin,
   });
 
   // Keep the line being spoken in the middle of the scroller. The offset comes from the
@@ -105,11 +141,27 @@ export function Transcript({ context, transcripts, fills = false }: TranscriptPr
     if (!follow.following || active < 0) return;
     const offset = virtualiser.getOffsetForIndex(active, 'center')?.[0];
     if (offset === undefined) return;
-    centre(offset);
+    // Either the player panel is left where it is or the lines are taken to the top of the
+    // section, never a stop in between: centring the first line of a recording is a scroll of a
+    // few dozen pixels, and paid for in the panel fading halfway out the moment somebody presses
+    // play (`UI-11g`). Anything far enough in to be worth scrolling to is past it anyway.
+    centre(offset < margin ? 0 : offset);
     // `virtualiser` is deliberately not a dependency: it is a new object every render, and this
     // has to run when the active line changes rather than on every frame of a scroll.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, follow.following, centre]);
+  }, [active, follow.following, centre, margin]);
+
+  // On the element rather than through a prop, because the element the transcript scrolls in is
+  // usually not the element the transcript renders.
+  const released = follow.onScroll;
+  useEffect(() => {
+    const column = scrolling.current;
+    if (column === null) return;
+    column.addEventListener('scroll', released, { passive: true });
+    return () => {
+      column.removeEventListener('scroll', released);
+    };
+  }, [scrolling, released]);
 
   /** Jump to a moment, loading the recording first if it is not the one playing. */
   const seekTo = (segment: Segment) => {
@@ -161,71 +213,82 @@ export function Transcript({ context, transcripts, fills = false }: TranscriptPr
 
   if (recording === undefined || segments.length === 0) return null;
 
-  return (
-    <section
-      data-app="transcript"
-      aria-label={t('transcript.label')}
-      style={
-        fills ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined
-      }
-    >
-      <Heading count={transcripts.active?.segment_count ?? segments.length} />
-      {!follow.following && <Released onResume={follow.resume} />}
-      {/* The transcript is the screen, so it takes what the column has left rather than a height
-          of its own: a fixed one either leaves a band of empty page under it or pushes the player
-          off the top, depending on the screen it lands on. */}
-      <div
-        ref={scroller}
-        data-app="transcript-scroller"
-        onScroll={follow.onScroll}
-        style={{
-          ...(fills ? { flex: 1, minHeight: 0 } : { height: `min(60vh, ${String(MAX_HEIGHT)}px)` }),
-          overflowY: 'auto',
-          contain: 'strict',
-        }}
-      >
-        <div style={{ height: virtualiser.getTotalSize(), position: 'relative' }}>
-          {virtualiser.getVirtualItems().map((item) => {
-            const segment = segments[item.index];
-            if (segment === undefined) return null;
-            return (
-              <div
-                key={item.key}
-                ref={virtualiser.measureElement}
-                data-index={item.index}
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  transform: `translateY(${String(item.start)}px)`,
-                }}
-              >
-                <TranscriptLine
-                  at={format.timestamp(segment.start_ms)}
-                  active={item.index === active}
-                  aria-current={item.index === active ? 'true' : undefined}
-                  onClick={() => {
-                    seekTo(segment);
-                  }}
-                >
-                  {/* The speaker prefixes the line when there is one. `speaker` is usually null
+  const lines = (
+    <div ref={list} style={{ height: virtualiser.getTotalSize(), position: 'relative' }}>
+      {virtualiser.getVirtualItems().map((item) => {
+        const segment = segments[item.index];
+        if (segment === undefined) return null;
+        return (
+          <div
+            key={item.key}
+            ref={virtualiser.measureElement}
+            data-index={item.index}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              // Less the margin: the lines are measured from the top of the scroller, which
+              // is the top of the player panel, and drawn from the top of this box.
+              transform: `translateY(${String(item.start - margin)}px)`,
+            }}
+          >
+            <TranscriptLine
+              at={format.timestamp(segment.start_ms)}
+              active={item.index === active}
+              aria-current={item.index === active ? 'true' : undefined}
+              onClick={() => {
+                seekTo(segment);
+              }}
+            >
+              {/* The speaker prefixes the line when there is one. `speaker` is usually null
                       in v0, and a label reserved for it would be an empty column on every line
                       of every transcript in the archive. */}
-                  {segment.speaker === null || segment.speaker === '' ? (
-                    segment.text
-                  ) : (
-                    <>
-                      <b style={{ fontWeight: 'var(--weight-semibold)' }}>{segment.speaker}</b>{' '}
-                      {segment.text}
-                    </>
-                  )}
-                </TranscriptLine>
-              </div>
-            );
-          })}
-        </div>
+              {segment.speaker === null || segment.speaker === '' ? (
+                segment.text
+              ) : (
+                <>
+                  <b style={{ fontWeight: 'var(--weight-semibold)' }}>{segment.speaker}</b>{' '}
+                  {segment.text}
+                </>
+              )}
+            </TranscriptLine>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <section data-app="transcript" aria-label={t('transcript.label')}>
+      {/* Pinned to the top of the section while the lines move under it. The offer to follow
+          again is the whole of `UI-12b` and it stops being an offer at all if it can be scrolled
+          a thousand lines out of reach; before the player and the transcript shared a scroller
+          it sat above one and could never leave. */}
+      <div
+        style={
+          fills ? { position: 'sticky', top: 0, zIndex: 1, background: 'var(--bg)' } : undefined
+        }
+      >
+        <Heading count={transcripts.active?.segment_count ?? segments.length} />
+        {!follow.following && <Released onResume={follow.resume} />}
       </div>
+      {fills ? (
+        lines
+      ) : (
+        // The phone's column has no height to give, so the transcript takes one of its own.
+        <div
+          ref={own}
+          data-app="transcript-scroller"
+          style={{
+            height: `min(60vh, ${String(MAX_HEIGHT)}px)`,
+            overflowY: 'auto',
+            contain: 'strict',
+          }}
+        >
+          {lines}
+        </div>
+      )}
     </section>
   );
 }

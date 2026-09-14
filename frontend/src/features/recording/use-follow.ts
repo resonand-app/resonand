@@ -93,20 +93,27 @@ export function useFollow(scroller: RefObject<HTMLElement | null>, smooth: boole
     [],
   );
 
+  const resume = useCallback(() => {
+    setFollowing(true);
+  }, []);
+
+  const onScroll = useCallback(() => {
+    if (ours.current) {
+      // Still converging on where we sent it. Each frame of a smooth scroll lands here.
+      arm();
+      return;
+    }
+    release();
+  }, [arm, release]);
+
+  // `onScroll` is stable because the transcript registers it as a listener on an element it does
+  // not render, and a new identity every render would be a listener added and removed on every
+  // frame of a scroll. `centreOn` is not: it reads the scroller through the ref it was handed.
   return {
     following,
-    resume: () => {
-      setFollowing(true);
-    },
-    onScroll: () => {
-      if (ours.current) {
-        // Still converging on where we sent it. Each frame of a smooth scroll lands here.
-        arm();
-        return;
-      }
-      release();
-    },
-    centreOn: (offset) => {
+    resume,
+    onScroll,
+    centreOn: (offset: number) => {
       const element = scroller.current;
       if (element === null) return;
       const target = Math.max(0, Math.min(offset, element.scrollHeight - element.clientHeight));

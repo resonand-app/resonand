@@ -50,6 +50,30 @@ if (typeof Element.prototype.scrollTo !== 'function') {
   Element.prototype.scrollTo = () => undefined;
 }
 
+/**
+ * `ResizeObserver`, which jsdom does not implement at all.
+ *
+ * Three surfaces watch their own size rather than being told it -- the waveform, which redraws at
+ * the bar count its width allows, the upload tray, and the detail view's player panel, which
+ * fades over its own height as the column scrolls it away. A missing constructor throws inside an
+ * effect, which fails a run in which every assertion passed.
+ *
+ * A no-op, and deliberately not one that reports a size: there is no layout in jsdom to report,
+ * and a stub that invented one would have components drawing against a number nothing on the
+ * screen agrees with. A test that needs a measurement stubs the measurement.
+ */
+if (!('ResizeObserver' in globalThis)) {
+  Object.defineProperty(globalThis, 'ResizeObserver', {
+    configurable: true,
+    writable: true,
+    value: class {
+      observe = () => undefined;
+      unobserve = () => undefined;
+      disconnect = () => undefined;
+    },
+  });
+}
+
 afterEach(() => {
   cleanup();
 });

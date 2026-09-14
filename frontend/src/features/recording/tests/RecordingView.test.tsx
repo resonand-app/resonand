@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { RECORDINGS, FIELD_TAKE, CASSETTE, archive } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE, CASSETTE, VOICE_NOTE, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -40,6 +40,44 @@ function renderRecording(uuid: string = FIELD_TAKE) {
     </QueryClientProvider>,
   );
 }
+
+/** The one scrollport the left column has, and what is inside it. */
+function scroller(): Element {
+  const column = document.querySelector('[data-app="recording-scroller"]');
+  if (column === null) throw new Error('The recording has no scroller.');
+  return column;
+}
+
+describe('the waveform and what is under it', () => {
+  it('are one scrolling section, so reading puts the picture away', async () => {
+    renderRecording();
+    await screen.findByRole('heading', { name: 'Field recording, long take', level: 1 });
+    const column = scroller();
+    const player = document.querySelector('[data-app="detail-player"]');
+    const transcript = await screen.findByLabelText('Transcript');
+    // Both inside it, because the waveform scrolling away under the transcript is the whole of
+    // `UI-11g`: on a short screen the picture was taking the height the reading needed.
+    expect(player).not.toBeNull();
+    expect(column.contains(player)).toBe(true);
+    expect(column.contains(transcript)).toBe(true);
+  });
+
+  it('is one scrollport and not two, whatever is under the waveform', async () => {
+    renderRecording();
+    await screen.findByLabelText('Transcript');
+    // A scroller inside a scroller is a wheel that moves whichever of the two the pointer is
+    // over, which is the thing nobody can explain afterwards.
+    expect(document.querySelector('[data-app="transcript-scroller"]')).toBeNull();
+  });
+
+  it('is the same section for a recording that has no transcript at all', async () => {
+    // `UI-15`'s three transcript-less states stand where the transcript would, so they scroll
+    // the waveform away exactly as a transcript does rather than pinning it to the screen.
+    renderRecording(VOICE_NOTE);
+    const state = await screen.findByText('This recording has not been transcribed');
+    expect(scroller().contains(state)).toBe(true);
+  });
+});
 
 describe('where you are', () => {
   it('names the library the recording is in and links back to it', async () => {
