@@ -1,9 +1,16 @@
-import type { ButtonHTMLAttributes } from 'react';
+import type { ButtonHTMLAttributes, Ref } from 'react';
 
 import { Icon } from '../foundation/Icon';
 import type { IconName } from '../foundation/Icon';
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  /**
+   * The control itself, for an overlay that has to be anchored to it.
+   *
+   * Declared here for the reason `Button` declares it: `ButtonHTMLAttributes` does not carry it,
+   * so without this line a caller passing one is a type error rather than a working anchor.
+   */
+  ref?: Ref<HTMLButtonElement>;
   /** The glyph. */
   icon: IconName;
   /**
@@ -22,6 +29,16 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   label: string;
   /** Renders the accent-soft fill for the current nav destination or an engaged toggle. */
   active?: boolean;
+  /**
+   * Renders an `<a>` with the control's shape, for a navigation the browser performs itself.
+   *
+   * `Button` carries the same pair and for the same reason: a download is a navigation, and one
+   * expressed as a link can be opened in a new tab, saved from the context menu, and needs no
+   * fetch, no blob and no progress the interface would have to invent.
+   */
+  href?: string;
+  /** Saves the target rather than opening it. Only meaningful beside `href`. */
+  download?: boolean;
 }
 
 /**
@@ -38,31 +55,44 @@ export function IconButton({
   size = 32,
   label,
   active,
+  href,
+  download,
   style,
   ...rest
 }: IconButtonProps) {
+  const shape = {
+    'aria-label': label,
+    'data-variant': variant,
+    'data-active': active === true ? 'true' : undefined,
+    'data-hit-target': '',
+    style: {
+      width: size,
+      height: size,
+      minWidth: size,
+      border: 'none',
+      borderRadius: 'var(--radius-circle)',
+      display: 'grid',
+      placeItems: 'center',
+      transition: 'background var(--transition-state), color var(--transition-state)',
+      ...style,
+    },
+  };
+
+  const glyph = <Icon name={icon} size={Math.round(size * 0.53)} />;
+
+  // No `rest` on the anchor, as on `Button`: a button's handlers on a link are how a download
+  // becomes something else.
+  if (href !== undefined) {
+    return (
+      <a data-ds="icon-button" href={href} download={download} {...shape}>
+        {glyph}
+      </a>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      aria-label={label}
-      data-ds="icon-button"
-      data-variant={variant}
-      data-active={active === true ? 'true' : undefined}
-      data-hit-target=""
-      style={{
-        width: size,
-        height: size,
-        minWidth: size,
-        border: 'none',
-        borderRadius: 'var(--radius-circle)',
-        display: 'grid',
-        placeItems: 'center',
-        transition: 'background var(--transition-state), color var(--transition-state)',
-        ...style,
-      }}
-      {...rest}
-    >
-      <Icon name={icon} size={Math.round(size * 0.53)} />
+    <button data-ds="icon-button" type="button" {...shape} {...rest}>
+      {glyph}
     </button>
   );
 }

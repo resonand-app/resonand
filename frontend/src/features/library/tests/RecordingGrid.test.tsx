@@ -503,6 +503,20 @@ describe('selecting recordings', () => {
     await user.click(all);
     expect(screen.getByText('3 selected')).toBeVisible();
   });
+
+  it('offers select-all as a button and not only as a 16px checkbox', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    // The checkbox has always done this and nobody found it: it carries no words, and the
+    // selection it covers is the one thing somebody wants to change once they have started.
+    await user.click(screen.getByRole('button', { name: 'Select all' }));
+    expect(screen.getByText('3 selected')).toBeVisible();
+    // Gone once there is nothing left for it to add, and nothing offered about the rest of a
+    // library that is already entirely selected. Three of three.
+    expect(screen.queryByRole('button', { name: /^Select all/ })).toBeNull();
+  });
 });
 
 describe('a bulk action where some fail', () => {

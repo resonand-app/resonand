@@ -22,8 +22,8 @@ import { useMemo } from 'react';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
-import { useInfinitePages } from '@/api/paged';
-import type { InfiniteResult } from '@/api/paged';
+import { MAX_PAGE_SIZE, useInfinitePages } from '@/api/paged';
+import type { InfiniteResult, Page } from '@/api/paged';
 import { intervalFor } from '@/api/settling';
 import type { components } from '@/api/contract/schema';
 import type { Filters as UrlFilters } from '@/app/url-state';
@@ -72,6 +72,34 @@ export function useRecordings(
       refetchInterval: (items) => intervalFor(items),
     },
   );
+}
+
+/**
+ * Every recording a filter matches, not just the page in hand (`UI-9a`).
+ *
+ * The bulk bar offers this only after somebody has already selected everything loaded, so it is
+ * asked for rather than paid for by default -- and it fetches the recordings and not their uuids,
+ * because adding a tag is a read followed by a write: `PATCH` replaces the whole tag list, so a
+ * selection whose tags are unknown is a selection that cannot be tagged without stripping them.
+ *
+ * `MAX_PAGE_SIZE` rather than the list's own window: the point here is the fewest round trips,
+ * and none of these pages is going on screen.
+ */
+export async function fetchEveryRecording(
+  uuid: string,
+  query: Record<string, unknown>,
+): Promise<Recording[]> {
+  const all: Recording[] = [];
+  for (;;) {
+    const page = (await get('/api/libraries/{library_uuid}/audio', {
+      path: { library_uuid: uuid },
+      query: { ...query, limit: MAX_PAGE_SIZE, offset: all.length },
+    })) as Page<Recording>;
+    all.push(...page.items);
+    // The second test is not redundant: a library that shrank between two of these pages would
+    // otherwise ask for an offset past its own end for ever.
+    if (all.length >= page.total || page.items.length === 0) return all;
+  }
 }
 
 export interface Categories {

@@ -13,6 +13,7 @@ import {
   EyeOff,
   FileAudio,
   FileVideo,
+  Folder,
   FolderInput,
   HardDrive,
   LayoutGrid,
@@ -67,7 +68,9 @@ import type { HTMLAttributes } from 'react';
  * `file-audio` and `file-video` are the upload dialog's two kinds of chosen file, which is the
  * one place the distinction is drawn before a recording exists to draw it on. `eye` and
  * `eye-off` are the sign-in password field's reveal toggle -- what it shows next depends on
- * which state it is in, so the one control needs both.
+ * which state it is in, so the one control needs both. `folder` is a category, for the bulk bar's
+ * picker once it lost its label -- `folder-input` is beside it and means moving to another
+ * library, which is the one thing it must not be confused with.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -84,6 +87,7 @@ const GLYPHS = {
   'eye-off': EyeOff,
   'file-audio': FileAudio,
   'file-video': FileVideo,
+  folder: Folder,
   'folder-input': FolderInput,
   'hard-drive': HardDrive,
   library: Library,
