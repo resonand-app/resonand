@@ -1,13 +1,22 @@
 /**
  * What can be done with a recording (`UI-13e`, §V5).
  *
+ * **It sits in the page header, beside the control that folds the panel away.** It was the last
+ * block inside that panel, which put the four things somebody does to a recording behind a fold,
+ * below eight fields and a collapsed technical section -- and gone entirely on a screen where the
+ * panel was closed. Actions belong where a view's actions belong, and the header is where this
+ * view already has one.
+ *
+ * **So they are glyphs.** Four labelled buttons do not fit a header that also carries a title and
+ * a four-fact line, and download, share, move and trash are four a person reads off an icon. The
+ * words are their accessible names, not lost.
+ *
  * **Download is always there, for everybody who can hear it.** Principle 1 is that the original
  * is yours and is kept byte for byte; a screen that can play a recording but not give it back
  * would be a claim the software does not honour. It is a link to `GET /audio/{uuid}/original` and
  * not a handler, because a download is a navigation the browser already knows how to do -- it can
  * be opened in a new tab, saved from the context menu, and needs no fetch, no blob and no progress
- * the interface would have to invent. It wears a `Button`'s shape because it stands in a row of
- * actions.
+ * the interface would have to invent.
  *
  * **Everything else is absent rather than disabled** (§3.5, `UI-10c`). A row of greyed-out
  * buttons reads as a bug; their absence reads as a decision, and the decision was made by whoever
@@ -33,7 +42,7 @@ import { invalidate } from '@/api/invalidate';
 import { toLibrary, toLibrarySettings } from '@/app/routes';
 import { useInstance } from '@/app/session';
 import { MoveDialog } from '@/components/MoveDialog';
-import { Button, Dialog, Modal } from '@/design-system';
+import { Button, Dialog, IconButton, Modal } from '@/design-system';
 
 import type { RecordingContext } from './data';
 import { originalUrl } from './original';
@@ -79,42 +88,43 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <Button variant="ghost" icon="download" href={originalUrl(recording.uuid)} download>
-        {t('actions.download')}
-      </Button>
+    <>
+      <IconButton
+        icon="download"
+        variant="ghost"
+        label={t('actions.download')}
+        href={originalUrl(recording.uuid)}
+        download
+      />
       {context.canShare && library !== undefined && (
-        <Button
-          variant="ghost"
+        <IconButton
           icon="share-2"
+          variant="ghost"
+          label={t('actions.share')}
           onClick={() => {
             void navigate(toLibrarySettings(library.uuid));
           }}
-        >
-          {t('actions.share')}
-        </Button>
+        />
       )}
       {context.canEdit && (
-        <Button
-          variant="ghost"
+        <IconButton
           icon="folder-input"
+          variant="ghost"
+          label={t('actions.move')}
           onClick={() => {
             setMoving(true);
           }}
-        >
-          {t('actions.move')}
-        </Button>
+        />
       )}
       {context.canEdit && (
-        <Button
-          variant="ghost"
+        <IconButton
           icon="trash-2"
+          variant="ghost"
+          label={t('actions.trash')}
           onClick={() => {
             setConfirming(true);
           }}
-        >
-          {t('actions.trash')}
-        </Button>
+        />
       )}
       <Modal
         open={confirming}
@@ -165,6 +175,6 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
           }}
         />
       )}
-    </div>
+    </>
   );
 }

@@ -10,6 +10,12 @@
  * is otherwise a screen with no context at all -- `library_uuid` and `category_id` are ids on the
  * wire and names to a person, and `data.ts` is where they become names.
  *
+ * **What can be done with the recording is in the header** (`UI-13e`), as glyphs, beside the
+ * control that folds the details away. It used to be the last block inside the metadata panel,
+ * which is to say behind a fold, under eight fields -- and absent from the screen entirely
+ * whenever somebody had folded the panel away to read a transcript, which is the whole reason
+ * that fold exists.
+ *
  * **One piece of display type, and it is correctable in place** (`UI-11i`). The title is the
  * view's `PageHeader` title and nothing else on the screen is Chillax. §V5 has it inline-editable
  * as that one element: a recording's title is the subject's own name rather than a label the
@@ -89,6 +95,7 @@ import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 
 import { MetadataPanel, PANEL_WIDTH } from './MetadataPanel';
+import { RecordingActions } from './RecordingActions';
 import { RecordingPlayer } from './RecordingPlayer';
 import { Transcript } from './Transcript';
 import { TrashedBand } from './TrashedBand';
@@ -132,28 +139,34 @@ export function RecordingView() {
         context={context}
         version={transcripts.activeVersion}
         actions={
-          isPhone ? (
-            // Opened from the essentials line, which is where somebody reading the four facts
-            // above it is already looking (§V5).
-            <Button
-              variant="secondary"
-              aria-expanded={sheetOpen}
-              onClick={() => {
-                setSheetOpen(true);
-              }}
-            >
-              {t('panel.label')}
-            </Button>
-          ) : (
-            <IconButton
-              icon="panel-left"
-              variant="ghost"
-              label={panel.collapsed ? t('panel.show') : t('panel.hide')}
-              active={!panel.collapsed}
-              aria-expanded={!panel.collapsed}
-              onClick={panel.toggle}
-            />
-          )
+          <>
+            {/* The four actions, then the control that folds the details away. In that order
+                because the fold is about this screen and the four are about the recording, and
+                the one nearest the panel it opens is the one that opens it (`UI-13e`). */}
+            <RecordingActions context={context} />
+            {isPhone ? (
+              // Opened from the essentials line, which is where somebody reading the four facts
+              // above it is already looking (§V5).
+              <Button
+                variant="secondary"
+                aria-expanded={sheetOpen}
+                onClick={() => {
+                  setSheetOpen(true);
+                }}
+              >
+                {t('panel.label')}
+              </Button>
+            ) : (
+              <IconButton
+                icon="panel-left"
+                variant="ghost"
+                label={panel.collapsed ? t('panel.show') : t('panel.hide')}
+                active={!panel.collapsed}
+                aria-expanded={!panel.collapsed}
+                onClick={panel.toggle}
+              />
+            )}
+          </>
         }
       />
       {context.isTrashed && <TrashedBand context={context} />}

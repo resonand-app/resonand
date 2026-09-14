@@ -59,6 +59,23 @@ function at(level: components['schemas']['Level'], libraryLevel = level) {
   );
 }
 
+describe('where they are', () => {
+  it('is the page header, so the details fold does not take them with it', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    const header = (await screen.findByRole('link', { name: 'Download the original' })).closest(
+      '[data-ds="page-header"]',
+    );
+    // They were the last block inside the metadata panel: behind a fold, under eight fields, and
+    // absent entirely whenever somebody folded the panel away to read a transcript -- which is
+    // the whole reason that fold exists.
+    expect(header).not.toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Hide the details' }));
+    expect(screen.getByRole('link', { name: 'Download the original' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Trash' })).toBeInTheDocument();
+  });
+});
+
 describe('downloading the original', () => {
   it('is a link to the original, so the browser saves it', async () => {
     renderRecording();
