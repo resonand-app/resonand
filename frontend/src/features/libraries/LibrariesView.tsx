@@ -35,6 +35,7 @@ import {
 import * as format from '@/i18n/format';
 
 import { colourOf } from '@/app/library-data';
+import { LEVEL } from '@/features/library/data';
 
 import { useLibraryList } from './data';
 import type { LibrarySummary } from './data';
@@ -124,6 +125,11 @@ export function LibrariesView() {
  * Everything on it -- the name, the colour, the count, the running time -- is on the summary, so
  * a card makes no request of its own. It used to make two, for a waveform of the library's most
  * recent recording that said nothing about the library (`UI-31b`).
+ *
+ * **The corner menu is the settings screen's only door, so it needs the level that screen needs.**
+ * Level 30, the same test `LibraryHeader` applies to the button that goes to the same place --
+ * without it a library shared at Can edit offered a way in, and the screen behind it was a form
+ * whose every field was read-only.
  */
 export function Card({
   library,
@@ -157,18 +163,21 @@ export function Card({
           }
         : {})}
       actions={
-        <Menu
-          label={t('card.options', { name: library.name })}
-          width={180}
-          items={[{ id: 'settings', label: t('card.settings'), icon: 'sliders-horizontal' }]}
-          onSelect={() => {
-            void navigate(toLibrarySettings(library.uuid));
-          }}
-        />
+        // An empty slot and not an omitted one: the card falls back to an inert overflow button
+        // where nothing is passed, and a control that opens nothing is worse than a bare corner.
+        library.level >= LEVEL.manage ? (
+          <Menu
+            label={t('card.options', { name: library.name })}
+            width={180}
+            items={[{ id: 'settings', label: t('card.settings'), icon: 'sliders-horizontal' }]}
+            onSelect={() => {
+              void navigate(toLibrarySettings(library.uuid));
+            }}
+          />
+        ) : (
+          <span />
+        )
       }
-      labels={{
-        options: (name) => t('card.options', { name }),
-      }}
     />
   );
 }

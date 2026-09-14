@@ -65,7 +65,7 @@ describe('what the library is called', () => {
     expect(await screen.findByText(/appears in the sidebar straight away/i)).toBeVisible();
   });
 
-  it('leaves the fields as facts, not as disabled boxes, when you cannot manage it', async () => {
+  it('refuses the screen below manage rather than drawing it read-only', async () => {
     server.use(
       http.get('/api/libraries/:library_uuid', ({ params }) =>
         HttpResponse.json({
@@ -75,12 +75,14 @@ describe('what the library is called', () => {
       ),
     );
     show(MEETINGS);
-    // The name is text on the page under an overline, not a control: `InlineField` draws
-    // read-only as a fact rather than as a disabled box.
-    await screen.findByRole('heading', { name: 'Meetings' });
-    expect(screen.queryByRole('button', { name: /Meetings/ })).not.toBeInTheDocument();
-    // No colour picker at all: an unavailable action is absent, not disabled.
+    // Not the 404's wording: this library is in the sidebar and opens, so "it may never have
+    // been yours" would withhold nothing and claim something untrue.
+    expect(await screen.findByText(/need Can manage/i)).toBeVisible();
+    expect(screen.queryByText(/never have been yours/i)).not.toBeInTheDocument();
+    // Nothing of the form is drawn, not even as facts: a form whose every field is read-only
+    // reads as a permissions bug rather than as a decision.
     expect(screen.queryByText(/appears in the sidebar/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Categories/)).not.toBeInTheDocument();
   });
 
   it('says a library that is not there and one that is not yours the same way', async () => {
