@@ -396,7 +396,7 @@ allowed in these tasks** — if a component looks different afterwards, somethin
       waveform's own defects are `UI-2`, not here. ⇢ UI-1c
 - [x] **UI-1g** · Convert `components/data/` — `StateBadge`, `Chip`, `LibraryCard`,
       `CreateLibraryCard`, `RecordingRow`, `RecordingCard`. Strip the real-looking default props
-      (`Martí Colom`, `The house on Carrer Nou`) so a forgotten prop is visibly empty rather than
+      (a person's name, a recording's title) so a forgotten prop is visibly empty rather than
       plausible. ⇢ UI-1c
 - [x] **UI-1h** · Convert `components/navigation/` — `TopNav`, `Sidebar`, `ProfileMenu`,
       `SearchResults`, `Dialog`. `Item` and `GroupLabel` inside `Sidebar` stay unexported.
@@ -565,8 +565,9 @@ the rest consume it.
       deliberately non-editable rather than broken. No box, no pencil, no disabled control. Saves
       on blur. ⇢ UI-32a
 - [x] **UI-34m** · `TypedConfirm` — permanent deletion only. States what will be destroyed in
-      numbers and requires the exact name typed. Settle case and accent sensitivity, since the
-      names are Catalan and the prototype compares with a bare `===`. 🧪 the action cannot fire
+      numbers and requires the exact name typed. Settle case and accent sensitivity, since a
+      name is whatever somebody typed and the prototype compares with a bare `===`. 🧪 the action
+      cannot fire
       before the match
       **Settled as: NFC-normalised, trimmed, case-insensitive, accent-sensitive.** The first two
       because `À` has two Unicode spellings and phone keyboards add trailing spaces; case-insensitive
@@ -638,8 +639,11 @@ Nothing on a screen yet. Everything a screen needs.
 - [x] **UI-3c** · TanStack Query wiring: a query-key convention, a helper over `Page<T>` that
       exposes `total` before the items arrive, and one invalidation map so a mutation does not
       have to know who cares. ⇢ UI-3b
-- [x] **UI-3d** · MSW handlers covering every endpoint, for tests only. Fixtures come from the
-      prototype's sample data, which was written to be plausible for a Catalan family archive.
+- [x] **UI-3d** · MSW handlers covering every endpoint, for tests only. The fixtures are
+      deliberately generic and deliberately not uniform — a library shared by somebody else, a
+      recording whose own time is unknown, one with no waveform yet, a title long enough to wrap,
+      and all four transcription states at once. They are the repository's only invented archive;
+      the demo instance is built outside it (`DAT-8`).
       _Done when:_ a view test needs no running instance. ⇢ UI-3a
 
 ### D.2 · i18n and formatting (UI-22)
