@@ -1,10 +1,16 @@
 /**
  * The recordings in a library, and the tree their categories hang in (`UI-6b`, §V3).
  *
- * One paged query, keyed by the filters, so a filter change is a new key rather than a refetch of
- * the same one -- which is what lets the previous page stay on screen while the next arrives
- * (`usePaged`). `total` comes back in every response, and the dense list depends on it: the
- * scrollbar has to be honest about the full length before the first page has been drawn.
+ * One query, keyed by the filters, so a filter change is a new key rather than a refetch of the
+ * same one -- which is what lets what is already on screen stay there while the next arrives.
+ * `total` comes back in every response, and both densities depend on it: the dense list's
+ * scrollbar has to be honest about the full length before the first page has been drawn, and the
+ * grid has to know whether asking again would bring anything.
+ *
+ * **The grid accumulates pages rather than sitting on one** (`useInfinitePages`). A library is
+ * routinely longer than the fifty rows a request answers with, and a grid holding one page has
+ * nothing to say so with: no scrollbar, no page number, and a screenful of cards that looks
+ * exactly like a whole small library.
  *
  * **Categories are fetched once per library and resolved here.** The API sends a flat list with
  * `parent_id`, which is the right shape to send and the wrong shape to draw: a card needs one
@@ -16,8 +22,8 @@ import { useMemo } from 'react';
 
 import { get } from '@/api/client';
 import { keys } from '@/api/keys';
-import { usePaged } from '@/api/paged';
-import type { PagedResult } from '@/api/paged';
+import { useInfinitePages } from '@/api/paged';
+import type { InfiniteResult } from '@/api/paged';
 import { intervalFor } from '@/api/settling';
 import type { components } from '@/api/contract/schema';
 import type { Filters as UrlFilters } from '@/app/url-state';
@@ -35,39 +41,35 @@ export type Category = components['schemas']['CategorySummary'];
  * because that helper also carries `q` and `library`, which are search's and which this endpoint
  * does not take. A filter nobody set is absent rather than empty (§2.1).
  */
-export function libraryQuery(
-  filters: UrlFilters,
-  window?: { limit: number; offset: number },
-): Record<string, unknown> {
+export function libraryQuery(filters: UrlFilters): Record<string, unknown> {
   return {
     ...(filters.categoryId === undefined ? {} : { category_id: filters.categoryId }),
     ...(filters.tags.length > 0 ? { tag: filters.tags } : {}),
     ...(filters.states.length > 0 ? { transcription_state: filters.states } : {}),
     sort: filters.sort,
     direction: filters.direction,
-    // The window is the caller's: the grid asks for one page, and the dense list windows over the
-    // whole library itself and so passes none.
-    ...(window ?? {}),
   };
 }
 
 export function useRecordings(
   uuid: string,
   query: Record<string, unknown>,
-): PagedResult<Recording> {
-  return usePaged<Recording>(
+): InfiniteResult<Recording> {
+  return useInfinitePages<Recording>(
+    // The window is deliberately absent from the key: the pages of one filter are one cached
+    // thing, and an offset in the key would make each of them a separate one.
     keys.libraryAudio(uuid, query),
-    () =>
+    (window) =>
       get('/api/libraries/{library_uuid}/audio', {
         path: { library_uuid: uuid },
-        query,
+        query: { ...query, ...window },
       }),
     {
       enabled: uuid !== '',
       // A card uploaded into a grid somebody is looking at grows its duration and its shape where
       // it stands, and the grid stops asking the moment nothing on it is still being made
       // (`FBK-3`).
-      refetchInterval: (one) => intervalFor(one.state.data?.items ?? []),
+      refetchInterval: (items) => intervalFor(items),
     },
   );
 }

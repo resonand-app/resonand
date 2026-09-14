@@ -14,8 +14,8 @@
  * like the same number until a collection is longer than one page.
  */
 
-import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { Query, QueryKey, UseQueryResult } from '@tanstack/react-query';
+import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import type { InfiniteData, Query, QueryKey, UseQueryResult } from '@tanstack/react-query';
 
 /** The envelope every list endpoint answers with. */
 export interface Page<Item> {
@@ -78,4 +78,86 @@ export function pageWindow(
   size: number = PAGE_SIZE,
 ): { limit: number; offset: number } {
   return { limit: size, offset: Math.max(0, page) * size };
+}
+
+/**
+ * A collection that grows as somebody asks for more of it (`UI-3c`).
+ *
+ * The card grid is not on a page and cannot be: a card is tall, a screenful is a handful of them,
+ * and V3 is a wall somebody scrolls down rather than a table they page through. So the pages
+ * accumulate into one list and the envelope's `total` says whether another exists -- which also
+ * lets the footer be honest about how much of the library is on screen, in the same way the dense
+ * list's scrollbar is honest about how long it is.
+ *
+ * The next offset is where the rows fetched so far end, never the page number times the size. The
+ * API answers the window it was given, and a page shorter than the one asked for is the end of the
+ * collection rather than a gap to skip over.
+ */
+export interface InfiniteResult<Item> {
+  /** Every row fetched so far, in the order they were fetched in. */
+  items: Item[];
+  /** How many rows match the filters, of which `items` is the beginning. */
+  total: number;
+  /** Whether a further page exists. */
+  hasMore: boolean;
+  /** True until the first page has answered. */
+  isPending: boolean;
+  /** True while a further page is in flight. */
+  isFetchingMore: boolean;
+  error: unknown;
+  /** Ask for the next page. Does nothing when there is not one. */
+  fetchMore: () => void;
+  refetch: () => void;
+  /** Whether these rows are the previous filter's, still on screen while the next ones load. */
+  isPlaceholder: boolean;
+}
+
+export function useInfinitePages<Item>(
+  key: QueryKey,
+  fetchPage: (window: { limit: number; offset: number }) => Promise<Page<Item>>,
+  options: {
+    enabled?: boolean;
+    /** How often to ask again, read off every row fetched so far. `false` for a list at rest. */
+    refetchInterval?: (items: Item[]) => number | false;
+  } = {},
+): InfiniteResult<Item> {
+  const { enabled, refetchInterval } = options;
+  const query = useInfiniteQuery({
+    queryKey: key,
+    queryFn: ({ pageParam }) => fetchPage({ limit: PAGE_SIZE, offset: pageParam }),
+    initialPageParam: 0,
+    getNextPageParam: (last: Page<Item>) => {
+      const fetched = last.offset + last.items.length;
+      return fetched < last.total ? fetched : undefined;
+    },
+    // The pages already fetched stay on screen while the next filter's first one loads, for the
+    // same reason `usePaged` keeps its page: an emptied grid measures at nothing and jumps.
+    placeholderData: keepPreviousData,
+    ...(enabled === undefined ? {} : { enabled }),
+    ...(refetchInterval === undefined
+      ? {}
+      : {
+          refetchInterval: (one: Query<Page<Item>, Error, InfiniteData<Page<Item>, number>>) =>
+            refetchInterval(one.state.data?.pages.flatMap((page) => page.items) ?? []),
+        }),
+  });
+  const pages = query.data?.pages ?? [];
+  const last = pages.at(-1);
+
+  return {
+    items: pages.flatMap((page) => page.items),
+    // The last page fetched carries the freshest count, which is the one a footer should show.
+    total: last?.total ?? 0,
+    hasMore: query.hasNextPage,
+    isPending: query.isPending,
+    isFetchingMore: query.isFetchingNextPage,
+    error: query.error,
+    fetchMore: () => {
+      void query.fetchNextPage();
+    },
+    refetch: () => {
+      void query.refetch();
+    },
+    isPlaceholder: query.isPlaceholderData,
+  };
 }

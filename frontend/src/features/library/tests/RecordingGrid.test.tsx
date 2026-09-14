@@ -646,3 +646,52 @@ describe('a library you can only read', () => {
     expect(document.querySelectorAll('[disabled]')).toHaveLength(0);
   });
 });
+
+/**
+ * A library longer than one request (`UI-6b`, §V3).
+ *
+ * The API answers fifty rows at a time, and a grid that drew the first fifty and stopped would
+ * report a library of a hundred and forty-two as holding fifty -- with nothing on screen saying
+ * otherwise. So the count is asserted as well as the cards: a grid that quietly truncates and a
+ * grid that honestly shows part of a library draw the same first screenful.
+ */
+// A grid of fifty cards is fifty waveform fetches and fifty subscriptions to the player, which is
+// seconds of work in jsdom rather than the milliseconds a handful of cards costs. The size is the
+// point of these two, so the timeout moves rather than the fixture.
+describe('a library longer than one page', { timeout: 30_000 }, () => {
+  /** Enough copies that the library does not fit in one request. */
+  function stock(extra: number): void {
+    const first = archive.recordings.find((one) => one.library_uuid === RECORDINGS);
+    if (first === undefined) throw new Error('The archive has no recording in this library.');
+    archive.recordings = [
+      ...archive.recordings,
+      ...Array.from({ length: extra }, (_, index) => ({
+        ...first,
+        uuid: `bulk-${String(index)}`,
+        title: `Take ${String(index + 1)}`,
+      })),
+    ];
+  }
+
+  it('draws the first page, says how much of the library that is, and fetches the rest', async () => {
+    stock(52);
+    renderLibrary();
+    await cardFor('Take 1');
+    expect(screen.getAllByRole('article')).toHaveLength(50);
+    expect(screen.getByText('50 of 55')).toBeVisible();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Load more' }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('article')).toHaveLength(55);
+    });
+    // Nothing left to ask for, so nothing offers to ask.
+    expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull();
+  });
+
+  it('offers nothing more when the library fits in one request', async () => {
+    renderLibrary();
+    await cardFor('Field recording, long take');
+    expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull();
+  });
+});
