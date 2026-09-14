@@ -93,6 +93,8 @@ export interface Archive {
   transcripts: Record<string, Transcript>;
   categories: Record<string, Schemas['CategorySummary'][]>;
   shares: Record<string, Schemas['ShareSummary'][]>;
+  /** Grants made on one recording, by its uuid. Inherited ones are resolved from the library. */
+  recordingShares: Record<string, Schemas['ShareSummary'][]>;
   sessions: Schemas['SessionSummary'][];
   /**
    * Every account, as administration sees it (`API-20`, `INT-3b`).
@@ -292,6 +294,7 @@ function fresh(): Archive {
         { id: 2, name: 'Fieldwork', parent_id: null, position: 1 },
       ],
     },
+    recordingShares: {},
     shares: {
       [RECORDINGS]: [
         {
@@ -303,6 +306,7 @@ function fresh(): Archive {
           level_description: 'Can edit: change titles, categories and tags, but not share.',
           granted_by: ALEX.id,
           created_at: '2026-02-01T12:00:00Z',
+          source: 'library',
         },
       ],
     },

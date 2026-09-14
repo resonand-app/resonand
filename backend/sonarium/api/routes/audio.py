@@ -25,6 +25,7 @@ from sonarium.api.presenters import (
     audio_summaries,
     audio_summary,
     job_summary,
+    share_summary,
     transcript_detail,
     transcript_summary,
     transcription_status,
@@ -32,9 +33,11 @@ from sonarium.api.presenters import (
 from sonarium.api.schemas import (
     AudioDetail,
     AudioSummary,
+    CreateShare,
     DuplicateWarning,
     JobSummary,
     MoveAudio,
+    ShareSummary,
     TagSuggestion,
     TagSummary,
     TranscribeRequest,
@@ -50,14 +53,17 @@ from sonarium.db import transcripts as transcript_repo
 from sonarium.db.audio import (
     MetadataPatch,
     find_duplicates,
+    list_audio_shares,
     move_audio,
     purge_audio,
     restore_audio,
+    share_audio,
     trash_audio,
     trashed_audio,
+    unshare_audio,
     update_metadata,
 )
-from sonarium.db.models import Library, Transcript
+from sonarium.db.models import Library, Transcript, User
 from sonarium.jobs import queue
 from sonarium.media import storage
 
@@ -130,6 +136,45 @@ def trash(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> None
 def restore(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> AudioDetail:
     audio, level = restore_audio(session, caller.id, audio_uuid)
     return audio_detail(session, audio, level)
+
+
+# --- Sharing one recording ------------------------------------------------
+
+
+@router.get("/audio/{audio_uuid}/shares", response_model=list[ShareSummary])
+def list_shares(audio_uuid: str, caller: CurrentCaller, session: ReadSession) -> list[ShareSummary]:
+    """Everybody who can reach this recording, inherited and individual alike (``API-22``).
+
+    Requires manage. An inherited row names the library this recording sits in and who
+    administers it, which is the one thing an individual grant is meant not to hand over.
+    """
+    return [
+        share_summary(share, grantee)
+        for share, grantee in list_audio_shares(session, caller.id, audio_uuid)
+    ]
+
+
+@router.put("/audio/{audio_uuid}/shares", response_model=ShareSummary)
+def share(
+    audio_uuid: str, body: CreateShare, caller: CurrentCaller, session: WriteSession
+) -> ShareSummary:
+    """Grant this one recording, or change the level somebody already has on it. Requires manage.
+
+    The grant reaches the recording and nothing around it: the library it sits in stays invisible.
+    """
+    granted = share_audio(
+        session, caller.id, audio_uuid, grantee_id=body.grantee_id, level=body.level
+    )
+    grantee = session.get(User, body.grantee_id)
+    if grantee is None:  # pragma: no cover -- share_audio already refused an unknown one
+        raise NotFoundError("No such account.")
+    return share_summary(granted, grantee)
+
+
+@router.delete("/audio/{audio_uuid}/shares/{grantee_id}", status_code=status.HTTP_204_NO_CONTENT)
+def unshare(audio_uuid: str, grantee_id: int, caller: CurrentCaller, session: WriteSession) -> None:
+    """Revoke a grant made on this recording. An inherited one is revoked on its library."""
+    unshare_audio(session, caller.id, audio_uuid, grantee_id=grantee_id)
 
 
 @router.get("/trash/audio", response_model=Page[AudioSummary])

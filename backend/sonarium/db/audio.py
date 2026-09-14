@@ -1,4 +1,4 @@
-"""Recordings: their metadata, the trash, and moving one between libraries.
+"""Recordings: their metadata, the trash, moving one between libraries, and the grants on one.
 
 Everything here goes through :mod:`sonarium.acl.query`; nothing queries ``audio`` directly.
 
@@ -20,13 +20,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
 from sonarium.acl.query import audio_acl, audio_select, require_audio, require_library
-from sonarium.core.errors import InvalidRequestError, NotFoundError
+from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
 from sonarium.core.ids import new_uuid
-from sonarium.core.levels import Level
+from sonarium.core.levels import GRANTABLE, Level
 from sonarium.core.text import clean_title
 from sonarium.core.time import is_wall_clock, now_instant
 from sonarium.db import search_index
-from sonarium.db.models import Audio, Library
+from sonarium.db.models import Audio, Library, Share, User
 from sonarium.db.search import Filters, SortDirection, SortField, apply_filters
 from sonarium.db.tags import set_audio_tags
 
@@ -226,6 +226,101 @@ def purge_audio(session: Session, user_id: int, audio_uuid: str) -> str:
     if audio.deleted_at is None:
         raise NotFoundError("No such recording in the trash.")
     return remove_recording(session, audio)
+
+
+def list_audio_shares(session: Session, user_id: int, audio_uuid: str) -> list[tuple[Share, User]]:
+    """Everybody who can reach this recording, by whichever of the two routes (``API-22``).
+
+    Both halves, in one list, because "who has access" has one answer and a panel that showed only
+    the grants made here would be as misleading as the library panel was on its own. Which half a
+    row is comes off the row: a grant carries a library or a recording and never both, so the
+    presenter reads it rather than being told.
+
+    Inherited grants come first and the library's own owner is not among them -- ownership is read
+    off ``library.owner_id`` and is not a ``share`` row (``DEC-14``'s levels).
+
+    **Manage, where the library's own list takes read.** There the two match: somebody who can
+    read a library is in it, and knowing who else is in it comes with that. An individual grant
+    is the case where they do not -- the grantee was given one recording precisely so the library
+    around it would stay invisible, and every inherited row here says ``library``, names who
+    administers it, and counts people who were never given this recording at all. Manage is also
+    the level the panel this answers needs before it can do anything with the list.
+    """
+    audio, _ = require_audio(session, user_id, audio_uuid, Level.MANAGE)
+    rows = session.execute(
+        select(Share, User)
+        .join(User, User.id == Share.grantee_id)
+        .where(
+            (Share.library_id == audio.library_id) | (Share.audio_id == audio.id),
+        )
+        .order_by(Share.audio_id.is_(None).desc(), User.display_name)
+    ).all()
+    return [(row[0], row[1]) for row in rows]
+
+
+def share_audio(
+    session: Session, user_id: int, audio_uuid: str, *, grantee_id: int, level: Level
+) -> Share:
+    """Grant somebody one recording, or raise the level they already hold on it.
+
+    **The grant is on the recording and reaches nothing else.** It does not make the library
+    visible, which is what separates this from sharing the library and is resolved that way in
+    :func:`sonarium.acl.query.audio_acl` rather than here.
+
+    Manage is manage however it was obtained, so somebody who holds it through a grant of their
+    own may share onwards (``DEC-25``). The chain stays legible because every row carries
+    ``granted_by``.
+
+    A grantee who already reaches the recording through its library is not refused: the resolution
+    takes the higher of the two, and refusing would make the answer depend on an ordering the
+    person sharing cannot see. Only the library's owner is, because there is no level left to
+    give them.
+    """
+    if level not in GRANTABLE:
+        raise InvalidRequestError("A share can grant read, edit or manage, and nothing else.")
+    audio, _ = require_audio(session, user_id, audio_uuid, Level.MANAGE)
+    library = session.get(Library, audio.library_id)
+    if library is not None and grantee_id == library.owner_id:
+        raise ConflictError("That person owns this recording already.")
+    if session.get(User, grantee_id) is None:
+        raise NotFoundError("No such account.")
+    existing = session.execute(
+        select(Share).where(Share.audio_id == audio.id, Share.grantee_id == grantee_id)
+    ).scalar_one_or_none()
+    if existing is not None:
+        existing.level = int(level)
+        existing.granted_by = user_id
+        session.flush()
+        return existing
+    share = Share(
+        library_id=None,
+        audio_id=audio.id,
+        grantee_id=grantee_id,
+        level=int(level),
+        granted_by=user_id,
+        created_at=now_instant(),
+    )
+    session.add(share)
+    session.flush()
+    return share
+
+
+def unshare_audio(session: Session, user_id: int, audio_uuid: str, *, grantee_id: int) -> None:
+    """Revoke a grant made on this recording. **Only one made here.**
+
+    An inherited grant is somebody's access to the whole library and is revoked where it was
+    given; taking it away from one recording would mean writing a denial, and there is no such row
+    -- the resolution is a ``MAX()`` and has nothing to subtract with. So this answers as though
+    the grant were not there, which is what it is: not one of this recording's.
+    """
+    audio, _ = require_audio(session, user_id, audio_uuid, Level.MANAGE)
+    share = session.execute(
+        select(Share).where(Share.audio_id == audio.id, Share.grantee_id == grantee_id)
+    ).scalar_one_or_none()
+    if share is None:
+        raise NotFoundError("That person has no grant on this recording.")
+    session.delete(share)
+    session.flush()
 
 
 def find_duplicates(session: Session, user_id: int, sha256: str) -> list[tuple[Audio, bool]]:
