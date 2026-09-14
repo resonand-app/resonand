@@ -2,8 +2,8 @@ Where a thing lives, and the one way back to it. Above the page title on a recor
 
 ```jsx
 <Breadcrumb
-  name="Àvia Teresa"
-  href="/library/avia"
+  name="Field recordings"
+  href="/library/field-recordings"
   detail="Interviews"
   label="Where this recording is"
   onNavigate={keepInRouter}

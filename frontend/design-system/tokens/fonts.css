@@ -17,7 +17,8 @@
  * is for Chillax; the version is written here because that is the only place it exists.
  *
  * Latin and Latin Extended only. Cyrillic and Vietnamese are dropped, and so is Geist Mono's
- * box-drawing subset: the product's own copy is English and its content is Catalan, and both
+ * box-drawing subset: the product's own copy is English and its content is whatever somebody
+ * recorded, and both
  * live inside these two ranges. Every italic is dropped too — the system uses none. The
  * `unicode-range` declarations are upstream's, so Latin Extended is fetched only by a page that
  * actually has an `à` on it.

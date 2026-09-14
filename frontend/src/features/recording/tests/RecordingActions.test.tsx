@@ -17,7 +17,7 @@ import { createQueryClient } from '@/api/query-client';
 import type { components } from '@/api/contract/schema';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { AVIA, CARRER_NOU, PERSONAL, archive } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -30,7 +30,7 @@ function Where() {
   return <div data-testid="where">{location.pathname}</div>;
 }
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -52,10 +52,10 @@ function renderRecording(uuid: string = CARRER_NOU) {
 /** Level and library level, for the four combinations the actions depend on. */
 function at(level: components['schemas']['Level'], libraryLevel = level) {
   archive.recordings = archive.recordings.map((one) =>
-    one.uuid === CARRER_NOU ? { ...one, level } : one,
+    one.uuid === FIELD_TAKE ? { ...one, level } : one,
   );
   archive.libraries = archive.libraries.map((one) =>
-    one.uuid === AVIA ? { ...one, level: libraryLevel } : one,
+    one.uuid === RECORDINGS ? { ...one, level: libraryLevel } : one,
   );
 }
 
@@ -65,7 +65,7 @@ describe('downloading the original', () => {
     const download = await screen.findByRole('link', { name: 'Download the original' });
     // A link and not a button: it can be opened in a new tab and saved from the context menu,
     // and nothing has to fetch a 284 MB file into memory first.
-    expect(download).toHaveAttribute('href', `/api/audio/${CARRER_NOU}/original`);
+    expect(download).toHaveAttribute('href', `/api/audio/${FIELD_TAKE}/original`);
     expect(download).toHaveAttribute('download');
   });
 
@@ -128,7 +128,7 @@ describe('sending it to the trash', () => {
     // Typing a name is V9's hard delete, where something is actually destroyed. This one is
     // reversible for a month, and asking for a typed name would be asking for the wrong thing.
     expect(dialog.querySelector('input')).toBeNull();
-    expect(archive.recordings.find((one) => one.uuid === CARRER_NOU)?.deleted_at).toBeNull();
+    expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.deleted_at).toBeNull();
   });
 
   it('trashes it and goes back to the library', async () => {
@@ -138,9 +138,9 @@ describe('sending it to the trash', () => {
     const dialog = await screen.findByRole('dialog');
     await user.click(await within(dialog).findByRole('button', { name: 'Trash' }));
     await waitFor(() => {
-      expect(screen.getByTestId('where').textContent).toBe(`/library/${AVIA}`);
+      expect(screen.getByTestId('where').textContent).toBe(`/library/${RECORDINGS}`);
     });
-    expect(archive.recordings.find((one) => one.uuid === CARRER_NOU)?.deleted_at).not.toBeNull();
+    expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.deleted_at).not.toBeNull();
   });
 });
 
@@ -151,12 +151,14 @@ describe('moving it', () => {
     await user.click(await screen.findByRole('button', { name: 'Move to another library' }));
     await user.click(await screen.findByRole('combobox', { name: 'Move to' }));
     await user.click(await screen.findByRole('option', { name: 'Personal' }));
-    // The consequences, before anything happens: `Àvia Teresa` is shared with Marta and
+    // The consequences, before anything happens: `Field recordings` is shared with Sam Rivera and
     // `Personal` is not.
-    expect(await screen.findByText(/Marta will no longer be able to see it/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Sam Rivera will no longer be able to see it/),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Move it' }));
     await waitFor(() => {
-      expect(archive.recordings.find((one) => one.uuid === CARRER_NOU)?.library_uuid).toBe(
+      expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.library_uuid).toBe(
         PERSONAL,
       );
     });
@@ -167,7 +169,7 @@ describe('moving it', () => {
     renderRecording();
     await user.click(await screen.findByRole('button', { name: 'Move to another library' }));
     await user.click(await screen.findByRole('combobox', { name: 'Move to' }));
-    expect(screen.queryByRole('option', { name: 'Àvia Teresa' })).toBeNull();
-    expect(screen.getByRole('option', { name: 'Reunions Ateneu' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Field recordings' })).toBeNull();
+    expect(screen.getByRole('option', { name: 'Meetings' })).toBeInTheDocument();
   });
 });

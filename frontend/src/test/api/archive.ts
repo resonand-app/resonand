@@ -1,10 +1,10 @@
 /**
  * The archive a view test runs against (`UI-3d`).
  *
- * The fixtures are the prototype's sample data, which was written to be plausible for a Catalan
- * family archive rather than to be easy to type: names with accents, a library shared by somebody
- * else, a recording whose own time is unknown, and all four transcription states present at once.
- * A view that only ever renders `Recording 1` looks finished and breaks on the first real name.
+ * The fixtures are deliberately generic, and deliberately not uniform: a library shared by
+ * somebody else, a recording whose own time is unknown, a recording with no waveform yet, one
+ * title long enough to wrap, and all four transcription states present at once. A view that only
+ * ever renders `Recording 1` looks finished and breaks on the first row that is not like it.
  *
  * It is mutable on purpose. A test that renames a recording and re-reads the list is testing what
  * a person does; handlers that always answered with the same constant would make every mutation
@@ -26,13 +26,17 @@ export type Account = Schemas['Me'];
 export type Instance = Schemas['InstanceState'];
 export type AdminUser = Schemas['AdminUser'];
 
-const GABRIEL: Schemas['UserSummary'] = {
+const ALEX: Schemas['UserSummary'] = {
   id: 1,
-  display_name: 'Gabriel',
-  email: 'gabriel@example.test',
+  display_name: 'Alex Morgan',
+  email: 'alex@example.test',
 };
 
-const MARTA: Schemas['UserSummary'] = { id: 2, display_name: 'Marta', email: 'marta@example.test' };
+const SAM: Schemas['UserSummary'] = {
+  id: 2,
+  display_name: 'Sam Rivera',
+  email: 'sam@example.test',
+};
 
 /** Minutes, as the API counts durations. */
 const minutes = (count: number): number => Math.round(count * 60_000);
@@ -44,7 +48,7 @@ function library(over: Partial<Library> & Pick<Library, 'uuid' | 'name'>): Libra
     deleted_at: null,
     is_personal: false,
     level: 40,
-    owner: GABRIEL,
+    owner: ALEX,
     audio_count: 0,
     total_duration_ms: 0,
     ...over,
@@ -73,10 +77,10 @@ function recording(
 }
 
 const TAGS = {
-  memoria: { id: 1, name: 'memòria', slug: 'memoria' },
-  catala: { id: 2, name: 'català', slug: 'catala' },
-  familia: { id: 3, name: 'família', slug: 'familia' },
-  musica: { id: 4, name: 'música', slug: 'musica' },
+  field: { id: 1, name: 'field', slug: 'field' },
+  outdoor: { id: 2, name: 'outdoor', slug: 'outdoor' },
+  music: { id: 3, name: 'music', slug: 'music' },
+  interview: { id: 4, name: 'interview', slug: 'interview' },
 } as const satisfies Record<string, Schemas['TagSummary']>;
 
 /** The state every handler reads. `reset()` puts it back between tests. */
@@ -136,17 +140,17 @@ export const PASSWORD = 'remembering-well';
 export const LOGIN_ATTEMPTS_PER_MINUTE = 10;
 
 /** An address with no account behind it, for the failure that must look like the other two. */
-export const NOBODY = 'ningu@example.test';
+export const NOBODY = 'nobody@example.test';
 
 export const PERSONAL = '11111111-1111-4111-8111-111111111111';
-export const AVIA = '22222222-2222-4222-8222-222222222222';
-export const ATENEU = '33333333-3333-4333-8333-333333333333';
+export const RECORDINGS = '22222222-2222-4222-8222-222222222222';
+export const MEETINGS = '33333333-3333-4333-8333-333333333333';
 
-export const CARRER_NOU = 'aaaaaaaa-0000-4000-8000-000000000001';
-export const NADAL = 'aaaaaaaa-0000-4000-8000-000000000002';
-export const CANCONS = 'aaaaaaaa-0000-4000-8000-000000000003';
-export const NOTA = 'aaaaaaaa-0000-4000-8000-000000000004';
-export const ASSAIG = 'aaaaaaaa-0000-4000-8000-000000000005';
+export const FIELD_TAKE = 'aaaaaaaa-0000-4000-8000-000000000001';
+export const CASSETTE = 'aaaaaaaa-0000-4000-8000-000000000002';
+export const REHEARSAL = 'aaaaaaaa-0000-4000-8000-000000000003';
+export const VOICE_NOTE = 'aaaaaaaa-0000-4000-8000-000000000004';
+export const INTERVIEW = 'aaaaaaaa-0000-4000-8000-000000000005';
 
 function fresh(): Archive {
   return {
@@ -160,9 +164,9 @@ function fresh(): Archive {
       video_extensions: ['.mp4', '.mov'],
     },
     me: {
-      id: GABRIEL.id,
-      display_name: GABRIEL.display_name,
-      email: GABRIEL.email,
+      id: ALEX.id,
+      display_name: ALEX.display_name,
+      email: ALEX.email,
       is_admin: true,
       language: null,
     },
@@ -176,20 +180,20 @@ function fresh(): Archive {
         total_duration_ms: minutes(31 * 60 + 12),
       }),
       library({
-        uuid: AVIA,
-        name: 'Àvia Teresa',
+        uuid: RECORDINGS,
+        name: 'Field recordings',
         colour: 'clay',
-        description: 'Everything she recorded before she stopped being able to.',
+        description: 'Everything recorded outside, kept in one place.',
         audio_count: 3,
         total_duration_ms: minutes(2 * 60 + 4),
       }),
       library({
-        uuid: ATENEU,
-        name: 'Reunions Ateneu',
+        uuid: MEETINGS,
+        name: 'Meetings',
         colour: 'plum',
         // Shared with this account by somebody else, which is its own group in the sidebar and
         // the reason a view may not assume every library is editable (`UI-4d`).
-        owner: MARTA,
+        owner: SAM,
         level: 20,
         audio_count: 41,
         total_duration_ms: minutes(9 * 60 + 18),
@@ -197,19 +201,19 @@ function fresh(): Archive {
     ],
     recordings: [
       recording({
-        uuid: CARRER_NOU,
-        library_uuid: AVIA,
-        title: 'The house on Carrer Nou',
+        uuid: FIELD_TAKE,
+        library_uuid: RECORDINGS,
+        title: 'Field recording, long take',
         duration_ms: minutes(48) + 12_000,
-        tags: [TAGS.memoria, TAGS.catala],
+        tags: [TAGS.field, TAGS.outdoor],
         notes: 'Recorded at the kitchen table. The radio is on for the first two minutes.',
       }),
       recording({
-        uuid: NADAL,
-        library_uuid: AVIA,
-        title: 'Sopar de Nadal 1998',
+        uuid: CASSETTE,
+        library_uuid: RECORDINGS,
+        title: 'Digitised cassette',
         duration_ms: minutes(12) + 7_000,
-        tags: [TAGS.familia],
+        tags: [TAGS.music],
         // A cassette digitised decades later: the file's own date is the day it was digitised,
         // so the interface falls back to `created_at` and says so (§1.3).
         recorded_at: null,
@@ -217,17 +221,17 @@ function fresh(): Archive {
         recorded_at_source: null,
       }),
       recording({
-        uuid: CANCONS,
-        library_uuid: AVIA,
-        title: 'Cançons que cantava la mare',
+        uuid: REHEARSAL,
+        library_uuid: RECORDINGS,
+        title: 'Rehearsal, second take',
         duration_ms: minutes(31) + 55_000,
-        tags: [TAGS.musica],
+        tags: [TAGS.interview],
         transcription_state: 'running',
       }),
       recording({
-        uuid: NOTA,
+        uuid: VOICE_NOTE,
         library_uuid: PERSONAL,
-        title: 'Nota de veu 12 mar',
+        title: 'Short voice note',
         duration_ms: 108_000,
         transcription_state: 'none',
         // Still being processed: no peaks yet, so the waveform is a dashed rule and a duration
@@ -236,9 +240,9 @@ function fresh(): Archive {
         recorded_at_source: 'filename',
       }),
       recording({
-        uuid: ASSAIG,
+        uuid: INTERVIEW,
         library_uuid: PERSONAL,
-        title: 'Assaig 4 de febrer',
+        title: 'Interview 02, raw',
         duration_ms: minutes(64),
         transcription_state: 'failed',
         recorded_at: '2026-02-04T20:05:00',
@@ -246,7 +250,7 @@ function fresh(): Archive {
       }),
     ],
     details: {
-      [CARRER_NOU]: {
+      [FIELD_TAKE]: {
         original_filename: 'Recording 2026-03-12 18.22.m4a',
         codec: 'aac',
         mime: 'audio/mp4',
@@ -257,22 +261,22 @@ function fresh(): Archive {
       },
     },
     transcripts: {
-      [CARRER_NOU]: {
+      [FIELD_TAKE]: {
         id: 1,
         is_active: true,
-        language: 'ca',
+        language: 'en',
         model: 'large-v3',
         provider: 'faster-whisper',
         source: 'machine',
         created_at: '2026-03-12T10:02:00Z',
         segment_count: 6,
         segments: [
-          'My mother was born in the village, but she never talked about it much.',
-          'I remember the stairs were always cold, even in August.',
-          'The house on Carrer Nou had a balcony that looked over the square, and every Sunday my mother would hang the sheets there.',
-          'We stayed until the year my grandfather died.',
-          'After that nobody wanted to go back.',
-          'The building is still there. Somebody painted the shutters green.',
+          'The first segment of the transcript, which is where playback starts.',
+          'The second segment, long enough to wrap onto a second line in the panel.',
+          'The third segment mentions rehearsal, which is the word search is asked for.',
+          'The fourth segment is a short one.',
+          'The fifth segment is the one a click seeks to.',
+          'The sixth segment, and the last one in this transcript.',
         ].map((text, index) => ({
           idx: index,
           start_ms: minutes(17) + 31_000 + index * 13_000,
@@ -283,21 +287,21 @@ function fresh(): Archive {
       },
     },
     categories: {
-      [AVIA]: [
-        { id: 1, name: 'Converses', parent_id: null, position: 0 },
-        { id: 2, name: 'Cançons', parent_id: null, position: 1 },
+      [RECORDINGS]: [
+        { id: 1, name: 'Interviews', parent_id: null, position: 0 },
+        { id: 2, name: 'Fieldwork', parent_id: null, position: 1 },
       ],
     },
     shares: {
-      [AVIA]: [
+      [RECORDINGS]: [
         {
-          grantee: MARTA,
+          grantee: SAM,
           level: 20,
           // The wording `sonarium.core.levels.DESCRIPTIONS` sends, colon and all: `LevelSelector`
           // splits on it to draw the name and the sentence, and a fixture worded differently
           // would test a split that never happens.
           level_description: 'Can edit: change titles, categories and tags, but not share.',
-          granted_by: GABRIEL.id,
+          granted_by: ALEX.id,
           created_at: '2026-02-01T12:00:00Z',
         },
       ],
@@ -342,7 +346,7 @@ function fresh(): Archive {
         id: 9,
         kind: 'transcribe',
         state: 'running',
-        audio_uuid: CANCONS,
+        audio_uuid: REHEARSAL,
         attempts: 1,
         error: null,
         created_at: '2026-03-12T09:00:00Z',
@@ -354,7 +358,7 @@ function fresh(): Archive {
         id: 8,
         kind: 'transcribe',
         state: 'failed',
-        audio_uuid: ASSAIG,
+        audio_uuid: INTERVIEW,
         attempts: 3,
         error: 'The transcription provider did not answer.',
         created_at: '2026-02-04T21:00:00Z',
@@ -371,17 +375,17 @@ function fresh(): Archive {
       configured: true,
     },
     users: [
-      { ...GABRIEL, is_admin: true, disabled_at: null, created_at: '2025-11-02T09:00:00Z' },
+      { ...ALEX, is_admin: true, disabled_at: null, created_at: '2025-11-02T09:00:00Z' },
       {
-        ...MARTA,
+        ...SAM,
         is_admin: false,
         disabled_at: '2026-01-18T08:30:00Z',
         created_at: '2025-12-14T18:20:00Z',
       },
     ],
     accounts: [
-      { email: GABRIEL.email, password: PASSWORD, disabled: false },
-      { email: MARTA.email, password: PASSWORD, disabled: true },
+      { email: ALEX.email, password: PASSWORD, disabled: false },
+      { email: SAM.email, password: PASSWORD, disabled: true },
     ],
     attempts: {},
     recall:
@@ -411,9 +415,9 @@ export function detailOf(uuid: string): RecordingDetail | undefined {
     channels: null,
     size_bytes: null,
     sha256: null,
-    uploaded_by: GABRIEL,
+    uploaded_by: ALEX,
     ...archive.details[uuid],
   };
 }
 
-export { GABRIEL, MARTA, TAGS };
+export { ALEX, SAM, TAGS };

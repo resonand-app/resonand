@@ -11,15 +11,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { audio, connect, reset, streamUrl } from '../audio';
 import { RATES, playedFraction, usePlayback } from '../store';
 
-const CARRER_NOU = {
+const FIELD_TAKE = {
   uuid: 'aaaaaaaa-0000-4000-8000-000000000001',
-  title: 'The house on Carrer Nou',
-  library: 'Àvia Teresa',
+  title: 'Field recording, long take',
+  library: 'Field recordings',
   durationMs: 2_892_000,
   hasWaveform: true,
 };
 
-const THREE_HOURS = { ...CARRER_NOU, uuid: 'long', durationMs: 3 * 3_600_000 };
+const THREE_HOURS = { ...FIELD_TAKE, uuid: 'long', durationMs: 3 * 3_600_000 };
 
 beforeEach(() => {
   usePlayback.getState().stop();
@@ -28,14 +28,14 @@ beforeEach(() => {
 
 describe('one state, two presentations', () => {
   it('starts buffering rather than playing, because a file has not loaded yet', () => {
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     expect(usePlayback.getState().status).toBe('buffering');
     expect(usePlayback.getState().positionMs).toBe(0);
   });
 
   it('is the same position wherever it is read from', () => {
     // The bar and the detail view both read this. There is no second copy to drift.
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     usePlayback.getState().report({ status: 'playing', durationMs: 2_892_000 });
     usePlayback.getState().seek(1_084_000);
     expect(usePlayback.getState().positionMs).toBe(1_084_000);
@@ -44,10 +44,10 @@ describe('one state, two presentations', () => {
 
   it('resumes rather than restarting when the same recording is played again', () => {
     const { play, report, pause } = usePlayback.getState();
-    play(CARRER_NOU);
+    play(FIELD_TAKE);
     report({ status: 'playing', durationMs: 2_892_000, positionMs: 600_000 });
     pause();
-    play(CARRER_NOU);
+    play(FIELD_TAKE);
     expect(usePlayback.getState().status).toBe('playing');
     expect(usePlayback.getState().positionMs).toBe(600_000);
   });
@@ -66,13 +66,13 @@ describe('one state, two presentations', () => {
         usePlayback.getState().toggle();
       },
       () => {
-        usePlayback.getState().play(CARRER_NOU);
+        usePlayback.getState().play(FIELD_TAKE);
       },
       () => {
         usePlayback.getState().report({ status: 'playing' });
       },
     ]) {
-      usePlayback.getState().play(CARRER_NOU);
+      usePlayback.getState().play(FIELD_TAKE);
       vi.spyOn(performance, 'now').mockReturnValue(1000);
       usePlayback.getState().report({ status: 'playing', durationMs: 13_333, positionMs: 5000 });
       usePlayback.getState().pause();
@@ -90,7 +90,7 @@ describe('one state, two presentations', () => {
 
   it('starts from the beginning when a different recording is played', () => {
     const { play, report } = usePlayback.getState();
-    play(CARRER_NOU);
+    play(FIELD_TAKE);
     report({ positionMs: 600_000 });
     play(THREE_HOURS);
     expect(usePlayback.getState().positionMs).toBe(0);
@@ -99,7 +99,7 @@ describe('one state, two presentations', () => {
 
   it('goes absent rather than empty when it is stopped', () => {
     // §3.1: nothing playing is no player at all, and the shell reflows.
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     usePlayback.getState().stop();
     expect(usePlayback.getState().recording).toBeNull();
     expect(usePlayback.getState().status).toBe('idle');
@@ -120,7 +120,7 @@ describe('moving through a recording', () => {
   it('answers the pending seek when the element reports arriving', () => {
     // Otherwise every later report is second-guessed against a position nobody asked for any more.
     const { play, report, seek } = usePlayback.getState();
-    play(CARRER_NOU);
+    play(FIELD_TAKE);
     report({ durationMs: 2_892_000 });
     seek(60_000);
     report({ positionMs: 60_000 });
@@ -129,7 +129,7 @@ describe('moving through a recording', () => {
 
   it('does not run off either end', () => {
     const { play, report, nudge, seek } = usePlayback.getState();
-    play(CARRER_NOU);
+    play(FIELD_TAKE);
     report({ status: 'playing', durationMs: 2_892_000, positionMs: 2_000 });
     nudge(-15);
     expect(usePlayback.getState().positionMs).toBe(0);
@@ -139,7 +139,7 @@ describe('moving through a recording', () => {
 
   it('moves by the amounts §1.8 names', () => {
     const { play, report, nudge } = usePlayback.getState();
-    play(CARRER_NOU);
+    play(FIELD_TAKE);
     report({ status: 'playing', durationMs: 2_892_000, positionMs: 100_000 });
     nudge(-5);
     expect(usePlayback.getState().positionMs).toBe(95_000);
@@ -161,8 +161,8 @@ describe('moving through a recording', () => {
 describe('where the sound comes from', () => {
   it('is a relative, same-origin URL, so the session cookie carries it', () => {
     // <audio> cannot send a header. The cookie is the authorisation, and a token is the fallback.
-    expect(streamUrl(CARRER_NOU.uuid)).toBe(`/api/audio/${CARRER_NOU.uuid}/stream`);
-    expect(streamUrl(CARRER_NOU.uuid)).not.toContain('token');
+    expect(streamUrl(FIELD_TAKE.uuid)).toBe(`/api/audio/${FIELD_TAKE.uuid}/stream`);
+    expect(streamUrl(FIELD_TAKE.uuid)).not.toContain('token');
   });
 
   it('carries a token only when it is given one', () => {
@@ -184,18 +184,18 @@ describe('the element', () => {
 
   it('loads what the store says is playing, and nothing before that', () => {
     expect(audio().getAttribute('src')).toBeNull();
-    usePlayback.getState().play(CARRER_NOU);
-    expect(audio().src).toContain(`/api/audio/${CARRER_NOU.uuid}/stream`);
+    usePlayback.getState().play(FIELD_TAKE);
+    expect(audio().src).toContain(`/api/audio/${FIELD_TAKE.uuid}/stream`);
   });
 
   it('follows the speed', () => {
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     usePlayback.getState().setRate(1.5);
     expect(audio().playbackRate).toBe(1.5);
   });
 
   it('lets go of the file when playback stops', () => {
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     usePlayback.getState().stop();
     expect(audio().getAttribute('src')).toBeNull();
   });
@@ -204,7 +204,7 @@ describe('the element', () => {
     // Closing the player is asked for while something is audible, and detaching a source the
     // element is still playing leaves the sound running until the buffer empties.
     const paused = vi.spyOn(audio(), 'pause');
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     usePlayback.getState().report({ status: 'playing' });
     usePlayback.getState().stop();
     expect(paused).toHaveBeenCalled();
@@ -218,18 +218,18 @@ describe('the element', () => {
        it wrapped round to the beginning and played on. */
     const played = vi.spyOn(audio(), 'play');
     vi.spyOn(audio(), 'ended', 'get').mockReturnValue(true);
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     played.mockClear();
     // The element reporting where it is, while the store still believes it is playing.
     usePlayback.getState().report({ status: 'playing' });
-    usePlayback.getState().report({ positionMs: CARRER_NOU.durationMs });
+    usePlayback.getState().report({ positionMs: FIELD_TAKE.durationMs });
     expect(played).not.toHaveBeenCalled();
   });
 
   it('says it failed rather than looking like it is playing silence', () => {
     // jsdom cannot decode audio, so `play()` rejects -- which is exactly the case being tested.
     vi.spyOn(audio(), 'play').mockRejectedValue(new Error('no decoder here'));
-    usePlayback.getState().play(CARRER_NOU);
+    usePlayback.getState().play(FIELD_TAKE);
     return vi.waitFor(() => {
       expect(usePlayback.getState().status).toBe('failed');
     });

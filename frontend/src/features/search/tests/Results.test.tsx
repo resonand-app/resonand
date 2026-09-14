@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { usePlayback } from '@/player/store';
-import { AVIA } from '@/test/api/archive';
+import { RECORDINGS } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { Results } from '../Results';
@@ -25,8 +25,8 @@ function Where() {
 
 const RECORDING = {
   uuid: 'audio-1',
-  title: 'Sopar de Nadal 1998',
-  library_uuid: AVIA,
+  title: 'Digitised cassette',
+  library_uuid: RECORDINGS,
   category_id: null,
   created_at: '2026-03-12T09:14:00Z',
   deleted_at: null,
@@ -47,7 +47,11 @@ function result(over: Partial<SearchResult> = {}): SearchResult {
     audio: RECORDING,
     total_matches: 3,
     matches: [
-      { kind: 'transcript', fragment: 'la <mark>casa</mark> del carrer', start_ms: 61_000 },
+      {
+        kind: 'transcript',
+        fragment: 'the <mark>third</mark> segment mentions rehearsal',
+        start_ms: 61_000,
+      },
     ],
     ...over,
   } as SearchResult;
@@ -74,7 +78,7 @@ describe('playing from a match', () => {
     // Opening the detail view would defeat it, so the route is the assertion.
     usePlayback.getState().stop();
     show([result()]);
-    await userEvent.click(screen.getByText(/del carrer/));
+    await userEvent.click(screen.getByText(/segment mentions rehearsal/));
     expect(usePlayback.getState().recording?.uuid).toBe('audio-1');
     expect(usePlayback.getState().positionMs).toBe(61_000);
     expect(screen.getByTestId('where')).toHaveTextContent('/search');
@@ -84,13 +88,13 @@ describe('playing from a match', () => {
     show([result()]);
     usePlayback.getState().play({
       uuid: 'audio-1',
-      title: 'Sopar de Nadal 1998',
-      library: 'Àvia Teresa',
+      title: 'Digitised cassette',
+      library: 'Field recordings',
       durationMs: 180_000,
       hasWaveform: true,
     });
     usePlayback.getState().report({ status: 'playing', positionMs: 5_000 });
-    await userEvent.click(screen.getByText(/del carrer/));
+    await userEvent.click(screen.getByText(/segment mentions rehearsal/));
     expect(usePlayback.getState().status).toBe('playing');
     expect(usePlayback.getState().positionMs).toBe(61_000);
   });
@@ -103,7 +107,7 @@ describe("a match in the recording's details", () => {
     show([
       result({
         matches: [
-          { kind: 'metadata', fragment: 'Sopar de <mark>Nadal</mark> 1998', start_ms: null },
+          { kind: 'metadata', fragment: '<mark>Rehearsal</mark>, second take', start_ms: null },
         ],
       }),
     ]);
@@ -119,8 +123,12 @@ describe("a match in the recording's details", () => {
       result({
         total_matches: 2,
         matches: [
-          { kind: 'transcript', fragment: 'la <mark>casa</mark> del carrer', start_ms: 61_000 },
-          { kind: 'metadata', fragment: 'Sopar de <mark>Nadal</mark>', start_ms: null },
+          {
+            kind: 'transcript',
+            fragment: 'the <mark>third</mark> segment mentions rehearsal',
+            start_ms: 61_000,
+          },
+          { kind: 'metadata', fragment: '<mark>Rehearsal</mark>', start_ms: null },
         ],
       }),
     ]);
@@ -132,12 +140,12 @@ describe("a match in the recording's details", () => {
 describe('a result', () => {
   it('says where the recording lives, because results span libraries', async () => {
     show([result()]);
-    expect(await screen.findByText(/Àvia Teresa/)).toBeInTheDocument();
+    expect(await screen.findByText(/Field recordings/)).toBeInTheDocument();
   });
 
   it('renders the marking the database put in the fragment', () => {
     show([result()]);
-    expect(screen.getByText('casa').tagName).toBe('MARK');
+    expect(screen.getByText('third').tagName).toBe('MARK');
   });
 
   it('gives each match the moment it is at, as a place rather than a length', () => {

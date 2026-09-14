@@ -18,7 +18,7 @@ import { describe, expect, it } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { CARRER_NOU, archive } from '@/test/api/archive';
+import { FIELD_TAKE, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -27,7 +27,7 @@ mockApi();
 
 /** A recording with two transcripts, newest first, as the endpoint sends them. */
 function twoVersions(activeId = 2) {
-  const first = archive.transcripts[CARRER_NOU];
+  const first = archive.transcripts[FIELD_TAKE];
   if (first === undefined) throw new Error('The fixture has no transcript.');
   const { segments: _segments, ...summary } = first;
   server.use(
@@ -54,7 +54,7 @@ function rowAt(list: HTMLElement, index: number): HTMLElement {
   return row;
 }
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -105,7 +105,7 @@ describe('the selector', () => {
 
   it('offers no switch to somebody who can only read the recording', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
     );
     twoVersions();
     renderRecording();
@@ -145,7 +145,7 @@ describe('asking for another transcription', () => {
 
   it('is absent for somebody who can only read the recording', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
     );
     renderRecording();
     await screen.findByText('6 segments');

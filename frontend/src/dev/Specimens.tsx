@@ -139,8 +139,8 @@ const LEVELS = [
 
 /** Who a library is shared with, for the avatar stack. */
 const PEOPLE = [
-  { id: 1, name: 'Martí Colom' },
-  { id: 2, name: 'Àvia Teresa' },
+  { id: 1, name: 'Ángela Ruiz' },
+  { id: 2, name: 'Field recordings' },
   { id: 3, name: 'Joana' },
   { id: 4, name: 'Pere Sala' },
   { id: 5, name: 'Anna Vidal' },
@@ -285,14 +285,14 @@ function ThemeControl() {
 
 export default function Specimens() {
   const [colour, setColour] = useState<LibraryColorName>('clay');
-  const [query, setQuery] = useState('carrer nou');
+  const [query, setQuery] = useState('field recording');
   const [sort, setSort] = useState('recorded');
   const [section, setSection] = useState('appearance');
   const [transcribe, setTranscribe] = useState(true);
   const [picked, setPicked] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [level, setLevel] = useState(20);
-  const [title, setTitle] = useState('Sopar de Nadal 1998');
+  const [title, setTitle] = useState('Digitised cassette');
   const [confirm, setConfirm] = useState(false);
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
 
@@ -371,12 +371,12 @@ export default function Specimens() {
           </div>
         </Panel>
         <Panel label="TextField" width={260}>
-          <TextField label="Library name" defaultValue="Àvia Teresa" />
+          <TextField label="Library name" defaultValue="Field recordings" />
         </Panel>
         <Panel label="TextField · error" width={260}>
           <TextField
             label="Library name"
-            defaultValue="Àvia Teresa"
+            defaultValue="Field recordings"
             error="You already have a library with this name."
           />
         </Panel>
@@ -399,7 +399,7 @@ export default function Specimens() {
         </Panel>
         <Panel label="Progress · determinate only" width={340}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <Progress value={0.64} label="Entrevista àvia 03.m4a" detail="64% · 284 MB" />
+            <Progress value={0.64} label="field-recording-03.m4a" detail="64% · 284 MB" />
             <Progress value={0.1} label="Overall" detail="3 of 30 uploaded, 1 failed" />
           </div>
         </Panel>
@@ -461,13 +461,13 @@ export default function Specimens() {
             played={0.375}
             playhead
             onSeek={() => undefined}
-            label="Seek within Entrevista amb l’àvia Teresa"
+            label="Seek within Field recording, long take"
           />
         </Panel>
         <Panel label="PlayerBar" width={900}>
           <PlayerBar
-            title="Entrevista amb l’àvia Teresa"
-            library="Àvia Teresa"
+            title="Field recording, long take"
+            library="Field recordings"
             peaks={PEAKS}
             position="18:04"
             duration="48:12"
@@ -478,13 +478,13 @@ export default function Specimens() {
         <Panel label="TranscriptLine" width={520}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <TranscriptLine at="18:01" onClick={() => undefined}>
-              I la casa de Carrer Nou tenia un balcó que donava a la plaça.
+              The third segment mentions rehearsal, which is the word search is asked for.
             </TranscriptLine>
             <TranscriptLine at="18:04" active onClick={() => undefined}>
-              La iaia hi estenia la roba, i des d’allà se sentia el mercat.
+              The fourth segment is a short one.
             </TranscriptLine>
             <TranscriptLine at="18:11" onClick={() => undefined}>
-              Això era abans de la guerra, molt abans que jo nasqués.
+              The fourth segment is a short one, and the panel still has to lay it out.
             </TranscriptLine>
           </div>
         </Panel>
@@ -507,8 +507,8 @@ export default function Specimens() {
         </Panel>
         <Panel label="Chip">
           <div style={{ display: 'flex', gap: 6 }}>
-            <Chip>memòria</Chip>
-            <Chip>català</Chip>
+            <Chip>field</Chip>
+            <Chip>outdoor</Chip>
             <Chip active>1998</Chip>
           </div>
         </Panel>
@@ -542,7 +542,7 @@ export default function Specimens() {
             <InlineField label="Title" value={title} onSave={setTitle} />
             <InlineField
               label="Title"
-              value="Sopar de Nadal 1998"
+              value="Digitised cassette"
               onSave={() => undefined}
               readOnly
             />
@@ -550,7 +550,7 @@ export default function Specimens() {
         </Panel>
         <Panel label="LevelSelector · the API's wording, visible" width={360}>
           <LevelSelector
-            label="What Marta can do"
+            label="What Sam Rivera can do"
             levels={LEVELS}
             value={level}
             onChange={setLevel}
@@ -559,7 +559,7 @@ export default function Specimens() {
         <Panel label="LibraryCard · CreateLibraryCard" width={672}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--grid-gap)' }}>
             <LibraryCard
-              name="Àvia Teresa"
+              name="Field recordings"
               meta="37 recordings · 24 h 12 min"
               colour="var(--library-clay)"
               onOpen={() => undefined}
@@ -569,10 +569,10 @@ export default function Specimens() {
         </Panel>
         <Panel label="RecordingCard" width={320}>
           <RecordingCard
-            name="Entrevista amb l’àvia Teresa"
+            name="Field recording, long take"
             meta="48:12 · 12 Mar 2026"
             state="done"
-            tags={['memòria', 'català']}
+            tags={['field', 'outdoor']}
             peaks={PEAKS}
             playing
           />
@@ -582,7 +582,7 @@ export default function Specimens() {
             {TRANSCRIPTION_STATE_NAMES.map((state, i) => (
               <RecordingRow
                 key={state}
-                name={`Entrevista amb l’àvia Teresa · ${state}`}
+                name={`Field recording, long take · ${state}`}
                 duration="48:12"
                 date="12 Mar 2026"
                 category="Family"
@@ -598,14 +598,14 @@ export default function Specimens() {
       <Section title="Navigation">
         <Panel label="Breadcrumb" width={420}>
           <Breadcrumb
-            name="Àvia Teresa"
-            href="/library/avia"
+            name="Field recordings"
+            href="/library/recordings"
             detail="Interviews"
             label="Where this recording is"
           />
         </Panel>
         <Panel label="Sidebar" width={224}>
-          <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} activeId="avia" />
+          <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} activeId="recordings" />
         </Panel>
         <Panel label="Sidebar · collapsed" width={52}>
           <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} collapsed />
@@ -632,15 +632,15 @@ export default function Specimens() {
           <Menu label="Library actions" items={RECORDING_ACTIONS} />
         </Panel>
         <Panel label="ProfileMenu" width={236}>
-          <ProfileMenu name="Martí Colom" email="marti@sonarium.app" initials="MC" theme="Dark" />
+          <ProfileMenu name="Ángela Ruiz" email="angela@example.test" initials="ÁR" theme="Dark" />
         </Panel>
         <Panel label="SearchResults" width={420}>
-          <SearchResults hits={HITS} total={214} query="carrer nou" />
+          <SearchResults hits={HITS} total={214} query="field recording" />
         </Panel>
         <Panel label="Dialog" width={420}>
           <Dialog
             title="Delete this library?"
-            description="Deleting Àvia Teresa also deletes its 37 recordings. They go to the trash for 30 days."
+            description="Deleting Field recordings also deletes its 37 recordings. They go to the trash for 30 days."
             footer={
               <>
                 <Button variant="ghost">Cancel</Button>
@@ -648,7 +648,7 @@ export default function Specimens() {
               </>
             }
           >
-            <TextField label="Type the library name to confirm" placeholder="Àvia Teresa" />
+            <TextField label="Type the library name to confirm" placeholder="Field recordings" />
           </Dialog>
         </Panel>
       </Section>
@@ -656,7 +656,7 @@ export default function Specimens() {
       <Section title="Composites">
         <Panel label="PageHeader · the one Chillax title per screen" width="100%">
           <PageHeader
-            title="Àvia Teresa"
+            title="Field recordings"
             meta="37 recordings · 24 h 12 min"
             before={
               <span
@@ -695,7 +695,7 @@ export default function Specimens() {
             />
             <StateCard
               icon="search"
-              title="No recordings match memòria"
+              title="No recordings match field"
               body="Nothing in this library carries that tag."
               action={<Button variant="secondary">Clear the filter</Button>}
               footnote="37 recordings in the library"
@@ -734,12 +734,14 @@ export default function Specimens() {
         <Panel label="Shell · nav, sidebar, content, player" width="100%">
           <div style={{ height: 420, borderRadius: 'var(--radius-panel)', overflow: 'hidden' }}>
             <Shell
-              nav={<TopNav initials="MC" query={query} onQueryChange={setQuery} />}
-              sidebar={<Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} activeId="avia" />}
+              nav={<TopNav initials="ÁR" query={query} onQueryChange={setQuery} />}
+              sidebar={
+                <Sidebar own={LIBRARIES} shared={SHARED} trashCount={3} activeId="recordings" />
+              }
               player={
                 <PlayerBar
-                  title="Entrevista amb l’àvia Teresa"
-                  library="Àvia Teresa"
+                  title="Field recording, long take"
+                  library="Field recordings"
                   peaks={PEAKS}
                   position="18:04"
                   duration="48:12"
@@ -748,8 +750,8 @@ export default function Specimens() {
                 />
               }
             >
-              <PageHeader title="Àvia Teresa" meta="37 recordings · 24 h 12 min" />
-              <RecordingRow name="Entrevista amb l’àvia Teresa" duration="48:12" />
+              <PageHeader title="Field recordings" meta="37 recordings · 24 h 12 min" />
+              <RecordingRow name="Field recording, long take" duration="48:12" />
             </Shell>
           </div>
         </Panel>
@@ -763,7 +765,7 @@ export default function Specimens() {
               setToasts([
                 {
                   id: String(Date.now()),
-                  content: <Toast>12 recordings moved to Àvia Teresa</Toast>,
+                  content: <Toast>12 recordings moved to Field recordings</Toast>,
                 },
               ]);
             }}
@@ -779,7 +781,7 @@ export default function Specimens() {
           />
         </Panel>
         <Panel label="Toast · done" width={420}>
-          <Toast onDismiss={() => undefined}>12 recordings moved to Àvia Teresa</Toast>
+          <Toast onDismiss={() => undefined}>12 recordings moved to Field recordings</Toast>
         </Panel>
         <Panel label="Toast · failed, and still selected" width={420}>
           <Toast
@@ -795,7 +797,7 @@ export default function Specimens() {
           </Toast>
         </Panel>
         <Panel label="Tooltip · a truncated title, in full" width={260}>
-          <Tooltip content="Interview with grandma Teresa — the house on Carrer Nou">
+          <Tooltip content="Field recording, long take — the one with the longest title">
             <span
               style={{
                 fontSize: 'var(--type-ui-size)',
@@ -806,7 +808,7 @@ export default function Specimens() {
                 textOverflow: 'ellipsis',
               }}
             >
-              Interview with grandma Teresa — the house…
+              Field recording, long take — the one…
             </span>
           </Tooltip>
         </Panel>
@@ -823,11 +825,11 @@ export default function Specimens() {
               setConfirm(true);
             }}
           >
-            Delete Àvia Teresa
+            Delete Field recordings
           </Button>
           <TypedConfirm
             open={confirm}
-            name="Àvia Teresa"
+            name="Field recordings"
             consequence="84 recordings, 12 h 40 min of audio and their transcripts"
             onConfirm={() => {
               setConfirm(false);
@@ -854,7 +856,7 @@ export default function Specimens() {
             title="Metadata"
           >
             <div style={{ display: 'flex', gap: 6 }}>
-              <Chip>memòria</Chip>
+              <Chip>field</Chip>
               <Chip>1998</Chip>
             </div>
           </Sheet>
@@ -865,7 +867,7 @@ export default function Specimens() {
         <Panel label="TopNav" width="100%">
           <div style={{ width: '100%' }}>
             <TopNav
-              initials="MC"
+              initials="ÁR"
               query={query}
               onQueryChange={setQuery}
               onToggleSidebar={() => undefined}

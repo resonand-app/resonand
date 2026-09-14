@@ -15,14 +15,14 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toLibrarySettings } from '@/app/routes';
-import { AVIA, PERSONAL, archive } from '@/test/api/archive';
+import { RECORDINGS, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { LibrarySettingsView } from '../LibrarySettingsView';
 
 mockApi();
 
-function show(uuid: string = AVIA) {
+function show(uuid: string = RECORDINGS) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -49,8 +49,8 @@ describe('the three variants', () => {
     show();
     // Read-only rather than absent: seeing who else has access is part of knowing what you are
     // working in.
-    expect(await screen.findByText('Marta')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Remove Marta/i })).not.toBeInTheDocument();
+    expect(await screen.findByText('Sam Rivera')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Remove Sam Rivera/i })).not.toBeInTheDocument();
     expect(screen.getByText(/only somebody who can manage it/i)).toBeVisible();
   });
 
@@ -74,11 +74,11 @@ describe('giving somebody access', () => {
       if (url.pathname === '/api/users/lookup') asked.push(url.searchParams.get('email') ?? '');
     });
     show();
-    await userEvent.type(await screen.findByLabelText(/their email address/i), 'mar');
+    await userEvent.type(await screen.findByLabelText(/their email address/i), 'sa');
     expect(asked).toEqual([]);
-    await userEvent.type(screen.getByLabelText(/their email address/i), 'ta@example.test');
+    await userEvent.type(screen.getByLabelText(/their email address/i), 'm@example.test');
     await waitFor(() => {
-      expect(asked.at(-1)).toBe('marta@example.test');
+      expect(asked.at(-1)).toBe('sam@example.test');
     });
     // Only what is address-shaped is ever asked about. A name, or half of one, produces nothing:
     // there is no request that could tell somebody whether an account exists for a prefix.
@@ -102,36 +102,32 @@ describe('giving somebody access', () => {
   it('grants at the level chosen, and only once the whole address matched', async () => {
     // A library nobody has been given access to yet, which is what the add form is for. The
     // personal one has no form at all, and that is `UI-17e`'s business rather than this test's.
-    archive.shares = { ...archive.shares, [AVIA]: [] };
+    archive.shares = { ...archive.shares, [RECORDINGS]: [] };
     show();
-    await userEvent.type(
-      await screen.findByLabelText(/their email address/i),
-      'marta@example.test',
-    );
-    await userEvent.click(await screen.findByRole('button', { name: /Share with Marta/i }));
+    await userEvent.type(await screen.findByLabelText(/their email address/i), 'sam@example.test');
+    await userEvent.click(await screen.findByRole('button', { name: /Share with Sam Rivera/i }));
     await waitFor(() => {
-      expect(archive.shares[AVIA]).toHaveLength(1);
+      expect(archive.shares[RECORDINGS]).toHaveLength(1);
     });
-    expect(archive.shares[AVIA]?.[0]?.level).toBe(10);
+    expect(archive.shares[RECORDINGS]?.[0]?.level).toBe(10);
   });
 
   it('does not offer to add somebody who is already there', async () => {
     show();
-    await userEvent.type(
-      await screen.findByLabelText(/their email address/i),
-      'marta@example.test',
-    );
+    await userEvent.type(await screen.findByLabelText(/their email address/i), 'sam@example.test');
     expect(await screen.findByText(/already has access/i)).toBeVisible();
-    expect(screen.queryByRole('button', { name: /Share with Marta/i })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /Share with Sam Rivera/i }),
+    ).not.toBeInTheDocument();
   });
 });
 
 describe('the sharing panel', () => {
   it('names the person, their address, and when it was shared', async () => {
     show();
-    expect(await screen.findByText('Marta')).toBeInTheDocument();
-    expect(screen.getByText('marta@example.test')).toBeInTheDocument();
-    expect(screen.getByText(/Shared by Gabriel/)).toBeInTheDocument();
+    expect(await screen.findByText('Sam Rivera')).toBeInTheDocument();
+    expect(screen.getByText('sam@example.test')).toBeInTheDocument();
+    expect(screen.getByText(/Shared by Alex Morgan/)).toBeInTheDocument();
   });
 
   it('renders the API’s own wording for a level rather than a copy of it', async () => {
@@ -146,24 +142,24 @@ describe('the sharing panel', () => {
     show();
     await userEvent.click(await screen.findByRole('radio', { name: /Can manage/i }));
     await waitFor(() => {
-      expect(archive.shares[AVIA]?.[0]?.level).toBe(30);
+      expect(archive.shares[RECORDINGS]?.[0]?.level).toBe(30);
     });
   });
 
   it('says what the person loses before revoking, in numbers', async () => {
     show();
-    await userEvent.click(await screen.findByRole('button', { name: /Remove Marta/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /Remove Sam Rivera/i }));
     expect(
-      await screen.findByText(/loses access to all 3 recordings in Àvia Teresa/i),
+      await screen.findByText(/loses access to all 3 recordings in Field recordings/i),
     ).toBeVisible();
   });
 
   it('revokes only when the confirm is answered', async () => {
     show();
-    await userEvent.click(await screen.findByRole('button', { name: /Remove Marta/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /Remove Sam Rivera/i }));
     await userEvent.click(await screen.findByRole('button', { name: 'Remove their access' }));
     await waitFor(() => {
-      expect(archive.shares[AVIA]).toHaveLength(0);
+      expect(archive.shares[RECORDINGS]).toHaveLength(0);
     });
   });
 

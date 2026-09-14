@@ -31,7 +31,7 @@ describe('StateCard', () => {
     const { container } = render(
       <StateCard
         icon="search"
-        title="No recordings match memòria"
+        title="No recordings match field"
         action={<button type="button">Clear the filter</button>}
         footnote="37 recordings in the library"
       />,

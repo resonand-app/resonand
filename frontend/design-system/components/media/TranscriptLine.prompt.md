@@ -2,7 +2,7 @@ A timestamped transcript line. The active line takes `--accent-soft` and full-st
 
 ```jsx
 <TranscriptLine at="18:04" active onClick={() => seek(1084)}>
-  The house on Carrer Nou had a balcony that looked over the square.
+  Field recording, long take had a balcony that looked over the square.
 </TranscriptLine>
 ```
 

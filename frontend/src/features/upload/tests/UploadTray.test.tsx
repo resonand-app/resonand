@@ -24,7 +24,7 @@ describe('UploadTray', () => {
     expect(screen.getByText('3 of 30 uploaded, 1 failed')).toBeDefined();
     rerender(
       <UploadTray summary="3 of 30 uploaded, 1 failed" collapsed={false} onToggle={vi.fn()}>
-        <Progress value={0.64} label="Entrevista àvia 03.m4a" />
+        <Progress value={0.64} label="field-recording-03.m4a" />
       </UploadTray>,
     );
     expect(screen.getByText('3 of 30 uploaded, 1 failed')).toBeDefined();
@@ -34,7 +34,7 @@ describe('UploadTray', () => {
   it('shows the files only when it is open', () => {
     render(
       <UploadTray summary="3 of 30 uploaded" collapsed onToggle={vi.fn()}>
-        <Progress value={0.64} label="Entrevista àvia 03.m4a" />
+        <Progress value={0.64} label="field-recording-03.m4a" />
       </UploadTray>,
     );
     expect(screen.queryByRole('progressbar')).toBeNull();

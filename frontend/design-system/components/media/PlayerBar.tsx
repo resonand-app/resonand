@@ -109,7 +109,7 @@ export interface PlayerBarProps extends HTMLAttributes<HTMLDivElement> {
  * navigation.
  *
  * **The sample-data defaults are gone (`UI-1f`).** It used to arrive already playing a recording
- * called "The house on Carrer Nou" from a library called "Àvia Teresa", 37.5% through. A forgotten
+ * called "Field recording, long take" from a library called "Field recordings", 37.5% through. A forgotten
  * prop then looked like a working player showing somebody else's audio, which is the one kind of
  * bug a screenshot cannot catch. Empty is now visibly empty. The defaults that survive are the
  * ones that are decisions rather than content: the speed pill reads 1.0x because that is where

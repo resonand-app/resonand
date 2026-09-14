@@ -10,14 +10,14 @@
  * Whether a typed name is a tag that already exists.
  *
  * Case and accents are folded away, because that is what the backend does when it turns a name
- * into the slug it looks a tag up by: `Musica` typed against an archive that has `música` is the
+ * into the slug it looks a tag up by: `Interview` typed against an archive that has `interview` is the
  * same tag, and `resolve_tag` will return the one that is there whatever spelling the request
  * carried. **The backend stays the authority** -- this is a display preference, so the chip shows
  * the name the recording is about to have rather than the one somebody typed, and a disagreement
  * corrects itself when the response arrives carrying the tags as stored.
  *
  * Deliberately not `matchesName`, which is accent-*sensitive* on purpose: that one guards a typed
- * confirmation before something is destroyed, where "Avia" must not pass for "Àvia". Here being
+ * confirmation before something is destroyed, where "Album" must not pass for "Álbum". Here being
  * strict would offer to create a second spelling of a tag that already exists, which is the
  * mistake in the other direction.
  */

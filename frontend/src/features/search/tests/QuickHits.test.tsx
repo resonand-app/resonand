@@ -31,23 +31,23 @@ function show(query: string, handlers: { onOpen?: (uuid: string) => void; onSeeA
 
 describe('the quick hits', () => {
   it('shows the recording, the line that matched and where in it that is', async () => {
-    show('Nadal', {});
-    expect(await screen.findByText('Sopar de Nadal 1998')).toBeInTheDocument();
-    expect(screen.getByText(/la casa del carrer Nou/)).toBeInTheDocument();
+    show('Cassette', {});
+    expect(await screen.findByText('Digitised cassette')).toBeInTheDocument();
+    expect(screen.getByText(/the third segment mentions rehearsal/)).toBeInTheDocument();
     // 1 084 000 ms into the recording, as a place rather than a length.
     expect(screen.getByText('18:04')).toBeInTheDocument();
   });
 
   it('opens the recording somebody pressed, not the one with the same name', async () => {
     const onOpen = vi.fn();
-    show('Nadal', { onOpen });
-    await userEvent.click(await screen.findByText('Sopar de Nadal 1998'));
+    show('Cassette', { onOpen });
+    await userEvent.click(await screen.findByText('Digitised cassette'));
     expect(onOpen).toHaveBeenCalledWith(expect.any(String));
   });
 
   it('counts what it found honestly on the see-all row, which is the way out', async () => {
     const onSeeAll = vi.fn();
-    show('Nadal', { onSeeAll });
+    show('Cassette', { onSeeAll });
     await userEvent.click(await screen.findByText(/all 1 result for/i));
     expect(onSeeAll).toHaveBeenCalled();
   });
@@ -62,8 +62,8 @@ describe('the quick hits', () => {
 
 describe('the marking', () => {
   it('renders what the database marked, as an element rather than as markup', () => {
-    render(<p>{marked('...la <mark>casa</mark> del carrer Nou...')}</p>);
-    const mark = screen.getByText('casa');
+    render(<p>{marked('...the <mark>third</mark> segment...')}</p>);
+    const mark = screen.getByText('third');
     expect(mark.tagName).toBe('MARK');
   });
 
@@ -74,6 +74,6 @@ describe('the marking', () => {
   });
 
   it('gives the same words back plain, for somewhere that can only take a string', () => {
-    expect(unmarked('...la <mark>casa</mark> del carrer...')).toBe('...la casa del carrer...');
+    expect(unmarked('...the <mark>third</mark> segment...')).toBe('...the third segment...');
   });
 });

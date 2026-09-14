@@ -3,7 +3,7 @@
  *
  * Its own module because two things need it and neither should own it: `AvatarStack` draws a
  * library's people, and `TopNav` and `ProfileMenu` draw the account. Two implementations would
- * eventually disagree about "Àvia Teresa", which is the kind of difference nobody reports and
+ * eventually disagree about "Ángela Ruiz", which is the kind of difference nobody reports and
  * everybody notices.
  */
 
@@ -11,7 +11,7 @@
  * Grapheme clusters, so a letter with a combining accent stays one letter.
  *
  * `name[0]` and `[...name][0]` both take a UTF-16 unit and a code point respectively, and neither
- * is a letter: a decomposed `À` is `A` followed by a combining grave, so both would return a bare
+ * is a letter: a decomposed `Á` is `A` followed by a combining acute, so both would return a bare
  * `A` and quietly drop the accent from somebody's name. `Intl.Segmenter` is the only thing in the
  * platform that answers the question actually being asked.
  */
@@ -25,8 +25,9 @@ function firstLetter(word: string): string {
 /**
  * Initials, in the two-letter form the product uses everywhere.
  *
- * The first letter of the first word and of the last -- right for "Martí Colom" and for "Àvia
- * Teresa", and one letter rather than a blank circle for a single-word name. There are no avatar
+ * The first letter of the first word and of the last -- right for "Ángela Ruiz" and for "Ana
+ * Maria Ruiz", and one letter rather than a blank circle for a single-word name. There are no
+ * avatar
  * images anywhere in this product: no storage exists for one, and fetching one from an external
  * service would break the promise that nothing leaves the instance.
  */

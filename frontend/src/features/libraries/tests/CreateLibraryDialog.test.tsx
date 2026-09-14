@@ -81,13 +81,13 @@ describe('the dialog', () => {
   it('sends the colour that was chosen rather than one derived from the name', async () => {
     const { sent } = capture();
     const { user } = renderDialog();
-    await user.type(screen.getByLabelText('Name'), 'Àvia Teresa');
+    await user.type(screen.getByLabelText('Name'), 'Field recordings');
     await user.click(screen.getByRole('button', { name: 'plum' }));
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(sent).toHaveLength(1);
     });
-    expect(sent[0]).toEqual({ name: 'Àvia Teresa', colour: 'plum' });
+    expect(sent[0]).toEqual({ name: 'Field recordings', colour: 'plum' });
   });
 
   it('puts a duplicate name beside the field, never in a banner', async () => {
@@ -97,7 +97,7 @@ describe('the dialog', () => {
           {
             type: 'about:blank',
             title: 'Conflict',
-            detail: 'You already have a library called Àvia Teresa.',
+            detail: 'You already have a library called Field recordings.',
             status: 409,
           },
           { status: 409, headers: { 'content-type': 'application/problem+json' } },
@@ -105,9 +105,9 @@ describe('the dialog', () => {
       ),
     );
     const { user } = renderDialog();
-    await user.type(screen.getByLabelText('Name'), 'Àvia Teresa');
+    await user.type(screen.getByLabelText('Name'), 'Field recordings');
     await user.click(screen.getByRole('button', { name: 'Create' }));
-    const message = await screen.findByText('You already have a library called Àvia Teresa.');
+    const message = await screen.findByText('You already have a library called Field recordings.');
     // Beside the field: the dialog stays open, and the message shares a label with the input
     // somebody has to change rather than sitting at the top of the panel.
     expect(screen.getByRole('dialog')).toBeInTheDocument();
@@ -134,7 +134,7 @@ describe('the dialog', () => {
   it('closes once the library exists', async () => {
     capture();
     const { user } = renderDialog();
-    await user.type(screen.getByLabelText('Name'), 'Reunions');
+    await user.type(screen.getByLabelText('Name'), 'Meetings');
     await user.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).toBeNull();

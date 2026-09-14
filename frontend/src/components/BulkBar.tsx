@@ -18,8 +18,8 @@ export interface BulkBarProps {
 /**
  * The bar that replaces the filter bar while a selection exists (`UI-35h`).
  *
- * **A count, never names.** "12 recordings selected", not "Sopar de Nadal 1998, Entrevista amb
- * l'àvia Teresa and 10 others" -- because it has to survive 200 selected, and a bar that lists
+ * **A count, never names.** "12 recordings selected", not "Digitised cassette, Field
+ * recording, long take and 10 others" -- because it has to survive 200 selected, and a bar that lists
  * what it can and truncates the rest is one that tells somebody less the more they have selected.
  * The names are on the rows, which are still on the screen and still ticked.
  *

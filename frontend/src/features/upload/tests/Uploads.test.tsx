@@ -22,7 +22,7 @@ import type { Upload } from '../uploads';
 
 mockApi();
 
-function file(name = 'avia.m4a'): File {
+function file(name = 'interview.m4a'): File {
   return new File([new Uint8Array(64)], name);
 }
 
@@ -76,11 +76,11 @@ describe('the tray', () => {
     );
     show();
     useUploads.getState().add([file()], { library: PERSONAL });
-    await screen.findByText('avia.m4a');
+    await screen.findByText('interview.m4a');
     await userEvent.click(screen.getByRole('button', { name: /go elsewhere/i }));
     expect(await screen.findByText('another screen')).toBeInTheDocument();
     // Same file, still going, on a screen it was not started from.
-    expect(screen.getByText('avia.m4a')).toBeInTheDocument();
+    expect(screen.getByText('interview.m4a')).toBeInTheDocument();
     await waitFor(() => {
       expect(useUploads.getState().files[0]?.status).toBe('done');
     });
@@ -88,10 +88,10 @@ describe('the tray', () => {
 
   it('collapses to one line without losing the answer', async () => {
     show();
-    useUploads.getState().add([file(), file('nadal.mp3')], { library: PERSONAL });
-    await screen.findByText('avia.m4a');
+    useUploads.getState().add([file(), file('take-two.mp3')], { library: PERSONAL });
+    await screen.findByText('interview.m4a');
     await userEvent.click(screen.getByRole('button', { name: /hide the uploads/i }));
-    expect(screen.queryByText('avia.m4a')).not.toBeInTheDocument();
+    expect(screen.queryByText('interview.m4a')).not.toBeInTheDocument();
     // The summary is the same sentence in both states.
     expect(screen.getByText(/of 2 uploaded/)).toBeInTheDocument();
   });
@@ -105,7 +105,7 @@ describe('the tray', () => {
     );
     show();
     useUploads.getState().add([file()], { library: PERSONAL });
-    await screen.findByText('avia.m4a');
+    await screen.findByText('interview.m4a');
     expect(screen.queryByRole('button', { name: /close the tray/i })).not.toBeInTheDocument();
     await waitFor(
       () => {
@@ -150,7 +150,7 @@ describe('the states of a file', () => {
       ),
     );
     show();
-    useUploads.getState().add([file(), file('nadal.mp3')], { library: PERSONAL });
+    useUploads.getState().add([file(), file('take-two.mp3')], { library: PERSONAL });
     // Sequential, so the second one is still going when the first has already failed.
     await waitFor(() => {
       expect(screen.getAllByText('There is no room left on this instance.')).toHaveLength(2);
@@ -182,8 +182,8 @@ describe('the phases a row used to spend in silence', () => {
   /** One row, put straight into the store: the phases are what is being drawn, not how. */
   function row(fields: Partial<Upload>): Upload {
     return {
-      id: '1-avia.m4a',
-      name: 'avia.m4a',
+      id: '1-interview.m4a',
+      name: 'interview.m4a',
       size: 1000,
       library: PERSONAL,
       transcribe: false,
@@ -203,7 +203,7 @@ describe('the phases a row used to spend in silence', () => {
     // minutes. A bar pinned at nought with the word "checking" on it is a frozen interface.
     useUploads.setState({ files: [row({ status: 'checking', hashed: 400 })] });
     show();
-    expect(screen.getByRole('progressbar', { name: 'avia.m4a' })).toHaveAttribute(
+    expect(screen.getByRole('progressbar', { name: 'interview.m4a' })).toHaveAttribute(
       'aria-valuenow',
       '40',
     );
@@ -216,7 +216,7 @@ describe('the phases a row used to spend in silence', () => {
     // stuck, and the bar has nothing left to say.
     useUploads.setState({ files: [row({ status: 'storing', sent: 1000 })] });
     show();
-    expect(screen.getByRole('progressbar', { name: 'avia.m4a' })).toHaveAttribute(
+    expect(screen.getByRole('progressbar', { name: 'interview.m4a' })).toHaveAttribute(
       'aria-valuenow',
       '100',
     );

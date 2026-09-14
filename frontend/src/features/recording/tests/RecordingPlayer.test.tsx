@@ -17,7 +17,7 @@ import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { usePlayback } from '@/player/store';
-import { CARRER_NOU, NOTA } from '@/test/api/archive';
+import { FIELD_TAKE, VOICE_NOTE } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -28,7 +28,7 @@ afterEach(() => {
   usePlayback.getState().stop();
 });
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -51,8 +51,8 @@ describe('the transport', () => {
     await user.click(await screen.findByRole('button', { name: 'Play' }));
     // The store, not a local flag: the bar at the bottom of the shell is the same sound, and a
     // panel with its own idea of what is playing would be the second player (§3.1).
-    expect(usePlayback.getState().recording?.uuid).toBe(CARRER_NOU);
-    expect(usePlayback.getState().recording?.library).toBe('Àvia Teresa');
+    expect(usePlayback.getState().recording?.uuid).toBe(FIELD_TAKE);
+    expect(usePlayback.getState().recording?.library).toBe('Field recordings');
   });
 
   it('does not claim to be playing while it is still buffering', async () => {
@@ -94,7 +94,7 @@ describe('the waveform', () => {
   it('seeks, and to the recording own length rather than to whatever loaded', async () => {
     const user = userEvent.setup();
     renderRecording();
-    const seek = await screen.findByRole('slider', { name: /Seek in The house on Carrer Nou/ });
+    const seek = await screen.findByRole('slider', { name: /Seek in Field recording, long take/ });
     await user.click(await screen.findByRole('button', { name: 'Play' }));
     seek.focus();
     // `End` is the design system's own binding for the far end. 48:12 in the fixtures, from the
@@ -111,7 +111,7 @@ describe('the waveform', () => {
     // `ING-14`'s reason for existing: the server reduces on the way out, so the detail view
     // costs a couple of thousand pairs rather than a megabyte for one picture.
     await waitFor(() => {
-      expect(asked.some((url) => url.includes(`/audio/${CARRER_NOU}/waveform?peaks=1200`))).toBe(
+      expect(asked.some((url) => url.includes(`/audio/${FIELD_TAKE}/waveform?peaks=1200`))).toBe(
         true,
       );
     });
@@ -120,25 +120,25 @@ describe('the waveform', () => {
 
 describe('a recording whose peaks job has not run', () => {
   it('says so in this view own words rather than showing an empty box', async () => {
-    renderRecording(NOTA);
+    renderRecording(VOICE_NOTE);
     expect(await screen.findByText(/The waveform is still being made/)).toBeInTheDocument();
   });
 
   it('asks for no peaks, because the request would answer 404', async () => {
     const asked: string[] = [];
     server.events.on('request:start', ({ request }) => asked.push(request.url));
-    renderRecording(NOTA);
+    renderRecording(VOICE_NOTE);
     await screen.findByText(/The waveform is still being made/);
     // `has_waveform` is the flag and is on the recording, so the interface never guesses from an
     // empty blob (§3.5).
-    expect(asked.some((url) => url.includes(`/audio/${NOTA}/waveform`))).toBe(false);
+    expect(asked.some((url) => url.includes(`/audio/${VOICE_NOTE}/waveform`))).toBe(false);
   });
 
   it('still says how long it is, and plays', async () => {
     const user = userEvent.setup();
-    renderRecording(NOTA);
+    renderRecording(VOICE_NOTE);
     await user.click(await screen.findByRole('button', { name: 'Play' }));
-    expect(usePlayback.getState().recording?.uuid).toBe(NOTA);
+    expect(usePlayback.getState().recording?.uuid).toBe(VOICE_NOTE);
     expect(screen.getAllByText(/01:48/).length).toBeGreaterThan(0);
   });
 });

@@ -9,9 +9,9 @@
  * things it is editing.
  *
  * **The canonical name wins over the typed one.** The backend normalises a tag to match it and
- * the first writer owns its display name, so if `memòria` already exists, somebody typing
+ * the first writer owns its display name, so if `field` already exists, somebody typing
  * `Memoria` gets the tag that is already there under the spelling it already has. Otherwise
- * `Memòria` and `memòria` are one tag whose displayed name is whichever spelling was saved last,
+ * `Interview` and `field` are one tag whose displayed name is whichever spelling was saved last,
  * which is a name that changes under people who did not touch it.
  *
  * **A tag nobody has used yet is still allowed.** The suggestions are what exists; the field is

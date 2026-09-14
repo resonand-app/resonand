@@ -1,7 +1,7 @@
 Something finished while you were looking somewhere else: a bulk outcome, an upload, a background failure.
 
 ```jsx
-<Toast onDismiss={dismiss}>12 recordings moved to Àvia Teresa</Toast>
+<Toast onDismiss={dismiss}>12 recordings moved to Field recordings</Toast>
 
 <Toast tone="failed" actions={<React.Fragment><Button variant="secondary">Retry 3</Button><Button variant="ghost">Dismiss</Button></React.Fragment>}>
   9 moved, 3 failed. The three that failed are still selected.

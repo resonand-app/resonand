@@ -68,7 +68,7 @@ describe('where it sends', () => {
     // a union. Joined into one string it would filter for a state called "none,done".
     fetchMock.mockResolvedValue(answer(200, { items: [], total: 0, limit: 50, offset: 0 }));
     await get('/api/search', {
-      query: { q: 'vermut', transcription_state: ['none', 'done'] },
+      query: { q: 'rehearsal', transcription_state: ['none', 'done'] },
     });
     const query = madeRequest().url.split('?')[1];
     expect(query).toContain('transcription_state=none');
@@ -79,16 +79,16 @@ describe('where it sends', () => {
     // "any state" and "state: none" are different questions, and an empty parameter asks the
     // second one.
     fetchMock.mockResolvedValue(answer(200, { items: [], total: 0, limit: 50, offset: 0 }));
-    await get('/api/search', { query: { q: 'vermut', category_id: null, limit: undefined } });
-    expect(madeRequest().url).toBe('/api/search?q=vermut');
+    await get('/api/search', { query: { q: 'rehearsal', category_id: null, limit: undefined } });
+    expect(madeRequest().url).toBe('/api/search?q=rehearsal');
   });
 
   it('sends a body as JSON, and says so', async () => {
     fetchMock.mockResolvedValue(answer(200, {}));
-    await patch('/api/auth/me', { body: { display_name: 'Gabriel' } });
+    await patch('/api/auth/me', { body: { display_name: 'Alex Morgan' } });
     const { init } = madeRequest();
     expect(init.method).toBe('PATCH');
-    expect(init.body).toBe('{"display_name":"Gabriel"}');
+    expect(init.body).toBe('{"display_name":"Alex Morgan"}');
     expect(init.headers).toMatchObject({ 'content-type': 'application/json' });
   });
 

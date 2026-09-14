@@ -90,7 +90,7 @@ def test_a_client_route_the_server_never_heard_of_serves_the_shell(serving: Fast
         "/library/8e29d6b4-0000-0000-0000-000000000000",
         "/library/8e29d6b4-0000-0000-0000-000000000000/settings",
         "/recording/8e29d6b4-0000-0000-0000-000000000000",
-        "/search?q=vermut",
+        "/search?q=rehearsal",
         "/trash",
         "/settings",
     ],

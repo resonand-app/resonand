@@ -13,7 +13,7 @@ import { ApiProblem } from '@/api/problem';
 
 import openapi from '@/api/contract/openapi.json';
 
-import { AVIA, CANCONS, CARRER_NOU, PERSONAL, archive } from './archive';
+import { RECORDINGS, REHEARSAL, FIELD_TAKE, PERSONAL, archive } from './archive';
 import { handlers } from './handlers';
 import { mockApi } from './server';
 
@@ -51,13 +51,13 @@ describe('coverage', () => {
 describe('what a view sees', () => {
   it('answers a real call through the real client', async () => {
     const libraries = await get('/api/libraries');
-    expect(libraries.map((one) => one.name)).toContain('Àvia Teresa');
+    expect(libraries.map((one) => one.name)).toContain('Field recordings');
   });
 
   it('carries the fixtures the views were designed against', async () => {
     // Accents, a library somebody else owns, and all four transcription states at once.
     const page = await get('/api/libraries/{library_uuid}/audio', {
-      path: { library_uuid: AVIA },
+      path: { library_uuid: RECORDINGS },
     });
     expect(page.total).toBe(3);
     const states = new Set(archive.recordings.map((one) => one.transcription_state));
@@ -66,11 +66,11 @@ describe('what a view sees', () => {
 
   it('remembers a change, so a mutation test can re-read the list', async () => {
     await patch('/api/audio/{audio_uuid}', {
-      path: { audio_uuid: CARRER_NOU },
-      body: { clear_category: false, title: 'La casa del carrer Nou' },
+      path: { audio_uuid: FIELD_TAKE },
+      body: { clear_category: false, title: 'A renamed recording' },
     });
-    const again = await get('/api/audio/{audio_uuid}', { path: { audio_uuid: CARRER_NOU } });
-    expect(again.title).toBe('La casa del carrer Nou');
+    const again = await get('/api/audio/{audio_uuid}', { path: { audio_uuid: FIELD_TAKE } });
+    expect(again.title).toBe('A renamed recording');
   });
 
   it('refuses the way the API refuses', async () => {
@@ -84,7 +84,7 @@ describe('what a view sees', () => {
 
   it('answers 409 when a transcription is already running, which is a state and not an error', async () => {
     const problem = (await post('/api/audio/{audio_uuid}/transcribe', {
-      path: { audio_uuid: CANCONS },
+      path: { audio_uuid: REHEARSAL },
       body: { language: null },
     }).catch((error: unknown) => error)) as ApiProblem;
     expect(problem.isConflict).toBe(true);
@@ -100,8 +100,8 @@ describe('what a view sees', () => {
   });
 
   it('starts each test from the same archive', () => {
-    expect(archive.recordings.find((one) => one.uuid === CARRER_NOU)?.title).toBe(
-      'The house on Carrer Nou',
+    expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.title).toBe(
+      'Field recording, long take',
     );
   });
 });

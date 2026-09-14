@@ -17,7 +17,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { ASSAIG, CARRER_NOU, NADAL, archive } from '@/test/api/archive';
+import { INTERVIEW, FIELD_TAKE, CASSETTE, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -31,7 +31,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function renderRecording(uuid: string = CARRER_NOU) {
+function renderRecording(uuid: string = FIELD_TAKE) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -66,15 +66,15 @@ describe('correcting a field', () => {
   it('saves the title when the field is left, with no Save button anywhere', async () => {
     const user = userEvent.setup();
     renderRecording();
-    const title = await screen.findByRole('button', { name: /The house on Carrer Nou/ });
+    const title = await screen.findByRole('button', { name: /Field recording, long take/ });
     await user.click(title);
     const field = screen.getByRole('textbox', { name: 'Title' });
     await user.clear(field);
-    await user.type(field, 'The house on Carrer Nou, 1998');
+    await user.type(field, 'Field recording, long take, 1998');
     await user.tab();
     await waitFor(() => {
       expect(
-        screen.getByRole('heading', { name: 'The house on Carrer Nou, 1998' }),
+        screen.getByRole('heading', { name: 'Field recording, long take, 1998' }),
       ).toBeInTheDocument();
     });
     // The panel is a caption being corrected, not a form being submitted (`UI-34l`).
@@ -128,11 +128,13 @@ describe('correcting a field', () => {
     const user = userEvent.setup();
     const bodies = recorded();
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: /The house on Carrer Nou/ }));
+    await user.click(await screen.findByRole('button', { name: /Field recording, long take/ }));
     await user.clear(screen.getByRole('textbox', { name: 'Title' }));
     await user.tab();
     expect(bodies).toEqual([]);
-    expect(await screen.findByRole('heading', { name: 'The house on Carrer Nou' })).toBeVisible();
+    expect(
+      await screen.findByRole('heading', { name: 'Field recording, long take' }),
+    ).toBeVisible();
   });
 });
 
@@ -146,14 +148,14 @@ describe('when it was recorded', () => {
   });
 
   it('says the date came from the file own date, which is not the recording own', async () => {
-    renderRecording(ASSAIG);
+    renderRecording(INTERVIEW);
     // A file's modification time is when the file was written. For a cassette digitised decades
     // later that is the digitisation, and the archive says so rather than making the claim.
     expect(await screen.findByText('From the file date')).toBeInTheDocument();
   });
 
   it('says plainly when the date shown is the upload own', async () => {
-    renderRecording(NADAL);
+    renderRecording(CASSETTE);
     expect(await screen.findByText('From the upload, not the recording')).toBeInTheDocument();
   });
 });
@@ -161,20 +163,20 @@ describe('when it was recorded', () => {
 describe('a recording somebody can only read', () => {
   it('draws the fields as facts rather than as disabled controls', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
     );
     renderRecording();
-    await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    await screen.findByRole('heading', { name: 'Field recording, long take' });
     // No box, no pencil, no greyed-out input: §3.5's read-only state, which has to look
     // intentional. A disabled row of fields reads as a bug.
-    expect(screen.queryByRole('button', { name: /The house on Carrer Nou/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Field recording, long take/ })).toBeNull();
     expect(document.querySelectorAll('[disabled]')).toHaveLength(0);
     expect(document.querySelector('[data-ds="inline-field-static"]')).not.toBeNull();
   });
 
   it('says so once, quietly, rather than on every field', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
     );
     renderRecording();
     expect(await screen.findByText(/You can read this recording/)).toBeInTheDocument();
@@ -184,7 +186,7 @@ describe('a recording somebody can only read', () => {
   it('is editable again at level 20, which is the whole difference', async () => {
     renderRecording();
     expect(
-      await screen.findByRole('button', { name: /The house on Carrer Nou/ }),
+      await screen.findByRole('button', { name: /Field recording, long take/ }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/You can read this recording/)).toBeNull();
   });
@@ -209,7 +211,7 @@ describe('the category', () => {
     const bodies = recorded();
     renderRecording();
     await user.click(await screen.findByRole('button', { name: /No category/ }));
-    await user.click(await screen.findByRole('radio', { name: 'Converses' }));
+    await user.click(await screen.findByRole('radio', { name: 'Interviews' }));
     await waitFor(() => {
       expect(bodies[0]).toEqual({ category_id: 1 });
     });
@@ -217,12 +219,12 @@ describe('the category', () => {
 
   it('clears it with the flag rather than with a null', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, category_id: 1 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, category_id: 1 } : one,
     );
     const user = userEvent.setup();
     const bodies = recorded();
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: /Converses/ }));
+    await user.click(await screen.findByRole('button', { name: /Interviews/ }));
     await user.click(await screen.findByRole('radio', { name: 'No category' }));
     // In JSON a null and "leave it alone" are the same value, so `clear_category` is the only
     // way "no category" can be said at all (`UI-13c`).
@@ -233,14 +235,14 @@ describe('the category', () => {
 
   it('is a fact rather than a control when it is not yours to change', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10, category_id: 1 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10, category_id: 1 } : one,
     );
     renderRecording();
     // Twice on the screen: the breadcrumb names it as well, and neither of them is a control.
     await waitFor(() => {
-      expect(screen.getAllByText('Converses').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Interviews').length).toBeGreaterThan(0);
     });
-    expect(screen.queryByRole('button', { name: /Converses/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Interviews/ })).toBeNull();
   });
 });
 
@@ -250,10 +252,10 @@ describe('the tags', () => {
     const bodies = recorded();
     renderRecording();
     await user.click(await screen.findByRole('button', { name: 'Add a tag' }));
-    await user.click(await screen.findByRole('button', { name: /família/ }));
+    await user.click(await screen.findByRole('button', { name: /music/ }));
     // The two it already had plus the new one. Sending only the new one would strip the rest.
     await waitFor(() => {
-      expect(bodies[0]).toEqual({ tags: ['memòria', 'català', 'família'] });
+      expect(bodies[0]).toEqual({ tags: ['field', 'outdoor', 'music'] });
     });
   });
 
@@ -262,11 +264,11 @@ describe('the tags', () => {
     const bodies = recorded();
     renderRecording();
     await user.click(await screen.findByRole('button', { name: 'Add a tag' }));
-    await user.type(screen.getByRole('textbox', { name: 'Tag name' }), 'Musica{Enter}');
-    // `música` already exists. The backend normalises to match it and the first writer owns the
-    // display name, so accepting "Musica" would rename somebody else's tag.
+    await user.type(screen.getByRole('textbox', { name: 'Tag name' }), 'Interview{Enter}');
+    // `interview` already exists. The backend normalises to match it and the first writer owns the
+    // display name, so accepting "Interview" would rename somebody else's tag.
     await waitFor(() => {
-      expect(bodies[0]).toEqual({ tags: ['memòria', 'català', 'música'] });
+      expect(bodies[0]).toEqual({ tags: ['field', 'outdoor', 'interview'] });
     });
   });
 
@@ -275,11 +277,11 @@ describe('the tags', () => {
     const bodies = recorded();
     renderRecording();
     await user.click(await screen.findByRole('button', { name: 'Add a tag' }));
-    await user.type(screen.getByRole('textbox', { name: 'Tag name' }), 'Carrer Nou{Enter}');
+    await user.type(screen.getByRole('textbox', { name: 'Tag name' }), 'Field notes{Enter}');
     // The suggestions are what exists, not what is allowed: whoever names a new tag owns its
     // spelling, which is the same rule from the other side.
     await waitFor(() => {
-      expect(bodies[0]).toEqual({ tags: ['memòria', 'català', 'Carrer Nou'] });
+      expect(bodies[0]).toEqual({ tags: ['field', 'outdoor', 'Field notes'] });
     });
   });
 
@@ -287,21 +289,21 @@ describe('the tags', () => {
     const user = userEvent.setup();
     const bodies = recorded();
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: 'Remove the tag memòria' }));
+    await user.click(await screen.findByRole('button', { name: 'Remove the tag field' }));
     await waitFor(() => {
-      expect(bodies[0]).toEqual({ tags: ['català'] });
+      expect(bodies[0]).toEqual({ tags: ['outdoor'] });
     });
   });
 
   it('offers no way to change them on a recording somebody can only read', async () => {
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === CARRER_NOU ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
     );
     renderRecording();
-    await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    await screen.findByRole('heading', { name: 'Field recording, long take' });
     // Absent rather than disabled (§3.5). The tags themselves stay: they are what the recording
     // is filed under, and reading them is the point.
-    expect(screen.getByText('memòria')).toBeInTheDocument();
+    expect(screen.getByText('field')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add a tag' })).toBeNull();
     expect(screen.queryByRole('button', { name: /Remove the tag/ })).toBeNull();
   });
@@ -320,7 +322,7 @@ describe('on a phone', () => {
     renderRecording();
     // No column at all: the transcript needs the full width and it is the reason the screen
     // exists (§V5).
-    await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    await screen.findByRole('heading', { name: 'Field recording, long take' });
     expect(screen.queryByRole('complementary', { name: 'Details' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Details' }));
     const sheet = await screen.findByRole('dialog', { name: 'Details' });
@@ -330,7 +332,7 @@ describe('on a phone', () => {
   it('offers no fold-away control, because there is no column to fold', async () => {
     phone();
     renderRecording();
-    await screen.findByRole('heading', { name: 'The house on Carrer Nou' });
+    await screen.findByRole('heading', { name: 'Field recording, long take' });
     expect(screen.queryByRole('button', { name: 'Hide the details' })).toBeNull();
   });
 });

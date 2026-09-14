@@ -13,18 +13,59 @@ import pytest
 from sonarium.cli.backup import backup_database, storage_note, verify_backup
 from sonarium.core.config import Settings
 from sonarium.core.errors import ConflictError, InvalidRequestError
-from sonarium.db import seed
+from sonarium.db import libraries, transcripts, users
+from sonarium.db.audio import create_audio, trash_audio
 from sonarium.db.engine import Database, build_engine
 from sonarium.db.migrate import migrate_at_startup
 from sonarium.db.models import Audio, Segment
+from sonarium.db.transcripts import SegmentDraft
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+SEGMENTS = [
+    "The first segment of a sample transcript.",
+    "The second segment, so a restore that lost one is visible in the count.",
+    "The third segment, which is the one the search index is asked for.",
+]
+
+
+def populate(session: Session) -> None:
+    """Four recordings, one of them in the trash, and one transcript to index.
+
+    Written out here rather than shared with another test, because what these tests assert is a
+    count: a fixture somebody else could grow would make them pass or fail for a reason that is
+    not in this file.
+    """
+    owner = users.create_user(session, email="owner@example.test", display_name="Owner")
+    library = libraries.create_library(session, owner.id, name="Recordings")
+    made = []
+    for index in range(4):
+        audio = create_audio(
+            session,
+            library_id=library.id,
+            uploaded_by=owner.id,
+            storage_path=f"storage/aa/{index}/original.m4a",
+            original_filename=f"recording-{index}.m4a",
+        )
+        audio.duration_ms = 60_000 * (index + 1)
+        made.append(audio)
+    session.flush()
+    transcripts.create_transcript(
+        session,
+        made[0].id,
+        [
+            SegmentDraft(index * 1000, index * 1000 + 900, line)
+            for index, line in enumerate(SEGMENTS)
+        ],
+    )
+    trash_audio(session, owner.id, made[-1].uuid)
 
 
 @pytest.fixture
 def populated(database: Database, db_settings: Settings) -> Settings:
     """An instance with a real archive in it."""
     with database.write_session() as session:
-        seed.seed(session)
+        populate(session)
     return db_settings
 
 
@@ -58,7 +99,7 @@ def test_a_backup_is_never_overwritten(populated: Settings, tmp_path: Path) -> N
 def test_a_backup_is_opened_as_part_of_being_taken(populated: Settings, tmp_path: Path) -> None:
     """A backup nobody has opened is a file, not a backup."""
     result = backup_database(populated, tmp_path / "backup.sqlite")
-    assert verify_backup(result.path) == 4, "every seeded recording, the trashed one included"
+    assert verify_backup(result.path) == 4, "every recording, the trashed one included"
 
 
 def test_a_corrupt_backup_is_not_reported_as_a_backup(tmp_path: Path) -> None:
@@ -119,7 +160,7 @@ def test_the_search_index_survives_a_restore(populated: Settings, tmp_path: Path
     try:
         with engine.connect() as connection:
             found = connection.execute(
-                text("SELECT count(*) FROM segment_fts WHERE segment_fts MATCH 'factory'")
+                text("SELECT count(*) FROM segment_fts WHERE segment_fts MATCH 'segment'")
             ).scalar_one()
     finally:
         engine.dispose()
@@ -141,7 +182,7 @@ def test_upgrading_a_populated_database_loses_nothing(tmp_path: Path) -> None:
     database = Database(engine)
     try:
         with database.write_session() as session:
-            seed.seed(session)
+            populate(session)
         with database.read_session() as session:
             before_audio = session.query(Audio).count()
             before_segments = session.query(Segment).count()

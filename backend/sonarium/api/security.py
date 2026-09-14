@@ -38,7 +38,7 @@ def hash_password(password: str) -> str:
 def verify_password(password_hash: str | None, password: str) -> bool:
     """Check a password against its hash, in constant time as far as the library allows.
 
-    An account with no password hash -- one that only signs in through OIDC, or a seeded one --
+    An account with no password hash -- one that only signs in through OIDC --
     verifies as false rather than raising, so the sign-in path has one shape for every failure and
     cannot be used to find out which accounts have local passwords.
     """

@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toLibrarySettings } from '@/app/routes';
-import { AVIA, PERSONAL, archive } from '@/test/api/archive';
+import { RECORDINGS, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { LibrarySettingsView } from '../LibrarySettingsView';
@@ -22,7 +22,7 @@ function Where() {
   return <div data-testid="where">{location.pathname}</div>;
 }
 
-function show(uuid: string = AVIA) {
+function show(uuid: string = RECORDINGS) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -63,7 +63,7 @@ describe('trashing a library', () => {
     await waitFor(() => {
       expect(screen.getByTestId('where')).toHaveTextContent(routes.libraries);
     });
-    expect(archive.libraries.find((one) => one.uuid === AVIA)?.deleted_at).not.toBeNull();
+    expect(archive.libraries.find((one) => one.uuid === RECORDINGS)?.deleted_at).not.toBeNull();
   });
 
   it('is not offered at all for the personal library', async () => {

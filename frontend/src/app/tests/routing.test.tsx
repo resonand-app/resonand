@@ -14,7 +14,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 
 import { createQueryClient } from '@/api/query-client';
 
-import { AVIA, CARRER_NOU } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 import { NotBuiltYet } from '../shell/NotBuiltYet';
 import { NotFound } from '../shell/NotFound';
@@ -81,10 +81,10 @@ function signedOut() {
 describe('the eight routes', () => {
   it.each([
     ['the libraries landing', routes.libraries, 'V2'],
-    ['a library', toLibrary(AVIA), 'V3'],
-    ["a library's settings", toLibrarySettings(AVIA), 'V7'],
-    ['a recording', toRecording(CARRER_NOU), 'V5'],
-    ['search', toSearch('vermut'), 'V6'],
+    ['a library', toLibrary(RECORDINGS), 'V3'],
+    ["a library's settings", toLibrarySettings(RECORDINGS), 'V7'],
+    ['a recording', toRecording(FIELD_TAKE), 'V5'],
+    ['search', toSearch('rehearsal'), 'V6'],
     ['the trash', routes.trash, 'V9'],
     ['settings', routes.settings, 'V10'],
   ])('reaches %s', async (_name, path, view) => {
@@ -93,16 +93,16 @@ describe('the eight routes', () => {
   });
 
   it('builds a path rather than letting a view write one', () => {
-    expect(toLibrary(AVIA)).toBe(`/library/${AVIA}`);
-    expect(toRecording(CARRER_NOU)).toBe(`/recording/${CARRER_NOU}`);
-    expect(toLibrarySettings(AVIA)).toBe(`/library/${AVIA}/settings`);
+    expect(toLibrary(RECORDINGS)).toBe(`/library/${RECORDINGS}`);
+    expect(toRecording(FIELD_TAKE)).toBe(`/recording/${FIELD_TAKE}`);
+    expect(toLibrarySettings(RECORDINGS)).toBe(`/library/${RECORDINGS}/settings`);
   });
 
   it('keeps the filters already set when the query changes', () => {
-    const filters = new URLSearchParams({ transcription_state: 'done', library: AVIA });
-    const built = toSearch('carrer nou', filters);
+    const filters = new URLSearchParams({ transcription_state: 'done', library: RECORDINGS });
+    const built = toSearch('field recording', filters);
     const parameters = new URLSearchParams(built.split('?')[1]);
-    expect(parameters.get('q')).toBe('carrer nou');
+    expect(parameters.get('q')).toBe('field recording');
     expect(parameters.get('transcription_state')).toBe('done');
   });
 
@@ -134,7 +134,7 @@ describe('the guard', () => {
 
   it('remembers where they were going, so the link they followed still works', async () => {
     signedOut();
-    renderAt(toRecording(CARRER_NOU));
+    renderAt(toRecording(FIELD_TAKE));
     await waitFor(() => {
       expect(screen.getByTestId('where')).toHaveTextContent(routes.signIn);
     });
@@ -163,11 +163,11 @@ describe('which recording a path is showing', () => {
   it('answers the uuid, so the player bar can drop its waveform', () => {
     // The shell asks this and hands it to the bar: two waveforms at two scales drifting a frame
     // apart is what makes people believe there are two players (§3.1).
-    expect(recordingIn(toRecording(CARRER_NOU))).toBe(CARRER_NOU);
+    expect(recordingIn(toRecording(FIELD_TAKE))).toBe(FIELD_TAKE);
   });
 
   it('answers nothing anywhere else, including the library it came from', () => {
-    expect(recordingIn(toLibrary(AVIA))).toBeUndefined();
+    expect(recordingIn(toLibrary(RECORDINGS))).toBeUndefined();
     expect(recordingIn(routes.libraries)).toBeUndefined();
     expect(recordingIn(routes.search)).toBeUndefined();
   });

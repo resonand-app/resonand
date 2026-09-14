@@ -11,14 +11,14 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toLibrarySettings } from '@/app/routes';
-import { ATENEU, AVIA, archive } from '@/test/api/archive';
+import { MEETINGS, RECORDINGS, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { LibrarySettingsView } from '../LibrarySettingsView';
 
 mockApi();
 
-function show(uuid: string = AVIA) {
+function show(uuid: string = RECORDINGS) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -38,9 +38,9 @@ describe('getting back to the library', () => {
     const where = await screen.findByRole('navigation', {
       name: 'The library these settings belong to',
     });
-    expect(within(where).getByRole('link', { name: 'Àvia Teresa' })).toHaveAttribute(
+    expect(within(where).getByRole('link', { name: 'Field recordings' })).toHaveAttribute(
       'href',
-      `/library/${AVIA}`,
+      `/library/${RECORDINGS}`,
     );
   });
 });
@@ -48,14 +48,14 @@ describe('getting back to the library', () => {
 describe('what the library is called', () => {
   it('renames it on blur, with no Save button to forget', async () => {
     show();
-    await userEvent.click(await screen.findByRole('button', { name: /Àvia Teresa/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /Field recordings/ }));
     const field = screen.getByRole('textbox', { name: 'Name' });
     await userEvent.clear(field);
-    await userEvent.type(field, 'Àvia Teresa i família');
+    await userEvent.type(field, 'Field recordings i music');
     await userEvent.tab();
     await waitFor(() => {
-      expect(archive.libraries.find((one) => one.uuid === AVIA)?.name).toBe(
-        'Àvia Teresa i família',
+      expect(archive.libraries.find((one) => one.uuid === RECORDINGS)?.name).toBe(
+        'Field recordings i music',
       );
     });
   });
@@ -74,11 +74,11 @@ describe('what the library is called', () => {
         }),
       ),
     );
-    show(ATENEU);
+    show(MEETINGS);
     // The name is text on the page under an overline, not a control: `InlineField` draws
     // read-only as a fact rather than as a disabled box.
-    await screen.findByRole('heading', { name: 'Reunions Ateneu' });
-    expect(screen.queryByRole('button', { name: /Reunions Ateneu/ })).not.toBeInTheDocument();
+    await screen.findByRole('heading', { name: 'Meetings' });
+    expect(screen.queryByRole('button', { name: /Meetings/ })).not.toBeInTheDocument();
     // No colour picker at all: an unavailable action is absent, not disabled.
     expect(screen.queryByText(/appears in the sidebar/i)).not.toBeInTheDocument();
   });

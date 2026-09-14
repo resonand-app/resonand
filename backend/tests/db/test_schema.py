@@ -136,9 +136,9 @@ def test_two_casings_of_one_address_collide_on_the_key_not_the_display_form(
 ) -> None:
     """DEC-15: UNIQUE on the typed address would make these two accounts."""
     with db_engine.begin() as connection:
-        insert_user(connection, email="Gabriel@example.test")
+        insert_user(connection, email="Alex@example.test")
         with pytest.raises(IntegrityError):
-            insert_user(connection, email="gabriel@example.test")
+            insert_user(connection, email="alex@example.test")
 
 
 def test_the_typed_form_may_repeat_when_the_key_does_not(db_engine: Engine) -> None:

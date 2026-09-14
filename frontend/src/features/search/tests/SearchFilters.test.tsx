@@ -10,7 +10,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toSearch } from '@/app/routes';
-import { AVIA } from '@/test/api/archive';
+import { RECORDINGS } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { SearchFilters } from '../SearchFilters';
@@ -22,7 +22,7 @@ function Where() {
   return <div data-testid="where">{location.search}</div>;
 }
 
-function show(at: string = toSearch('vermut')) {
+function show(at: string = toSearch('rehearsal')) {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -47,20 +47,20 @@ describe('the filters', () => {
   it('narrows to one library, and writes it into the URL', async () => {
     show();
     await userEvent.click(await screen.findByRole('combobox', { name: /which library/i }));
-    await userEvent.click(await screen.findByRole('option', { name: 'Àvia Teresa' }));
-    expect(screen.getByTestId('where')).toHaveTextContent(`library=${AVIA}`);
+    await userEvent.click(await screen.findByRole('option', { name: 'Field recordings' }));
+    expect(screen.getByTestId('where')).toHaveTextContent(`library=${RECORDINGS}`);
   });
 
   it('offers no category until a library is chosen, because a category belongs to one', async () => {
     show();
     expect(screen.queryByRole('button', { name: /category/i })).not.toBeInTheDocument();
     await userEvent.click(await screen.findByRole('combobox', { name: /which library/i }));
-    await userEvent.click(await screen.findByRole('option', { name: 'Àvia Teresa' }));
+    await userEvent.click(await screen.findByRole('option', { name: 'Field recordings' }));
     expect(await screen.findByRole('button', { name: /category/i })).toBeInTheDocument();
   });
 
   it('drops the category when the library changes, since the id means nothing there', async () => {
-    show(`${toSearch('vermut')}&library=${AVIA}&category_id=1`);
+    show(`${toSearch('rehearsal')}&library=${RECORDINGS}&category_id=1`);
     await userEvent.click(await screen.findByRole('combobox', { name: /which library/i }));
     await userEvent.click(await screen.findByRole('option', { name: 'Any library' }));
     expect(screen.getByTestId('where')).not.toHaveTextContent('category_id');
@@ -74,7 +74,7 @@ describe('the filters', () => {
   });
 
   it('says how many of the four range fields are set, since they are behind a popover', async () => {
-    show(`${toSearch('vermut')}&recorded_from=2026-01-01`);
+    show(`${toSearch('rehearsal')}&recorded_from=2026-01-01`);
     expect(await screen.findByRole('button', { name: /when and how long \(1\)/i })).toBeVisible();
   });
 

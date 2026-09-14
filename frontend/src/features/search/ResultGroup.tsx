@@ -35,7 +35,7 @@ export interface ResultMatch {
 
 export interface ResultGroupProps {
   title: string;
-  /** Library and date, mono: "Àvia Teresa · 12 Mar 2026". */
+  /** Library and date, mono: "Field recordings · 12 Mar 2026". */
   meta?: string;
   state?: TranscriptionState;
   /** The matches for this recording, in time order. */

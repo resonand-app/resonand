@@ -14,9 +14,9 @@ import { post } from '@/api/client';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import {
-  CARRER_NOU,
+  FIELD_TAKE,
   LOGIN_ATTEMPTS_PER_MINUTE,
-  MARTA,
+  SAM,
   NOBODY,
   PASSWORD,
   archive,
@@ -118,7 +118,7 @@ describe('there is no way to make an account here', () => {
 
 describe('where signing in leads', () => {
   it('returns to the link somebody followed rather than to the landing page', async () => {
-    show(toRecording(CARRER_NOU));
+    show(toRecording(FIELD_TAKE));
     await signIn(archive.me.email, PASSWORD);
     expect(await screen.findByText('the recording')).toBeVisible();
   });
@@ -134,7 +134,7 @@ describe('where signing in leads', () => {
     // an open redirect written by whoever last linked to this screen.
     expect(intended({ from: '//evil.example' })).toBe(routes.libraries);
     expect(intended({ from: 'https://evil.example' })).toBe(routes.libraries);
-    expect(intended({ from: '/search?q=vermut' })).toBe('/search?q=vermut');
+    expect(intended({ from: '/search?q=rehearsal' })).toBe('/search?q=rehearsal');
   });
 });
 
@@ -150,8 +150,8 @@ describe('the first run', () => {
     expect(await screen.findByRole('heading', { name: 'Create the first account' })).toBeVisible();
     expect(screen.getByText(/will be the administrator/i)).toBeVisible();
 
-    await userEvent.type(screen.getByLabelText('Display name'), 'Gabriel');
-    await userEvent.type(screen.getByLabelText('Email'), 'gabriel@example.test');
+    await userEvent.type(screen.getByLabelText('Display name'), 'Alex Morgan');
+    await userEvent.type(screen.getByLabelText('Email'), 'alex@example.test');
     await userEvent.type(screen.getByLabelText('Password'), PASSWORD);
     await userEvent.click(screen.getByRole('button', { name: 'Create the account' }));
 
@@ -169,8 +169,8 @@ describe('the first run', () => {
     empty();
     show();
     await screen.findByRole('heading', { name: 'Create the first account' });
-    await userEvent.type(screen.getByLabelText('Display name'), 'Gabriel');
-    await userEvent.type(screen.getByLabelText('Email'), 'gabriel@example.test');
+    await userEvent.type(screen.getByLabelText('Display name'), 'Alex Morgan');
+    await userEvent.type(screen.getByLabelText('Email'), 'alex@example.test');
     await userEvent.type(
       screen.getByLabelText('Password'),
       'a'.repeat(MINIMUM_PASSWORD_LENGTH - 1),
@@ -215,7 +215,7 @@ describe('the four states', () => {
     const refused: [address: string, password: string][] = [
       [NOBODY, PASSWORD],
       [archive.me.email, 'not-the-password'],
-      [MARTA.email, PASSWORD],
+      [SAM.email, PASSWORD],
     ];
     for (const [address, password] of refused) {
       const { unmount } = show();

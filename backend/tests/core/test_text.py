@@ -9,9 +9,9 @@ from sonarium.core.text import clean_title, normalise_email, normalise_slug
 @pytest.mark.parametrize(
     ("typed", "key"),
     [
-        ("Gabriel@example.com", "gabriel@example.com"),
-        ("  gabriel@example.com  ", "gabriel@example.com"),
-        ("GABRIEL@EXAMPLE.COM", "gabriel@example.com"),
+        ("Alex@example.com", "alex@example.com"),
+        ("  alex@example.com  ", "alex@example.com"),
+        ("ALEX@EXAMPLE.COM", "alex@example.com"),
     ],
 )
 def test_two_casings_of_one_address_are_one_account(typed: str, key: str) -> None:
@@ -52,7 +52,7 @@ def test_a_non_latin_tag_keeps_its_own_letters() -> None:
     [
         ("Recording 2024-03-11 18.22.m4a", "Recording 2024-03-11 18.22"),
         ("PTT-20240311-WA0007.opus", "PTT-20240311-WA0007"),
-        ("avia_fabrica.mp3", "avia fabrica"),
+        ("voice_memo_02.mp3", "voice memo 02"),
         ("no-extension", "no-extension"),
         (".hidden", ".hidden"),
     ],

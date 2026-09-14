@@ -20,7 +20,7 @@ import type { HttpHandler } from 'msw';
 
 import type { components } from '@/api/contract/schema';
 
-import { GABRIEL, LOGIN_ATTEMPTS_PER_MINUTE, MARTA, archive, detailOf } from './archive';
+import { ALEX, LOGIN_ATTEMPTS_PER_MINUTE, SAM, archive, detailOf } from './archive';
 
 type Schemas = components['schemas'];
 
@@ -206,7 +206,7 @@ export const handlers: HttpHandler[] = [
       deleted_at: null,
       is_personal: false,
       level: 40,
-      owner: GABRIEL,
+      owner: ALEX,
       audio_count: 0,
       total_duration_ms: 0,
     };
@@ -349,7 +349,7 @@ export const handlers: HttpHandler[] = [
     const key = String(params.library_uuid);
     const existing = archive.shares[key] ?? [];
     const made: Schemas['ShareSummary'] = {
-      grantee: { id: body.grantee_id, display_name: 'Marta', email: 'marta@example.test' },
+      grantee: { id: body.grantee_id, display_name: 'Sam Rivera', email: 'sam@example.test' },
       level: body.level,
       level_description: 'Can edit: change titles, categories and tags, but not share.',
       granted_by: archive.me.id,
@@ -372,7 +372,7 @@ export const handlers: HttpHandler[] = [
     return new HttpResponse(null, { status: 204 });
   }),
 
-  // --- Recordings -----------------------------------------------------------
+  // --- Field recordings -----------------------------------------------------------
 
   http.get('/api/audio', ({ request }) => {
     const url = new URL(request.url);
@@ -498,7 +498,11 @@ export const handlers: HttpHandler[] = [
       audio,
       total_matches: 2,
       matches: [
-        { kind: 'transcript', fragment: '…la casa del carrer Nou…', start_ms: 1_084_000 },
+        {
+          kind: 'transcript',
+          fragment: '…the third segment mentions rehearsal…',
+          start_ms: 1_084_000,
+        },
         { kind: 'title', fragment: audio.title, start_ms: null },
       ],
     }));
@@ -515,7 +519,7 @@ export const handlers: HttpHandler[] = [
     // feature that uses it untestable.
     //
     // Matched against the slug, as `suggest_tags` does: it normalises the prefix and compares it
-    // to `tag.slug`, so typing `Musica` finds `música`. A mock that compared names would answer
+    // to `tag.slug`, so typing `Musica` finds `interview`. A mock that compared names would answer
     // nothing there, and `UI-13c`'s canonical-name rule -- the whole reason the suggestion is
     // preferred over what was typed -- could not be tested at all.
     const prefix = fold(new URL(request.url).searchParams.get('prefix') ?? '');
@@ -565,7 +569,7 @@ export const handlers: HttpHandler[] = [
     // Full address only, at most one result: a prefix search would let any library manager
     // enumerate the instance (`API-15`).
     const email = new URL(request.url).searchParams.get('email')?.toLowerCase();
-    const people = [GABRIEL, MARTA];
+    const people = [ALEX, SAM];
     return HttpResponse.json(people.filter((one) => one.email.toLowerCase() === email));
   }),
 

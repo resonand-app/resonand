@@ -17,7 +17,7 @@ import { describe, expect, it } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { toLibrary } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
-import { ATENEU, AVIA, PERSONAL, archive } from '@/test/api/archive';
+import { MEETINGS, RECORDINGS, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { LibrariesView } from '../LibrariesView';
@@ -92,46 +92,48 @@ describe('the grid', () => {
   it('shows the libraries this account owns, personal first', async () => {
     renderView();
     const personal = await screen.findByRole('heading', { name: 'Personal' });
-    const avia = screen.getByRole('heading', { name: 'Àvia Teresa' });
+    const avia = screen.getByRole('heading', { name: 'Field recordings' });
     expect(personal.compareDocumentPosition(avia)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('leaves what somebody else owns out of this grid', async () => {
     renderView();
     await screen.findByRole('heading', { name: 'Personal' });
-    // `Reunions Ateneu` is Marta's. It has a group of its own (`UI-31c`) and is not one of these.
-    expect(within(gridOf()).queryByText('Reunions Ateneu')).toBeNull();
+    // `Meetings` is Sam Rivera's. It has a group of its own (`UI-31c`) and is not one of these.
+    expect(within(gridOf()).queryByText('Meetings')).toBeNull();
   });
 });
 
 describe('a card', () => {
   it('carries the name, the count and the total, all from one list request', async () => {
     renderView();
-    const card = await cardFor('Àvia Teresa');
+    const card = await cardFor('Field recordings');
     expect(within(card).getByText(/3 recordings/)).toBeInTheDocument();
     expect(within(card).getByText(/2.h.04.min/u)).toBeInTheDocument();
   });
 
   it('opens the library from the title, by keyboard', async () => {
     renderView();
-    const card = await cardFor('Àvia Teresa');
+    const card = await cardFor('Field recordings');
     // A link, so it is in the tab order, announced as a link, and openable in a new tab. The
     // click handler over the whole card is the mouse convenience, not the affordance.
-    expect(within(card).getByRole('link', { name: 'Àvia Teresa' })).toHaveAttribute(
+    expect(within(card).getByRole('link', { name: 'Field recordings' })).toHaveAttribute(
       'href',
-      `/library/${AVIA}`,
+      `/library/${RECORDINGS}`,
     );
   });
 
   it('names the overflow control after the library it belongs to', async () => {
     renderView();
-    const card = await cardFor('Àvia Teresa');
-    expect(within(card).getByRole('button', { name: 'Options for Àvia Teresa' })).toBeVisible();
+    const card = await cardFor('Field recordings');
+    expect(
+      within(card).getByRole('button', { name: 'Options for Field recordings' }),
+    ).toBeVisible();
   });
 
   it('draws no waveform: the shape of one recording is not a fact about the library', async () => {
     renderView();
-    const card = await cardFor('Àvia Teresa');
+    const card = await cardFor('Field recordings');
     expect(card.querySelector('[data-ds="waveform"]')).toBeNull();
   });
 
@@ -139,10 +141,10 @@ describe('a card', () => {
     const asked: string[] = [];
     server.events.on('request:start', ({ request }) => asked.push(request.url));
     renderView();
-    await cardFor('Àvia Teresa');
+    await cardFor('Field recordings');
     await cardFor('Personal');
     // Neither of the two the waveform cost: which recording is the most recent, then its peaks.
-    expect(asked.some((url) => url.includes(`/libraries/${AVIA}/audio`))).toBe(false);
+    expect(asked.some((url) => url.includes(`/libraries/${RECORDINGS}/audio`))).toBe(false);
     expect(asked.some((url) => url.includes(`/libraries/${PERSONAL}/audio`))).toBe(false);
     expect(asked.some((url) => url.includes('/waveform'))).toBe(false);
   });
@@ -152,20 +154,20 @@ describe('the shared group', () => {
   it('is titled separately and holds what somebody else owns', async () => {
     renderView();
     const group = await screen.findByRole('heading', { name: /Shared with you/i });
-    const ateneu = await screen.findByRole('heading', { name: 'Reunions Ateneu' });
-    expect(group.compareDocumentPosition(ateneu)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    const meetings = await screen.findByRole('heading', { name: 'Meetings' });
+    expect(group.compareDocumentPosition(meetings)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('names the owner and what you may do there', async () => {
     renderView();
-    const card = await cardFor('Reunions Ateneu');
+    const card = await cardFor('Meetings');
     // Level 20 in the fixtures. The short name, not the API's whole sentence -- that one is for
     // the sharing panel, where somebody is deciding what to grant.
-    expect(within(card).getByText('Marta · Can edit')).toBeInTheDocument();
+    expect(within(card).getByText('Sam Rivera · Can edit')).toBeInTheDocument();
   });
 
   it('is absent entirely when nobody has shared anything', async () => {
-    archive.libraries = archive.libraries.filter((one) => one.uuid !== ATENEU);
+    archive.libraries = archive.libraries.filter((one) => one.uuid !== MEETINGS);
     renderView();
     await screen.findByRole('heading', { name: 'Personal' });
     // Absent, not empty: a group saying nobody has shared anything with you is a thing to read

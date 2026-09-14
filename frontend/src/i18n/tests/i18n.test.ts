@@ -29,7 +29,7 @@ describe('the base language', () => {
   it('does not escape what React is going to escape anyway', () => {
     // Otherwise an apostrophe in a library's name arrives as `&#39;`.
     const i18n = createI18n(BASE);
-    expect(i18n.t('time.notItsOwn', { date: "L'Ateneu" })).toContain("L'Ateneu");
+    expect(i18n.t('time.notItsOwn', { date: "Alex's archive" })).toContain("Alex's archive");
   });
 });
 

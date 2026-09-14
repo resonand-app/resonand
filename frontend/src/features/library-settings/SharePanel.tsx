@@ -20,7 +20,7 @@
  * name where it has no sentence.
  *
  * **Revoking says what the person loses, in numbers.** "Are you sure?" is not a consequence;
- * "Marta loses access to all 41 recordings" is.
+ * "Sam Rivera loses access to all 41 recordings" is.
  *
  * **Adding somebody takes a whole address and nothing shorter** (`UI-17d`, `API-15`). The lookup
  * matches the full normalised email and answers with at most one account, because a prefix or a

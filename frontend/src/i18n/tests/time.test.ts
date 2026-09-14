@@ -11,7 +11,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { daysLeft, instant, recordedAt, relative, wallClock } from '../time';
 
 /** A recording made at half six on a March evening, with the offset genuinely known. */
-const CARRER_NOU = {
+const FIELD_TAKE = {
   recorded_at: '2026-03-12T18:22:00',
   recorded_at_offset: 60,
   recorded_at_source: 'container',
@@ -19,7 +19,7 @@ const CARRER_NOU = {
 };
 
 /** A digitised cassette: nobody knows when it was recorded, only when it arrived. */
-const NADAL = {
+const CASSETTE = {
   recorded_at: null,
   recorded_at_offset: null,
   recorded_at_source: null,
@@ -37,7 +37,7 @@ describe("a recording's own time", () => {
     const rendered = new Set<string>();
     for (const zone of ['Europe/Madrid', 'America/Santiago', 'Pacific/Auckland', 'UTC']) {
       vi.stubEnv('TZ', zone);
-      rendered.add(recordedAt(CARRER_NOU, 'en-GB').text);
+      rendered.add(recordedAt(FIELD_TAKE, 'en-GB').text);
     }
     expect(rendered.size).toBe(1);
     expect([...rendered][0]).toContain('18:22');
@@ -49,21 +49,21 @@ describe("a recording's own time", () => {
   });
 
   it('carries where the date came from, which is provenance and not a warning', () => {
-    expect(recordedAt(CARRER_NOU).provenance).toBe('container');
-    expect(recordedAt({ ...CARRER_NOU, recorded_at_source: 'filesystem' }).provenance).toBe(
+    expect(recordedAt(FIELD_TAKE).provenance).toBe('container');
+    expect(recordedAt({ ...FIELD_TAKE, recorded_at_source: 'filesystem' }).provenance).toBe(
       'filesystem',
     );
-    expect(recordedAt({ ...CARRER_NOU, recorded_at_source: 'invented' }).provenance).toBeNull();
+    expect(recordedAt({ ...FIELD_TAKE, recorded_at_source: 'invented' }).provenance).toBeNull();
   });
 
   it('carries the offset as written, when it is genuinely known', () => {
-    expect(recordedAt(CARRER_NOU).offset).toBe('+01:00');
-    expect(recordedAt({ ...CARRER_NOU, recorded_at_offset: -330 }).offset).toBe('-05:30');
-    expect(recordedAt({ ...CARRER_NOU, recorded_at_offset: null }).offset).toBeNull();
+    expect(recordedAt(FIELD_TAKE).offset).toBe('+01:00');
+    expect(recordedAt({ ...FIELD_TAKE, recorded_at_offset: -330 }).offset).toBe('-05:30');
+    expect(recordedAt({ ...FIELD_TAKE, recorded_at_offset: null }).offset).toBeNull();
   });
 
   it('falls back to the upload and says so, rather than inventing one', () => {
-    const shown = recordedAt(NADAL, 'en-GB');
+    const shown = recordedAt(CASSETTE, 'en-GB');
     expect(shown.isOwn).toBe(false);
     expect(shown.provenance).toBeNull();
   });

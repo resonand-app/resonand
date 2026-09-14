@@ -15,8 +15,8 @@ import { Toast } from './Toast';
 
 describe('Toast', () => {
   it('says what happened, in the numbers it was given', () => {
-    render(<Toast>12 recordings moved to Àvia Teresa</Toast>);
-    expect(screen.getByText('12 recordings moved to Àvia Teresa')).toBeDefined();
+    render(<Toast>12 recordings moved to Field recordings</Toast>);
+    expect(screen.getByText('12 recordings moved to Field recordings')).toBeDefined();
   });
 
   it('carries actions for a failure and none for a success', () => {

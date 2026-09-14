@@ -24,7 +24,7 @@ import { createQueryClient } from '@/api/query-client';
 import { toLibrary } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { usePlayback } from '@/player/store';
-import { AVIA, archive } from '@/test/api/archive';
+import { RECORDINGS, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { LibraryView } from '../LibraryView';
@@ -74,7 +74,7 @@ function Where() {
   return <div data-testid="where">{location.pathname + location.search}</div>;
 }
 
-function renderList(uuid: string = AVIA, search = '?view=list') {
+function renderList(uuid: string = RECORDINGS, search = '?view=list') {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
   return render(
@@ -136,7 +136,7 @@ describe('the dense list', () => {
     archive.recordings = Array.from({ length: 200 }, (_, index) => ({
       ...archive.recordings[0],
       uuid: `cccccccc-0000-4000-8000-${String(index).padStart(12, '0')}`,
-      library_uuid: AVIA,
+      library_uuid: RECORDINGS,
       title: `Recording ${String(index)}`,
     })) as typeof archive.recordings;
     renderList();
@@ -165,7 +165,7 @@ describe('the dense list', () => {
     const many = Array.from({ length: 537 }, (_, index) => ({
       ...archive.recordings[0],
       uuid: `bbbbbbbb-0000-4000-8000-${String(index).padStart(12, '0')}`,
-      library_uuid: AVIA,
+      library_uuid: RECORDINGS,
       title: `Recording ${String(index)}`,
     }));
     archive.recordings = many as typeof archive.recordings;
@@ -184,7 +184,7 @@ describe('the dense list', () => {
     server.events.on('request:start', ({ request }) => asked.push(request.url));
     renderList();
     await screen.findByRole('table');
-    const listing = asked.filter((url) => url.includes(`/libraries/${AVIA}/audio`));
+    const listing = asked.filter((url) => url.includes(`/libraries/${RECORDINGS}/audio`));
     expect(listing.length).toBeGreaterThan(0);
     for (const url of listing) expect(url).toContain(`limit=${String(PAGE_SIZE)}`);
   });
@@ -297,7 +297,7 @@ describe('sorting from a column heading', () => {
   });
 
   it('shows the sort the bar set, without having been clicked itself', async () => {
-    renderList(AVIA, '?view=list&sort=title&direction=asc');
+    renderList(RECORDINGS, '?view=list&sort=title&direction=asc');
     await screen.findByRole('table');
     expect(screen.getByRole('columnheader', { name: /Title/ })).toHaveAttribute(
       'aria-sort',
@@ -362,7 +362,7 @@ describe('the keyboard, on a selection', () => {
     archive.recordings = Array.from({ length: 6 }, (_, index) => ({
       ...archive.recordings[0],
       uuid: `dddddddd-0000-4000-8000-${String(index).padStart(12, '0')}`,
-      library_uuid: AVIA,
+      library_uuid: RECORDINGS,
       title: `Recording ${String(index)}`,
     })) as typeof archive.recordings;
     const user = userEvent.setup();

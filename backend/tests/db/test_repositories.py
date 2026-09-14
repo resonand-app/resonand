@@ -13,7 +13,7 @@ from sonarium.core.errors import (
     PermissionDeniedError,
 )
 from sonarium.core.levels import Level
-from sonarium.db import categories, libraries, seed, tags, transcripts, users
+from sonarium.db import categories, libraries, tags, transcripts, users
 from sonarium.db.audio import (
     MetadataPatch,
     create_audio,
@@ -25,7 +25,7 @@ from sonarium.db.audio import (
     update_metadata,
 )
 from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Library, Segment
+from sonarium.db.models import Audio, Segment
 from sonarium.db.transcripts import Origin, SegmentDraft
 from sqlalchemy import event, select, text
 
@@ -577,50 +577,25 @@ def test_creating_a_transcript_refuses_impossible_timings_before_writing_anythin
         assert session.execute(select(Segment)).scalars().all() == []
 
 
-# --- The seed (DAT-8) -----------------------------------------------------
-
-
-def test_the_seed_produces_every_shape_the_interface_has_to_handle(database: Database) -> None:
-    with database.write_session() as session:
-        made = seed.seed(session)
-        readable = libraries.list_libraries(session, made.reader.id)
-        owned = libraries.list_libraries(session, made.owner.id)
-        trashed = session.execute(trashed_audio(made.owner.id)).all()
-        with_transcript = transcripts.active_transcript(session, made.recordings[0].id)
-    assert {level for _, level in readable} == {Level.READ, Level.OWNER}
-    assert len(owned) == 2, "their own personal library and the shared one"
-    assert len(trashed) == 1
-    assert with_transcript is not None
-
-
-def test_no_seeded_account_can_be_signed_into(database: Database) -> None:
-    with database.write_session() as session:
-        seed.seed(session)
-        hashes = session.execute(select(text("password_hash")).select_from(text("user"))).scalars()
-    assert all(value == seed.UNUSABLE_CREDENTIAL for value in hashes)
-
-
-def test_the_seed_is_the_same_every_time(database: Database) -> None:
-    """A seed that shuffles produces screenshots that cannot be compared."""
-    with database.write_session() as session:
-        first = [row.title for row in session.execute(select(Audio)).scalars()]
-        seed.seed(session)
-        titles = [row.title for row in session.execute(select(Audio).order_by(Audio.id)).scalars()]
-    assert first == []
-    assert titles == [
-        "Recording 2024-03-11 18.22",
-        "PTT-20240412-WA0007",
-        "Thinking out loud while driving",
-        "Test recording, ignore",
-    ]
+# --- What a library header counts (DAT-7) ---------------------------------
 
 
 def test_the_library_header_counts_only_what_the_grid_shows(database: Database) -> None:
     with database.write_session() as session:
-        made = seed.seed(session)
-        shared = session.execute(
-            select(Library).where(Library.uuid == made.shared.uuid)
-        ).scalar_one()
-        count, duration = libraries.library_totals(session, shared.id)
+        owner = users.create_user(session, email="owner@x.test", display_name="Owner")
+        library = libraries.create_library(session, owner.id, name="Recordings")
+        for index, duration in enumerate((2_400_000, 63_000, 1_000)):
+            audio = create_audio(
+                session,
+                library_id=library.id,
+                uploaded_by=owner.id,
+                storage_path=f"storage/aa/{index}/original.m4a",
+                original_filename=f"recording-{index}.m4a",
+            )
+            audio.duration_ms = duration
+            if duration == 1_000:
+                session.flush()
+                trash_audio(session, owner.id, audio.uuid)
+        count, duration = libraries.library_totals(session, library.id)
     assert count == 2, "the trashed recording is not counted"
     assert duration == 2_400_000 + 63_000

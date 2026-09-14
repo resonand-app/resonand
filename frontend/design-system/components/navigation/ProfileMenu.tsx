@@ -83,7 +83,7 @@ export interface ProfileMenuProps extends HTMLAttributes<HTMLDivElement> {
 /**
  * The dialog behind the account button: identity, theme, Settings, Sign out. Nothing more.
  *
- * **The sample-data defaults are gone (`UI-1h`).** It used to arrive as "Martí Colom", initials MC,
+ * **The sample-data defaults are gone (`UI-1h`).** It used to arrive as "Ángela Ruiz", initials MC,
  * "marti@sonarium.app", on a Dark theme -- so a forgotten prop rendered a complete, plausible
  * account belonging to nobody. Empty is now visibly empty.
  *

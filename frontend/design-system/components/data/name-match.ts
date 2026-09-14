@@ -12,7 +12,7 @@
  *
  * **Case-insensitive, accent-sensitive, trimmed, and normalised.** Each of those is a decision,
  * and the prototype's bare `===` took none of them -- which matters here more than anywhere,
- * because the names in this archive are Catalan: "Àvia Teresa", "Nadal '98", "Memòries".
+ * because a library name is whatever somebody typed: "Álbum", "Interviews '98", "Rehearsals".
  *
  * - **Normalised**, because `À` has two Unicode spellings -- one code point, or an `A` followed by
  *   a combining grave -- and a macOS keyboard and a Linux one do not always produce the same one.
@@ -22,8 +22,9 @@
  *   different library.
  * - **Case-insensitive**, because shift is a typing convention and not part of the name. Requiring
  *   it makes the gesture about spelling rather than about deliberateness.
- * - **Accent-sensitive**, because an accent is part of the word. "Avia" is not "Àvia", and this is
- *   the one place in the product where being strict costs a retype and being lax costs a library.
+ * - **Accent-sensitive**, because an accent is part of the word. "Album" is not "Álbum", and
+ *   this is the one place in the product where being strict costs a retype and being lax costs a
+ *   library.
  */
 export function matchesName(typed: string, name: string): boolean {
   const clean = (value: string) => value.normalize('NFC').trim().toLocaleLowerCase();

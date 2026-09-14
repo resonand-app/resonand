@@ -14,7 +14,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { AVIA, CARRER_NOU, NADAL, PERSONAL, archive } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE, CASSETTE, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { TrashView } from '../TrashView';
@@ -63,10 +63,10 @@ describe('an empty trash', () => {
 
 describe('one list with a type marker', () => {
   it('shows recordings and libraries together, marked by what they are', async () => {
-    trashLibrary(AVIA, daysAgo(2));
-    trashRecording(NADAL, daysAgo(3));
+    trashLibrary(RECORDINGS, daysAgo(2));
+    trashRecording(CASSETTE, daysAgo(3));
     show();
-    expect(await screen.findByText('Àvia Teresa')).toBeVisible();
+    expect(await screen.findByText('Field recordings')).toBeVisible();
     // Sentence case in the DOM and uppercased in CSS, the way every mono meta line in the
     // system is -- so the assertion is on the string, not on the treatment.
     expect(screen.getByText('Library')).toBeVisible();
@@ -74,14 +74,14 @@ describe('one list with a type marker', () => {
   });
 
   it('puts what is closest to being purged at the top', async () => {
-    trashRecording(CARRER_NOU, daysAgo(20));
-    trashRecording(NADAL, daysAgo(1));
+    trashRecording(FIELD_TAKE, daysAgo(20));
+    trashRecording(CASSETTE, daysAgo(1));
     show();
-    await screen.findByText('The house on Carrer Nou');
+    await screen.findByText('Field recording, long take');
     const names = screen
-      .getAllByText(/The house on Carrer Nou|Sopar de Nadal 1998/)
+      .getAllByText(/Field recording, long take|Digitised cassette/)
       .map((one) => one.textContent);
-    expect(names[0]).toBe('The house on Carrer Nou');
+    expect(names[0]).toBe('Field recording, long take');
   });
 
   it('says how long the instance keeps things, rather than a number written into the bundle', async () => {
@@ -92,13 +92,13 @@ describe('one list with a type marker', () => {
 
 describe('the last day', () => {
   it('is marked unmistakably, because doing nothing is a decision on that row', async () => {
-    trashRecording(NADAL, daysAgo(30));
+    trashRecording(CASSETTE, daysAgo(30));
     show();
     expect(await screen.findByText('Destroyed today')).toBeVisible();
   });
 
   it('is quiet on a row with weeks to go', async () => {
-    trashRecording(NADAL, daysAgo(1));
+    trashRecording(CASSETTE, daysAgo(1));
     show();
     expect(await screen.findByText('29 days left')).toBeVisible();
   });
@@ -106,83 +106,83 @@ describe('the last day', () => {
 
 describe('restoring', () => {
   it('takes a recording back out, one call per item', async () => {
-    trashRecording(NADAL, daysAgo(3));
+    trashRecording(CASSETTE, daysAgo(3));
     show();
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Restore Sopar de Nadal 1998' }),
+      await screen.findByRole('button', { name: 'Restore Digitised cassette' }),
     );
     await waitFor(() => {
-      expect(archive.recordings.find((one) => one.uuid === NADAL)?.deleted_at).toBeNull();
+      expect(archive.recordings.find((one) => one.uuid === CASSETTE)?.deleted_at).toBeNull();
     });
   });
 
   it('takes a library back out', async () => {
-    trashLibrary(AVIA, daysAgo(3));
+    trashLibrary(RECORDINGS, daysAgo(3));
     show();
-    await userEvent.click(await screen.findByRole('button', { name: 'Restore Àvia Teresa' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Restore Field recordings' }));
     await waitFor(() => {
-      expect(archive.libraries.find((one) => one.uuid === AVIA)?.deleted_at).toBeNull();
+      expect(archive.libraries.find((one) => one.uuid === RECORDINGS)?.deleted_at).toBeNull();
     });
   });
 });
 
 describe('deleting now', () => {
   it('states what is destroyed in numbers, and will not fire before the name is typed', async () => {
-    trashLibrary(AVIA, daysAgo(3));
+    trashLibrary(RECORDINGS, daysAgo(3));
     show();
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Delete Àvia Teresa permanently' }),
+      await screen.findByRole('button', { name: 'Delete Field recordings permanently' }),
     );
     const confirm = await screen.findByRole('dialog');
     expect(within(confirm).getByText(/3 recordings, 2 h 04 min of audio/)).toBeVisible();
     const action = within(confirm).getByRole('button', { name: /Delete/ });
     expect(action).toBeDisabled();
-    await userEvent.type(within(confirm).getByRole('textbox'), 'Àvia Teresa');
+    await userEvent.type(within(confirm).getByRole('textbox'), 'Field recordings');
     expect(action).toBeEnabled();
     await userEvent.click(action);
     await waitFor(() => {
-      expect(archive.libraries.some((one) => one.uuid === AVIA)).toBe(false);
+      expect(archive.libraries.some((one) => one.uuid === RECORDINGS)).toBe(false);
     });
   });
 
   it('destroys a recording once its own title has been typed', async () => {
-    trashRecording(NADAL, daysAgo(3));
+    trashRecording(CASSETTE, daysAgo(3));
     show();
     await userEvent.click(
-      await screen.findByRole('button', { name: 'Delete Sopar de Nadal 1998 permanently' }),
+      await screen.findByRole('button', { name: 'Delete Digitised cassette permanently' }),
     );
     const confirm = await screen.findByRole('dialog');
-    await userEvent.type(within(confirm).getByRole('textbox'), 'Sopar de Nadal 1998');
+    await userEvent.type(within(confirm).getByRole('textbox'), 'Digitised cassette');
     await userEvent.click(within(confirm).getByRole('button', { name: /Delete/ }));
     await waitFor(() => {
-      expect(archive.recordings.some((one) => one.uuid === NADAL)).toBe(false);
+      expect(archive.recordings.some((one) => one.uuid === CASSETTE)).toBe(false);
     });
   });
 });
 
 describe('a recording whose library is in the trash too', () => {
   it('is grouped under it and says what restoring it alone would do', async () => {
-    trashLibrary(AVIA, daysAgo(2));
-    trashRecording(NADAL, daysAgo(1));
+    trashLibrary(RECORDINGS, daysAgo(2));
+    trashRecording(CASSETTE, daysAgo(1));
     show();
     expect(await screen.findByText(/puts it back somewhere you would not see it/)).toBeVisible();
   });
 
   it('offers to restore the library too, which is the answer that helps', async () => {
-    trashLibrary(AVIA, daysAgo(2));
-    trashRecording(NADAL, daysAgo(1));
+    trashLibrary(RECORDINGS, daysAgo(2));
+    trashRecording(CASSETTE, daysAgo(1));
     show();
     await userEvent.click(await screen.findByRole('button', { name: 'Restore the library too' }));
     await waitFor(() => {
-      expect(archive.libraries.find((one) => one.uuid === AVIA)?.deleted_at).toBeNull();
-      expect(archive.recordings.find((one) => one.uuid === NADAL)?.deleted_at).toBeNull();
+      expect(archive.libraries.find((one) => one.uuid === RECORDINGS)?.deleted_at).toBeNull();
+      expect(archive.recordings.find((one) => one.uuid === CASSETTE)?.deleted_at).toBeNull();
     });
   });
 
   it('says nothing of the sort when the library is still there', async () => {
-    trashRecording(NADAL, daysAgo(1));
+    trashRecording(CASSETTE, daysAgo(1));
     show();
-    await screen.findByText('Sopar de Nadal 1998');
+    await screen.findByText('Digitised cassette');
     expect(screen.queryByText(/puts it back somewhere you would not see it/)).toBeNull();
   });
 });

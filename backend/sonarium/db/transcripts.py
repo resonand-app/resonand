@@ -174,7 +174,7 @@ def validate_segments(segments: list[SegmentDraft]) -> None:
     A provider that returns an end before its start, or a negative offset, has given us something
     that will silently seek to the wrong place; failing here is how that gets noticed while the
     provider is still on screen. ``create_transcript`` calls it, so every path into the archive --
-    the worker, the import and the seed -- goes through it.
+    the worker and the import -- goes through it.
     """
     for index, segment in enumerate(segments):
         if segment.start_ms < 0 or segment.end_ms < segment.start_ms:

@@ -35,13 +35,13 @@ function show() {
 describe('who you are', () => {
   it('saves the display name on blur, with no Save button to forget', async () => {
     show();
-    await userEvent.click(await screen.findByRole('button', { name: /Gabriel/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /Alex Morgan/ }));
     const field = screen.getByRole('textbox', { name: 'Display name' });
     await userEvent.clear(field);
-    await userEvent.type(field, 'Gabriel C.');
+    await userEvent.type(field, 'Alex Morgan C.');
     await userEvent.tab();
     await waitFor(() => {
-      expect(archive.me.display_name).toBe('Gabriel C.');
+      expect(archive.me.display_name).toBe('Alex Morgan C.');
     });
   });
 
@@ -66,10 +66,10 @@ describe('who you are', () => {
       ),
     );
     show();
-    await userEvent.click(await screen.findByRole('button', { name: /gabriel@example.test/ }));
+    await userEvent.click(await screen.findByRole('button', { name: /alex@example.test/ }));
     const field = screen.getByRole('textbox', { name: 'Email address' });
     await userEvent.clear(field);
-    await userEvent.type(field, 'marta@example.test');
+    await userEvent.type(field, 'sam@example.test');
     await userEvent.tab();
     expect(await screen.findByRole('alert')).toHaveTextContent(/already belongs to another/i);
   });

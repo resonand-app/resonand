@@ -20,7 +20,7 @@ export interface LevelSelectorProps {
   levels: LevelOption[];
   value?: number | undefined;
   onChange: (level: number) => void;
-  /** Names the group: "What Marta can do". */
+  /** Names the group: "What Sam Rivera can do". */
   label: string;
   disabled?: boolean;
 }
