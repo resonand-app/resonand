@@ -20,7 +20,7 @@ describe('Logo', () => {
   it('drops the wordmark and keeps the mark', () => {
     const { container } = render(<Logo showWordmark={false} />);
     expect(screen.queryByText('Sonarium')).toBeNull();
-    expect(container.querySelectorAll('path')).toHaveLength(4);
+    expect(container.querySelectorAll('path')).toHaveLength(1);
   });
 
   it('hides the mark from assistive technology', () => {

@@ -1,4 +1,4 @@
-The Sonarium lockup: the four-stroke mark plus the Chillax wordmark. Use it in the top nav, on the login screen, and nowhere else.
+The Sonarium lockup: the mark plus the Chillax wordmark. Use it in the top nav, on the login screen, and nowhere else.
 
 ```jsx
 <Logo size={21} />

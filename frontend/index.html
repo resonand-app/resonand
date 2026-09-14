@@ -35,10 +35,26 @@
       }
     </script>
     <!--
-      Straight out of the design system rather than copied into a `public/` directory. Vite
-      hashes and emits it like any other asset, and there is exactly one mark in the repository.
+      Browser and OS chrome, not the in-app mark. These come from the brand kit as rendered
+      files -- an .ico for old browsers, sized PNGs for iOS/PWA/OS icon surfaces -- so they live
+      in `public/` and are served at a fixed path instead of being hashed like a bundled asset.
+      The in-app mark stays a single source in `design-system/assets/`, used by `Logo`.
     -->
-    <link rel="icon" type="image/svg+xml" href="./design-system/assets/sonarium-mark.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#FFFFFF" />
+
+    <meta property="og:title" content="Sonarium" />
+    <meta
+      property="og:description"
+      content="A self-hosted archive for the recordings that matter."
+    />
+    <meta property="og:image" content="https://sonarium.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
   </head>
   <body>
     <div id="root"></div>

@@ -83,7 +83,7 @@ Use `Icon` for every glyph; do not inline SVG in a screen. **`name` is one of th
 
 The registry is written out by hand in `Icon.tsx`, which is what keeps the other fourteen hundred icons out of the bundle — measured at 759 KB against 2.6 KB. Adding a glyph is two lines there; using one that is not registered is a compile error at the call site, and a thrown error in development if it arrives as a computed string. Four of the names above are deprecated aliases upstream and the registry absorbs that, so the system's vocabulary does not move when Lucide's does.
 
-**The mark** (`assets/sonarium-mark.svg`) is the waveform reduced to four rounded strokes of unequal height — the same geometry, cap and rhythm as the `Waveform` component, so the logo and the data read as the same object. It was designed for this system; there was no prior logo. No unicode characters are used as icons. The one exception is the `↵` and `⌘K` keyboard hints, which are typographic, not iconographic.
+**The mark** (`assets/sonarium-mark.svg`) is three radiating arcs — a signal, a sound wave — curling down into the letter S. It ships as a finished asset from the brand kit rather than being drawn from the `Waveform` component's own geometry, which is how its four-stroke predecessor was built. No unicode characters are used as icons. The one exception is the `↵` and `⌘K` keyboard hints, which are typographic, not iconographic.
 
 ---
 
