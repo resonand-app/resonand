@@ -1,5 +1,6 @@
 import type { InputHTMLAttributes, Ref } from 'react';
 
+import { isApplePlatform } from '../../theme/platform';
 import { Icon } from '../foundation/Icon';
 
 export interface SearchFieldProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -26,11 +27,14 @@ export interface SearchFieldProps extends InputHTMLAttributes<HTMLInputElement> 
  * **The magnifier goes amber on focus by inheritance (`UI-32a`).** It used to be a `focused` prop
  * the caller had to keep in step with reality; now `components.css` puts a colour on this wrapper
  * when it `:has(:focus-visible)`, and `Icon` defaults to `currentColor`, so the glyph follows and
- * nothing else does -- the input and the ⌘K hint both state their own.
+ * nothing else does -- the input and the keyboard hint both state their own.
+ *
+ * **The hint names the modifier the device actually has.** `⌘K` only ever meant Mac; everywhere
+ * else the key is Ctrl, and `isApplePlatform` (`theme/platform.ts`) is what tells the two apart.
  */
 export function SearchField({
   placeholder = "Search everything you've recorded",
-  shortcut = '⌘K',
+  shortcut = isApplePlatform() ? '⌘K' : 'Ctrl+K',
   style,
   ref,
   ...rest

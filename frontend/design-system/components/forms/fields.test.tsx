@@ -13,7 +13,7 @@
 
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { SearchField } from './SearchField';
 import { TextField } from './TextField';
@@ -84,5 +84,29 @@ describe('SearchField', () => {
   it('hides the keyboard hint when there is none to give', () => {
     render(<SearchField shortcut={null} />);
     expect(screen.queryByText('⌘K')).toBeNull();
+  });
+
+  describe('the default hint', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('names ⌘K on a Mac', () => {
+      vi.stubGlobal(
+        'navigator',
+        Object.defineProperty(Object.create(navigator), 'platform', { value: 'MacIntel' }),
+      );
+      render(<SearchField />);
+      expect(screen.getByText('⌘K')).toBeDefined();
+    });
+
+    it('names Ctrl+K everywhere else', () => {
+      vi.stubGlobal(
+        'navigator',
+        Object.defineProperty(Object.create(navigator), 'platform', { value: 'Win32' }),
+      );
+      render(<SearchField />);
+      expect(screen.getByText('Ctrl+K')).toBeDefined();
+    });
   });
 });
