@@ -24,7 +24,7 @@ migration contains* in ``docs/v0-plan.md``, each of which is expensive to add af
    already. Adding a public identifier where it is not needed costs a column, an index and a
    lookup path on every request forever.
 4. ``user.email_normalised UNIQUE`` (``DEC-15``) -- and note that ``user.email`` **loses** the
-   specification's ``UNIQUE``. Keeping both would make ``Gabriel@x.com`` and ``gabriel@x.com`` two
+   specification's ``UNIQUE``. Keeping both would make ``Alex@x.com`` and ``alex@x.com`` two
    accounts, which is exactly the bug the delta exists to prevent.
 5. ``audio.recorded_at_offset`` (``DEC-11``) -- nullable, in minutes. ``recorded_at`` is a
    wall-clock reading rendered as written; its offset is stored apart and only when it is genuinely

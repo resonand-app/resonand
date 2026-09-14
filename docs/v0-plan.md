@@ -198,7 +198,7 @@ afterwards.
    change. Paired with a resolution rule, below.
 
 4. **`user.email_normalised UNIQUE`** (`DEC-15`) — lowercased, with the typed form kept in `email`
-   for display. `UNIQUE` on the typed address makes `Gabriel@x.com` and `gabriel@x.com` two
+   for display. `UNIQUE` on the typed address makes `Alex@x.com` and `alex@x.com` two
    accounts, and `DEC-2`'s OIDC linking would later compare against whichever casing happened to
    land first.
 
@@ -443,8 +443,12 @@ query is the only source of truth for permissions and everything goes through it
 - [ ] **DAT-7** · Category tree with `parent_id`: creation, rename, reorder and move, with cycle
       detection and per-level uniqueness. ⇢ DAT-4 🧪
 
-- [ ] **DAT-8** · Development fixtures and seed: users, libraries shared with all three levels, and
-      audios with and without a transcript. Serves both the tests and, later, the demo. ⇢ DAT-5
+- [x] **DAT-8** · **No seed ships in the package.** A seeded archive writes `storage_path` rows
+      naming files that were never written: right for a test, wrong for an instance somebody is
+      going to click through, where nothing plays and no waveform is drawn. The demo archive is
+      built outside the repository by the local development layer, through `sonarium import` and
+      the real probe and waveform jobs, so a recording in it is indistinguishable from one
+      somebody uploaded. Tests construct exactly the rows they assert on. ⇢ DAT-5
 
 ---
 

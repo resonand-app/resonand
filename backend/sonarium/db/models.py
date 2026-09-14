@@ -68,7 +68,7 @@ class User(Base):
 
     ``email`` is the address as typed, kept for display and deliberately **not** unique;
     ``email_normalised`` is the key (``DEC-15``). Unique on the typed form would make
-    ``Gabriel@x.com`` and ``gabriel@x.com`` two accounts.
+    ``Alex@x.com`` and ``alex@x.com`` two accounts.
     """
 
     __tablename__ = "user"

@@ -223,10 +223,10 @@ def test_grinding_through_a_password_list_is_slowed_down(
 
 def test_a_display_name_can_be_changed(client: TestClient, accounts: dict[str, int]) -> None:
     sign_in(client, "admin")
-    changed = client.patch("/auth/me", json={"display_name": "Gabriel"})
+    changed = client.patch("/auth/me", json={"display_name": "Alex"})
     assert changed.status_code == status.HTTP_200_OK
-    assert changed.json()["display_name"] == "Gabriel"
-    assert client.get("/auth/me").json()["display_name"] == "Gabriel"
+    assert changed.json()["display_name"] == "Alex"
+    assert client.get("/auth/me").json()["display_name"] == "Alex"
 
 
 def test_each_field_is_changed_on_its_own(client: TestClient, accounts: dict[str, int]) -> None:
@@ -287,10 +287,10 @@ def test_a_changed_address_is_the_one_that_signs_in(
 ) -> None:
     """The point of re-deriving the key rather than only storing the typed form."""
     sign_in(client, "admin")
-    client.patch("/auth/me", json={"email": "Gabriel@Example.Test"})
+    client.patch("/auth/me", json={"email": "Alex@Example.Test"})
     other = app_client_factory()
     signed_in = other.post(
-        "/auth/session", json={"email": "gabriel@example.test", "password": PASSWORD}
+        "/auth/session", json={"email": "alex@example.test", "password": PASSWORD}
     )
     assert signed_in.status_code == status.HTTP_200_OK
 
