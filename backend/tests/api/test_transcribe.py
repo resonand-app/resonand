@@ -370,3 +370,141 @@ def test_somebody_elses_recording_does_not_exist(
         client.post(f"/audio/{audio_uuid}/transcribe", json={}).status_code
         == status.HTTP_404_NOT_FOUND
     )
+
+
+# --- Changing your mind about one -----------------------------------------
+
+
+def test_cancelling_takes_the_transcription_off_the_queue(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``API-21``. The counterpart of asking, and it answers with the job it stopped."""
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+    client.post(f"/audio/{audio_uuid}/transcribe", json={})
+
+    cancelled = client.post(f"/audio/{audio_uuid}/transcribe/cancel")
+
+    assert cancelled.status_code == status.HTTP_200_OK
+    assert cancelled.json()["state"] == queue.CANCELLED
+    with database.write_session() as session:
+        assert queue.claim(session) is None, "a cancelled job is not work"
+
+
+def test_a_cancelled_transcription_leaves_the_recording_asking_again(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``cancelled`` is not a fifth state.
+
+    :mod:`sonarium.core.states` reads it as ``none``, so the recording comes back to its call to
+    action rather than to a failure nobody caused -- which is the honest answer, because after
+    cancelling there is exactly as much transcript as there was before.
+    """
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+    client.post(f"/audio/{audio_uuid}/transcribe", json={})
+    client.post(f"/audio/{audio_uuid}/transcribe/cancel")
+
+    reported = client.get(f"/audio/{audio_uuid}/transcription").json()
+
+    assert reported["state"] == "none"
+    assert reported["error"] is None, "cancelling is a decision, not a failure to explain"
+
+
+def test_a_transcription_already_under_way_can_still_be_cancelled(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """The case worth having the endpoint for.
+
+    Cancelling a job still waiting its turn saves a request nobody had made yet; cancelling one
+    the worker has claimed is somebody stopping audio that is already being sent, which is the
+    minutes-long wait ``UI-15b`` sits in front of.
+    """
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+    client.post(f"/audio/{audio_uuid}/transcribe", json={})
+    with database.write_session() as session:
+        assert queue.claim(session) is not None
+
+    assert client.post(f"/audio/{audio_uuid}/transcribe/cancel").status_code == status.HTTP_200_OK
+
+    assert [job.state for job in _transcribe_jobs(database)] == [queue.CANCELLED]
+
+
+def test_cancelling_a_recording_with_nothing_under_way_is_a_conflict(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """The mirror of the 409 on asking.
+
+    Pressing cancel on a transcription that has just finished is the same race as pressing
+    transcribe on one that has just started, and neither is an error worth putting on a screen.
+    """
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+
+    assert (
+        client.post(f"/audio/{audio_uuid}/transcribe/cancel").status_code
+        == status.HTTP_409_CONFLICT
+    )
+
+
+def test_asking_again_after_cancelling_queues_fresh_work(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """Nothing is resumed. The idempotency key counts the cancelled attempt, so the second
+    request is a second job rather than a collision discarded in silence."""
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+    client.post(f"/audio/{audio_uuid}/transcribe", json={})
+    client.post(f"/audio/{audio_uuid}/transcribe/cancel")
+
+    assert (
+        client.post(f"/audio/{audio_uuid}/transcribe", json={}).status_code
+        == status.HTTP_202_ACCEPTED
+    )
+
+    jobs = _transcribe_jobs(database)
+    assert [job.state for job in jobs] == [queue.CANCELLED, queue.PENDING]
+    assert [job.idempotency_key for job in jobs] == [
+        f"transcribe:{audio_uuid}:1",
+        f"transcribe:{audio_uuid}:2",
+    ]
+
+
+def test_a_reader_may_not_cancel_somebody_elses_transcription(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """Level 20, the same as asking: both directions of the decision belong to the same people."""
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+    client.post(f"/audio/{audio_uuid}/transcribe", json={})
+    with database.write_session() as session:
+        library_repo.share_library(
+            session,
+            accounts["admin"],
+            owner_library,
+            grantee_id=accounts["friend"],
+            level=Level.READ,
+        )
+    sign_in(client, "friend")
+
+    assert (
+        client.post(f"/audio/{audio_uuid}/transcribe/cancel").status_code
+        == status.HTTP_403_FORBIDDEN
+    )
+    assert [job.state for job in _transcribe_jobs(database)] == [queue.PENDING]
+
+
+def test_a_stranger_cannot_cancel_a_recording_that_does_not_exist_for_them(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``DEC-14``: a 409 here would confirm both the recording and that it is being transcribed."""
+    audio_uuid = _a_recording(database, accounts, owner_library)
+    sign_in(client, "admin")
+    client.post(f"/audio/{audio_uuid}/transcribe", json={})
+    sign_in(client, "stranger")
+
+    assert (
+        client.post(f"/audio/{audio_uuid}/transcribe/cancel").status_code
+        == status.HTTP_404_NOT_FOUND
+    )

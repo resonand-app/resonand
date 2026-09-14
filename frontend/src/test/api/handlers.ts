@@ -431,6 +431,30 @@ export const handlers: HttpHandler[] = [
     );
     return HttpResponse.json(archive.jobs[0], { status: 202 });
   }),
+  http.post('/api/audio/:audio_uuid/transcribe/cancel', ({ params }) => {
+    const existing = archive.recordings.find((one) => one.uuid === params.audio_uuid);
+    if (!existing) return NOT_FOUND();
+    if (existing.transcription_state !== 'running') {
+      // The mirror of the 409 on asking: pressing cancel on one that has just finished is a
+      // race, not an error (`API-21`).
+      return problem(409, 'That recording is not being transcribed.');
+    }
+    // Back to `none` and not to a fifth state: cancelling leaves exactly as much transcript as
+    // there was before, which is none.
+    archive.recordings = archive.recordings.map((one) =>
+      one === existing ? { ...one, transcription_state: 'none' } : one,
+    );
+    archive.jobs = archive.jobs.map((one) =>
+      one.audio_uuid === existing.uuid && one.kind === 'transcribe'
+        ? { ...one, state: 'cancelled', error: null, started_at: null }
+        : one,
+    );
+    const cancelled = archive.jobs.find(
+      (one) => one.audio_uuid === existing.uuid && one.kind === 'transcribe',
+    );
+    if (cancelled === undefined) return NOT_FOUND();
+    return HttpResponse.json(cancelled);
+  }),
   http.get('/api/audio/:audio_uuid/transcription', ({ params }) => {
     const uuid = String(params.audio_uuid);
     const existing = archive.recordings.find((one) => one.uuid === uuid);

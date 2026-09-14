@@ -33,6 +33,7 @@ from sonarium.jobs.queue import (
     KIND_WAVEFORM,
     Work,
     enqueue,
+    is_cancelled,
 )
 from sonarium.media import recorded_at as recorded_at_module
 from sonarium.media import storage, transcode, waveform
@@ -126,6 +127,13 @@ def handle_transcribe(work: Work, context: Context) -> None:
     The parts are cut from the file on disk and submitted one at a time. Each one's segments are
     offset by where it started, which is the difference between a transcript that plays correctly
     and one that reads correctly and plays wrong.
+
+    **It asks whether it is still wanted between parts** (``API-21``). An hour of audio is a
+    dozen requests over several minutes, and somebody who cancels during the second one is asking
+    for the other ten not to be sent -- so a cancellation that only stopped the transcript being
+    written would still have paid the provider, and still have sent the audio, which is the half
+    of it principle 2 is about. The part in flight finishes: it is already sent, and abandoning
+    the answer to it buys nothing back.
     """
     if context.provider is None:
         raise NotFoundError("No transcription provider is configured.")
@@ -153,6 +161,8 @@ def handle_transcribe(work: Work, context: Context) -> None:
     detected: str | None = None
     working = storage.recording_dir(context.storage_root, audio_uuid)
     for part in plan.parts:
+        if _abandoned(work, context):
+            return
         source = path
         if not plan.is_single:
             source = transcode.extract_part(
@@ -183,6 +193,11 @@ def handle_transcribe(work: Work, context: Context) -> None:
 
     stitched = restitch(plan, per_part)
     with context.database.write_session() as session:
+        # Asked in the transaction that writes, not before it: a cancellation landing between
+        # the two would be answered with the transcript it was meant to prevent, and a recording
+        # that has one reads `done` whatever its job says.
+        if _abandoned_in(session, work):
+            return
         transcripts.create_transcript(
             session,
             audio_id,
@@ -258,6 +273,24 @@ def _locate(work: Work, context: Context) -> tuple[str, Path]:
             f"The original file for {audio_uuid} is missing from storage. Run sonarium fsck."
         )
     return audio_uuid, path
+
+
+def _abandoned(work: Work, context: Context) -> bool:
+    """Whether somebody cancelled this job since the worker claimed it (``API-21``)."""
+    with context.database.read_session() as session:
+        return _abandoned_in(session, work)
+
+
+def _abandoned_in(session: Session, work: Work) -> bool:
+    """The same question, on a session the caller already holds.
+
+    What the last check before a write needs: the writer's own transaction holds the write lock,
+    so a cancellation cannot land between being asked and being acted on.
+    """
+    if not is_cancelled(session, work.id):
+        return False
+    _logger.info("job.abandoned", job_id=work.id, kind=work.kind)
+    return True
 
 
 def _require(session: Session, work: Work) -> Audio:

@@ -630,6 +630,29 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       answer with the account they changed. ⇢ API-7, INT-3 🧪
       🧪 The shape a share answers with is unchanged, which is what keeps the leak closed.
 
+- [x] **API-21** · **Stop a transcription that is under way.** `API-11` starts one and `API-17`
+      says how it is going, and between them a recording could be committed to minutes of a
+      provider's time with no way back: the only cancel in the product is `INT-3d`'s, which takes
+      a job id and is administrator-only, so on a family instance the person whose hour of audio
+      was being sent somewhere was the one person who could not stop it.
+      `POST /audio/{uuid}/transcribe/cancel` at level 20 -- the same level as asking, because
+      starting and stopping are the same decision about somebody's quota and somebody's audio.
+      A recording with nothing in flight answers 409, mirroring the endpoint it undoes.
+      **The row is not the whole of it.** A claimed job's handler runs for minutes outside any
+      transaction, so cancelling has to reach three places or it reaches none: `finish` and `fail`
+      must leave a cancellation standing rather than marking the job done on top of it, and
+      `JOB-13`'s loop must ask between parts, or the other ten requests of a twelve-part hour are
+      sent after somebody has already stopped it. That last one is principle 2 rather than a
+      refund: the audio is what cannot be taken back.
+      **Nothing is kept and nothing is resumed.** `cancelled` is not a fifth state -- `JOB-11`
+      reads it as `none` -- so the recording returns to its call to action with exactly as much
+      transcript as it had before, and asking again queues fresh work.
+      *Done when:* a transcription can be stopped from the recording it belongs to, by anybody
+      who could have started it, and a job cancelled mid-flight leaves no transcript and is not
+      retried. ⇢ API-11, API-17, JOB-13 🧪
+      *Found while building `UI-15`: the running card is where somebody sits for minutes, and it
+      was the one state in it with nothing to press.*
+
 ---
 
 ## Phase 3 · Four parallel tracks

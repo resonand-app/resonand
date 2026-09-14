@@ -96,7 +96,9 @@
       "since": "Started {{when}}",
       "attempt_one": "attempt {{count}}",
       "attempt_other": "attempt {{count}}",
-      "provider": "on {{provider}}"
+      "provider": "on {{provider}}",
+      "cancel": "Stop transcribing",
+      "cancelling": "Stopping..."
     },
     "failed": {
       "title": "The transcription did not finish",

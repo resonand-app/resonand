@@ -19,6 +19,7 @@ import { usePaged } from '../paged';
 import { ApiProblem } from '../problem';
 import {
   HANDLED,
+  HANDLED_CONFLICT,
   RETRIES,
   createQueryClient,
   worthRetrying,
@@ -108,6 +109,14 @@ describe('a write that failed', () => {
 
   it('reports a failure that never reached the instance like any other', () => {
     expect(worthReporting(new Error('offline'), undefined)).toBe(true);
+  });
+
+  it('lets a view own one status without owning every failure it can meet', () => {
+    // A control that can lose a race answers the race itself and nothing else: the instance
+    // being unreachable is still a sentence somebody is owed.
+    expect(worthReporting(problem(409), HANDLED_CONFLICT)).toBe(false);
+    expect(worthReporting(problem(500), HANDLED_CONFLICT)).toBe(true);
+    expect(worthReporting(new Error('offline'), HANDLED_CONFLICT)).toBe(true);
   });
 });
 

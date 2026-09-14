@@ -855,6 +855,12 @@ The most important single screen, and the one whose phone layout is a genuinely 
 - [x] **UI-15c** · State `failed`: **the real error message**, what it means and what to do, the
       retry register of the egress notice, and a retry. The error explains; it does not apologise.
       ⇢ UI-15a, API-11
+- [x] **UI-15d** · State `running`: **a way to stop it**. The card that says a transcription is
+      happening is the one somebody sits in front of for minutes, and it was the only state with
+      nothing to press. Secondary and not a danger -- nothing is destroyed, every transcript the
+      recording already had survives -- and **no egress notice beside it**, which is the one
+      asymmetry in the component and is deliberate: the disclosure stands in front of the paths
+      that send audio, and stopping one sends nothing. ⇢ UI-15b, API-21
 - [x] **UI-25a** · 🔒 `EgressNotice` wired to `GET /transcription/destination` in **all three
       placements** — the upload dialog, the detail view's call to action, and beside a retry — for
       every caller and not only administrators. ⇢ UI-34n, API-12

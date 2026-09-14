@@ -24,6 +24,7 @@ import { useEffect, useRef } from 'react';
 import { get, post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
+import { HANDLED_CONFLICT } from '@/api/query-client';
 import type { components } from '@/api/contract/schema';
 import type { TranscriptionState } from '@/design-system';
 
@@ -130,6 +131,31 @@ export function useTranscribe(uuid: string): Transcribe {
     onError: async () => {
       // A 409 means somebody -- possibly this person, twice -- already asked. Re-reading is what
       // turns that into the running state rather than into an error nobody can act on.
+      await invalidate(client, { kind: 'transcription', recording: uuid });
+    },
+  });
+}
+
+/**
+ * Change your mind about one (`API-21`, `UI-15d`).
+ *
+ * The same shape as the request it undoes, and for the same reason: cancelling is a decision
+ * somebody makes on a screen, not an error, so a 409 -- the transcription finished between the
+ * card being drawn and the button being pressed -- is re-read rather than reported. What comes
+ * back is either `done` with a transcript or `none` with the call to action, and both of those
+ * are answers to what the person was asking. That one status, and not the rest: an instance that
+ * cannot be reached is still a failure this button owes somebody a sentence about.
+ *
+ * Nothing is resumed afterwards. `cancelled` reads as `none`, so the card returns to offering a
+ * transcription rather than to a half-finished one, which is what the archive actually holds.
+ */
+export function useCancelTranscription(uuid: string): Transcribe {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () =>
+      post('/api/audio/{audio_uuid}/transcribe/cancel', { path: { audio_uuid: uuid } }),
+    meta: HANDLED_CONFLICT,
+    onSettled: async () => {
       await invalidate(client, { kind: 'transcription', recording: uuid });
     },
   });
