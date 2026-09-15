@@ -24,6 +24,14 @@
  * screen where 320px of metadata is 320px of transcript -- and what somebody folds away stays
  * folded, per device, since it is a property of the screen and not of the account.
  *
+ * **The left column is one scrolling section: the waveform, and the transcript under it**
+ * (`UI-11g`). The player is what the screen opens with and the transcript is what the screen is
+ * for, and on a laptop the first was taking most of the height the second needed. So it scrolls:
+ * the panel fades as it goes, the transcript is left with the whole section, and the bar at the
+ * foot of the shell picks the waveform up on the way (`UI-11h`). The column below the player is
+ * a full column whatever is in it, so this is the same movement on every recording rather than a
+ * thing that only long transcripts can do.
+ *
  * **On a phone the panel is a bottom sheet** (`UI-13f`), opened from the essentials line. Not a
  * narrowed column and not a section under the transcript: the transcript needs the full width and
  * it is the reason the screen exists, so the details come up over it when they are asked for and
@@ -49,8 +57,8 @@
  * not have permission", which is the one sentence that gives away what the 404 withholds.
  */
 
-import { useState } from 'react';
-import type { ReactNode } from 'react';
+import { useRef, useState } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
@@ -88,6 +96,7 @@ export function RecordingView() {
   const transcripts = useTranscripts(uuid);
   const panel = usePanel();
   const isPhone = useIsPhone();
+  const scroller = useRef<HTMLDivElement>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { t } = useTranslation('recording');
 
@@ -97,7 +106,8 @@ export function RecordingView() {
   if (context.recording === undefined) return <Loading />;
 
   // The columns scroll, not the page (`UI-11c`). Not on the phone (`DEC-23`): that shell hands
-  // down no settled height, and a transcript filling an unsettled one draws every segment.
+  // down no settled height, and a transcript filling an unsettled one draws every segment -- so
+  // there the player keeps its place and the page scrolls under it.
   const fills = !isPhone;
 
   return (
@@ -169,23 +179,27 @@ export function RecordingView() {
         <div
           style={{ minWidth: 0, ...(fills ? { display: 'flex', flexDirection: 'column' } : {}) }}
         >
-          <RecordingPlayer context={context} />
-          {/* The player keeps its height and this takes the rest. `auto` for the short viewport
-              where a transcript-less state is taller than what is left. */}
+          {/* The player and what is under it are one scrolling section (`UI-11g`): the waveform
+              is what the screen opens with, and a scroll puts it away and leaves the transcript
+              the whole column. Two scrollports, one inside the other, is a wheel that moves
+              whichever of them the pointer happens to be over. */}
           <div
-            style={
-              fills
-                ? {
-                    flex: 1,
-                    minHeight: 0,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflowY: 'auto',
-                  }
-                : undefined
-            }
+            ref={scroller}
+            data-app="recording-scroller"
+            style={fills ? { flex: 1, minHeight: 0, overflowY: 'auto' } : undefined}
           >
-            <Middle context={context} transcripts={transcripts} fills={fills} />
+            <RecordingPlayer context={context} {...(fills ? { scroller } : {})} />
+            {/* A full column whatever is in it, so the waveform can always be scrolled away --
+                a three-line transcript and a recording with none at all behave like the
+                forty-minute one rather than pinning the picture to the screen. */}
+            <div style={fills ? { minHeight: '100%' } : undefined}>
+              <Middle
+                context={context}
+                transcripts={transcripts}
+                fills={fills}
+                {...(fills ? { scroller } : {})}
+              />
+            </div>
           </div>
         </div>
         {/* A tall panel is not a reason for the player to leave the screen. */}
@@ -232,10 +246,12 @@ function Middle({
   context,
   transcripts,
   fills,
+  scroller,
 }: {
   context: RecordingContext;
   transcripts: Transcripts;
   fills: boolean;
+  scroller?: RefObject<HTMLDivElement | null>;
 }) {
   const { t } = useTranslation('recording');
   const recording = context.recording;
@@ -268,7 +284,14 @@ function Middle({
         </div>
       );
     }
-    return <Transcript context={context} transcripts={transcripts} fills={fills} />;
+    return (
+      <Transcript
+        context={context}
+        transcripts={transcripts}
+        fills={fills}
+        {...(scroller === undefined ? {} : { scroller })}
+      />
+    );
   }
 
   return <TranscriptionState context={context} state={state} />;

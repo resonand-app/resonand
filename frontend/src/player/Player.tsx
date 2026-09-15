@@ -4,10 +4,15 @@
  * The bar at the bottom of the shell is the same sound as the 130px player in the detail view, so
  * two rules decide what it draws rather than any styling:
  *
- * **When the recording being played is the one on screen, the bar drops its waveform.** The
- * detail view's waveform is the one that moves, and the bar collapses to the position and the
- * duration with a note saying which one is which. Two waveforms at two scales drifting a frame
- * apart is what makes people believe there are two players.
+ * **While the recording being played is drawing its own waveform on screen, the bar drops
+ * its.** The detail view's waveform is the one that moves, and the bar collapses to the position
+ * and the duration with a note saying which one is which. Two waveforms at two scales drifting a
+ * frame apart is what makes people believe there are two players.
+ *
+ * **It is visibility and not the route that decides that** (`UI-11h`). The detail waveform scrolls
+ * away under the transcript (`UI-11g`), and somebody reading the transcript of what they are
+ * listening to is on the recording's page with no waveform in front of them -- which is exactly
+ * when the bar has to have one. `on-screen.ts` is where the view says which it is.
  *
  * **When the file will not play, the bar does not vanish.** It states the fact and offers to try
  * again. A player that disappeared on failure would leave somebody looking at a shell that
@@ -30,7 +35,7 @@ import { RATES, advanceRate, playedFraction, usePlayback } from './store';
 import { usePlayingPeaks } from './use-playing-peaks';
 
 export interface PlayerProps {
-  /** The recording the view is showing, if it is showing one. */
+  /** The recording whose own waveform is on screen, if one is. `useOnScreenWaveform`. */
   onScreen?: string | undefined;
 }
 
@@ -44,7 +49,8 @@ export function Player({ onScreen }: PlayerProps) {
   const { recording, status } = state;
   const isOnScreen = onScreen !== undefined && onScreen === recording?.uuid;
   // Not asked for while the detail view's waveform is the one on screen: the bar draws no second
-  // shape, so there is no second picture to fetch.
+  // shape, so there is no second picture to fetch. It is the same buckets either way, so the
+  // scroll that hands the shape over finds it already fetched.
   const peaks = usePlayingPeaks(!isOnScreen);
 
   // Absent, not empty (§3.1). A 64px bar with nothing in it is a control somebody keeps looking

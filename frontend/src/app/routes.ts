@@ -44,18 +44,5 @@ export function queryIn(search: string): string {
   return new URLSearchParams(search).get('q') ?? '';
 }
 
-/**
- * The recording a path is showing, if it is showing one (`UI-11b`, §3.1).
- *
- * The shell asks it so the player bar can drop its waveform while the detail view's 130px one is
- * on screen: two waveforms at two scales drifting a frame apart is what makes people believe
- * there are two players. Here rather than in the shell because it is a fact about a path, and
- * `routes.recording` is the pattern it has to agree with.
- */
-export function recordingIn(pathname: string): string | undefined {
-  const match = /^\/recording\/([^/]+)\/?$/.exec(pathname);
-  return match?.[1] === undefined ? undefined : decodeURIComponent(match[1]);
-}
-
 /** Whether a path is the one public route, which is the only question the guard has to ask. */
 export const isPublic = (pathname: string): boolean => pathname === routes.signIn;

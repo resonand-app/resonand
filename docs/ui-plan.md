@@ -816,6 +816,18 @@ The most important single screen, and the one whose phone layout is a genuinely 
       been yours, and that **the instance does not say which**. Never "you do not have permission".
       ⇢ UI-35c, UI-3b
 - [x] **UI-11f** · No waveform yet, in the detail view's own words. ⇢ UI-2d
+- [x] **UI-11g** · The player panel and what is under it as **one scrolling section**: the waveform
+      is what the screen opens with, a scroll takes it away — fading as it goes — and the
+      transcript is left the whole column. On a laptop the picture was taking the height the
+      reading needed. The column under the player is a full column whatever is in it, so a
+      three-line transcript and a recording with no transcript at all do this exactly as a
+      forty-minute one does. 🧪 one scrollport and not two, and the waveform can always be
+      scrolled away ⇢ UI-11b, UI-11c, UI-12a
+- [x] **UI-11h** · The bar takes the waveform over once the panel has faded, decided by
+      **visibility and not by the route**: reading a transcript is being on the recording's page
+      with no waveform in front of you, which is exactly when the bar has to have one. Two
+      thresholds rather than one, so a trackpad's own jitter cannot flip the shape back and forth.
+      🧪 the handover, and that it holds inside the dead band ⇢ UI-11g, UI-5c
 - [x] **UI-12a** · The transcript: virtualised segments, exactly one active line, click a line to
       seek. `speaker` is usually empty in v0 — accommodate it without depending on it.
       ⇢ UI-11b, JOB-6

@@ -31,6 +31,7 @@ import { MediaSession } from '@/player/MediaSession';
 import { PhonePlayer } from '@/player/PhonePlayer';
 import { Player } from '@/player/Player';
 import { connect } from '@/player/audio';
+import { useOnScreenWaveform } from '@/player/on-screen';
 import { playerShowing, usePlayback } from '@/player/store';
 
 import { PhoneShell } from './PhoneShell';
@@ -39,7 +40,7 @@ import { Toasts } from './Toasts';
 import { destinationOf, destinationTo, initialsOf, libraryIn } from '@/app/destinations';
 import { isPlainClick } from '@/app/links';
 import { useLibraries, useTrashCount } from '@/app/library-data';
-import { queryIn, recordingIn, routes, toRecording, toSearch } from '@/app/routes';
+import { queryIn, routes, toRecording, toSearch } from '@/app/routes';
 import { useSession } from '@/app/session';
 import { SEEK_SECONDS, SKIP_SECONDS } from '@/app/keyboard';
 import { useIsPhone } from '@/app/hooks/use-is-phone';
@@ -70,6 +71,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   // The bar's own answer, because the frame is handed a player whether or not there is one to
   // draw: it is what the tray sits above, and what it drops to the gutter without.
   const playerVisible = usePlayback(playerShowing);
+  const onScreenWaveform = useOnScreenWaveform((state) => state.uuid);
   const [uploading, setUploading] = useState(false);
   // The upload dialog belongs to the frame, like the player and the tray: it is opened from the
   // nav on any screen, and what it starts has to outlive the screen it was started from
@@ -272,9 +274,9 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
         player={
           <>
             <MediaSession />
-            {/* Which recording the view is showing, so the bar can drop its waveform while the
-              detail view's own one is on screen (`UI-11b`, §3.1). */}
-            {player ?? <Player onScreen={recordingIn(location.pathname)} />}
+            {/* Which recording is drawing its own waveform, so the bar can drop its while that
+              one is on screen and take it back when it has scrolled away (`UI-11h`, §3.1). */}
+            {player ?? <Player onScreen={onScreenWaveform ?? undefined} />}
           </>
         }
         tray={tray ?? <Uploads />}
