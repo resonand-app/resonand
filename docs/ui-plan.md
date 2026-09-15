@@ -828,6 +828,17 @@ The most important single screen, and the one whose phone layout is a genuinely 
       with no waveform in front of you, which is exactly when the bar has to have one. Two
       thresholds rather than one, so a trackpad's own jitter cannot flip the shape back and forth.
       🧪 the handover, and that it holds inside the dead band ⇢ UI-11g, UI-5c
+- [x] **UI-11i** · The title corrected where it is largest, as §V5 has always had it —
+      inline-editable as the one Chillax element. A recording's title is the subject's own name
+      rather than a label the product chose, and it is most often wrong right where it is biggest:
+      a filename nobody looked at, over the waveform of the thing it names. `PageHeader` grows an
+      `onTitleSave` and keeps `title` a `string`, so the pencil is the design system's own, at the
+      interface's size and never in Chillax — `UI-35b` is about foreign nodes in the display type
+      and holds exactly as it did. Two controls over one field, deliberately: the panel is where a
+      title is corrected among the other seven, the header where it is corrected because you are
+      looking at it. **Absent rather than inert below level 20**, which is `UI-34l`'s rule for the
+      panel applied to the title. 🧪 the heading survives the control, the panel agrees after a
+      save, and there is no pencil at level 10 ⇢ UI-11a, UI-13a, UI-35b
 - [x] **UI-12a** · The transcript: virtualised segments, exactly one active line, click a line to
       seek. `speaker` is usually empty in v0 — accommodate it without depending on it.
       ⇢ UI-11b, JOB-6

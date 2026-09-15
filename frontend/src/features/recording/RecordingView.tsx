@@ -10,10 +10,18 @@
  * is otherwise a screen with no context at all -- `library_uuid` and `category_id` are ids on the
  * wire and names to a person, and `data.ts` is where they become names.
  *
- * **One piece of display type.** The title is the view's `PageHeader` title and nothing else on
- * the screen is Chillax. It is not editable here: `PageHeader` takes a string on purpose
- * (`UI-35b`), and the place a title is corrected is the metadata panel, where the other seven
- * fields are corrected the same way (`UI-13a`).
+ * **One piece of display type, and it is correctable in place** (`UI-11i`). The title is the
+ * view's `PageHeader` title and nothing else on the screen is Chillax. §V5 has it inline-editable
+ * as that one element: a recording's title is the subject's own name rather than a label the
+ * product chose, and it is most often wrong exactly where it is largest -- a filename nobody
+ * looked at, sitting over the waveform of the thing it names. So it is corrected here as well as
+ * in the panel (`UI-13a`), both through the same `PATCH /audio/{uuid}`.
+ *
+ * Two controls on one screen for one field is worth being deliberate about. The panel is where a
+ * title is corrected *among the other seven fields*, in a column somebody opened to change
+ * things; the header is where it is corrected *because you are looking at it*. Neither is the
+ * other's shortcut. The title is still a `string` -- `PageHeader` draws the pencil itself, so
+ * `UI-35b` holds exactly as it did.
  *
  * **The essentials line is four facts and no more.** The recording's own date, how long it runs,
  * who uploaded it, and which transcript version is active. §V5 lists exactly those, and a field a
@@ -86,6 +94,7 @@ import { TrashedBand } from './TrashedBand';
 import { TranscriptionState } from './TranscriptionState';
 import { useRecording } from './data';
 import type { RecordingContext } from './data';
+import { useUpdateRecording } from './metadata';
 import { useTranscripts } from './transcripts';
 import type { Transcripts } from './transcripts';
 import { usePanel } from './use-panel';
@@ -338,6 +347,10 @@ function Whereabouts({ context }: { context: RecordingContext }) {
  * recorded at half six in the evening was recorded at half six in the evening, and converting it
  * to the reader's timezone would make it a different evening for somebody abroad. A recording
  * with no date of its own says so rather than passing the upload's off as the recording's.
+ *
+ * **The title is corrected here** (`UI-11i`), through the same mutation the panel uses, and only
+ * where `canEdit` says so -- which is already false for a recording in the trash, so the band
+ * saying it cannot be edited and the title being editable can never disagree (`UI-11d`).
  */
 function Essentials({
   context,
@@ -350,6 +363,7 @@ function Essentials({
 }) {
   const { t, i18n } = useTranslation('recording');
   const recording = context.recording;
+  const update = useUpdateRecording(recording?.uuid ?? '', recording?.library_uuid ?? '');
   if (recording === undefined) return null;
 
   const when = recordedAt(recording, i18n.language);
@@ -360,7 +374,24 @@ function Essentials({
     version === undefined ? undefined : t('essentials.version', { version }),
   ].filter((part): part is string => part !== undefined);
 
-  return <PageHeader title={recording.title} meta={meta.join(' · ')} actions={actions} />;
+  return (
+    <PageHeader
+      title={recording.title}
+      meta={meta.join(' · ')}
+      actions={actions}
+      {...(context.canEdit
+        ? {
+            editLabel: t('essentials.editTitle'),
+            onTitleSave: (title: string) => {
+              // An empty title is not a title. The endpoint refuses one, and offering to send it
+              // would be offering to fail.
+              if (title.trim() === '') return;
+              update.mutate({ title: title.trim() });
+            },
+          }
+        : {})}
+    />
+  );
 }
 
 /** The page knows its own shape, so it says so while it waits (§3.5). */

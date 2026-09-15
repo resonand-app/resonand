@@ -4,7 +4,8 @@
   },
   "essentials": {
     "uploadedBy": "Uploaded by {{name}}",
-    "version": "Transcript v{{version}}"
+    "version": "Transcript v{{version}}",
+    "editTitle": "Edit the title"
   },
   "missing": {
     "title": "This recording is not here",

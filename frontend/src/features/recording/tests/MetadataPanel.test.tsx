@@ -47,6 +47,16 @@ function renderRecording(uuid: string = FIELD_TAKE) {
   );
 }
 
+/**
+ * The panel, so a query for the title finds its field rather than the page header's.
+ *
+ * A title is correctable in both places (`UI-11i`), and this file's subject is the panel: an
+ * unscoped query for it matches two controls and stops saying which of them it meant.
+ */
+async function panel(): Promise<HTMLElement> {
+  return screen.findByRole('complementary', { name: 'Details' });
+}
+
 /** Every body a request was sent with, so a test can assert what was not sent as well. */
 function recorded(): Record<string, unknown>[] {
   const bodies: Record<string, unknown>[] = [];
@@ -66,7 +76,7 @@ describe('correcting a field', () => {
   it('saves the title when the field is left, with no Save button anywhere', async () => {
     const user = userEvent.setup();
     renderRecording();
-    const title = await screen.findByRole('button', { name: /Field recording, long take/ });
+    const title = within(await panel()).getByRole('button', { name: /Field recording, long take/ });
     await user.click(title);
     const field = screen.getByRole('textbox', { name: 'Title' });
     await user.clear(field);
@@ -128,7 +138,9 @@ describe('correcting a field', () => {
     const user = userEvent.setup();
     const bodies = recorded();
     renderRecording();
-    await user.click(await screen.findByRole('button', { name: /Field recording, long take/ }));
+    await user.click(
+      within(await panel()).getByRole('button', { name: /Field recording, long take/ }),
+    );
     await user.clear(screen.getByRole('textbox', { name: 'Title' }));
     await user.tab();
     expect(bodies).toEqual([]);
@@ -186,7 +198,7 @@ describe('a recording somebody can only read', () => {
   it('is editable again at level 20, which is the whole difference', async () => {
     renderRecording();
     expect(
-      await screen.findByRole('button', { name: /Field recording, long take/ }),
+      within(await panel()).getByRole('button', { name: /Field recording, long take/ }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/You can read this recording/)).toBeNull();
   });

@@ -11,6 +11,7 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { describe, expect, it } from 'vitest';
@@ -134,6 +135,69 @@ describe('the essentials line', () => {
     renderRecording(CASSETTE);
     await screen.findByRole('heading', { name: 'Digitised cassette' });
     expect(screen.queryByText(/Transcript v/)).toBeNull();
+  });
+});
+
+/**
+ * Correcting the title where it is largest (`UI-11i`).
+ *
+ * The header and the panel are two controls over one field, so the pair that matters is: the
+ * header saves through the same endpoint, and the panel hears about it -- a title corrected above
+ * the waveform that still reads the old way in the column beside it is the bug this arrangement
+ * could produce and must not.
+ */
+describe('the title in the header', () => {
+  /** The page header's own control, rather than the panel's field for the same title. */
+  function headerTitle(): HTMLElement {
+    return within(screen.getByRole('heading', { level: 1 })).getByRole('button');
+  }
+
+  it('is corrected in place, and the panel says the same thing afterwards', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    await screen.findByRole('heading', { name: /Field recording, long take/, level: 1 });
+    await user.click(headerTitle());
+    const field = screen.getByRole('textbox', { name: 'Edit the title' });
+    await user.clear(field);
+    await user.type(field, 'Field recording, long take, 1998{Enter}');
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /Field recording, long take, 1998/, level: 1 }),
+      ).toBeInTheDocument();
+    });
+    // One field and one cache: the panel is looking at the same recording, so it cannot be
+    // left showing the title somebody just replaced.
+    const panel = within(screen.getByRole('complementary', { name: 'Details' }));
+    expect(
+      panel.getByRole('button', { name: /Field recording, long take, 1998/ }),
+    ).toBeInTheDocument();
+  });
+
+  it('refuses to send an empty title, because a recording has to be called something', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    await screen.findByRole('heading', { name: /Field recording, long take/, level: 1 });
+    await user.click(headerTitle());
+    await user.clear(screen.getByRole('textbox', { name: 'Edit the title' }));
+    await user.tab();
+    expect(
+      await screen.findByRole('heading', { name: /Field recording, long take/, level: 1 }),
+    ).toBeVisible();
+  });
+
+  it('offers nothing at all on a recording somebody can only read', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
+    );
+    renderRecording();
+    const heading = await screen.findByRole('heading', {
+      name: 'Field recording, long take',
+      level: 1,
+    });
+    // The title is a heading and nothing else: no pencil to reach for, which is §3.5's
+    // read-only state rather than a control that turns out to do nothing.
+    expect(within(heading).queryByRole('button')).toBeNull();
+    expect(heading).toBeVisible();
   });
 });
 
