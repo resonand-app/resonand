@@ -20,11 +20,9 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
 import { shiftHeld } from '@/app/modifiers';
-import { fromList } from '@/app/came-from';
 import { toRecording } from '@/app/routes';
 import { RecordingCard } from '@/design-system';
 import * as format from '@/i18n/format';
@@ -32,6 +30,7 @@ import { recordedAt } from '@/i18n/time';
 import { usePlayback } from '@/player/store';
 
 import { transcriptionState } from './recordings';
+import { useKeepPlace } from './use-keep-place';
 import { useLongPress } from './use-long-press';
 import type { Categories, Recording } from './recordings';
 
@@ -61,8 +60,10 @@ export function RecordingGrid({
   waveforms,
   selection,
 }: RecordingGridProps) {
+  const { root, open } = useKeepPlace();
   return (
     <div
+      ref={root}
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fill, minmax(var(--card-width), 1fr))',
@@ -77,6 +78,7 @@ export function RecordingGrid({
           category={categories.nameOf(recording.category_id)}
           libraryName={libraryName}
           waveforms={waveforms}
+          onOpen={open}
           {...(selection === undefined ? {} : { selection })}
         />
       ))}
@@ -89,17 +91,17 @@ function Card({
   category,
   libraryName,
   waveforms,
+  onOpen,
   selection,
 }: {
   recording: Recording;
   category: string | undefined;
   libraryName: string;
   waveforms: boolean;
+  onOpen: (uuid: string) => void;
   selection?: RecordingGridProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
-  const navigate = useNavigate();
-  const { search } = useLocation();
   // Subscribed to which recording is playing and nothing else. The card's waveform is static and
   // the ring is the whole mark, so no card has any reason to know the position -- which is what
   // stops a screenful of them re-rendering several times a second.
@@ -133,7 +135,7 @@ function Card({
         // click as "open me". Opening now would take somebody who asked to select one recording
         // to that recording instead.
         if (longPress.consumedByPress()) return;
-        void navigate(toRecording(recording.uuid), fromList(search));
+        onOpen(recording.uuid);
       }}
       name={recording.title}
       href={toRecording(recording.uuid)}
