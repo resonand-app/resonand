@@ -65,6 +65,7 @@ import { useNavigate, useParams } from 'react-router';
 import { isApiProblem } from '@/api/problem';
 import { isPlainClick } from '@/app/links';
 import { transcriptionState } from '@/features/library/recordings';
+import { useCameFromList } from '@/app/came-from';
 import { toLibrary } from '@/app/routes';
 import {
   Breadcrumb,
@@ -309,10 +310,11 @@ function Middle({
 function Whereabouts({ context }: { context: RecordingContext }) {
   const { t } = useTranslation('recording');
   const navigate = useNavigate();
+  const cameFrom = useCameFromList();
   const { library, categoryName } = context;
   if (library === undefined) return null;
 
-  const href = toLibrary(library.uuid);
+  const href = `${toLibrary(library.uuid)}${cameFrom}`;
 
   return (
     <div style={{ marginBottom: 'var(--space-4)' }}>

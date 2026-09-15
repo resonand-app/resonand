@@ -30,8 +30,9 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
+import { fromList } from '@/app/came-from';
 import { toRecording } from '@/app/routes';
 import { shiftHeld } from '@/app/modifiers';
 import { useUrlState } from '@/app/url-state';
@@ -327,6 +328,7 @@ function Row({
 }) {
   const { t, i18n } = useTranslation('library');
   const navigate = useNavigate();
+  const { search } = useLocation();
   const isCurrent = usePlayback((state) => state.recording?.uuid === recording.uuid);
   const isPlaying = usePlayback((state) => isCurrent && state.status === 'playing');
   const state = transcriptionState(recording.transcription_state);
@@ -364,7 +366,7 @@ function Row({
         // click as "open me". Opening now would take somebody who asked to select one recording
         // to that recording instead.
         if (longPress.consumedByPress()) return;
-        void navigate(toRecording(recording.uuid));
+        void navigate(toRecording(recording.uuid), fromList(search));
       }}
       onPlay={() => {
         const player = usePlayback.getState();
