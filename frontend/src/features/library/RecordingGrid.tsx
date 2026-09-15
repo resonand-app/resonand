@@ -20,10 +20,11 @@
  */
 
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
 import { shiftHeld } from '@/app/modifiers';
+import { fromList } from '@/app/came-from';
 import { toRecording } from '@/app/routes';
 import { RecordingCard } from '@/design-system';
 import * as format from '@/i18n/format';
@@ -98,6 +99,7 @@ function Card({
 }) {
   const { t, i18n } = useTranslation('library');
   const navigate = useNavigate();
+  const { search } = useLocation();
   // Subscribed to which recording is playing and nothing else. The card's waveform is static and
   // the ring is the whole mark, so no card has any reason to know the position -- which is what
   // stops a screenful of them re-rendering several times a second.
@@ -131,7 +133,7 @@ function Card({
         // click as "open me". Opening now would take somebody who asked to select one recording
         // to that recording instead.
         if (longPress.consumedByPress()) return;
-        void navigate(toRecording(recording.uuid));
+        void navigate(toRecording(recording.uuid), fromList(search));
       }}
       name={recording.title}
       href={toRecording(recording.uuid)}
