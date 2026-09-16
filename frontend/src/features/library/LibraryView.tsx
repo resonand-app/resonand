@@ -34,7 +34,7 @@
  * than broken.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
@@ -143,14 +143,14 @@ export function LibraryView() {
           waveforms={painted}
           {...(selectable === undefined ? {} : { selection: selectable })}
         />
-        {recordings.hasMore && (
-          <MoreRecordings
-            shown={recordings.items.length}
-            total={recordings.total}
-            loading={recordings.isFetchingMore}
-            onMore={recordings.fetchMore}
-          />
-        )}
+        <MoreRecordings
+          shown={recordings.items.length}
+          total={recordings.total}
+          hasMore={recordings.hasMore}
+          loading={recordings.isFetchingMore}
+          settling={recordings.isPlaceholder}
+          onMore={recordings.fetchMore}
+        />
       </>
     );
   }
@@ -240,15 +240,32 @@ function Unavailable({ error, onRetry }: { error: unknown; onRetry: () => void }
 function MoreRecordings({
   shown,
   total,
+  hasMore,
   loading,
+  settling,
   onMore,
 }: {
   shown: number;
   total: number;
+  hasMore: boolean;
   loading: boolean;
+  /** These rows are the previous filter's, still drawn while the next one's first page loads. */
+  settling: boolean;
   onMore: () => void;
 }) {
   const { t } = useTranslation('library');
+  const asked = useRef(false);
+  const count = useRef<HTMLSpanElement>(null);
+
+  // The button is what goes when the last page lands, and it is where somebody's focus is at
+  // exactly that moment -- pressing it is how they got here. Losing it drops them at the top of
+  // the document, which on a grid of a hundred and forty-two cards is the whole way back.
+  useEffect(() => {
+    if (hasMore || !asked.current) return;
+    asked.current = false;
+    count.current?.focus();
+  }, [hasMore]);
+
   return (
     <div
       style={{
@@ -259,11 +276,29 @@ function MoreRecordings({
         marginTop: 'var(--space-6)',
       }}
     >
-      <Button variant="secondary" disabled={loading} onClick={onMore}>
-        {loading ? t('more.loading') : t('more.label')}
-      </Button>
+      {/* Disabled while the filter is settling. The count and the cards are both the previous
+          filter's and agree with each other, but the query behind this button is already the
+          next one's -- so a press here would append its second page under the first filter's
+          first, and the grid would be showing two different questions at once. */}
+      {hasMore && (
+        <Button
+          variant="secondary"
+          disabled={loading || settling}
+          onClick={() => {
+            asked.current = true;
+            onMore();
+          }}
+        >
+          {loading ? t('more.loading') : t('more.label')}
+        </Button>
+      )}
+      {/* Mounted whether or not there is more to fetch: a live region that unmounts as its last
+          value arrives announces nothing, and `50 of 55` reaching `55 of 55` is the sentence
+          somebody pressing the button is waiting for. */}
       <span
-        aria-live="polite"
+        ref={count}
+        role="status"
+        tabIndex={-1}
         style={{
           fontFamily: 'var(--font-mono)',
           fontSize: 'var(--type-numeric-size)',
