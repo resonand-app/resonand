@@ -21,6 +21,7 @@ from fastapi import FastAPI
 
 from sonarium import __version__
 from sonarium.api.errors import install_error_handlers
+from sonarium.api.headers import SecurityHeaders
 from sonarium.api.limits import RequestSizeLimit
 from sonarium.api.logging import RequestCorrelationMiddleware, configure_logging
 from sonarium.api.namespace import API_PREFIX
@@ -37,7 +38,7 @@ from sonarium.api.routes import (
     transcription,
     users,
 )
-from sonarium.api.spa import install_spa
+from sonarium.api.spa import inline_script_hashes, install_spa
 from sonarium.core.config import Settings, get_settings
 from sonarium.db.engine import Database, build_engine
 from sonarium.db.migrate import migrate_at_startup
@@ -96,6 +97,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         upload_bytes=resolved.max_upload_bytes,
         body_bytes=resolved.max_request_bytes,
     )
+    # Outside the size ceiling, so that a refused body is answered with the headers too. The
+    # hashes come off the built shell rather than being written down, so editing `index.html`
+    # cannot leave a policy behind that refuses the page it describes.
+    app.add_middleware(SecurityHeaders, script_hashes=inline_script_hashes(resolved.static_dir))
     app.add_middleware(RequestCorrelationMiddleware)
     install_error_handlers(app)
 

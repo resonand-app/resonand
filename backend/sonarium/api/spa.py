@@ -31,8 +31,11 @@ none of this is installed at all, and ``/`` goes on saying what the instance is.
 
 from __future__ import annotations
 
+import base64
 import os
+import re
 from dataclasses import dataclass
+from hashlib import sha256
 from typing import TYPE_CHECKING
 
 # `Request` is imported at runtime and not under TYPE_CHECKING, and has to be: FastAPI resolves
@@ -167,3 +170,32 @@ def install_spa(app: FastAPI, static_dir: Path) -> SinglePageApp | None:
     if spa is not None:
         spa.install(app)
     return spa
+
+
+_INLINE_SCRIPT = re.compile(
+    rb"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", re.DOTALL | re.IGNORECASE
+)
+
+
+def inline_script_hashes(static_dir: Path) -> tuple[str, ...]:
+    """The ``sha256-`` sources a content policy needs in order to allow this shell's own scripts.
+
+    The shell carries exactly one inline script: the theme bootstrap, which has to run before any
+    module does so that somebody who chose light does not watch a dark page repaint (``UI-1j``).
+    It cannot move into the bundle without bringing back the flash it exists to prevent, so the
+    policy names it by hash rather than allowing inline script wholesale -- which would give up
+    most of what the policy is for (``SEC-4``).
+
+    Read out of the built shell rather than written down here, so editing ``index.html`` cannot
+    leave behind a policy that refuses it. An instance with no bundle has no inline script and
+    gets an empty tuple, which is the strictest answer rather than a missing one.
+    """
+    index = static_dir / "index.html"
+    if not index.is_file():
+        return ()
+    found = _INLINE_SCRIPT.findall(index.read_bytes())
+    return tuple(
+        f"'sha256-{base64.b64encode(sha256(body).digest()).decode()}'"
+        for body in found
+        if body.strip()
+    )

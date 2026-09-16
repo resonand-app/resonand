@@ -97,6 +97,11 @@ ceilings before it reads a body (`SEC-1`): `SONARIUM_MAX_UPLOAD_BYTES` for a rec
 upload the instance would have accepted — but an instance reached directly, or through a proxy
 configured generously, is not relying on that line to stay standing.
 
+**Sonarium sets its own security headers** (`SEC-4`) -- a content policy, `nosniff`,
+`frame-ancestors 'none'` and a referrer policy. A proxy that adds its own will produce two of
+each, and where they disagree the browser takes the stricter one, which is usually not the one
+anybody intended. Pass them through rather than adding a second set.
+
 **If the proxy runs on a different host** from the container, uvicorn will not trust its
 `X-Forwarded-*` headers — it trusts `127.0.0.1` only — and every session will be recorded as
 coming from the proxy. Add `--forwarded-allow-ips=<the proxy's address>` to the command. Not `*`:
