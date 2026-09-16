@@ -685,8 +685,13 @@ describe('a library longer than one page', { timeout: 30_000 }, () => {
     await waitFor(() => {
       expect(screen.getAllByRole('article')).toHaveLength(55);
     });
-    // Nothing left to ask for, so nothing offers to ask.
+    // Nothing left to ask for, so nothing offers to ask -- but the count stays, because a live
+    // region that unmounts as its last value arrives announces nothing, and it is where the
+    // focus of the button that has just gone lands.
     expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull();
+    const count = screen.getByRole('status');
+    expect(count).toHaveTextContent('55 of 55');
+    expect(count).toHaveFocus();
   });
 
   it('offers nothing more when the library fits in one request', async () => {
