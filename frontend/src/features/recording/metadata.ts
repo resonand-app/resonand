@@ -19,6 +19,10 @@
  * The cache is told what changed rather than which keys to drop: a corrected title is a different
  * search result and a different card in two lists, and `invalidate` is the one place that knows
  * it (`UI-3c`).
+ *
+ * **The player is told separately, because it is not a query.** It keeps its own copy of what is
+ * playing so that it can outlive this view, which is the one thing invalidating a cache cannot
+ * reach.
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -27,6 +31,7 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import { patch } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
+import { usePlayback } from '@/player/store';
 import type { components } from '@/api/contract/schema';
 
 import type { RecordingDetail } from './data';
@@ -45,6 +50,10 @@ export function useUpdateRecording(uuid: string, libraryUuid: string): Update {
       // panel is looking at that query, and a refetch before the invalidation lands would show
       // the old value for one frame.
       client.setQueryData([...keys.recording(uuid)], updated);
+      // The player is not a query and does not read this cache: it holds its own copy of what is
+      // playing, so a corrected title has to be handed to it or the bar keeps the old one for as
+      // long as the sound lasts.
+      usePlayback.getState().retitle(uuid, updated.title);
       await invalidate(client, { kind: 'recording', recording: uuid, library: libraryUuid });
     },
   });

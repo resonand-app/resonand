@@ -17,6 +17,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
+import { usePlayback } from '@/player/store';
 import { INTERVIEW, FIELD_TAKE, CASSETTE, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
@@ -29,6 +30,9 @@ afterEach(() => {
   // test starting on a screen somebody else configured.
   window.localStorage.clear();
   vi.unstubAllGlobals();
+  // The player outlives every view, which is the whole point of it and also means it outlives
+  // a test: left playing, it carries a recording into the next one.
+  usePlayback.getState().stop();
 });
 
 function renderRecording(uuid: string = FIELD_TAKE) {
@@ -89,6 +93,32 @@ describe('correcting a field', () => {
     });
     // The panel is a caption being corrected, not a form being submitted (`UI-34l`).
     expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
+  });
+
+  it('corrects the title the player is showing, without interrupting it', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    usePlayback.getState().play({
+      uuid: FIELD_TAKE,
+      title: 'Field recording, long take',
+      library: 'Field recordings',
+      durationMs: 2_892_000,
+      hasWaveform: true,
+    });
+    usePlayback.getState().report({ status: 'playing', positionMs: 600_000 });
+    const title = within(await panel()).getByRole('button', { name: /Field recording, long take/ });
+    await user.click(title);
+    const field = screen.getByRole('textbox', { name: 'Title' });
+    await user.clear(field);
+    await user.type(field, 'Field recording, long take, 1998');
+    await user.tab();
+    await waitFor(() => {
+      expect(usePlayback.getState().recording?.title).toBe('Field recording, long take, 1998');
+    });
+    // The bar is showing the new name and the sound has not restarted: a rename is a correction,
+    // not a reload.
+    expect(usePlayback.getState().status).toBe('playing');
+    expect(usePlayback.getState().positionMs).toBe(600_000);
   });
 
   it('sends the one field it changed and nothing else', async () => {

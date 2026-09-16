@@ -82,6 +82,16 @@ export interface PlaybackState {
   setRate: (rate: number) => void;
   /** Stop and forget. The player goes absent and the shell reflows. */
   stop: () => void;
+  /**
+   * Correct the title of what is playing, when that recording has been renamed.
+   *
+   * `recording` is a copy taken when playback began, and it has to be one: the player outlives
+   * every route, so it cannot read a query belonging to a view somebody has navigated away from.
+   * The cost of the copy is that it does not hear about a rename, and this is where a rename
+   * tells it. Ignored unless the renamed recording is the one playing -- renaming something else
+   * is not about the player.
+   */
+  retitle: (uuid: string, title: string) => void;
 
   /** What the audio element says is true. Nothing else writes these. */
   report: (update: Partial<Pick<PlaybackState, 'status' | 'positionMs' | 'durationMs'>>) => void;
@@ -161,6 +171,13 @@ export const usePlayback = create<PlaybackState>((set, get) => ({
 
   stop: () => {
     set({ ...EMPTY });
+  },
+
+  retitle: (uuid, title) => {
+    const { recording } = get();
+    if (recording === null) return;
+    if (recording.uuid !== uuid || recording.title === title) return;
+    set({ recording: { ...recording, title } });
   },
 
   report: (update) => {
