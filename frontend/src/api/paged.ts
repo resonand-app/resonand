@@ -112,6 +112,23 @@ export interface InfiniteResult<Item> {
   isPlaceholder: boolean;
 }
 
+/**
+ * How often to poll a collection that is holding `pages` of itself.
+ *
+ * Stretched by the depth so the cost stays flat as the grid grows: a refetch here is not one
+ * request. The pages are a chain, each one's offset read off the one before, so the client
+ * refetches all of them together -- and it has to. Refresh page 0 alone and an upload landing at
+ * the top pushes the row that was last on it down onto page 1, where the stale copy still sits:
+ * the same recording drawn twice, under one key.
+ *
+ * So the interval moves rather than the number of requests. A deep grid settles more slowly,
+ * which costs nothing anybody sees -- what is still being made is newest, and newest is page 0,
+ * where they are already looking.
+ */
+export function pollEvery(wanted: number | false, pages: number): number | false {
+  return wanted === false ? false : wanted * Math.max(1, pages);
+}
+
 export function useInfinitePages<Item>(
   key: QueryKey,
   fetchPage: (window: { limit: number; offset: number }) => Promise<Page<Item>>,
@@ -137,8 +154,18 @@ export function useInfinitePages<Item>(
     ...(refetchInterval === undefined
       ? {}
       : {
-          refetchInterval: (one: Query<Page<Item>, Error, InfiniteData<Page<Item>, number>>) =>
-            refetchInterval(one.state.data?.pages.flatMap((page) => page.items) ?? []),
+          // Stretched by however many pages are held, so the cost of polling stays flat as the
+          // grid grows. A refetch here is not one request: the pages are a chain, each one's
+          // offset read off the one before, so the client refetches all of them together -- and
+          // it has to. Refresh page 0 alone and an upload landing at the top pushes the row that
+          // was last on it down onto page 1, where the stale copy still sits: the same recording
+          // drawn twice, under one key. So the interval moves rather than the number of requests,
+          // and a deep grid settles more slowly -- which costs nothing anybody sees, because what
+          // is still being made is at the top where they are looking.
+          refetchInterval: (one: Query<Page<Item>, Error, InfiniteData<Page<Item>, number>>) => {
+            const held = one.state.data?.pages ?? [];
+            return pollEvery(refetchInterval(held.flatMap((page) => page.items)), held.length);
+          },
         }),
   });
   const pages = query.data?.pages ?? [];
