@@ -40,6 +40,10 @@ round-trips, and several months have gone by with all of that true.
   revocation. The value is shown **exactly once** and only its hash is stored.
 - **API-7b** · OIDC administrator designation: an explicit way to name admins in deployments where
   no local account is ever created (environment variable with `sub` values or emails). ⇢ API-4
+- **API-23** · **The library a recording is in, named on the recording.** `AudioDetail` carries
+  `library_uuid` and the interface resolves the name against `GET /libraries`, which holds only
+  while every readable recording sits in a readable library. An individual grant breaks that by
+  design, and the breadcrumb, the player's label and the move dialog all read it. ⇢ API-22
 - **INT-4** · **User deletion with mandatory ownership transfer**: it shows how many libraries and
   how many audios are being transferred and to whom before confirming, and resolves the personal
   library too. Until this exists, the first version simply refuses to delete a user with content.
@@ -49,10 +53,16 @@ round-trips, and several months have gone by with all of that true.
   the value is shown only once. ⇢ API-6
 - **UI-27** · OIDC on the sign-in screen, with both paths visible when both are enabled and without
   OIDC looking like a footnote. ⇢ API-4
-- **UI-30** · Individual-recording sharing in the interface, which has to **visually distinguish
-  access inherited from the library from access granted on this specific recording**. The data
-  model and the permission resolution already support it from the first migration; only the
-  surface is missing.
+- **UI-30a** · **The sharing panel on a recording**, which has to **visually distinguish access
+  inherited from the library from access granted on this specific recording**: inherited rows
+  read-only and named as inherited, individual rows editable. `SharePanel` is already shaped for
+  it (`UI-17e`) and takes a target rather than a library. Revoking states the consequence in
+  numbers as it does today, but the honest sentence is a different one — revoking an individual
+  grant may leave the person with access anyway, through the library. ⇢ API-22, API-23, UI-17c
+- **UI-30b** · **Shared with me**, the destination a recording shared on its own is reachable
+  from. An individual grant deliberately does not grant its library, so such a recording appears in
+  no library, no sidebar entry and no route: today it is reachable only by search or by its URL.
+  `GET /api/audio` already answers it and the interface has never called it. ⇢ UI-30a, UI-4d
 
 ### The API as a product
 
