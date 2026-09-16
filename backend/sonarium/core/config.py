@@ -90,6 +90,13 @@ class Settings(BaseSettings):
     max_upload_bytes: int = Field(default=8 * GIGABYTE, gt=0)
     """An hour of driving is not a large file; a multi-hour interview can be."""
 
+    max_request_bytes: int = Field(default=MEGABYTE, gt=0)
+    """The ceiling on every request that is *not* an upload (``SEC-1``).
+
+    A sign-in, a metadata edit and a share are all a few hundred bytes, so this is generous by
+    three orders of magnitude and still small enough that no unauthenticated caller can spend the
+    instance's disk or memory by describing a body it will never accept."""
+
     waveform_peaks_per_second: int = Field(default=10, gt=0)
     """``DEC-19``: fixed rate, so a stored waveform is comparable across recordings."""
 

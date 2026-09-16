@@ -91,6 +91,12 @@ location /sonarium/ {
 The session cookie is scoped to the subpath either way, so Sonarium cannot send it to another
 application on the same domain.
 
+**`client_max_body_size` is a convenience here, not a boundary.** Sonarium enforces its own
+ceilings before it reads a body (`SEC-1`): `SONARIUM_MAX_UPLOAD_BYTES` for a recording and
+`SONARIUM_MAX_REQUEST_BYTES` for everything else. Raise the proxy's limit so it does not refuse an
+upload the instance would have accepted — but an instance reached directly, or through a proxy
+configured generously, is not relying on that line to stay standing.
+
 **If the proxy runs on a different host** from the container, uvicorn will not trust its
 `X-Forwarded-*` headers — it trusts `127.0.0.1` only — and every session will be recorded as
 coming from the proxy. Add `--forwarded-allow-ips=<the proxy's address>` to the command. Not `*`:

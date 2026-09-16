@@ -21,6 +21,7 @@ from fastapi import FastAPI
 
 from sonarium import __version__
 from sonarium.api.errors import install_error_handlers
+from sonarium.api.limits import RequestSizeLimit
 from sonarium.api.logging import RequestCorrelationMiddleware, configure_logging
 from sonarium.api.namespace import API_PREFIX
 from sonarium.api.rate_limit import AttemptLimiter
@@ -85,6 +86,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = resolved
     app.state.login_limiter = AttemptLimiter(resolved.login_attempts_per_minute)
 
+    # Added innermost first: `add_middleware` stacks in reverse, so the last one added is the
+    # outermost. Correlation is outermost because a refused request still deserves an id in its
+    # answer and a line in the log, and the size ceiling is inside it because it has to run
+    # before anything reads a body -- including the dependency that authenticates the caller.
+    app.add_middleware(
+        RequestSizeLimit,
+        upload_bytes=resolved.max_upload_bytes,
+        body_bytes=resolved.max_request_bytes,
+    )
     app.add_middleware(RequestCorrelationMiddleware)
     install_error_handlers(app)
 
