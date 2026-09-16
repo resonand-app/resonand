@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+from argon2 import PasswordHasher
 from fastapi import status
 from fastapi.testclient import TestClient
 from sonarium.core.config import Settings
@@ -71,6 +73,63 @@ def test_a_wrong_password_and_an_unknown_address_give_the_same_answer(
     )
     assert wrong_password.status_code == unknown.status_code
     assert wrong_password.json()["detail"] == unknown.json()["detail"]
+
+
+def _count_verifications(monkeypatch: pytest.MonkeyPatch) -> list[int]:
+    """Count Argon2 verifications, which is what a sign-in's duration is made of.
+
+    Counted rather than timed: a stopwatch in a test suite is a flake, and what made the two
+    answers distinguishable was never a slow path but a *skipped* one. A verification is tens of
+    milliseconds and the rest of the endpoint is microseconds, so "the hash was verified" is the
+    whole property -- measured at 80 ms against 3 ms on the machine that reported it.
+    """
+    counted = [0]
+    real_verify = PasswordHasher.verify
+
+    def counting_verify(self: PasswordHasher, hash_: str, password: str) -> bool:
+        counted[0] += 1
+        return bool(real_verify(self, hash_, password))
+
+    # Patched on the class rather than on `security._hasher`, which has `__slots__` and so
+    # refuses an instance attribute.
+    monkeypatch.setattr(PasswordHasher, "verify", counting_verify)
+    return counted
+
+
+def test_an_unknown_address_costs_the_same_verification_as_a_real_one(
+    client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """🧪 The same answer has to take the same time, or it is two answers (``SEC-2``)."""
+    del accounts
+    counted = _count_verifications(monkeypatch)
+
+    client.post("/auth/session", json={"email": "admin@example.test", "password": "wrong one"})
+    for_a_real_account = counted[0]
+    counted[0] = 0
+    client.post("/auth/session", json={"email": "nobody@example.test", "password": PASSWORD})
+
+    assert for_a_real_account == 1
+    assert counted[0] == for_a_real_account
+
+
+def test_an_account_without_a_password_still_costs_a_verification(
+    database: Database, client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An account that only signs in through OIDC is not distinguishable either.
+
+    Nothing creates one yet -- ``oidc_subject`` ships unused -- so this is the guard that the day
+    something does, it does not arrive as a way to sort the instance's accounts into two piles.
+    """
+    with database.write_session() as session:
+        users.create_user(session, email="federated@example.test", display_name="Fed")
+    counted = _count_verifications(monkeypatch)
+
+    response = client.post(
+        "/auth/session", json={"email": "federated@example.test", "password": PASSWORD}
+    )
+
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert counted[0] == 1
 
 
 def test_a_disabled_account_cannot_sign_in_and_is_not_told_why(
