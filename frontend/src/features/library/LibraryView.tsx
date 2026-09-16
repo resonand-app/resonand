@@ -55,6 +55,7 @@ import { useKeyboard } from '@/app/use-keyboard';
 import { isFiltered, useUrlState } from '@/app/url-state';
 import { Button, StateCard } from '@/design-system';
 import { useAfterPaint } from '@/app/hooks/use-after-paint';
+import { useIsPhone } from '@/app/hooks/use-is-phone';
 import * as format from '@/i18n/format';
 
 import { LibraryFilters } from './LibraryFilters';
@@ -76,6 +77,7 @@ export function LibraryView() {
   const { filters, clear } = useUrlState();
   const categories = useCategories(uuid);
   const painted = useAfterPaint();
+  const isPhone = useIsPhone();
   // Both densities are handed the filters alone: the grid accumulates pages behind this, and the
   // dense list windows over the whole library itself.
   const recordings = useRecordings(uuid, libraryQuery(filters));
@@ -115,6 +117,16 @@ export function LibraryView() {
   }
 
   const libraryName = context.library?.name ?? '';
+  // Whether the dense list is what this screen currently is. It is the only body that scrolls on
+  // its own, so it is the only one that asks the frame for a settled height to fill (`UI-11c`) --
+  // the grid and the five other states keep the page they lengthen. Not on the phone (`DEC-23`):
+  // that shell settles no height, and a list filling an unsettled one has none.
+  const dense =
+    filters.view === 'list' &&
+    recordings.error === null &&
+    !recordings.isPending &&
+    recordings.items.length > 0;
+  const fills = dense && !isPhone;
   // Absent rather than disabled: a library you can only read has no checkboxes (§3.5).
   const selectable = context.canEdit
     ? {
@@ -156,6 +168,7 @@ export function LibraryView() {
           query={libraryQuery(filters)}
           libraryName={libraryName}
           headerOffset={`${String(headerHeight)}px`}
+          fills={fills}
           {...(selectable === undefined ? {} : { selection: selectable })}
         />
       );
@@ -182,7 +195,12 @@ export function LibraryView() {
   }
 
   return (
-    <section>
+    <section
+      {...(fills ? { 'data-fills': '' } : {})}
+      style={
+        fills ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined
+      }
+    >
       <LibraryHeader context={context} />
       {/* `flow-root` so the bar's own bottom gutter is inside the box that sticks rather than
           collapsing out of it: the height measured here is what the list's column header pins

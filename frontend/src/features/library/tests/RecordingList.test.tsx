@@ -245,6 +245,57 @@ describe('the dense list', () => {
   });
 });
 
+/**
+ * Which box scrolls, which is a question about one attribute here and about layout everywhere
+ * else.
+ *
+ * The dense list scrolls on its own, so the page under it must not: a list with a height of its
+ * own leaves the frame's content box taller than the window, and then one list has two
+ * scrollbars and neither of them is the one somebody means to use. `data-fills` is what the view
+ * asks the frame with, and asking is the whole of what jsdom can see -- the heights it buys are
+ * resolved by a flex layout that does not run here, and were checked in a browser instead.
+ *
+ * The other five states this screen can be keep the page they lengthen, so the attribute has to
+ * be absent from them: a state card stretched down a settled column is the cost of getting that
+ * wrong.
+ */
+describe('which box scrolls', () => {
+  /** Whether the view asked the frame to settle a height for it. */
+  const asksForAHeight = () => document.querySelector('[data-fills]') !== null;
+
+  it('asks the frame for a height at the dense list', async () => {
+    measured(720);
+    renderList();
+    await screen.findByRole('table');
+    await waitFor(() => {
+      expect(document.querySelectorAll(ROW_SELECTOR).length).toBeGreaterThan(0);
+    });
+    expect(asksForAHeight()).toBe(true);
+  });
+
+  it('leaves the grid on the page it lengthens', async () => {
+    renderList(RECORDINGS, '');
+    await waitFor(() => {
+      expect(document.querySelectorAll('[data-ds="recording-card"]').length).toBeGreaterThan(0);
+    });
+    expect(asksForAHeight()).toBe(false);
+  });
+
+  it('leaves a library with nothing in it alone, at either density', async () => {
+    server.use(
+      http.get('/api/libraries/:library_uuid/audio', () =>
+        HttpResponse.json({ items: [], total: 0, limit: PAGE_SIZE, offset: 0 }),
+      ),
+    );
+    renderList();
+    // The empty state, not the list: there is no table to fill a height with.
+    await waitFor(() => {
+      expect(screen.queryByRole('table')).toBeNull();
+    });
+    expect(asksForAHeight()).toBe(false);
+  });
+});
+
 describe('which columns go, and in which order', () => {
   /**
    * Read off the stylesheet, because a media query is the one thing jsdom cannot answer: it
