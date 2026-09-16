@@ -23,6 +23,11 @@ export interface ModalProps {
  * panel renderable on its own -- a specimen page draws twenty of them at once, and none of them
  * should be trapping a keyboard.
  *
+ * Focus lands on the first focusable thing in the panel, which for a `Dialog` is its close
+ * control. That is right for a confirm -- `Enter` then means cancel -- and wrong for anything
+ * somebody opened in order to type, so a dialog with a field puts `data-initial-focus` on it and
+ * gets the caret instead.
+ *
  * `Sheet` is the phone's answer to the same problem and does its own placing for the same reason:
  * it is anchored to the bottom of the viewport rather than to a control on the page.
  */
