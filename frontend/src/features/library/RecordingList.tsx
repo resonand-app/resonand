@@ -52,7 +52,10 @@ const ROW_HEIGHT = 36;
 /** How many rows to draw beyond the viewport, so a fast scroll does not show empty space. */
 const OVERSCAN = 8;
 
-/** How tall the scroll container gets. The virtualiser measures the element, not this. */
+/**
+ * How tall the scroll container gets where the frame hands down no settled height. The
+ * virtualiser measures the element, not this.
+ */
 const MAX_HEIGHT = 720;
 
 export interface RecordingListProps {
@@ -75,6 +78,13 @@ export interface RecordingListProps {
    * under it. The view owns that number; this only has to be told it.
    */
   headerOffset?: string;
+  /**
+   * Whether the frame has settled a height for this list to fill.
+   *
+   * The view asks the shell for one and says so here; without it the list is drawn on a page
+   * that scrolls, and it takes a height of its own rather than growing to eight hundred rows.
+   */
+  fills?: boolean;
 }
 
 export function RecordingList({
@@ -83,6 +93,7 @@ export function RecordingList({
   query,
   libraryName,
   headerOffset = '0',
+  fills = false,
   selection,
 }: RecordingListProps) {
   // The virtualiser measures a live DOM node and hands back functions whose results change
@@ -119,12 +130,25 @@ export function RecordingList({
   });
 
   return (
-    <div ref={root} role="table" aria-label={t('list.label')} aria-rowcount={total}>
+    <div
+      ref={root}
+      role="table"
+      aria-label={t('list.label')}
+      aria-rowcount={total}
+      style={
+        fills ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined
+      }
+    >
       <Columns selecting={selection !== undefined} offset={headerOffset} />
       <div
         ref={scroller}
         style={{
-          height: `min(70vh, ${String(MAX_HEIGHT)}px)`,
+          ...(fills
+            ? // The rows take what the frame left, so the only box that scrolls is this one: a
+              // list with a height of its own leaves the page a band taller than the window, and
+              // then there are two scrollbars for one list.
+              { flex: 1, minHeight: 0 }
+            : { height: `min(70vh, ${String(MAX_HEIGHT)}px)` }),
           overflowY: 'auto',
           // The scroll container is the thing the virtualiser measures, so it owns the height.
           contain: 'strict',
@@ -214,6 +238,9 @@ function Columns({ selecting, offset }: { selecting: boolean; offset: string }) 
         padding: '0 12px',
         height: 28,
         background: 'var(--surface)',
+        // Top only: the surface ends at the divider and the rows below it are transparent, so a
+        // rounded bottom would round a corner against nothing.
+        borderRadius: 'var(--radius-panel) var(--radius-panel) 0 0',
         borderBottom: '1px solid var(--border)',
         fontFamily: 'var(--font-mono)',
         fontSize: 'var(--type-overline-size)',
