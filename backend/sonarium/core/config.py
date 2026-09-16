@@ -80,8 +80,19 @@ class Settings(BaseSettings):
     A cookie without this travels in clear text, and it is the whole session."""
 
     login_attempts_per_minute: int = Field(default=10, gt=0)
-    """Per address and per client. Enough that nobody notices; too few to grind through a
-    password list (``INT-5``)."""
+    """Per address *and* client together. Enough that nobody notices; too few to grind through a
+    password list (``INT-5``).
+
+    Both halves of that key matter (``SEC-3``): counting the address alone let anybody who knew
+    an address lock its owner out from anywhere, which is a denial of service dressed as a
+    protection."""
+
+    login_attempts_per_client_per_minute: int = Field(default=60, gt=0)
+    """The second ceiling, on one client whatever addresses it names (``SEC-3``).
+
+    Higher than the per-account one because a household behind one address is an ordinary thing
+    and a few people getting their passwords wrong at once must not lock the door. Low enough
+    that walking an address list from one place is not worth starting."""
     trash_retention_days: int = Field(default=30, gt=0)
     """``DEC-3``: 30 days by default, per instance, never per library."""
 

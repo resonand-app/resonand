@@ -17,7 +17,7 @@ from sonarium.api.deps import (
     WriteSession,
     current_caller,
 )
-from sonarium.api.rate_limit import AttemptLimiter
+from sonarium.api.rate_limit import AttemptLimiter, address_key, client_key
 from sonarium.api.schemas import (
     Bootstrap,
     ChangePassword,
@@ -50,6 +50,16 @@ def _limiter(request: Request, settings: Settings) -> AttemptLimiter:
         return existing
     made = AttemptLimiter(settings.login_attempts_per_minute)
     request.app.state.login_limiter = made
+    return made
+
+
+def _client_limiter(request: Request, settings: Settings) -> AttemptLimiter:
+    """The second counter, for one place trying many accounts (``SEC-3``)."""
+    existing = getattr(request.app.state, "login_client_limiter", None)
+    if isinstance(existing, AttemptLimiter):
+        return existing
+    made = AttemptLimiter(settings.login_attempts_per_client_per_minute)
+    request.app.state.login_client_limiter = made
     return made
 
 
@@ -129,9 +139,14 @@ def sign_in(
     request: Request,
 ) -> Me:
     """Exchange an email and a password for a session cookie."""
-    key = normalise_email(str(body.email))
+    client = request.client.host if request.client else None
+    key = address_key(normalise_email(str(body.email)), client)
     limiter = _limiter(request, settings)
-    if not limiter.check(key):
+    # Both counters, and the address one is keyed on where the attempt came from as well. Counting
+    # an address alone meant somebody who knew yours could spend its budget from anywhere and keep
+    # you out of your own account, while one client could still walk a whole address list at full
+    # speed (`SEC-3`).
+    if not limiter.check(key) or not _client_limiter(request, settings).check(client_key(client)):
         raise InvalidRequestError(
             "Too many sign-in attempts. Wait a minute and try again.",
             code="too_many_requests",

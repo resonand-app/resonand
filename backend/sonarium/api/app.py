@@ -85,6 +85,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved
     app.state.login_limiter = AttemptLimiter(resolved.login_attempts_per_minute)
+    app.state.login_client_limiter = AttemptLimiter(resolved.login_attempts_per_client_per_minute)
 
     # Added innermost first: `add_middleware` stacks in reverse, so the last one added is the
     # outermost. Correlation is outermost because a refused request still deserves an id in its
