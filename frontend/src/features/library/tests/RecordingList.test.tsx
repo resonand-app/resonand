@@ -16,6 +16,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -68,6 +69,9 @@ function measured(height = 720) {
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(height);
 }
 
+/** One drawn row. Cheaper to match than a role and a name, which this file does a lot of. */
+const ROW_SELECTOR = '[data-ds="recording-row"]';
+
 /** The address, so a test can assert what a control put in it (`UI-4b`). */
 function Where() {
   const location = useLocation();
@@ -106,6 +110,57 @@ describe('which pages a scroll position needs', () => {
 
   it('treats a range that arrives backwards as the page it starts in', () => {
     expect(pagesFor({ start: 30, end: 0 }, 50)).toEqual([0]);
+  });
+});
+
+describe('selecting more of the library than has been fetched', () => {
+  /** A library of `total` recordings, answering `limit` and `offset` the way the API does. */
+  function aLibraryOf(total: number) {
+    const template = archive.recordings[0];
+    const every = Array.from({ length: total }, (_, index) => ({
+      ...template,
+      uuid: `dddddddd-0000-4000-8000-${String(index).padStart(12, '0')}`,
+      library_uuid: RECORDINGS,
+      title: `Recording ${String(index)}`,
+    }));
+    server.use(
+      http.get('/api/libraries/:library_uuid/audio', ({ request }) => {
+        const url = new URL(request.url);
+        const limit = Number(url.searchParams.get('limit') ?? PAGE_SIZE);
+        const offset = Number(url.searchParams.get('offset') ?? 0);
+        return HttpResponse.json({
+          items: every.slice(offset, offset + limit),
+          total,
+          limit,
+          offset,
+        });
+      }),
+    );
+  }
+
+  it('offers the whole library only once the page in hand is selected', async () => {
+    const user = userEvent.setup();
+    measured(200);
+    aLibraryOf(120);
+    renderList();
+    await screen.findByRole('table');
+    // The rows are found by `data-ds` and not by their accessible names: `findByRole` recomputes
+    // every name in the tree on each 50ms poll, and this view draws twenty-eight rows before the
+    // first click -- a second of the test's time, in a file whose other tests take forty
+    // milliseconds each.
+    await waitFor(() => {
+      expect(document.querySelectorAll(ROW_SELECTOR).length).toBeGreaterThan(0);
+    });
+    const first = document.querySelector(`${ROW_SELECTOR} [role="checkbox"]`);
+    await user.click(first as HTMLElement);
+    // One step at a time: a single button meaning either 50 or 120 depending on how far somebody
+    // had scrolled is a button that trashes a hundred recordings by surprise.
+    expect(screen.queryByRole('button', { name: 'Select all 120' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Select all' }));
+    expect(screen.getByText('50 selected')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Select all 120' }));
+    expect(await screen.findByText('120 selected')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /^Select all/ })).toBeNull();
   });
 });
 

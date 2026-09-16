@@ -37,7 +37,7 @@ function show(uuid: string = RECORDINGS) {
 }
 
 describe('the three variants', () => {
-  it('keeps the panel and drops the controls when you can edit but not manage', async () => {
+  it('is not reached at all when you can edit but not manage', async () => {
     server.use(
       http.get('/api/libraries/:library_uuid', ({ params }) =>
         HttpResponse.json({
@@ -47,11 +47,10 @@ describe('the three variants', () => {
       ),
     );
     show();
-    // Read-only rather than absent: seeing who else has access is part of knowing what you are
-    // working in.
-    expect(await screen.findByText('Sam Rivera')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Remove Sam Rivera/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/only somebody who can manage it/i)).toBeVisible();
+    // The route takes level 30, so who else has access is answered by the library's own header
+    // and its avatar stack rather than by a panel behind a screen full of read-only fields.
+    expect(await screen.findByText(/need Can manage/i)).toBeVisible();
+    expect(screen.queryByText('Sam Rivera')).not.toBeInTheDocument();
   });
 
   it('cannot share the personal library away, and says why once', async () => {

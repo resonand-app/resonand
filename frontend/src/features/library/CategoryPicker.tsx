@@ -18,7 +18,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { Button, Icon, useAnchoredOverlay } from '@/design-system';
+import { Button, Icon, IconButton, useAnchoredOverlay } from '@/design-system';
 
 import { inDrawnOrder, treeOf } from './categories';
 import type { Category } from './recordings';
@@ -38,6 +38,14 @@ export interface CategoryPickerProps {
   placeholder?: string;
   /** What the row for "no category" says. Clearing a filter, or clearing a recording's category. */
   anyLabel?: string;
+  /**
+   * Draw the trigger as a glyph, with `placeholder` as its accessible name (`UI-9a`).
+   *
+   * For the bulk bar, where every control is an icon so that all four fit the row at 1280 with
+   * the sidebar out. Not for the filter bar: there the trigger has to show which category is
+   * narrowing the list, and a filter you cannot see is a filter somebody forgets they set.
+   */
+  compact?: boolean;
 }
 
 export function CategoryPicker({
@@ -46,6 +54,7 @@ export function CategoryPicker({
   onChange,
   placeholder,
   anyLabel,
+  compact = false,
 }: CategoryPickerProps) {
   const { t } = useTranslation('library');
   const any = anyLabel ?? t('filters.anyCategory');
@@ -73,18 +82,31 @@ export function CategoryPicker({
 
   return (
     <>
-      <Button
-        ref={anchorRef}
-        variant="secondary"
-        aria-expanded={open}
-        aria-haspopup="true"
-        onClick={() => {
-          setOpen((was) => !was);
-        }}
-      >
-        {selected?.name ?? placeholder ?? any}
-        <Icon name="chevron-down" size={15} />
-      </Button>
+      {compact ? (
+        <IconButton
+          ref={anchorRef}
+          icon="folder"
+          label={placeholder ?? any}
+          aria-expanded={open}
+          aria-haspopup="true"
+          onClick={() => {
+            setOpen((was) => !was);
+          }}
+        />
+      ) : (
+        <Button
+          ref={anchorRef}
+          variant="secondary"
+          aria-expanded={open}
+          aria-haspopup="true"
+          onClick={() => {
+            setOpen((was) => !was);
+          }}
+        >
+          {selected?.name ?? placeholder ?? any}
+          <Icon name="chevron-down" size={15} />
+        </Button>
+      )}
       {open && (
         <div
           ref={surfaceRef}

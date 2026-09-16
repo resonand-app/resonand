@@ -20,11 +20,16 @@
  * stops meaning anything the day it is needed. What the confirm owes is the count and the window:
  * how many recordings go with it, and for how long it can come back.
  *
- * **A library you can only edit is not a settings screen.** Level 30 is what this route needs, and
- * below it the honest answer is the same one the ACL gives for anything else it will not show:
- * this may not be yours (`DEC-14`). Except for the sharing panel, which stays visible and
- * read-only, because seeing who else has access is part of knowing what you are working in
- * (`UI-17e`).
+ * **A library you can only edit is not a settings screen, and the route says so.** Level 30 is
+ * what this needs, and below it the screen is one card and a way back rather than a form whose
+ * every field is read-only -- which is what it was, and which read as a permissions bug rather
+ * than as a decision. This is a narrowing of `UI-17e`, whose read-only sharing panel is gone with
+ * it: who else has access is still on the library's own header, in the avatar stack.
+ *
+ * **It does not borrow the 404's wording.** `DEC-14`'s "it may never have been yours" exists so
+ * that a refusal cannot confirm a library exists -- and somebody who reached this screen is
+ * already looking at the library in their sidebar, so that sentence would withhold nothing and
+ * claim something untrue.
  */
 
 import { useTranslation } from 'react-i18next';
@@ -34,7 +39,14 @@ import { isApiProblem } from '@/api/problem';
 import { colourOf } from '@/app/library-data';
 import { isPlainClick } from '@/app/links';
 import { toLibrary } from '@/app/routes';
-import { Breadcrumb, ColorSwatchPicker, InlineField, PageHeader, StateCard } from '@/design-system';
+import {
+  Breadcrumb,
+  Button,
+  ColorSwatchPicker,
+  InlineField,
+  PageHeader,
+  StateCard,
+} from '@/design-system';
 import { useLibrary } from '@/features/library/data';
 import { useCategories } from '@/features/library/recordings';
 
@@ -60,6 +72,16 @@ export function LibrarySettingsView() {
   if (library === undefined) return null;
 
   const href = toLibrary(uuid);
+
+  if (!context.canManage) {
+    return (
+      <NotYours
+        onBack={() => {
+          void navigate(href);
+        }}
+      />
+    );
+  }
 
   return (
     <section>
@@ -103,7 +125,6 @@ export function LibrarySettingsView() {
           <InlineField
             label={t('identity.name')}
             value={library.name}
-            readOnly={!context.canManage}
             onSave={(name) => {
               const trimmed = name.trim();
               if (trimmed === '' || trimmed === library.name) return;
@@ -115,54 +136,64 @@ export function LibrarySettingsView() {
             value={library.description ?? ''}
             placeholder={t('identity.noDescription')}
             multiline
-            readOnly={!context.canManage}
             onSave={(description) => {
               const trimmed = description.trim();
               if (trimmed === (library.description ?? '')) return;
               update.mutate({ description: trimmed === '' ? null : trimmed });
             }}
           />
-          {context.canManage && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-              <ColorSwatchPicker
-                label={t('identity.colour')}
-                value={library.colour}
-                onChange={(colour) => {
-                  update.mutate({ colour });
-                }}
-              />
-              <span
-                style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: 'var(--type-ui-size-sm)',
-                  color: 'var(--text-3)',
-                }}
-              >
-                {t('identity.colourReaches')}
-              </span>
-            </div>
-          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+            <ColorSwatchPicker
+              label={t('identity.colour')}
+              value={library.colour}
+              onChange={(colour) => {
+                update.mutate({ colour });
+              }}
+            />
+            <span
+              style={{
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'var(--type-ui-size-sm)',
+                color: 'var(--text-3)',
+              }}
+            >
+              {t('identity.colourReaches')}
+            </span>
+          </div>
         </section>
 
-        <CategoryTree
-          uuid={uuid}
-          categories={categories.all}
-          edits={categoryEdits}
-          canManage={context.canManage}
-        />
+        <CategoryTree uuid={uuid} categories={categories.all} edits={categoryEdits} canManage />
 
-        <SharePanel
-          library={library}
-          shares={context.shares}
-          edits={shareEdits}
-          canManage={context.canManage}
-        />
+        <SharePanel library={library} shares={context.shares} edits={shareEdits} canManage />
 
         {/* The personal library cannot be deleted, and the affordance is absent rather than
             disabled: the API refuses it, and a button that always fails is worse than none. */}
-        {context.canManage && !library.is_personal && <TrashLibrary library={library} />}
+        {!library.is_personal && <TrashLibrary library={library} />}
       </div>
     </section>
+  );
+}
+
+/**
+ * A library shared below level 30, which has settings but not yours to change.
+ *
+ * A state of its own and not the 404 above it: the library is real, it is in the sidebar, and it
+ * opens. What is refused is this screen, and saying which level it takes is what makes the refusal
+ * something somebody can act on -- by asking whoever owns it.
+ */
+function NotYours({ onBack }: { onBack: () => void }) {
+  const { t } = useTranslation('librarySettings');
+  return (
+    <StateCard
+      icon="library"
+      title={t('notYours.title')}
+      body={t('notYours.body')}
+      action={
+        <Button variant="secondary" onClick={onBack}>
+          {t('notYours.back')}
+        </Button>
+      }
+    />
   );
 }
 

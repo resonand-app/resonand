@@ -17,7 +17,8 @@
  * **The column header is sticky and is a header.** `role="row"` over `columnheader` cells, so a
  * screen reader reads the list as a table rather than as eight hundred buttons -- and it stays on
  * screen, because a column somebody has scrolled two hundred rows past is a column they can no
- * longer name.
+ * longer name. It pins under whatever the view has already stuck above it rather than at zero:
+ * two sticky rows both claiming the top is one row hidden behind the other.
  *
  * **A sortable heading and the filter bar's control are one sort** (`UI-7d`, §V4). Neither holds
  * a sort of its own: both write `sort` and `direction` to the URL and read them back, so clicking
@@ -67,6 +68,13 @@ export interface RecordingListProps {
   query: Record<string, unknown>;
   /** The library's name, which the player shows under the title (§3.1). */
   libraryName: string;
+  /**
+   * How far down the viewport this header has to start, because something else is sticky above it.
+   *
+   * The library's filter and bulk bar is, so a column header pinned at `top: 0` would slide
+   * under it. The view owns that number; this only has to be told it.
+   */
+  headerOffset?: string;
 }
 
 export function RecordingList({
@@ -74,6 +82,7 @@ export function RecordingList({
   categories,
   query,
   libraryName,
+  headerOffset = '0',
   selection,
 }: RecordingListProps) {
   // The virtualiser measures a live DOM node and hands back functions whose results change
@@ -111,7 +120,7 @@ export function RecordingList({
 
   return (
     <div ref={root} role="table" aria-label={t('list.label')} aria-rowcount={total}>
-      <Columns selecting={selection !== undefined} />
+      <Columns selecting={selection !== undefined} offset={headerOffset} />
       <div
         ref={scroller}
         style={{
@@ -166,7 +175,7 @@ export function RecordingList({
  * The four headings the API can sort by are buttons (`UI-7d`); the rest are labels, because a
  * heading that looks pressable and does nothing is worse than one that plainly is not.
  */
-function Columns({ selecting }: { selecting: boolean }) {
+function Columns({ selecting, offset }: { selecting: boolean; offset: string }) {
   const { t } = useTranslation('library');
   const { filters, set } = useUrlState();
 
@@ -197,7 +206,7 @@ function Columns({ selecting }: { selecting: boolean }) {
       role="row"
       style={{
         position: 'sticky',
-        top: 0,
+        top: offset,
         zIndex: 1,
         display: 'flex',
         alignItems: 'center',

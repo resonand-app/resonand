@@ -28,6 +28,8 @@
   },
   "selection": {
     "count": "{{count}} selected",
+    "selectAll": "Select all",
+    "everything": "Select all {{total}}",
     "all": "Select everything here",
     "clearAll": "Clear the selection"
   },

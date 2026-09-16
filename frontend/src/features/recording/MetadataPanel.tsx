@@ -21,6 +21,11 @@
  * **The technical fields are collapsed** (`UI-13d`), because a sample rate is a fact somebody
  * looks up twice a year and everything above it is what they came for.
  *
+ * **What can be done with the recording is not here** (`UI-13e`). Download, share, move and trash
+ * were the last block in this column, which put them behind a fold, under eight fields, and out
+ * of reach entirely when the panel was closed. They are in the page header now, where a view's
+ * actions belong; this column is the caption and nothing else.
+ *
  * **A category is cleared with `clear_category`, never with a null** (`UI-13c`). In JSON a null
  * and "leave it alone" are the same value, and the endpoint reads them as such -- so the one flag
  * is what makes "no category" expressible at all.
@@ -43,7 +48,6 @@ import { CategoryPicker } from '@/features/library/CategoryPicker';
 import { recordedAt } from '@/i18n/time';
 
 import { TagEditor } from './TagEditor';
-import { RecordingActions } from './RecordingActions';
 import { TranscriptVersions } from './TranscriptVersions';
 import { TechnicalDetails } from './TechnicalDetails';
 import type { RecordingContext } from './data';
@@ -127,7 +131,6 @@ export function MetadataPanel({
       />
       <TranscriptVersions context={context} transcripts={transcripts} />
       <TechnicalDetails recording={recording} />
-      <RecordingActions context={context} />
     </div>
   );
 }

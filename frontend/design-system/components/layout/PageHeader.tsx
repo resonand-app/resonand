@@ -234,7 +234,19 @@ export function PageHeader({
         )}
       </div>
       {actions !== undefined && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            flexWrap: 'wrap',
+            // `space-between` above only separates the two while they share a line. A long title
+            // wraps the actions onto their own, and there `space-between` has nothing to push
+            // against -- so they sat at the left margin, under the title, reading as a toolbar
+            // belonging to nothing.
+            marginInlineStart: 'auto',
+          }}
+        >
           {actions}
         </div>
       )}

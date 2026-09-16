@@ -28,6 +28,14 @@ export interface Page<Item> {
 /** How many rows a list asks for at a time. The API's own default. */
 export const PAGE_SIZE = 50;
 
+/**
+ * The largest page the API will answer, from `sonarium.api.pagination.MAX_LIMIT`.
+ *
+ * For the one caller that wants a whole collection rather than a window of it -- selecting every
+ * recording a filter matches (`UI-9a`) -- where the choice is between four requests and sixteen.
+ */
+export const MAX_PAGE_SIZE = 200;
+
 export interface PagedResult<Item> extends Omit<UseQueryResult<Page<Item>>, 'data'> {
   /** The rows on this page. Empty while the first page is loading. */
   items: Item[];

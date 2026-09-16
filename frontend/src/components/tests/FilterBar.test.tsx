@@ -61,6 +61,49 @@ describe('BulkBar', () => {
     expect(onClear).toHaveBeenCalledTimes(1);
   });
 
+  it('offers select-all as a button too, because the checkbox carries no words', async () => {
+    const onSelectAll = vi.fn();
+    render(<BulkBar count={12} allSelected="mixed" onSelectAll={onSelectAll} onClear={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Select all' }));
+    expect(onSelectAll).toHaveBeenCalledWith(true);
+  });
+
+  it('offers the rest of the library only once what is loaded is selected', async () => {
+    const onSelectEverything = vi.fn();
+    const rest = (allSelected: boolean | 'mixed') => (
+      <BulkBar
+        count={50}
+        allSelected={allSelected}
+        onSelectAll={vi.fn()}
+        onClear={vi.fn()}
+        matching={812}
+        onSelectEverything={onSelectEverything}
+      />
+    );
+    // Two steps, because one button meaning either "50" or "812" depending on how far somebody
+    // scrolled is a button that trashes eight hundred recordings by surprise.
+    const partial = render(rest('mixed'));
+    expect(screen.queryByRole('button', { name: 'Select all 812' })).toBeNull();
+    partial.unmount();
+    render(rest(true));
+    await userEvent.click(screen.getByRole('button', { name: 'Select all 812' }));
+    expect(onSelectEverything).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers nothing further when the selection already covers everything that matches', () => {
+    render(
+      <BulkBar
+        count={812}
+        allSelected
+        onSelectAll={vi.fn()}
+        onClear={vi.fn()}
+        matching={812}
+        onSelectEverything={vi.fn()}
+      />,
+    );
+    expect(screen.queryByRole('button', { name: /^Select all/ })).toBeNull();
+  });
+
   it('is the same height as the bar it replaces', () => {
     // The one that matters. Both are `--hit-target` tall, so ticking the first checkbox does not
     // move the list underneath.

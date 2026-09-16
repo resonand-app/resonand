@@ -10,6 +10,11 @@
     "colour": "Colour",
     "colourReaches": "The colour appears in the sidebar straight away."
   },
+  "notYours": {
+    "title": "These settings need Can manage",
+    "body": "This library is shared with you. Its name, its categories and who else can see it are for whoever manages it to change.",
+    "back": "Back to the library"
+  },
   "missing": {
     "title": "This library is not here",
     "body": "It may have been deleted, or it may never have been yours. This instance does not say which."

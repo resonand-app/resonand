@@ -166,6 +166,17 @@ describe('the shared group', () => {
     expect(within(card).getByText('Sam Rivera · Can edit')).toBeInTheDocument();
   });
 
+  it('offers no way into settings for a library you cannot manage', async () => {
+    renderView();
+    // Level 20 in the fixtures. The settings screen takes 30, and an entrance to a screen that
+    // refuses you is worse than no entrance -- `LibraryHeader` has applied the same test to the
+    // button that goes to the same place since `UI-6a`.
+    expect(within(await cardFor('Meetings')).queryByRole('button')).toBeNull();
+    expect(
+      within(await cardFor('Personal')).getByRole('button', { name: /Options for Personal/i }),
+    ).toBeInTheDocument();
+  });
+
   it('is absent entirely when nobody has shared anything', async () => {
     archive.libraries = archive.libraries.filter((one) => one.uuid !== MEETINGS);
     renderView();

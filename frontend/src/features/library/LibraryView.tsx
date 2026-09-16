@@ -15,6 +15,18 @@
  * is a mode: while one exists, the question on screen is what to do with these, not which others
  * to find.
  *
+ * **That row is sticky, at both densities.** A library is scrolled through while it is being
+ * selected in, and a bulk bar that has gone off the top is a selection somebody has to scroll back
+ * up to act on. The dense list's own column header pins underneath it rather than at zero, and at
+ * a height that is measured rather than written down: the bar wraps to two and then three rows as
+ * the window narrows, and a constant offset hid the column header behind it at those widths.
+ *
+ * **Select-all is two steps, and the second one is the view's** (`UI-9a`). The first selects the
+ * page in hand, which is what the checkbox has always done. The second selects every recording
+ * the filter matches, and it is here because it has to fetch them: adding a tag reads a
+ * recording's own tags before writing them back, so a selection of eight hundred uuids with no
+ * recordings behind it is a selection that cannot be tagged without stripping what is there.
+ *
  * **A library you can only read is a different screen, and it has to look intentional** (`UI-10c`,
  * §3.5). No checkboxes, so no bulk bar; no Settings; no invitation to upload. Every one of those
  * is absent rather than disabled, because a disabled row of controls reads as a bug and their
@@ -34,7 +46,7 @@
  * than broken.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
@@ -52,9 +64,11 @@ import { BulkReport, LibraryBulkBar } from './LibraryBulkBar';
 import { RecordingGrid } from './RecordingGrid';
 import { RecordingList } from './RecordingList';
 import { useLibrary } from './data';
-import { libraryQuery, useCategories, useRecordings } from './recordings';
+import { fetchEveryRecording, libraryQuery, useCategories, useRecordings } from './recordings';
+import type { Recording } from './recordings';
 import { EMPTY, coverage, extendTo, retain, selectAll, toggle } from './selection';
 import { useBulk } from './use-bulk';
+import { useStickyHeader } from './use-sticky-header';
 
 export function LibraryView() {
   const { uuid = '' } = useParams();
@@ -67,6 +81,17 @@ export function LibraryView() {
   const recordings = useRecordings(uuid, libraryQuery(filters));
   const [selection, setSelection] = useState(EMPTY);
   const bulk = useBulk(uuid);
+  const [stickyRef, headerHeight] = useStickyHeader();
+  // What a run needs in full rather than by uuid: adding a tag reads a recording's own tags
+  // before it writes them back (`use-bulk.ts`). The page in hand covers the ordinary selection;
+  // this is what the second select-all step fetched, and it is keyed by the query it answered so
+  // that a filter change drops it rather than tagging what is no longer on screen.
+  const [everything, setEverything] = useState<{ query: string; items: Recording[] } | null>(null);
+  const queryKey = JSON.stringify(libraryQuery(filters));
+  const pool = useMemo(
+    () => (everything?.query === queryKey ? everything.items : recordings.items),
+    [everything, queryKey, recordings.items],
+  );
 
   // `Esc` clears the selection (§1.8). The shell answers the same command for a dialog, a sheet
   // and a popover; a view answers it for the thing a view owns, and `useKeyboard` ignores a
@@ -130,6 +155,7 @@ export function LibraryView() {
           categories={categories}
           query={libraryQuery(filters)}
           libraryName={libraryName}
+          headerOffset={`${String(headerHeight)}px`}
           {...(selectable === undefined ? {} : { selection: selectable })}
         />
       );
@@ -158,33 +184,54 @@ export function LibraryView() {
   return (
     <section>
       <LibraryHeader context={context} />
-      {selection.selected.size > 0 ? (
-        <LibraryBulkBar
-          count={selection.selected.size}
-          allSelected={coverage(selection, order)}
-          onSelectAll={(on) => {
-            setSelection((was) => selectAll(was, order, on));
-          }}
-          onClear={() => {
-            setSelection(EMPTY);
-          }}
-          selected={recordings.items.filter((one) => selection.selected.has(one.uuid))}
-          categories={categories.all}
-          bulk={bulk}
-          onOutcome={(outcome) => {
-            // What is left selected is what did not succeed, so Retry is one click rather than a
-            // reconstruction of what somebody had picked (`UI-9c`).
-            setSelection((was) =>
-              retain(
-                was,
-                outcome.failed.map((failure) => failure.uuid),
-              ),
-            );
-          }}
-        />
-      ) : (
-        <LibraryFilters categories={categories.all} />
-      )}
+      {/* `flow-root` so the bar's own bottom gutter is inside the box that sticks rather than
+          collapsing out of it: the height measured here is what the list's column header pins
+          under, and a collapsed margin would leave a 16px band for rows to scroll through. */}
+      <div
+        ref={stickyRef}
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 'var(--z-player)',
+          display: 'flow-root',
+          background: 'var(--bg)',
+        }}
+      >
+        {selection.selected.size > 0 ? (
+          <LibraryBulkBar
+            count={selection.selected.size}
+            allSelected={coverage(selection, order)}
+            onSelectAll={(on) => {
+              setSelection((was) => selectAll(was, order, on));
+            }}
+            onClear={() => {
+              setSelection(EMPTY);
+            }}
+            matching={recordings.total}
+            onSelectEverything={() => {
+              void fetchEveryRecording(uuid, libraryQuery(filters)).then((items) => {
+                setEverything({ query: queryKey, items });
+                setSelection({ selected: new Set(items.map((one) => one.uuid)), anchor: null });
+              });
+            }}
+            selected={pool.filter((one) => selection.selected.has(one.uuid))}
+            categories={categories.all}
+            bulk={bulk}
+            onOutcome={(outcome) => {
+              // What is left selected is what did not succeed, so Retry is one click rather than a
+              // reconstruction of what somebody had picked (`UI-9c`).
+              setSelection((was) =>
+                retain(
+                  was,
+                  outcome.failed.map((failure) => failure.uuid),
+                ),
+              );
+            }}
+          />
+        ) : (
+          <LibraryFilters categories={categories.all} />
+        )}
+      </div>
       {/* Outside the swap above: a run that succeeded entirely leaves nothing selected, and a
           report inside the bulk bar would disappear at the moment it had something to say. */}
       {bulk.outcome !== null && <BulkReport bulk={bulk} />}

@@ -16,6 +16,11 @@
  * the filter bar, and a report nested inside it would vanish at exactly the moment it had good
  * news. That was a real bug and a test caught it.
  *
+ * **Every action here is a glyph** (`BulkBar` says why). The four are a category, a tag, a move
+ * and the trash, which are the four a person reads off an icon without being told -- and the row
+ * has to hold them at 1280 with the sidebar out, beside a count and a select-all that carries a
+ * number. The labels are not lost, they are the accessible names.
+ *
  * Move is the one action that opens a dialog, because it has consequences somebody has to have
  * been told about before it happens: it changes who can see the recordings, by name, and it loses
  * their category. `MoveDialog` states all three and hands back a destination; the moving is done
@@ -28,7 +33,7 @@ import { useTranslation } from 'react-i18next';
 
 import { BulkBar } from '@/components/BulkBar';
 import { MoveDialog } from '@/components/MoveDialog';
-import { Button, Menu, StateCard, TextField } from '@/design-system';
+import { Button, IconButton, Menu, StateCard, TextField } from '@/design-system';
 
 import { CategoryPicker } from './CategoryPicker';
 import { reasonsIn } from './bulk';
@@ -41,6 +46,10 @@ export interface LibraryBulkBarProps {
   allSelected: boolean | 'mixed';
   onSelectAll: (selected: boolean) => void;
   onClear: () => void;
+  /** How many recordings the filter matches, which is what the second select-all step names. */
+  matching: number;
+  /** Select every recording the filter matches, and not only the page that has been fetched. */
+  onSelectEverything: () => void;
   /** The recordings selected, which "add a tag" needs in full to avoid replacing what is there. */
   selected: readonly Recording[];
   categories: readonly Category[];
@@ -54,6 +63,8 @@ export function LibraryBulkBar({
   allSelected,
   onSelectAll,
   onClear,
+  matching,
+  onSelectEverything,
   selected,
   categories,
   bulk,
@@ -76,12 +87,15 @@ export function LibraryBulkBar({
         allSelected={allSelected}
         onSelectAll={onSelectAll}
         onClear={onClear}
+        matching={matching}
+        onSelectEverything={onSelectEverything}
         actions={
           bulk.running === null ? (
             <>
               <CategoryPicker
                 categories={categories}
                 value={undefined}
+                compact
                 // Not "Any category": in the bulk bar this control does something rather than
                 // narrowing something, and a filter's words on an action is how somebody assigns
                 // a category by accident while trying to clear a filter.
@@ -90,15 +104,14 @@ export function LibraryBulkBar({
                   void bulk.assignCategory(uuids, categoryId ?? null).then(after);
                 }}
               />
-              <Button
-                variant="secondary"
+              <IconButton
                 icon="tag"
+                label={t('bulk.addTag')}
+                aria-expanded={tagging}
                 onClick={() => {
                   setTagging(true);
                 }}
-              >
-                {t('bulk.addTag')}
-              </Button>
+              />
               <Menu
                 label={t('bulk.more')}
                 items={[
