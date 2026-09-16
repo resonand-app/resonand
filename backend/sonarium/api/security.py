@@ -29,6 +29,19 @@ MINIMUM_PASSWORD_LENGTH = 10
 
 _hasher = PasswordHasher()
 
+_NO_ACCOUNT = _hasher.hash(secrets.token_urlsafe(TOKEN_BYTES))
+"""A hash of a secret nobody holds, verified against when there is no real hash to verify against.
+
+An Argon2 verification is slow on purpose, so *skipping* one is loud: an account that exists took
+about 80 ms to refuse and an address that does not took under 3 ms, which is a difference anybody
+can measure across the internet. The sign-in path answers every failure with one sentence
+precisely so it cannot be asked which addresses have accounts here, and returning early went on
+answering that question through the clock (``SEC-2``).
+
+Hashed once at import. Doing it per call would make the work -- and so the timing -- depend on the
+very thing this is here to hide.
+"""
+
 
 def hash_password(password: str) -> str:
     """Hash a password for storage."""
@@ -38,14 +51,12 @@ def hash_password(password: str) -> str:
 def verify_password(password_hash: str | None, password: str) -> bool:
     """Check a password against its hash, in constant time as far as the library allows.
 
-    An account with no password hash -- one that only signs in through OIDC --
-    verifies as false rather than raising, so the sign-in path has one shape for every failure and
-    cannot be used to find out which accounts have local passwords.
+    **A missing hash does the work anyway and then says no.** One shape covers both callers that
+    reach it: an account that only signs in through OIDC, and an address that is not an account at
+    all. Neither the message nor the time it took distinguishes them from a wrong password.
     """
-    if not password_hash:
-        return False
     try:
-        return _hasher.verify(password_hash, password)
+        return _hasher.verify(password_hash or _NO_ACCOUNT, password)
     except (VerifyMismatchError, VerificationError, InvalidHashError):
         return False
 

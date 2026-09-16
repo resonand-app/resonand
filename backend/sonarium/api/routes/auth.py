@@ -137,9 +137,12 @@ def sign_in(
             code="too_many_requests",
         )
     user = users.find_by_email(session, str(body.email))
-    if user is None or not verify_password(user.password_hash, body.password):
-        raise InvalidRequestError(_SAME_ANSWER, code="unauthenticated")
-    if user.disabled_at is not None:
+    # Verified before the account is tested, and verified even when there is no account. The two
+    # conditions are deliberately not short-circuited: `verify_password` is the expensive part of
+    # this endpoint, so letting an unknown address skip it answers in microseconds where a real
+    # one takes tens of milliseconds -- which is `_SAME_ANSWER` undone by the clock (`SEC-2`).
+    correct = verify_password(user.password_hash if user is not None else None, body.password)
+    if user is None or not correct or user.disabled_at is not None:
         raise InvalidRequestError(_SAME_ANSWER, code="unauthenticated")
     limiter.forget(key)
     if user.password_hash and needs_rehash(user.password_hash):
