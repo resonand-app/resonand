@@ -129,33 +129,87 @@ application shell and the hashed bundle the shell references, and that the CLI r
 
 ## Conventions
 
-> **The three subsections that follow are scoped to the build of the first version.** Commits,
-> branches and task identifiers describe how v0 is being built against `docs/v0-plan.md`. When
-> v0 ships, delete them — keeping only Conventional Commits itself and the comment rules below.
+> **The four subsections that follow are scoped to the build of the first version.** Commits,
+> pull requests, branches and task identifiers describe how v0 is being built against
+> `docs/v0-plan.md`. When v0 ships, delete what the identifiers hold together — keeping
+> Conventional Commits, the four things a pull request answers, and the comment rules below.
 
 ### Commits
 
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), **in this repository's
 voice**:
 
-- `type: subject` — lowercase, no scope, imperative, no trailing period.
+- `type: subject` — lowercase, no scope, imperative, no trailing period, 72 characters at most.
 - Types in use: `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `ci`, `chore`.
-- The body explains **why**, never restates the diff: the problem, the alternative rejected and
-  the reason. Wrap at 80. Several short paragraphs beat one long one.
+- The subject names what is now true for somebody using the archive, rather than the mechanism
+  that made it true: `let the card grid reach past its first page`, not `accumulate the pages
+  under one cache key`.
+- The body explains **why**, never restates the diff. Four things, in whatever order the change
+  needs and only the ones it has: the problem, in terms somebody would recognise from using the
+  thing; the decision the change embodies, where the code cannot say it itself; the alternative
+  rejected, and the reason it looks better than it is; the cost somebody will meet later, named
+  rather than left to be found.
+- Prose wrapped at 80, and prose only — no headings, no bullet lists, no checklists. A commit body
+  is read in `git log`. Several short paragraphs beat one long one.
 - **ASCII only in commit messages and in code comments.** `--` for a dash, never `—`. Markdown
   prose under `docs/`, `README.md` and `ROADMAP.md` does use real em dashes.
 - Last line: the task identifiers, bare and space-separated — `UI-10a UI-10b UI-10c`. No
   `Refs:`, no `Fixes:`, no issue links.
 - **Never** add a `Co-Authored-By:` trailer.
 
-### One task, one branch, one commit
+### Pull requests
+
+One task is one pull request, and its title is the commit's with the identifiers in front:
+
+```
+[UI-6b2] fix: stop the grid's poll growing with the grid
+[UI-6b1][UI-6b3] fix: the two defects UI-6b left in the grid footer
+docs: decompose individual-recording sharing on the roadmap
+```
+
+One `[ID]` per task, no space between brackets, in the order they were done. A change with no
+identifier — a chore, a dependency bump, a README fix — carries none and starts at the type. The
+rest is the commit subject, unchanged: if a reader has to hold two different sentences for one
+change, one of them is wrong.
+
+The description is prose, and may use headings, tables and em dashes; `git log` never reads it.
+Four things have to be answerable in it, and a change that cannot answer the first is not a task:
+
+1. **The problem** — what somebody hits today, in their own terms, and with the number if there
+   is one.
+2. **What changed, and why this way** — the decision, not the file list. GitHub already has the
+   file list.
+3. **What was rejected** — the alternative that looks better than it is. Where nothing was, say so
+   in a clause rather than inventing one.
+4. **How it was verified** — the checks that ran, and whatever was exercised beyond them: a
+   browser, a real archive, a measurement. **And what was not verified, in one line.** "Not
+   verified in a browser: the change is a mount condition and two attributes" is worth more than
+   silence, which leaves a reader to assume either everything or nothing.
+
+Then the identifiers on the last line, as in the commit. Headings only where the description is
+long enough that somebody would otherwise scroll past something; three paragraphs need none.
+
+### One task, one branch, one commit, one pull request
 
 A task is one branch, one commit, one session. If it cannot be finished in a sitting it was cut
 too big: split it, keeping the parent letter and adding a number (`UI-12b1`, `UI-12b2`).
 
 Branch names are the identifier lowercased plus a slug — `ui-12b-follow-and-release`,
 `rev-1-write-lock-scope` — or, for a batch, the phase: `phase-e1-e2-libraries-and-library`.
-Branch from `main`; merge back through a pull request.
+Branch from `main`; merge back through a pull request, with a merge commit.
+
+**A correction to an open pull request amends that one commit** rather than adding to it —
+`git commit --amend`, then `git push --force-with-lease` — and the body is rewritten to describe
+the branch as it now stands. No commit message says "also", "additionally" or "as reviewed": a
+message describes the change that is there, not the order it was arrived at, which is the rule the
+comments section applies to code. The description is brought back into line in the same step, and
+where somebody has already reviewed, what changed since they looked goes in a comment — that is
+where a chronology belongs, and the one place it earns its keep, because their line references
+have just moved under them.
+
+A correction that turns out to be a **different concern** is not a correction. It takes an
+identifier of its own, as a child of the task that produced it (`UI-6b` → `UI-6b1`), with its own
+branch and its own pull request, and says in one line which pull request it came out of.
 
 ### Task identifiers
 
@@ -174,6 +228,7 @@ not the phase. Cite them in commits, branches and reviews.
 | `OPS` | Docker, configuration, backup, observability | `docs/v0-plan.md` |
 | `INT` | Views that cross tracks: trash, administration, security | `docs/v0-plan.md` |
 | `REV` | Backend review findings | `docs/internal/backend-review-v0.md` (local only) |
+| `FBK` | Feedback and liveness: what the interface says while it works | `docs/internal/feedback-plan.md` (local only) |
 
 Notation in the plans: `⇢ X, Y` depends on those · `🔒` critical path · `🧪` carries a mandatory
 test. **A task is done when it meets the criterion written next to it, not when it works.**
