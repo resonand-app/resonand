@@ -158,6 +158,56 @@ def test_a_cancelled_job_is_not_run(database: Database) -> None:
         assert queue.claim(session) is None
 
 
+def test_finishing_a_job_cancelled_under_it_does_not_undo_the_cancellation(
+    database: Database,
+) -> None:
+    """A running handler is not killed, so it returns the same way either way (``API-21``).
+
+    Without this the row would come back as ``done`` seconds after somebody stopped it, which is
+    the one outcome cancel must never produce: the work was paid for, the audio was sent, and the
+    screen would say it succeeded.
+    """
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        job = queue.enqueue(session, "probe", audio_id=audio_id)
+        assert job is not None
+        work = queue.claim(session)
+        assert work is not None
+        assert queue.cancel(session, work.id) is True
+        assert queue.finish(session, work.id) is False
+        row = session.get(Job, work.id)
+    assert row is not None
+    assert row.state == queue.CANCELLED
+
+
+def test_a_job_cancelled_under_it_is_not_put_back_when_it_then_fails(database: Database) -> None:
+    """The same rule from the other side: a provider that breaks after the cancellation must not
+    restart the work somebody has just stopped."""
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        job = queue.enqueue(session, "probe", audio_id=audio_id)
+        assert job is not None
+        work = queue.claim(session)
+        assert work is not None
+        queue.cancel(session, work.id)
+        assert queue.fail(session, work.id, "broke", attempts=work.attempts) == queue.CANCELLED
+        assert queue.claim(session) is None
+
+
+def test_cancelling_a_recordings_transcription_finds_the_one_in_flight(
+    database: Database,
+) -> None:
+    """The endpoint takes a recording, not a job id: nobody on a recording screen has one."""
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        assert queue.cancel_transcription(session, audio_id) is None, "nothing to stop yet"
+        queue.enqueue_transcription(session, audio_id=audio_id, audio_uuid="u")
+        stopped = queue.cancel_transcription(session, audio_id)
+        assert stopped is not None
+        assert stopped.state == queue.CANCELLED
+        assert queue.cancel_transcription(session, audio_id) is None, "and not twice"
+
+
 def test_retrying_resets_the_attempts(database: Database) -> None:
     """Somebody clicking retry has usually just fixed the thing that broke."""
     audio_id = _audio(database)

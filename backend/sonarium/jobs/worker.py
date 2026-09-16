@@ -42,6 +42,7 @@ class WorkerStats:
     completed: int = 0
     failed: int = 0
     retried: int = 0
+    cancelled: int = 0
 
 
 class Worker:
@@ -120,9 +121,15 @@ class Worker:
             self._record_failure(work, f"{type(error).__name__}: {error}")
         else:
             with self._context.database.write_session() as session:
-                queue.finish(session, work.id)
-            self.stats.completed += 1
-            _logger.info("job.done", job_id=work.id, kind=work.kind)
+                finished = queue.finish(session, work.id)
+            if finished:
+                self.stats.completed += 1
+                _logger.info("job.done", job_id=work.id, kind=work.kind)
+            else:
+                # Cancelled while it ran. The handler returns the same way whether it stopped
+                # early or ran to the end, and the row is what knows the difference.
+                self.stats.cancelled += 1
+                _logger.info("job.cancelled", job_id=work.id, kind=work.kind)
         return True
 
     def _record_failure(self, work: queue.Work, message: str) -> None:
@@ -133,7 +140,10 @@ class Worker:
         """
         with self._context.database.write_session() as session:
             state = queue.fail(session, work.id, message, attempts=work.attempts)
-        if state == queue.FAILED:
+        if state == queue.CANCELLED:
+            self.stats.cancelled += 1
+            _logger.info("job.cancelled", job_id=work.id, kind=work.kind)
+        elif state == queue.FAILED:
             self.stats.failed += 1
             _logger.error("job.failed", job_id=work.id, kind=work.kind, error=message)
         else:

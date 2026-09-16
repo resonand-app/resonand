@@ -27,6 +27,15 @@
  * same picture a stalled transcription would draw, and this screen is where somebody sits for
  * minutes waiting to find out which of the two they have.
  *
+ * **`running` has a way out** (`UI-15d`). A transcription is minutes of somebody else's machine
+ * and, for a provider that is not on this network, audio that has left the instance -- so the
+ * screen that says it is happening is the screen that has to be able to stop it. The button is
+ * secondary and not a danger: nothing is destroyed, every transcript the recording already had
+ * survives, and what the card returns to is its own call to action.
+ *
+ * **No disclosure beside it**, which is the one asymmetry in this component and is deliberate:
+ * `EgressNotice` stands in front of the paths that *send* audio, and stopping one sends nothing.
+ *
  * **`failed` shows the provider's own words** (`UI-15c`). The error explains what happened; it
  * does not apologise. That text exists only on the job, which is why `API-17` had to be built
  * before this could be honest -- before it, the person whose recording had failed was the one
@@ -41,7 +50,12 @@ import { relative } from '@/i18n/time';
 import { useEgressLabels } from '@/i18n/egress-labels';
 
 import type { RecordingContext } from './data';
-import { useDestination, useTranscribe, useTranscriptionStatus } from './transcription';
+import {
+  useCancelTranscription,
+  useDestination,
+  useTranscribe,
+  useTranscriptionStatus,
+} from './transcription';
 import type { TranscriptionStatus } from './transcription';
 
 /** Below this, there is no number worth showing and `Intl` has no phrase for it. */
@@ -60,6 +74,7 @@ export function TranscriptionState({ context, state }: TranscriptionStateProps) 
   const destination = useDestination();
   const status = useTranscriptionStatus(recording?.uuid ?? '', state);
   const transcribe = useTranscribe(recording?.uuid ?? '');
+  const cancel = useCancelTranscription(recording?.uuid ?? '');
 
   if (recording === undefined || state === 'done') return null;
 
@@ -81,6 +96,26 @@ export function TranscriptionState({ context, state }: TranscriptionStateProps) 
         busy
         title={t('transcription.running.title')}
         body={<Running status={status.data} provider={where?.provider} language={i18n.language} />}
+        {...(context.canEdit
+          ? {
+              // Secondary, not danger: nothing is destroyed. The recording keeps every transcript
+              // it already had, and this card is the one place somebody waiting out a long
+              // transcription is actually looking (`UI-15d`).
+              action: (
+                <Button
+                  variant="secondary"
+                  disabled={cancel.isPending}
+                  onClick={() => {
+                    cancel.mutate();
+                  }}
+                >
+                  {cancel.isPending
+                    ? t('transcription.running.cancelling')
+                    : t('transcription.running.cancel')}
+                </Button>
+              ),
+            }
+          : {})}
       />
     );
   }

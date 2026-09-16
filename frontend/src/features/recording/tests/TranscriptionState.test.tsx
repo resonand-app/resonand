@@ -92,6 +92,28 @@ describe('a recording nobody has asked about', () => {
 });
 
 describe('a transcription that is running', () => {
+  it('offers a way to stop it, because this is the screen somebody waits on', async () => {
+    // `UI-15d`. A transcription is minutes of somebody else's machine and, off this network,
+    // audio that has already left -- so the card that says it is happening has to be able to
+    // stop it.
+    const user = userEvent.setup();
+    renderRecording(REHEARSAL);
+    await user.click(await screen.findByRole('button', { name: 'Stop transcribing' }));
+    // Back to the call to action, not to a failure: cancelling leaves exactly as much
+    // transcript as there was before, which is none.
+    expect(await screen.findByText(/has not been transcribed/)).toBeInTheDocument();
+  });
+
+  it('offers nothing to press to somebody who can only read it', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === REHEARSAL ? { ...one, level: 10 } : one,
+    );
+    renderRecording(REHEARSAL);
+    await screen.findByText('Transcribing');
+    // Stopping one spends the same decision as starting it, so it takes the same level.
+    expect(screen.queryByRole('button', { name: 'Stop transcribing' })).toBeNull();
+  });
+
   it('says when it started and shows no progress anywhere', async () => {
     renderRecording(REHEARSAL);
     expect(await screen.findByText('Transcribing')).toBeInTheDocument();

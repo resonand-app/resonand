@@ -463,6 +463,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audio/{audio_uuid}/transcribe/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop a transcription that is under way
+         * @description Give up on the transcription in flight, and stop sending audio (``API-21``).
+         *
+         *     Level 20, the same as asking for one: a transcription is somebody's provider quota and
+         *     somebody's audio leaving the instance, and both directions of that decision belong to the
+         *     people who can edit the recording.
+         *
+         *     **Cancelling is a decision, not a failure.** The job goes to ``cancelled``, which is a state
+         *     :mod:`sonarium.core.states` already reads as ``none`` -- so the recording comes back to its
+         *     call to action rather than to an error nobody caused. Nothing is kept: no transcript is
+         *     written from the parts that did finish, because a transcript covering the first four minutes
+         *     of an hour is worse than none, and it would be the one thing on the screen claiming to be
+         *     the recording's words.
+         *
+         *     A recording with nothing in flight answers 409, mirroring the endpoint above: pressing cancel
+         *     on a transcription that has just finished is the same race as pressing transcribe on one that
+         *     has just started, and neither is an error worth showing.
+         */
+        post: operations["cancel_transcription_api_audio__audio_uuid__transcribe_cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audio/{audio_uuid}/transcript": {
         parameters: {
             query?: never;
@@ -2600,6 +2635,37 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_transcription_api_audio__audio_uuid__transcribe_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

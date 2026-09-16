@@ -3185,6 +3185,49 @@
         ]
       }
     },
+    "/api/audio/{audio_uuid}/transcribe/cancel": {
+      "post": {
+        "description": "Give up on the transcription in flight, and stop sending audio (``API-21``).\n\nLevel 20, the same as asking for one: a transcription is somebody's provider quota and\nsomebody's audio leaving the instance, and both directions of that decision belong to the\npeople who can edit the recording.\n\n**Cancelling is a decision, not a failure.** The job goes to ``cancelled``, which is a state\n:mod:`sonarium.core.states` already reads as ``none`` -- so the recording comes back to its\ncall to action rather than to an error nobody caused. Nothing is kept: no transcript is\nwritten from the parts that did finish, because a transcript covering the first four minutes\nof an hour is worse than none, and it would be the one thing on the screen claiming to be\nthe recording's words.\n\nA recording with nothing in flight answers 409, mirroring the endpoint above: pressing cancel\non a transcription that has just finished is the same race as pressing transcribe on one that\nhas just started, and neither is an error worth showing.",
+        "operationId": "cancel_transcription_api_audio__audio_uuid__transcribe_cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stop a transcription that is under way",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
     "/api/audio/{audio_uuid}/transcript": {
       "get": {
         "description": "The active transcript with its segments, which is what the detail view highlights.",

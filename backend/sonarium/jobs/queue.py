@@ -203,13 +203,18 @@ def claim(session: Session, *, kinds: tuple[str, ...] | None = None) -> Work | N
     return None
 
 
-def finish(session: Session, job_id: int, *, external_id: str | None = None) -> None:
-    """Mark a job done."""
-    session.execute(
+def finish(session: Session, job_id: int, *, external_id: str | None = None) -> bool:
+    """Mark a job done, unless somebody gave up on it while it ran.
+
+    Returns whether the row moved, which is the only way the worker can tell a job it completed
+    from one that was cancelled underneath it: the handler returns normally either way.
+    """
+    changed = session.execute(
         update(Job)
-        .where(Job.id == job_id)
+        .where(Job.id == job_id, Job.state != CANCELLED)
         .values(state=DONE, error=None, external_id=external_id, finished_at=now_instant())
     )
+    return bool(changed_rows(changed))
 
 
 def fail(session: Session, job_id: int, error: str, *, attempts: int) -> str:
@@ -217,24 +222,64 @@ def fail(session: Session, job_id: int, error: str, *, attempts: int) -> str:
 
     The error text is kept whatever happens: ``UI-15`` shows the real message and a retry button,
     because an error that explains what happened is what lets somebody fix a wrong URL themselves.
+
+    A job cancelled while it ran keeps its cancellation and returns ``cancelled``. Whatever the
+    provider said on the way down is not a failure anybody needs to read: the person who pressed
+    cancel already knows why it stopped, and putting it back on the queue would restart the work
+    they just stopped.
     """
     state = PENDING if attempts < MAX_ATTEMPTS else FAILED
-    session.execute(
+    changed = session.execute(
         update(Job)
-        .where(Job.id == job_id)
+        .where(Job.id == job_id, Job.state != CANCELLED)
         .values(state=state, error=error[:2000], finished_at=now_instant())
     )
+    if not changed_rows(changed):
+        return CANCELLED
     return state
 
 
 def cancel(session: Session, job_id: int) -> bool:
-    """Give up on a job that has not finished. Running work is not interrupted mid-flight."""
+    """Give up on a job that has not finished.
+
+    The row is the whole of it. A running handler is not killed -- it is asked, through
+    :func:`is_cancelled`, and it stops at the next point where stopping is safe; and whether it
+    stops or runs to the end, :func:`finish` and :func:`fail` leave the cancellation standing.
+    """
     changed = session.execute(
         update(Job)
         .where(Job.id == job_id, Job.state.in_((PENDING, RUNNING)))
         .values(state=CANCELLED, finished_at=now_instant())
     )
     return bool(changed_rows(changed))
+
+
+def is_cancelled(session: Session, job_id: int) -> bool:
+    """Whether somebody has given up on this job since it was claimed.
+
+    Read by a handler that is long enough to be worth interrupting. It is a fresh read every
+    time on purpose: the claimed :class:`Work` is a value taken minutes ago, and the question is
+    about now.
+    """
+    state = session.execute(select(Job.state).where(Job.id == job_id)).scalar_one_or_none()
+    return state == CANCELLED
+
+
+def cancel_transcription(session: Session, audio_id: int) -> Job | None:
+    """Stop the transcription a recording has in flight, if it has one (``API-21``).
+
+    The counterpart of :func:`enqueue_transcription`, and it answers the same way: ``None`` when
+    there is nothing to do, which the endpoint renders as a conflict rather than as a failure.
+
+    Nothing is undone. A cancelled job leaves no transcript and no state behind -- the recording
+    reads as ``none`` again, because that is what it is -- and asking a second time queues fresh
+    work rather than resuming this.
+    """
+    job = transcription_in_flight(session, audio_id)
+    if job is None or not cancel(session, job.id):
+        return None
+    session.refresh(job)
+    return job
 
 
 def retry(session: Session, job_id: int) -> bool:

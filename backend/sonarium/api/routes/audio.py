@@ -284,6 +284,38 @@ def transcribe_audio(
     return job_summary(job, audio.uuid)
 
 
+@router.post(
+    "/audio/{audio_uuid}/transcribe/cancel",
+    response_model=JobSummary,
+    summary="Stop a transcription that is under way",
+)
+def cancel_transcription(
+    audio_uuid: str, caller: CurrentCaller, session: WriteSession
+) -> JobSummary:
+    """Give up on the transcription in flight, and stop sending audio (``API-21``).
+
+    Level 20, the same as asking for one: a transcription is somebody's provider quota and
+    somebody's audio leaving the instance, and both directions of that decision belong to the
+    people who can edit the recording.
+
+    **Cancelling is a decision, not a failure.** The job goes to ``cancelled``, which is a state
+    :mod:`sonarium.core.states` already reads as ``none`` -- so the recording comes back to its
+    call to action rather than to an error nobody caused. Nothing is kept: no transcript is
+    written from the parts that did finish, because a transcript covering the first four minutes
+    of an hour is worse than none, and it would be the one thing on the screen claiming to be
+    the recording's words.
+
+    A recording with nothing in flight answers 409, mirroring the endpoint above: pressing cancel
+    on a transcription that has just finished is the same race as pressing transcribe on one that
+    has just started, and neither is an error worth showing.
+    """
+    audio, _ = require_audio(session, caller.id, audio_uuid, Level.EDIT)
+    job = queue.cancel_transcription(session, audio.id)
+    if job is None:
+        raise ConflictError("This recording is not being transcribed.")
+    return job_summary(job, audio.uuid)
+
+
 # --- Tags -----------------------------------------------------------------
 
 

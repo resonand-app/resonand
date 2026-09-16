@@ -34,6 +34,9 @@ export const FORGET_AFTER_MS = 5 * 60_000;
 /** How many times a request that could plausibly succeed is repeated. */
 export const RETRIES = 2;
 
+/** The status a race answers with: somebody else got there first. */
+export const CONFLICT = 409;
+
 /** What the interface does when the instance says there is no session. */
 export type SessionEnded = () => void;
 
@@ -49,15 +52,29 @@ export type WriteFailed = (detail: string) => void;
 export const HANDLED = { handled: true } as const;
 
 /**
+ * The same, for a view that answers **one** status itself and leaves the rest to the report.
+ *
+ * `HANDLED` is all or nothing, which is the wrong trade for a control that can lose a race: a
+ * button whose work may finish underneath it has an answer for that one refusal and none at all
+ * for the instance being unreachable. `meta: HANDLED_CONFLICT` says which of the two this is.
+ */
+export const HANDLED_CONFLICT = { handled: CONFLICT } as const;
+
+/**
  * Whether a failed write is this client's to report (`FBK-1`).
  *
  * Two exceptions, and both are about not answering a question twice. A `401` is the end of the
  * session rather than a failed write, and `UI-4a`'s guard is already leaving for the sign-in
  * screen. A mutation carrying `meta: { handled: true }` renders its own refusal next to the
- * control that caused it, which is closer to the person than a toast and outlives it.
+ * control that caused it, which is closer to the person than a toast and outlives it -- and one
+ * carrying a status says it about that status alone, so everything else still reaches somebody.
  */
 export function worthReporting(error: unknown, meta: Record<string, unknown> | undefined): boolean {
-  if (meta?.handled === true) return false;
+  const handled = meta?.handled;
+  if (handled === true) return false;
+  if (typeof handled === 'number' && error instanceof ApiProblem && error.status === handled) {
+    return false;
+  }
   return !(error instanceof ApiProblem && error.isUnauthenticated);
 }
 
