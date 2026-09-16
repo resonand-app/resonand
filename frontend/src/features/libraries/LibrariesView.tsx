@@ -23,6 +23,7 @@ import { useNavigate } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
 import { toLibrary, toLibrarySettings } from '@/app/routes';
+import { TrashLibraryDialog } from '@/components/TrashLibraryDialog';
 import {
   Button,
   CardSkeleton,
@@ -129,7 +130,8 @@ export function LibrariesView() {
  * **The corner menu is the settings screen's only door, so it needs the level that screen needs.**
  * Level 30, the same test `LibraryHeader` applies to the button that goes to the same place --
  * without it a library shared at Can edit offered a way in, and the screen behind it was a form
- * whose every field was read-only.
+ * whose every field was read-only. Trashing the library needs the same 30 and is refused outright
+ * on a personal one, so the row is absent there rather than present and answered with a 400.
  */
 export function Card({
   library,
@@ -141,44 +143,73 @@ export function Card({
 }) {
   const { t } = useTranslation('libraries');
   const navigate = useNavigate();
+  const [trashing, setTrashing] = useState(false);
 
   return (
-    <LibraryCard
-      name={library.name}
-      href={toLibrary(library.uuid)}
-      // The card opens the library through the router; the `href` above would reload the page.
-      onOpen={() => {
-        void navigate(toLibrary(library.uuid));
-      }}
-      colour={colourOf(library.colour)}
-      meta={`${t('common:count.recordings', { count: library.audio_count })} · ${format.total(
-        library.total_duration_ms,
-      )}`}
-      {...(byline
-        ? {
-            byline: t('shared.byline', {
-              owner: library.owner.display_name,
-              level: t(`common:level.${LEVEL_NAMES[library.level] ?? 'read'}`),
-            }),
-          }
-        : {})}
-      actions={
-        // An empty slot and not an omitted one: the card falls back to an inert overflow button
-        // where nothing is passed, and a control that opens nothing is worse than a bare corner.
-        library.level >= LEVEL.manage ? (
-          <Menu
-            label={t('card.options', { name: library.name })}
-            width={180}
-            items={[{ id: 'settings', label: t('card.settings'), icon: 'sliders-horizontal' }]}
-            onSelect={() => {
-              void navigate(toLibrarySettings(library.uuid));
-            }}
-          />
-        ) : (
-          <span />
-        )
-      }
-    />
+    <>
+      <LibraryCard
+        name={library.name}
+        href={toLibrary(library.uuid)}
+        // The card opens the library through the router; the `href` above would reload the page.
+        onOpen={() => {
+          void navigate(toLibrary(library.uuid));
+        }}
+        colour={colourOf(library.colour)}
+        meta={`${t('common:count.recordings', { count: library.audio_count })} · ${format.total(
+          library.total_duration_ms,
+        )}`}
+        {...(byline
+          ? {
+              byline: t('shared.byline', {
+                owner: library.owner.display_name,
+                level: t(`common:level.${LEVEL_NAMES[library.level] ?? 'read'}`),
+              }),
+            }
+          : {})}
+        actions={
+          // An empty slot and not an omitted one: the card falls back to an inert overflow button
+          // where nothing is passed, and a control that opens nothing is worse than a bare corner.
+          library.level >= LEVEL.manage ? (
+            <Menu
+              label={t('card.options', { name: library.name })}
+              width={200}
+              items={[
+                { id: 'edit', label: t('common:action.edit'), icon: 'pencil' },
+                ...(library.is_personal
+                  ? []
+                  : [
+                      {
+                        id: 'trash',
+                        label: t('card.trash'),
+                        icon: 'trash-2' as const,
+                        destructive: true,
+                        separated: true,
+                      },
+                    ]),
+              ]}
+              onSelect={(id) => {
+                if (id === 'edit') void navigate(toLibrarySettings(library.uuid));
+                if (id === 'trash') setTrashing(true);
+              }}
+            />
+          ) : (
+            <span />
+          )
+        }
+      />
+      {/* Outside the card. The modal is `position: fixed`, and a card that ever grows a transform
+          would make that fixed to the card rather than to the viewport. */}
+      <TrashLibraryDialog
+        library={library}
+        open={trashing}
+        onClose={() => {
+          setTrashing(false);
+        }}
+        onTrashed={() => {
+          setTrashing(false);
+        }}
+      />
+    </>
   );
 }
 

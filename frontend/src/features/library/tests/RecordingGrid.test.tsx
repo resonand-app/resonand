@@ -517,6 +517,39 @@ describe('selecting recordings', () => {
     // library that is already entirely selected. Three of three.
     expect(screen.queryByRole('button', { name: /^Select all/ })).toBeNull();
   });
+
+  it('puts all four actions on the row, as the glyphs the recording view uses', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    // Named rather than counted: an overflow menu holding two of them passes a count of four.
+    expect(screen.getByRole('button', { name: 'Assign a category' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Add a tag' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Move to another library' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Send to trash' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'More for the selection' })).toBeNull();
+  });
+
+  it('folds move and trash into an overflow menu where the row is too narrow', async () => {
+    // The threshold is a width the row was measured at; what jsdom can say is that the fold
+    // happens and that nothing is lost by it, not that 437px was the right number.
+    Object.defineProperty(window, 'innerWidth', { value: 420, writable: true, configurable: true });
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    expect(screen.queryByRole('button', { name: 'Move to another library' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send to trash' })).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'More for the selection' }));
+    expect(await screen.findByRole('menuitem', { name: 'Move to another library' })).toBeVisible();
+    expect(screen.getByRole('menuitem', { name: 'Send to trash' })).toBeVisible();
+    Object.defineProperty(window, 'innerWidth', {
+      value: 1024,
+      writable: true,
+      configurable: true,
+    });
+  });
 });
 
 describe('a bulk action where some fail', () => {
@@ -543,8 +576,7 @@ describe('a bulk action where some fail', () => {
     const card = await cardFor('Field recording, long take');
     await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
     await user.click(screen.getByRole('checkbox', { name: 'Select everything here' }));
-    await user.click(screen.getByRole('button', { name: 'More for the selection' }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Send to trash' }));
+    await user.click(screen.getByRole('button', { name: 'Send to trash' }));
   }
 
   it('reports what worked and what did not, in the API own words', async () => {

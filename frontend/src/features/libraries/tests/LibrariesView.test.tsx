@@ -15,7 +15,7 @@ import { MemoryRouter, useLocation } from 'react-router';
 import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
-import { toLibrary } from '@/app/routes';
+import { toLibrary, toLibrarySettings } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { MEETINGS, RECORDINGS, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
@@ -129,6 +129,40 @@ describe('a card', () => {
     expect(
       within(card).getByRole('button', { name: 'Options for Field recordings' }),
     ).toBeVisible();
+  });
+
+  it('offers the trash on a library that has one, and never on the personal one', async () => {
+    const user = userEvent.setup();
+    renderView();
+    const card = await cardFor('Field recordings');
+    await user.click(within(card).getByRole('button', { name: 'Options for Field recordings' }));
+    expect(await screen.findByRole('menuitem', { name: 'Move to the trash' })).toBeVisible();
+    await user.keyboard('{Escape}');
+    const personal = await cardFor('Personal');
+    await user.click(within(personal).getByRole('button', { name: 'Options for Personal' }));
+    // Absent rather than refused: the API answers a personal library with a 400, and a row that
+    // exists only to explain itself afterwards is a row nobody should have been offered.
+    expect(await screen.findByRole('menuitem', { name: 'Edit' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: 'Move to the trash' })).toBeNull();
+  });
+
+  it('states the count and the window before it trashes anything, and then asks', async () => {
+    const asked: string[] = [];
+    server.events.on('request:start', ({ request }) => {
+      if (request.method === 'DELETE') asked.push(request.url);
+    });
+    const user = userEvent.setup();
+    renderView();
+    const card = await cardFor('Field recordings');
+    await user.click(within(card).getByRole('button', { name: 'Options for Field recordings' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Move to the trash' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('Its 3 recordings go with it.');
+    expect(asked).toHaveLength(0);
+    await user.click(within(dialog).getByRole('button', { name: 'Move it to the trash' }));
+    await waitFor(() => {
+      expect(asked.some((url) => url.endsWith(`/api/libraries/${RECORDINGS}`))).toBe(true);
+    });
   });
 
   it('draws no waveform: the shape of one recording is not a fact about the library', async () => {
@@ -268,6 +302,17 @@ describe('opening a library', () => {
       </QueryClientProvider>,
     );
   }
+
+  it('reaches the settings screen from a row that says what it does, not where it goes', async () => {
+    const user = userEvent.setup();
+    renderWithLocation();
+    const card = await cardFor('Field recordings');
+    await user.click(within(card).getByRole('button', { name: 'Options for Field recordings' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Edit' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent(toLibrarySettings(RECORDINGS));
+    });
+  });
 
   it('opens from the whole card and not only from the title', async () => {
     const user = userEvent.setup();
