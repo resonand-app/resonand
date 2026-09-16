@@ -5,7 +5,7 @@ it says so — an operations document that overstates what has been tested is wo
 
 > **Status: not ready to install.** The backend works and is tested; there is no web interface
 > yet. Following this gets you a working HTTP API and nothing to look at. See
-> [`../docs/v0-plan.md`](../docs/v0-plan.md) for what is left.
+> [`../docs/v0-plan/`](../docs/v0-plan/) for what is left.
 
 ## What an instance is
 
@@ -138,7 +138,7 @@ not have. `sonarium fsck` will tell you exactly which ones.
 
 The restore path and an upgrade of a populated database are both covered by tests. Neither has
 yet been performed against a real archive on real hardware, which is one of the conditions in
-[`../docs/v0-plan.md`](../docs/v0-plan.md) for the first version being finished.
+[`../docs/v0-plan/`](../docs/v0-plan/) for the first version being finished.
 
 ## Upgrading
 

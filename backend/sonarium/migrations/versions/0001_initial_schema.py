@@ -11,7 +11,8 @@ This file is the source of truth for the schema; ``sonarium.db.models`` mirrors 
 asserts the two agree.
 
 It carries the specification's schema **plus the seven deltas** listed under *What the first
-migration contains* in ``docs/v0-plan.md``, each of which is expensive to add afterwards:
+migration contains* in ``docs/v0-plan/decisions.md``, each of which is expensive to add
+afterwards:
 
 1. ``session`` (``DEC-12``) -- the cookie carries a random secret and nothing else, so the row is
    found by ``token_hash``, which is unique for that reason and not merely indexed. The partial

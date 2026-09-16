@@ -1,7 +1,7 @@
 # Sonarium — roadmap
 
 What comes **after** the first version. The build plan for the first version is
-[`docs/v0-plan.md`](docs/v0-plan.md); why any of it exists is [`VISION.md`](VISION.md).
+[`docs/v0-plan/`](docs/v0-plan/); why any of it exists is [`VISION.md`](VISION.md).
 
 Task identifiers (`API-4`, `UI-29`…) are stable and are never renumbered: a task listed here is
 one that was deferred out of the first version, and it keeps the number it had.
@@ -95,7 +95,7 @@ it only makes sense once the API is stable enough that tools built on it do not 
 - **INF-10** · `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue and pull request templates, and
   `SECURITY.md` with a contact address. Deliberately not done earlier: community scaffolding
   before there is anything to contribute to is furniture in an empty room. *Was `INF-9` until the
-  repairs task in `docs/ui-plan.md` turned out to hold that number and to have shipped under it.*
+  repairs task in the interface plan turned out to hold that number and to have shipped under it.*
 - **OPS-8** · Publishing the image to GHCR from CI, with `latest` and per-version tags.
 - **OPS-9** · **Cross-version migration matrix**: upgrade a populated database across every
   released revision, not just the previous one, in CI. The uncounted metric for this whole project
