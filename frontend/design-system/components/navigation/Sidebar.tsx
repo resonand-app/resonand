@@ -180,76 +180,93 @@ export function Sidebar({
         boxShadow: 'var(--elevation-panel)',
         display: 'flex',
         flexDirection: 'column',
-        padding: collapsed ? '12px 9px' : '12px 10px',
-        gap: collapsed ? 6 : 0,
+        // The growing edge is what uncovers the labels, so nothing may spill past it. `clip` and
+        // not `hidden` on one axis only: `hidden` would turn the panel into a scroll container and
+        // take the vertical overflow with it.
+        overflowX: 'clip',
         transition: 'width var(--transition-panel)',
         ...style,
       }}
       {...rest}
     >
-      <Item
-        icon="library"
-        label={labels?.libraries ?? 'Libraries'}
-        active={activeId === 'libraries'}
-        collapsed={collapsed}
-        onClick={pick('libraries')}
-      />
-      {collapsed ? (
-        <Item
-          icon="search"
-          label={labels?.search ?? 'Search'}
-          collapsed
-          onClick={pick('search')}
-        />
-      ) : (
-        <>
-          <GroupLabel>{labels?.yours ?? 'Your libraries'}</GroupLabel>
-          {own.map((library) => (
-            <Item
-              key={idOf(library)}
-              dot={library.colour}
-              label={library.name}
-              count={library.count}
-              active={activeId === idOf(library)}
-              onClick={pick(idOf(library))}
-            />
-          ))}
-          {shared.length > 0 && <GroupLabel>{labels?.shared ?? 'Shared with you'}</GroupLabel>}
-          {shared.map((library) => (
-            <Item
-              key={idOf(library)}
-              dot={library.colour}
-              label={library.name}
-              count={library.count}
-              active={activeId === idOf(library)}
-              onClick={pick(idOf(library))}
-            />
-          ))}
-        </>
-      )}
+      {/* Expanded, the rows are laid out at the settled 224px while the panel is still narrower
+          than that, so the panel wipes across finished text instead of reflowing an ellipsis on
+          every frame. Collapsed it tracks the panel, which keeps the icons centred as it shrinks. */}
       <div
         style={{
-          marginTop: 'auto',
+          width: collapsed ? '100%' : 'var(--sidebar-width)',
+          flex: 1,
+          minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
+          padding: collapsed ? '12px 9px' : '12px 10px',
           gap: collapsed ? 6 : 0,
         }}
       >
         <Item
-          icon="trash-2"
-          label={labels?.trash ?? 'Trash'}
-          count={collapsed ? null : trashCount}
+          icon="library"
+          label={labels?.libraries ?? 'Libraries'}
+          active={activeId === 'libraries'}
           collapsed={collapsed}
-          active={activeId === 'trash'}
-          onClick={pick('trash')}
+          onClick={pick('libraries')}
         />
-        <Item
-          icon="sliders-horizontal"
-          label={labels?.settings ?? 'Settings'}
-          collapsed={collapsed}
-          active={activeId === 'settings'}
-          onClick={pick('settings')}
-        />
+        {collapsed ? (
+          <Item
+            icon="search"
+            label={labels?.search ?? 'Search'}
+            collapsed
+            onClick={pick('search')}
+          />
+        ) : (
+          <>
+            <GroupLabel>{labels?.yours ?? 'Your libraries'}</GroupLabel>
+            {own.map((library) => (
+              <Item
+                key={idOf(library)}
+                dot={library.colour}
+                label={library.name}
+                count={library.count}
+                active={activeId === idOf(library)}
+                onClick={pick(idOf(library))}
+              />
+            ))}
+            {shared.length > 0 && <GroupLabel>{labels?.shared ?? 'Shared with you'}</GroupLabel>}
+            {shared.map((library) => (
+              <Item
+                key={idOf(library)}
+                dot={library.colour}
+                label={library.name}
+                count={library.count}
+                active={activeId === idOf(library)}
+                onClick={pick(idOf(library))}
+              />
+            ))}
+          </>
+        )}
+        <div
+          style={{
+            marginTop: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: collapsed ? 6 : 0,
+          }}
+        >
+          <Item
+            icon="trash-2"
+            label={labels?.trash ?? 'Trash'}
+            count={collapsed ? null : trashCount}
+            collapsed={collapsed}
+            active={activeId === 'trash'}
+            onClick={pick('trash')}
+          />
+          <Item
+            icon="sliders-horizontal"
+            label={labels?.settings ?? 'Settings'}
+            collapsed={collapsed}
+            active={activeId === 'settings'}
+            onClick={pick('settings')}
+          />
+        </div>
       </div>
     </nav>
   );
