@@ -1,9 +1,9 @@
 /**
  * Creating a library (`UI-31e`, §V2, §1.9).
  *
- * Three things are worth holding: that the colour is sent as chosen, that a duplicate name lands
- * beside the field somebody can act on rather than in a banner, and that the dialog does not
- * remember a failed attempt after it has been closed.
+ * Four things are worth holding: that it opens ready to be typed into, that the colour is sent as
+ * chosen, that a duplicate name lands beside the field somebody can act on rather than in a
+ * banner, and that the dialog does not remember a failed attempt after it has been closed.
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -71,6 +71,11 @@ describe('the dialog', () => {
     expect(screen.getByRole('dialog', { name: 'Create a library' })).toBeInTheDocument();
     expect(screen.getByLabelText('Name')).toBeInTheDocument();
     expect(screen.getByText(/Nothing in a library is shared until you share it/)).toBeVisible();
+  });
+
+  it('opens with the caret in the name, not on the control that closes it', () => {
+    renderDialog();
+    expect(screen.getByLabelText('Name')).toHaveFocus();
   });
 
   it('will not create a library with no name', () => {

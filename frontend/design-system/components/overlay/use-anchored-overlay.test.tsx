@@ -25,11 +25,14 @@ function Harness({
   placement = 'bottom',
   modal = true,
   lockScroll = false,
+  names,
   onClose,
 }: {
   placement?: Placement;
   modal?: boolean;
   lockScroll?: boolean;
+  /** Which of the two the surface asks focus to land on, if either. */
+  names?: 'Last' | 'Missing';
   onClose?: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -60,7 +63,10 @@ function Harness({
       {open && (
         <div ref={surfaceRef} style={surfaceStyle}>
           <button type="button">First</button>
-          <button type="button">Last</button>
+          <button type="button" {...(names === 'Last' ? { 'data-initial-focus': '' } : {})}>
+            Last
+          </button>
+          {names === 'Missing' && <span data-initial-focus="">Unreachable</span>}
         </div>
       )}
     </div>
@@ -174,6 +180,20 @@ describe('focus', () => {
     // Back to the button that opened it, ready to open it again -- not to the body, which is
     // where a keyboard has to start over from the top of the page.
     expect(trigger).toHaveFocus();
+  });
+
+  it('lands on the control the surface names rather than the first one', async () => {
+    render(<Harness names="Last" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    // A dialog's first focusable is its close control, so anything opened in order to be typed
+    // into would otherwise open on the one control that throws it away.
+    expect(screen.getByRole('button', { name: 'Last' })).toHaveFocus();
+  });
+
+  it('falls through to the first focusable when what is named cannot take focus', async () => {
+    render(<Harness names="Missing" />);
+    await userEvent.click(screen.getByRole('button', { name: 'Open' }));
+    expect(screen.getByRole('button', { name: 'First' })).toHaveFocus();
   });
 
   it('wraps at both ends rather than letting Tab out', async () => {

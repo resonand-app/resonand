@@ -106,6 +106,7 @@ export function CreateLibraryDialog({ open, onClose }: CreateLibraryDialogProps)
             label={t('create.name')}
             value={name}
             maxLength={200}
+            data-initial-focus=""
             onChange={(event) => {
               setName(event.target.value);
             }}

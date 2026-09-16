@@ -87,6 +87,15 @@ const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex^="-"])';
 
 /**
+ * What a surface marks as the control it should open on.
+ *
+ * An attribute rather than a ref, because the control is usually several components down -- a
+ * `TextField` inside a `Dialog` inside a `Modal` -- and a ref would have to be threaded through
+ * every one of them, including the ones that do not forward it.
+ */
+const INITIAL_FOCUS = '[data-initial-focus]';
+
+/**
  * The focusables inside an overlay.
  *
  * `hidden` is the only visibility test made. The obvious stronger one -- `offsetParent !== null`,
@@ -200,6 +209,10 @@ function place(
  *   invents a `z-index`.
  * - **Traps focus while `modal`**, moving focus in on open and returning it to the anchor on
  *   close. An overlay you can tab out of is one that stays open behind whatever you tabbed into.
+ *   It lands on whatever inside carries `data-initial-focus`, and otherwise on the first
+ *   focusable: a dialog whose first focusable is its close control opens on the one control that
+ *   throws the dialog away, so anything somebody opened in order to type into has to be able to
+ *   say so.
  * - **Closes on `Esc` and on a pointer outside** both the surface and the anchor -- the anchor
  *   excluded, because a trigger that toggles would otherwise close and reopen on one click and
  *   appear not to work at all.
@@ -267,10 +280,14 @@ export function useAnchoredOverlay<
     const surface = surfaceRef.current;
     const anchor = anchorRef.current;
     returnTo.current = document.activeElement as HTMLElement | null;
-    /* The first thing inside, or the surface itself when there is nothing -- a listbox whose
-       options are named by `aria-activedescendant` has no focusable children on purpose, and
-       leaving focus outside it would send its own arrow keys to whatever opened it. */
-    ((surface === null ? undefined : focusableIn(surface)[0]) ?? surface)?.focus();
+    /* What the surface named, then the first thing inside, then the surface itself -- a listbox
+       whose options are named by `aria-activedescendant` has no focusable children on purpose,
+       and leaving focus outside it would send its own arrow keys to whatever opened it. The
+       named control is taken from the focusables rather than queried on its own, so a marker on
+       something a keyboard cannot reach falls through instead of swallowing the focus. */
+    const focusable = surface === null ? [] : focusableIn(surface);
+    ((focusable.find((element) => element.matches(INITIAL_FOCUS)) ?? focusable[0]) ??
+      surface)?.focus();
     return () => {
       (returnTo.current ?? anchor)?.focus();
     };
