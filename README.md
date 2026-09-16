@@ -18,7 +18,7 @@
 > The backend, the ingestion pipeline, search and the CLI are written; the web interface is being
 > built against a finished design system. **Nothing is installable, there is no release, and
 > nothing here is asking you to try it.** The first version has to run against a real archive for
-> several months before any of that changes — see [`docs/v0-plan.md`](docs/v0-plan.md). The
+> several months before any of that changes — see [`docs/v0-plan/`](docs/v0-plan/). The
 > reasoning is on the record from the start on purpose. When there is something to install, this
 > section will say so.
 
@@ -93,7 +93,7 @@ configured through environment variables.
 |---|---|
 | [`VISION.md`](VISION.md) | Why it exists, who it is for, the principles it will not break |
 | [`ROADMAP.md`](ROADMAP.md) | What comes after the first version, and what is explicitly out of scope |
-| [`docs/v0-plan.md`](docs/v0-plan.md) | The build plan for the first version, task by task |
+| [`docs/v0-plan/`](docs/v0-plan/) | The build plan for the first version, one file per work track |
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
 | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what Sonarium assumes, and the limitations it knows about |
 

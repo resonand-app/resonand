@@ -82,9 +82,10 @@ Layered, and the dependency runs one way:
 
 ### The plans, and the ones that are not here
 
-`docs/v0-plan.md` is the first version: every decision with its rationale, and every task with
-its done-criterion. `docs/ui-plan.md` decomposes its frontend track. `ROADMAP.md` is Milestone 1
-and beyond — where a deferred task goes, keeping its identifier.
+`docs/v0-plan/` is the first version: every decision with its rationale, and every task with its
+done-criterion. It is **one file per work track**, indexed by `docs/v0-plan/README.md`, so the
+prefix of an identifier is the file it is in and there is no exception to remember. `ROADMAP.md`
+is Milestone 1 and beyond — where a deferred task goes, keeping its identifier.
 
 **`docs/internal/` is absent from a fresh clone.** It holds the authoritative functional and
 UI/UX specifications, kept local while the first version is built. A task needing real fields,
@@ -131,7 +132,7 @@ application shell and the hashed bundle the shell references, and that the CLI r
 
 > **The four subsections that follow are scoped to the build of the first version.** Commits,
 > pull requests, branches and task identifiers describe how v0 is being built against
-> `docs/v0-plan.md`. When v0 ships, delete what the identifiers hold together — keeping
+> `docs/v0-plan/`. When v0 ships, delete what the identifiers hold together — keeping
 > Conventional Commits, the four things a pull request answers, and the comment rules below.
 
 ### Commits
@@ -216,17 +217,25 @@ branch and its own pull request, and says in one line which pull request it came
 Every task has a **stable identifier that is never renumbered**. The prefix is the work track,
 not the phase. Cite them in commits, branches and reviews.
 
+**The prefix is the file.** Everything under `docs/v0-plan/`, one file per track:
+
 | Prefix | Track | Lives in |
 |---|---|---|
-| `INF` | Repository infrastructure, tooling, CI | `docs/v0-plan.md` |
-| `DEC` | Decisions that block code | `docs/v0-plan.md`, `docs/ui-plan.md` |
-| `DAT` | Schema, migrations, ACL, access layer | `docs/v0-plan.md` |
-| `API` | HTTP skeleton, sessions, authentication | `docs/v0-plan.md` |
-| `ING` | Storage, ffprobe, waveform, streaming, integrity | `docs/v0-plan.md` |
-| `JOB` | Queue, providers, segments, FTS5 | `docs/v0-plan.md` |
-| `UI` | Every view in the interface | `docs/ui-plan.md` (decomposes Track C of `v0-plan`) |
-| `OPS` | Docker, configuration, backup, observability | `docs/v0-plan.md` |
-| `INT` | Views that cross tracks: trash, administration, security | `docs/v0-plan.md` |
+| `INF` | Repository infrastructure, tooling, CI | `infrastructure.md` |
+| `DEC` | Decisions that block code | `decisions.md` |
+| `DAT` | Schema, migrations, ACL, access layer | `data.md` |
+| `API` | HTTP skeleton, sessions, authentication | `api.md` |
+| `ING` | Storage, ffprobe, waveform, streaming, integrity | `ingestion.md` |
+| `JOB` | Queue, providers, segments, FTS5 | `jobs.md` |
+| `UI` | Every view in the interface | `interface.md` |
+| `OPS` | Docker, configuration, backup, observability | `operations.md` |
+| `INT` | Views that cross tracks: trash, administration, security | `integration.md` |
+
+Two more are cited from the code and planned in working documents that are **not in this
+repository**, so an identifier carrying one resolves to the code that applied it and nowhere else:
+
+| Prefix | Track | Planned in |
+|---|---|---|
 | `REV` | Backend review findings | `docs/internal/backend-review-v0.md` (local only) |
 | `FBK` | Feedback and liveness: what the interface says while it works | `docs/internal/feedback-plan.md` (local only) |
 

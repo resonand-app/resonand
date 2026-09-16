@@ -1,362 +1,195 @@
-# Sonarium v0 — UI build plan
-
-The build plan for the interface, task by task. `docs/v0-plan.md` Track C names twenty-six pieces
-of frontend work at the altitude of a view; this document is where each of those becomes a list of
-things one person can finish in one sitting. Nothing here is new scope. It is the same work, cut
-small enough to start.
-
-**Where this plan started, in 2026-09.** The interface was drawn: `frontend/design-system/` was
-the signed-off visual language (`DEC-8`), and a click-through prototype covered eight routes, six
-overlays and fifty-six view-states in both themes. What did not exist was a single line of
-application code — `frontend/src/` was five empty directories, there was no `package.json`, and no
-`.tsx` file anywhere in the repository. Everything below is cut from that starting point, and the
-section that follows says how far it got.
-
-## Where it got to
-
-**Phases A through F are done, and one task is open.** Every box below is ticked except `INT-6`,
-which is deferred rather than skipped: it is the only task here needing a browser toolchain and a
-running instance rather than jsdom, so it waits for the backend review worklist
-(`docs/internal/backend-review-v0.md`) to finish and lands against a backend that has settled.
-Until it does, the _When the interface is done_ list at the foot of this document is not yet
-answered in full — the utility threshold has been proved in tests, not in a browser with
-headphones.
-
-Phase F found four things worth naming, because none of them was visible on an English desktop
-screen and each was in the product rather than in a test:
-
-- **The libraries landing page skipped a heading level.** The owned grid had no heading while the
-  shared group below it had one, so the page ran `h1` straight to `h3` and no screen reader could
-  outline it. Found only once the audit waited for the cards to draw.
-- **Three strings never reached `src/i18n/en/`**: the sidebar's six labels, the waveform's "No
-  waveform yet", and — the one that matters — `EgressNotice`, principle 2's only implementation.
-  The sentence telling somebody their recording is about to leave the machine was English for
-  everybody.
-- **A phone could not start a selection.** `UI-9a` reveals the checkbox on hover, on focus, or
-  once a selection exists; a phone has none of the three before the first recording is picked.
-  `UI-24b` built the long press that closes it.
-- **Two card titles were text-height tap targets.** Both took `data-hit-target`.
-
-Two limitations are recorded rather than fixed. `level_description` and the search recall sentence
-are **written by the backend**, so the interface renders them in whatever language Python chose;
-when a second language ships, those are backend work. And **truncation is still a visual check** —
-`text-overflow` clips a string without changing its `textContent`, so no test in any environment
-can see it. `?lang=pseudo` in a dev build is the tool, and the `»` ending every string is what
-makes a cut one obvious.
-
-## Why this document exists
-
-Three things forced it.
-
-**The prototype is a prototype.** It builds forty-odd screens out of inline HTML on top of eight
-of the twenty-one shipped components. Every pattern it invented — the filter bar, the bulk bar, the
-upload tray, the skeletons, the empty-state card, the technical metadata rows — exists once, as
-markup, inside a single artboard. Ported view by view, each of those becomes one copy per view.
-Extracted first, each is written once. That extraction is Phase C and it is the largest single
-block of work here.
-
-**The design system owes thirteen components.** The interface specification's §5 named them; the
-prototype's second canvas drew all thirteen with their states, their geometry and a "when not to
-use it" note each. They are pixel specimens with no props, no keyboard behaviour and no positioning
-strategy. They have to be built before the views that need them, or nine views produce nine
-one-offs.
-
-**Seven API tasks and one split are prerequisites, not parallel work.** Nine gaps were found when
-the views were specified against the backend as built. Four of them only change what the interface
-can fetch; five decide whether a control exists at all. They close first.
-
-## How to read it
-
-### Identifiers
-
-Every task carries a **stable identifier** whose parent is the Track C task in `docs/v0-plan.md` it
-decomposes: `UI-6a`, `UI-6b`, `UI-6c` are the library grid. The suffix follows the `API-7b`
-precedent already in the plan. **Identifiers are never renumbered.** A task that turns out to
-belong to Milestone 1 keeps its letter and moves to `ROADMAP.md`, which is why gaps here are
-expected and are not mistakes.
-
-Four parents are new, because Track C has no task for them:
-
-| New parent | What it covers                            | Why it has no parent today                                                                                                                                         |
-| ---------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `UI-32`    | The CSS interaction layer                 | The system is written entirely in inline style objects, so `:hover`, `:focus-visible`, `:active` and `@media` cannot be expressed at all. `UI-23` assumes they can |
-| `UI-33`    | Token reconciliation                      | Six values in shipped components bypass the tokens, and four token groups the views need do not exist                                                              |
-| `UI-34`    | The thirteen components the system owes   | `UI-1` is a porting task. Authoring thirteen new components with keyboard and positioning behaviour is not porting                                                 |
-| `UI-35`    | The ten composites the prototype invented | Named nowhere. They are the reason a view is a hundred lines instead of six hundred                                                                                |
-
-Notation is the plan's: `⇢ X, Y` depends on those, `🔒` on the critical path, `🧪` carries a
-mandatory test. A task is done when it meets the criterion written next to it, not when it works.
-
-### What one task is
-
-One task is **one branch, one commit, one session**. The branch is the identifier lowercased plus a
-slug (`ui-12b-follow-and-release`). The commit is Conventional Commits in the repository's voice,
-citing the identifier bare in the body. If a task cannot be finished in a sitting it was cut too
-big — say so in the review and split it, keeping the parent letter and adding a number
-(`UI-12b1`, `UI-12b2`).
-
-### Where the fields and states come from
-
-**This document is committed, and `docs/internal/design/ui-ux-specification.md` is not.** So this
-plan names what to build and points at the section that says what it contains; it does not
-reproduce field tables, state tables or copy. Read the specification section cited before starting
-a task. In a fresh clone the specification is absent — that is deliberate, and the
-`sonarium-design` skill already says to stop rather than guess the fields.
-
-The prototype is the visual and state reference: `docs/internal/design/provenance/Sonarium app
-prototype design.zip`. Where the two disagree, **the specification wins** — the prototype was built
-from it, not the other way round.
-
----
-
-## Decisions this plan takes
-
-### DEC-20 · The frontend libraries
-
-Chosen once, here, so no task chooses again.
-
-| Concern           | Choice                                                                                 | Why this one                                                                                                                                                   |
-| ----------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Build, dev server | **Vite 8** + React 19 + TypeScript strict                                              | Already the decision in `docs/v0-plan.md` and already written into the commented Dockerfile stage                                                              |
-| Routing           | **React Router 7**, declarative mode                                                   | Eight routes, and §2.1 puts real state in the URL — the query, the filters, the view mode. Query-param handling is the requirement, not loaders                |
-| Server state      | **TanStack Query 5**                                                                   | Every list endpoint is `limit`/`offset` with a `total`; caching, invalidation after a mutation, and a known total before the rows arrive are exactly its shape |
-| Client state      | **Zustand 5**                                                                          | Three stores that outlive a route: playback, the upload tray, toasts. `UI-5` asks for one playback state with two presentations; a store is that sentence      |
-| Virtualisation    | **TanStack Virtual 3**                                                                 | 36px rows over 800 recordings, and a few hundred transcript segments                                                                                           |
-| i18n              | **i18next** + react-i18next                                                            | `UI-22` wants every literal externalised and a pseudo-locale for the +30% check                                                                                |
-| Icons             | **lucide-react**                                                                       | Replaces the CDN UMD build and its `createIcons` effect. Bundled, tree-shaken, no outbound request                                                             |
-| Fonts             | **Fontsource's** Geist and Geist Mono, vendored                                        | Both faces as subset woff2. Closes the Google Fonts `@import` that `UI-1` was already told to close                                                            |
-| Tests             | **Vitest** + Testing Library + jsdom; **Playwright** for `INT-6`; **axe-core** in both | Mirrors the backend's arrangement: the same checks locally and in CI                                                                                           |
-| Test doubles      | **MSW 2**                                                                              | The API is real by the time views are built, but a view test must not need a running instance                                                                  |
-
-Nothing here is a framework. Everything is replaceable one file at a time, which is the property
-that matters for a project that intends to be maintained by one person for years.
-
-**The row said Vite 6 when this was signed.** By the time `INF-3a` installed it, Vite 6 was the
-registry's `previous` tag and 8 was `latest`; Vitest had reached 5 and ESLint 10. The table now
-says what actually landed, because a decision record that disagrees with `package-lock.json` is
-worse than no record. The exact versions live in the lock file, which is the only place a version
-should be written twice.
-
-**The fonts row said the `geist` package, and that package is the wrong object.** It ships TTF
-and no woff2 — 169 KB and 171 KB for the two variable faces, against 84 KB for all four files
-that landed — and it peer-depends on `next >=13.2.0`, because it exists to hand a descriptor to
-Next.js's font loader rather than to produce a stylesheet. `UI-1a` vendors
-`@fontsource-variable/geist` and `@fontsource-variable/geist-mono` instead: the same upstream
-fonts, subset to Latin and Latin Extended and compressed. **They are copied in rather than
-depended on**, because `tokens/fonts.css` is read two ways — Vite processes it for the app, and
-the seventeen cards in `guidelines/` `<link>` it off disk with no bundler — and only a relative
-`url()` works in both. The version they came from is written in that file, which is the one place
-somebody bumping them will be looking.
-
-The one thing that is a ceiling rather than a choice: **TypeScript is 6.0.3 and not 7.**
-TypeScript 7 is the Go port, and `typescript-eslint` peer-requires `typescript >=4.8.4 <6.1.0` —
-so `INF-3b`, which needs `typescript-eslint`, decides this and not preference. Revisit when
-`typescript-eslint` supports it; nothing else in the stack is holding it back.
-
-### DEC-21 · The design system is TypeScript, in place
-
-`frontend/design-system/` **becomes the application's component source**, converted from `.jsx` to
-strict `.tsx` where it stands. The hand-written `.d.ts` files fold into the components they
-document; the `.prompt.md` files stay, because they are the only record of when not to use a
-component. A generated `index.ts` barrel is added — the adherence config that shipped with the
-system already forbids reaching into `components/**` and mandates importing from a barrel that was
-never authored.
-
-The alternative was `UI-1`'s literal wording: keep the system as a `.jsx` design artifact and port
-it into `src/components/ui/`. That produces two copies of twenty-one components with no mechanism
-to keep them in step, and the design tool commits nothing upstream, so the re-syncability it would
-buy does not exist. `DEC-8` said one system, versioned with the code. This is that.
-
-`UI-1`'s stated scope survives intact: every component, self-hosted Geist, bundled Lucide, and a
-test that fails on a hex colour in a component. It said thirty-two; the count is thirty-four, and
-`INF-9` is where that gets fixed at the source.
-
-### DEC-22 · Presentational in the system, data-bound in the app
-
-The composites the prototype invented split on one line: **if it can be rendered from props alone
-it belongs in `frontend/design-system/`; if it holds a query, a mutation or a store it belongs in
-`frontend/src/components/`.** So `Shell`, `PageHeader`, `StateSlot`, `AvatarStack`, `KeyValueList`
-and `ToastRegion` join the system. `FilterBar`, `BulkBar`, `UploadTray` and `ResultGroup` do not —
-they are application components built out of system primitives.
-
-Without this line, "make it reusable" ends with the design system importing TanStack Query.
-
-### DEC-23 · The phone shell is built from prose
-
-The prototype draws the desktop shell only. The phone shell — four bottom tabs, the docked player
-strip that expands, the filter sheet, the metadata sheet — exists as §2.3's prose and ASCII
-diagrams plus the `Sheet` component, which was drawn specifically to unblock it. It is built from
-that, and `UI-4f`, `UI-5f`, `UI-8e`, `UI-13f` and `UI-24a` are where the phone layout gets decided
-in code rather than in a picture. If any of them turns out to need a drawing first, stop and get
-one; a phone layout guessed at 375px is cheaper to draw than to rewrite.
-
-### DEC-24 · The API is mounted under `/api`
-
-`UI-4a` was told to settle the namespace before naming a route, and this is the settlement.
-
-The API is mounted at the root, so the interface's routes and the API's paths are one namespace
-and the API was there first. `/search?q=…` — §2.1's search route — _is_ `GET /search`, and a hard
-refresh on it answers the endpoint rather than the shell. `backend/tests/api/test_spa.py` already
-asserts that, deliberately, so it could not be rediscovered later.
-
-`UI-4a` offered two ways out and preferred the cheaper: rename the colliding client route. **This
-plan takes the other one.** Every API path moves under `/api` (`API-16`), and §2.1's eight routes
-are built exactly as specified.
-
-The reason is that renaming `/search` fixes one collision and leaves the arrangement that produced
-it. `/libraries`, `/audio`, `/trash`, `/tags`, `/instance`, `/auth`, `/users`, `/admin` and
-`/transcription` are nine top-level names the interface can never be given, and every endpoint
-added after this one takes another. A view named after the thing it shows is the normal case, so a
-namespace where that is sometimes forbidden — for a reason nobody can see from the route table —
-costs more over the life of the project than one prefix costs now.
-
-It is also the last cheap moment. `UI-3a` commits an `openapi.json` snapshot carrying every path,
-and a build that fails when the backend renames a field is the point of it; renaming every path
-afterwards means regenerating the snapshot and reviewing a diff that touches every line of it.
-
-What does not move: `/healthz` and `/readyz`, which are probes rather than API surface and are
-already outside the document; and `/`, which is the interface when a bundle is present and the
-instance's own answer when it is not.
-
-### Three repairs before anything cites them (INF-9)
-
-- **`UI-31` names two different things.** It is the libraries landing in `docs/v0-plan.md` and
-  shipping actual translations in `ROADMAP.md`. Both documents promise identifiers are never
-  renumbered, so one of them is wrong. **`UI-31` stays the libraries landing** — it is the one with
-  dependents — and the roadmap's becomes `UI-36`.
-- **The component count is stated three ways.** The filesystem holds twenty-one; the design
-  system's README enumerates those twenty-one by name without ever stating a number; the
-  specification says nineteen, and that `UI-1` will port thirty-two. The filesystem is right:
-  **21 shipped + 13 owed = 34**, and `CreateLibraryCard` and `ColorSwatchPicker` are the two that
-  arrived after the count was written. **The wrong number exists only in the specification**, which
-  is not committed — so this half of the repair lands locally and is invisible to a fresh clone.
-- **The four-state search widening had a parent already.** `JOB-11` in `docs/v0-plan.md` promises
-  search's transcription state as "all four states, repeatable", and the rest of `JOB-11` is built —
-  so the widening is a split of a partly-done task, not a new one. It is **`JOB-11b`**, following
-  the `API-7b` precedent, and not `API-10b`: `API-10` is the library grid, and a suffix names its
-  parent. Renaming is free only until something cites it, which is now.
-
-`INF-9` makes those three true, in one commit, across `ROADMAP.md`, `docs/v0-plan.md`, this
-document and the specification. It also **registers `UI-32`–`UI-35` and `JOB-11b` in
-`docs/v0-plan.md`**, which is the numbering authority — an identifier that exists only here is an
-identifier the other document will one day hand out twice. Every task below is written against the
-repaired numbers.
-
----
-
-## Phase A · Close the API gaps the interface depends on
-
-Ten gaps, seven existing tasks, one new split. All eight land before the views that need them,
-because five of the ten decide whether a control exists at all and a control designed around a
-shape that then changes is a rewrite, not a tweak. The shape each one needs is in the
-specification's §6.1 — parameter lists and response bodies are written out there.
-
-**The tenth is not in §6.1**, because it was found here rather than there: `UI-18a` is told to read
-the size limit and the accepted formats "from the instance rather than hard-coded", and `GET
-/instance` carries neither. It is folded into `API-14`, which is already the task that grows
-`InstanceState`.
-
-**Two of the eight are not independent.** `JOB-11b` rewrites the filter that `API-10` then wires
-into the library grid — the same `Filters`, the same `apply_filters`, the same dependency. `JOB-11b`
-goes first. The other six touch disjoint files.
-
-These are backend tasks. They belong to this plan only because the interface cannot be finished
-without them.
-
-- [x] **API-12** · 🔒 `GET /transcription/destination` — the provider, its host, whether it is
-      local, whether it is configured, readable by **any authenticated caller**.
-      _Done when:_ a non-admin can be told where their audio goes. Until then `UI-25` — principle
-      2's only implementation — is unbuildable for exactly the people it protects. 🧪 a non-admin
-      gets the same answer an admin does, minus the credential.
-
-- [x] **API-10** · Filter and sort a library's recordings. `GET /libraries/{uuid}/audio` takes
-      today only `limit` and `offset`, newest first. It gains search's filter parameters plus
-      `sort` and `direction`.
-      _Done when:_ `UI-8`'s filter bar and `UI-7d`'s column sort are expressible as one request.
-      🧪 every sort field, both directions, stable under pagination.
-
-- [x] **JOB-11b** · Widen `/search`'s `transcription_state` to all four states and make it
-      repeatable. It accepts `none|done` today, which is why two of V6's four state toggles are
-      drawn visibly disabled in the prototype. The four states are derived, not stored: `done` is an
-      active transcript, `running` and `failed` are the `transcribe` job's state, and the filter has
-      to read them the way `AudioSummary` already does or the badge and the toggle disagree.
-      _Done when:_ the same four toggles work in a library and in search. 🧪 repeated parameters
-      are a union, not the last one wins; and the filter's answer equals the badge's, state by
-      state, over a fixture holding all four.
-
-- [x] **API-11** · `POST /audio/{uuid}/transcribe`, level 20, 202 with the job, **409 when one is
-      already pending or running**.
-      _Done when:_ `UI-15a`'s call to action, `UI-15c`'s retry and `UI-14`'s re-transcription have
-      an endpoint. 🧪 the 409, because the interface renders it as a state and not as an error.
-
-- [x] **API-13** · `PATCH /auth/me` for display name, email and language. Only the password can be
-      changed today.
-      _Done when:_ V10's Account and Appearance sections can save. 🧪 email uniqueness against
-      `user.email_normalised`, which already exists.
-
-- [x] **API-14** · `GET /trash/libraries` as `Page[LibrarySummary]`, and the instance facts the
-      interface reads before it can draw: `trash_retention_days`, `max_upload_bytes` and the
-      accepted formats, all added to `GET /instance`.
-      _Done when:_ the trash can show one mixed list, everybody — not only admins — can be told how
-      long they have, and `UI-18a` can state the size limit without hard-coding it. `/instance` is
-      the one call made without a session and already gives out the version; none of these four is
-      a secret. The retention half is the cheapest of the ten.
-
-- [x] **API-15** · `GET /users/lookup?email=` — **full normalised email only, at most one result**,
-      for any holder of level 30 on at least one library.
-      _Done when:_ V7 can add a person without an administrator. It is deliberately not a
-      directory: a prefix search would let any library manager enumerate the instance. 🧪 a partial
-      address returns nothing, not a list.
-
-- [x] **ING-14** · `GET /audio/{uuid}/waveform?peaks=N`, N capped server-side. **This is a format
-      change, not a parameter.** The blob's header stores peaks _per second_ in one byte, so a
-      48-minute recording reduced to 200 pairs is 0.07 peaks per second — not an integer, not a
-      byte, and `encode` refuses it. Version 2 stores `duration_ms` instead, which is the quantity
-      that survives resampling; `decode` keeps reading version 1, so nothing has to be recomputed
-      and the version byte does the job it was put there for.
-      _Done when:_ twenty-six dense rows cost twenty-six kilobytes rather than megabytes. A
-      48-minute recording stores about 28,800 min/max pairs and V4 draws them into 88 pixels.
-      ⇢ ING-5 🧪 the downsample of a downsample is the same shape, and a version 1 blob still reads.
-
----
-
-## Phase B · The toolchain
-
-Six tasks, none of them interesting, all of them blocking. Three call sites already carry
-written-out instructions for turning the frontend on — `Dockerfile`, `.github/workflows/ci.yml` and
-`.pre-commit-config.yaml` each explain what they are waiting for and why they are not failing
-today. Follow them.
-
-- [x] **INF-3a** · Vite 6 + React 19 + TypeScript in strict mode, the `@/` path alias, and
-      `dev` / `build` / `preview` scripts. `frontend/src/`'s five directories keep their names.
-      _Done when:_ `npm run build` writes a hashed bundle into `frontend/dist/`, which `.gitignore`
-      already expects. ⇢ INF-1
-
-- [x] **INF-3b** · ESLint (typescript-eslint, react-hooks, jsx-a11y) and Prettier, configured to
-      agree with `.editorconfig` and with the backend's line width.
-      _Done when:_ `npm run lint` and `npm run format:check` pass on an empty app. ⇢ INF-3a
-
-- [x] **INF-3c** · Vitest + Testing Library + jsdom, with coverage thresholds and a `test:unit`
-      script.
-      _Done when:_ one trivial component test runs in CI. ⇢ INF-3a
-
-- [x] **INF-3d** · Wire both into `pre-commit` and CI so they fail identically, which is the
-      standard the backend already holds itself to.
-      _Done when:_ the hooks the `.pre-commit-config.yaml` comment promises exist, and
-      `ci.yml` grows a `frontend` job. ⇢ INF-3b, INF-3c (amends INF-4, INF-5)
-
-- [x] **INF-3e** · Turn on the Dockerfile's frontend stage: uncomment the build stage, uncomment
-      the `COPY --from=frontend-build` line, delete the backend-only warning at the top. Three
-      edits, all in one file, all already marked.
-      _Done when:_ the image serves the built SPA from `/app/static` and `/readyz` still answers.
-      ⇢ INF-3a 🧪 the existing image smoke test also loads the shell
-
-- [x] **INF-9** · The three repairs above: `UI-36` in `ROADMAP.md`, `JOB-11b` here, the component
-      count in the specification, and `UI-32`–`UI-35` plus `JOB-11b` registered in
-      `docs/v0-plan.md`.
-      _Done when:_ `UI-31` means one thing, the component count means one number, and no identifier
-      exists in one document and not the other. It runs **before** Phase A rather than beside it,
-      because Phase A's commits cite these numbers.
+# The interface
+
+`UI-*` — every view, and the design system and application spine underneath them. Sixty per cent
+of the first version's tasks are here.
+
+Two altitudes in one file. The first section names the frontend work at the altitude of a view;
+everything after it cuts each of those into pieces one person can finish in a sitting. Nothing
+in the second half is new scope -- it is the same work, cut small enough to start.
+
+## Track C · Frontend
+
+`UI-1`/`UI-2` can start during Phase 1, and `UI-3`/`UI-4` against mocks during Phase 2.
+
+- [ ] **UI-1** · **Adopt the design system**, which is already built and vendored at
+      `frontend/design-system/` (`DEC-8`). This task is not a design task: it is wiring the
+      finished system into the application. Link `styles.css`, port each component from its `.jsx`
+      to strict TSX against the `.d.ts` that ships beside it, **self-host Geist and bundle Lucide**
+      so the interface makes no outbound request to render itself, and add a Vitest check that
+      fails if a hex colour, an `rgb()` or a font name appears anywhere in a component. The theme
+      is `light` / `dark` / follow-the-system and nothing else.
+      *Done when:* every component in the system renders in the app in both themes, and the
+      no-hardcoded-colour test passes.
+
+- [ ] **UI-2** · **Waveform component** — the product's signature visual element, specified by the
+      system: amplitude in rounded bars at the five documented sizes (20 dense row · 38 library
+      card · 52 recording card · 34 player · 130 audio detail), played vs pending bars, a 2px
+      rounded playhead, click to seek on the large one, and minimum bar height equal to bar width
+      so silence stays a row of dots. It reduces `ING-5`'s stored min/max pairs to the available
+      pixel width — a 48-minute recording is ~28,800 pairs — and when the peaks job has not run it
+      renders **a dashed rule and the duration, never an invented shape**. ⇢ UI-1, ING-5
+
+- [ ] **UI-3** · API client generated from the OpenAPI spec (`openapi-typescript`), with shared
+      types. ⇢ API-1
+      *This is what keeps the interface a client of the API rather than a privileged path into it.*
+
+- [ ] **UI-4** · Navigation shell, in the two forms the interface specification settles. **Desktop:**
+      the floating shell — a 52px top nav carrying the mark, the global search field, upload and the
+      account; a 224px sidebar (52px collapsed) listing your libraries and, separately, libraries
+      shared with you, then Trash and Settings; the content area; and the 64px player pinned along
+      the bottom whenever something is playing, everything separated by a 12px gap. **Phone:** not a
+      narrowed desktop but four bottom tabs — Libraries, Search, Upload, Settings — with the player
+      docked directly above them as a compact strip that expands to a full-screen player. The
+      sidebar's contents become the Libraries tab. ⇢ UI-1, UI-3
+
+- [ ] **UI-31** · **Libraries landing**, the application's home: the create tile first, then a card
+      per library carrying its name, its user-chosen colour, its recording count and total duration,
+      and the waveform of its most recent recording. Libraries shared with you are a second,
+      separately titled group that **disappears entirely rather than sitting empty**. A brand-new
+      account has exactly one library — the personal one — and that state is an invitation to upload,
+      not an empty grid. ⇢ UI-4, API-8
+
+- [ ] **UI-5** · **Persistent player**: it survives view changes, and a decision on whether the
+      large player and the compact one are the same component in two states or two synchronised
+      components (*recommendation: a single global state, two presentations*). Integration with the
+      **Media Session API** for system controls on mobile. ⇢ UI-2, UI-4
+
+- [ ] **UI-6** · **View A · Library grid**: header with owner, shares, count and total duration;
+      audio card with the **four transcription states visually distinguishable**, category, tags
+      with overflow, and a play button on the card. ⇢ UI-5, API-9
+
+- [ ] **UI-7** · **View A' · Dense compact list** — for 800 audios the grid is useless. Fixed-height
+      36px row, virtualised, and the scrollbar honest about the full length before everything is
+      fetched. ⇢ UI-6, API-10, ING-14
+
+- [ ] **UI-8** · Filters and sorting, as **one filter bar under the page header** rather than a
+      second rail: a category popover holding the tree, tag chips, the four transcription states as
+      toggles, the sort control, and the grid/list switch. A permanent rail would drop the card grid
+      from three columns to two at 1280 and is a lot of chrome for a family archive; a popover also
+      collapses honestly onto a phone. Sorting is by recording date / upload date / duration /
+      title, and **the list's column headings and the bar's sort control are the same sort**.
+      ⇢ UI-6, API-10, DAT-6, DAT-7, ING-12
+
+- [ ] **UI-9** · Multiple selection and bulk actions: assign category, add tag, move between
+      libraries, send to trash. ⇢ UI-7
+
+- [ ] **UI-10** · Grid states: empty (an invitation to upload, not a sad drawing), loading
+      (skeletons), and error. ⇢ UI-6
+
+- [ ] **UI-11** · **View B · Detail** with a large player and a seekable waveform, 0.75×–2× speed
+      and ±15 s skips. ⇢ UI-5, ING-7
+
+- [ ] **UI-12** · **Synchronised transcript** — the central moment of the product: the active
+      segment is highlighted as it plays, clicking a segment seeks to that moment, and the scroll
+      follows playback without hijacking the user's manual scrolling. ⇢ UI-11, JOB-6
+
+- [ ] **UI-13** · Metadata panel, inline-editable according to permission, technical metadata
+      collapsed, and a **read-only state that clearly reads as non-editable without looking
+      broken**. It is a 320px panel to the right of the transcript on desktop, collapsible, and a
+      **bottom sheet on a phone** opened from the essentials line — the transcript needs the full
+      width and it is the centre of the product. ⇢ UI-11, API-9
+
+- [ ] **UI-14** · Transcript selector when there is more than one (model, language, date, which one
+      is active). `JOB-7` makes re-transcription possible, so without this it is unreachable from
+      the interface. The manual editor is a later milestone. ⇢ UI-13, JOB-7, API-11
+
+- [ ] **UI-15** · Transcription states in the detail view: missing (with a call to action), in
+      progress (with progress if the provider offers it), and **failed with the real error message
+      and a retry button** — the error explains what happened and what to do, it does not
+      apologise. ⇢ UI-13, JOB-2, API-11
+
+- [ ] **UI-16** · **View C · Search**, which is two surfaces over one endpoint: the **quick-hits
+      dropdown** anchored under the nav search field for the three-second case, and the **full
+      search view** that `Enter` and its see-all row lead to, carrying the filters (library, date
+      range, duration range, tags, transcription state). Both show transcript results with a context
+      fragment, a timestamp, and playback from that exact point **without opening the detail view**.
+      Several matches in one recording are grouped under it, three shown, "+N more" expands. A
+      metadata match has no timestamp and no play-from-here, and needs a form that says so. The
+      recall note from `GET /search/about` is shown, not hard-coded. ⇢ UI-5, JOB-10, JOB-11
+
+- [ ] **UI-17** · **View D · Library and sharing**: edit name and description, manage the category
+      tree, a panel with who has access, at what level, who granted it and when, and the level
+      selector **explained in plain language**, rendered from the API's own `level_description` so
+      the wording cannot drift. Library-level grants only in v0. ⇢ UI-4, API-8, API-15
+
+- [ ] **UI-18** · **View E · Upload dialog**: drag and drop, multiple files, per-file progress,
+      destination (library + category), the transcription request from `UI-25`, handling of hash
+      duplicates and unsupported formats, and **an upload that is not lost when switching tabs**.
+      ⇢ UI-4, ING-2, ING-3, UI-25
+
+- [ ] **UI-19** · **View F · Move audio dialog** — its own design, because it has non-obvious
+      consequences. It must explicitly warn that it will change who can see the audio and that the
+      category will be lost. ⇢ UI-13, ING-10
+
+- [ ] **UI-20** · **View G · Settings**, one destination with sections rather than a scattering of
+      screens: **Account** (display name, email, password change), **Sessions** (every active
+      sign-in with the current one marked and not revocable by mistake, revoke one or sign out
+      everywhere), **Appearance** (language, and theme as light / dark / follow the system), and —
+      only when `is_admin` — **Administration** from `INT-3`, which keeps its own chrome inside so
+      nobody wanders into it. **There are no avatar images**: no storage exists for one and fetching
+      one from an external service would violate principle 2, so identity is initials or a derived
+      mark. Tokens are not in v0. ⇢ UI-4, API-3, API-13
+
+- [ ] **UI-21** · **View J · Authentication**: local sign-in, and the first-run screen that creates
+      the initial administrator when `GET /instance` reports the instance needs bootstrapping.
+      **There is no sign-up path and the screen must not imply one** — registration is
+      administrator-only in v0, so the design system's app kit, whose login screen offers to create
+      an account, is wrong here and is not copied forward. Wrong credentials, an unknown address and
+      a disabled account are **indistinguishable on purpose**; rate-limiting is a real state.
+      ⇢ API-3, API-7
+
+- [ ] **UI-22** · i18n plumbing: English as the base, **every literal externalised**, localised date
+      and duration formatting. Shipping actual translations is a later milestone; making them
+      possible without touching components is v0. ⇢ UI-4
+
+- [ ] **UI-23** · Accessibility as the floor: visible keyboard focus, `prefers-reduced-motion`
+      respected, AA contrast, full keyboard navigation of the player and the transcript.
+      ⇢ UI-12 🧪 axe audit on every view.
+
+- [ ] **UI-24** · A real mobile-first pass: much of the consumption happens on a phone, with
+      headphones, on the move. Gestures, touch target sizes, and the player coexisting with the
+      system controls. PWA installability and offline behaviour are a later milestone. ⇢ UI-23
+
+- [ ] **UI-25** · **External transcription disclosure** — principle 2 made visible. Wherever a
+      transcription is requested, the interface names **which provider the audio will be sent to**
+      and that it will leave the instance, before the request is made; per `DEC-9`, the
+      administration view says the same thing for every watched folder configured to transcribe on
+      arrival. No silent egress anywhere, including the retry path. ⇢ UI-13, JOB-2, API-12 🧪
+      *This is the one principle with no other implementing task. Without it, principle 2 is a
+      sentence in a document rather than a property of the software.*
+
+The four below were found while decomposing this track into session-sized
+work. They are registered here because this document hands out the numbers, and an identifier that
+lives in only one of the two would eventually be handed out twice. Their tasks are written out
+there, not here.
+
+- [ ] **UI-32** · **The CSS interaction layer.** The design system is written entirely in inline
+      style objects, so `:hover`, `:focus-visible`, `:active` and `@media` cannot be expressed at
+      all — which means the interaction rules its README states, the single focus treatment `UI-23`
+      requires and the 44px hit targets the accessibility floor demands are documented and none of
+      them is implemented. ⇢ UI-1 🧪
+- [ ] **UI-33** · **Token reconciliation.** Six values in shipped components bypass the tokens, and
+      four token groups the views need — a z-index scale, breakpoints, a disabled opacity, border
+      widths — do not exist. ⇢ UI-1 🧪
+- [ ] **UI-34** · **The thirteen components the design system owes**, named by the interface
+      specification's §5 and drawn in the prototype. `UI-1` is a porting task; authoring thirteen
+      new components with keyboard and positioning behaviour is not porting. ⇢ UI-32
+- [ ] **UI-35** · **The ten composites the prototype invented** — the filter bar, the bulk bar, the
+      upload tray, the skeletons and the rest. Each exists once as markup inside a single artboard,
+      and each is needed by three or more views. ⇢ UI-34
+
+
+### Four parents this track did not have
+
+Decomposing the work above into session-sized pieces needed four identifiers Track C never named.
+They are parents, not new scope: each covers work the views assume exists.
+
+| New parent | What it covers | Why it had no parent |
+| --- | --- | --- |
+| `UI-32` | The CSS interaction layer | The system is written entirely in inline style objects, so `:hover`, `:focus-visible`, `:active` and `@media` cannot be expressed at all. `UI-23` assumes they can |
+| `UI-33` | Token reconciliation | Six values in shipped components bypass the tokens, and four token groups the views need do not exist |
+| `UI-34` | The thirteen components the system owes | `UI-1` is a porting task. Authoring thirteen new components with keyboard and positioning behaviour is not porting |
+| `UI-35` | The ten composites the prototype invented | Named nowhere. They are the reason a view is a hundred lines instead of six hundred |
 
 ---
 
@@ -617,13 +450,6 @@ presentational and join the system; four hold data and stay in the application, 
 ## Phase D · The application spine
 
 Nothing on a screen yet. Everything a screen needs.
-
-### D.0 · The namespace (API-16)
-
-- [x] **API-16** · Move every router under `/api`, and the published document and its viewer with
-      them. `/healthz` and `/readyz` stay at the root; so does `/`. The test that asserts where the
-      two namespaces collide becomes the test that asserts they cannot.
-      _Done when:_ every route in §2.1 can be hard-refreshed into. ⇢ DEC-24 🧪
 
 ### D.1 · The API client (UI-3)
 
@@ -1007,36 +833,6 @@ One destination with sections, not a scattering of screens.
       point is proving the round trip before there is a translation to lose. Design it as settled,
       not as unfinished. ⇢ UI-20a, UI-1j, API-13
 
-### E.9 · V9 · Trash and Administration (INT-1, INT-3)
-
-- [x] **INT-1a** · One list with a type marker, **not two sections** — the question is where a thing
-      went, not whether it was a library. Sorted closest to being purged first, with the time left
-      per item computed from the retention on `/instance`. ⇢ UI-4a, API-14
-- [x] **INT-1b** · A trashed library and its children grouped, and the hard case answered on screen:
-      restoring one child alone puts it back in a library that is still in the trash, where you
-      would not see it. ⇢ INT-1a, API-14
-- [x] **INT-1c** · Restore, one call per item; and Delete now through `TypedConfirm`, stating
-      exactly what is destroyed. ⇢ INT-1a, UI-34m, API-19
-- [x] **INT-1d** · The states: items in their last day marked unmistakably, loading, and empty —
-      where the good state reads as reassurance rather than as absence. ⇢ INT-1a, UI-35c
-- [x] **INT-3a** · Administration's own chrome inside Settings, so nobody wanders into it: it runs
-      the instance for everybody on it, and it says so. ⇢ UI-20a, API-7
-- [x] **INT-3b** · Users: create, disable, re-enable, and the **refusal to delete an owner that
-      names the libraries and recordings in the way**. Transferring content between accounts is a
-      later task, so until then an account can be disabled but not deleted. ⇢ INT-3a, API-7,
-      API-20
-- [x] **INT-3c** · The transcription provider: its fields, the egress notice in its calm register,
-      and a test that is **explicit and never automatic** — opening the page contacts nothing. Plus
-      the no-provider state, which says plainly that nothing on this instance can be transcribed.
-      ⇢ INT-3a, UI-34n, API-7
-- [x] **INT-3d** · The job queue: real errors, `attempts`, and `ready_at` rendered as when the next
-      attempt happens; retry and cancel; and an aggregate panel instead of four hundred rows when
-      the queue is long. ⇢ INT-3a, JOB-1
-- [x] **INT-3e** · System status, with **the revision comparison as the loudest thing on the page**
-      when the database is not where the build expects it — writes may fail or lose data until the
-      migrations run. ⇢ INT-3a, UI-35e, API-7
-
----
 
 ## Phase F · The cross-cutting pass
 
@@ -1058,14 +854,30 @@ checked once everything exists because that is the only point at which they can 
 - [x] **UI-24c** · 🧪 The **+30% string pass** using the pseudo-locale. **The filter bar and the
       dense list break first** — check those before anything else. No layout may depend on English
       string length. ⇢ UI-22d, UI-8a, UI-7b
-- [x] **INT-5** · The security pass over the finished client: no token in a URL that persists, no
-      privileged path, and the 404-not-403 rule holding everywhere. ⇢ UI-3b
-- [ ] **INT-6** · 🧪 Playwright over **the utility threshold itself**: put audio in, have it
-      transcribed, find a specific moment by searching everything, and play from that moment. If
-      that path passes, the interface does the thing the product exists to do.
-      **Deferred, not skipped** — it is the one task here that needs a browser and a live
-      instance rather than jsdom, so it follows the backend review worklist and lands against a
-      backend that has settled. ⇢ every view
+
+### What the cross-cutting pass found
+
+Four things, and none of them was visible on an English desktop screen. Each was in the product
+rather than in a test, which is the argument for doing this pass at all.
+
+- **The libraries landing skipped a heading level.** The owned grid had no heading while the
+  shared group below it had one, so the page ran `h1` straight to `h3` and no screen reader could
+  outline it. Found only once the audit waited for the cards to draw.
+- **Three strings never reached `src/i18n/en/`**: the sidebar's six labels, the waveform's "No
+  waveform yet", and — the one that matters — `EgressNotice`, principle 2's only implementation.
+  The sentence telling somebody their recording is about to leave the machine was English for
+  everybody.
+- **A phone could not start a selection.** `UI-9a` reveals the checkbox on hover, on focus, or
+  once a selection exists; a phone has none of the three before the first recording is picked.
+  `UI-24b` built the long press that closes it.
+- **Two card titles were text-height tap targets.** Both took `data-hit-target`.
+
+Two limitations are recorded rather than fixed. `level_description` and the search recall sentence
+are **written by the backend**, so the interface renders them in whatever language Python chose;
+when a second language ships, those are backend work. And **truncation is still a visual check** —
+`text-overflow` clips a string without changing its `textContent`, so no test in any environment
+can see it. `?lang=pseudo` in a dev build is the tool, and the `»` ending every string is what
+makes a cut one obvious.
 
 ---
 
