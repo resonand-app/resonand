@@ -95,6 +95,7 @@ configured through environment variables.
 | [`ROADMAP.md`](ROADMAP.md) | What comes after the first version, and what is explicitly out of scope |
 | [`docs/v0-plan.md`](docs/v0-plan.md) | The build plan for the first version, task by task |
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
+| [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what Sonarium assumes, and the limitations it knows about |
 
 ## Contributing
 
@@ -102,6 +103,10 @@ Not yet — there is nothing to build on. The first version is deliberately bein
 use before it is offered to anyone, because in this niche credibility comes from the author
 actually using the thing, and the fastest way to lose it is to ship something that loses files.
 Contribution guidelines arrive with the first installable release.
+
+**Security reports are the exception, and they are welcome now** — see
+[`SECURITY.md`](SECURITY.md). If you built this from a commit and found a way into somebody
+else's recordings, that is worth hearing about long before there is anything to install.
 
 If the idea interests you, opening an issue to disagree with something in
 [`VISION.md`](VISION.md) is genuinely useful.
