@@ -15,11 +15,19 @@ it. The test that matters is that a user does not find transcript text they may 
 
 **Matches are grouped under their recording** (``DEC-4``). A flat list lets one long interview
 bury everything else -- forty matches in a two-hour recording would be the entire first page.
+
+**The grouping, the ranking, the counting and the paging are all the database's** -- which is what
+makes the answer the whole answer. Grouping in Python needs the matches in Python, and needing
+them in Python needs a ceiling on how many are fetched; a ceiling on an unordered compound select
+decides *which* results exist by whatever order SQLite happened to produce, applies the filters to
+the survivors, and counts what is left as though it were the total. The only bound now is the
+page: the fragments are built for the recordings somebody is looking at and no others.
 """
 
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -39,13 +47,6 @@ MATCH_METADATA = "metadata"
 
 SHOWN_PER_RECORDING = 3
 """``DEC-4``: three matches visible, the rest behind "+N more"."""
-
-MAX_MATCHES_SCANNED = 500
-"""A ceiling on how much of a very common word's results are pulled back to be grouped.
-
-Grouping happens here rather than in SQL because the two indexes rank separately and a
-recording can match in both; the ceiling is what keeps that from being unbounded when
-somebody searches for a word that appears in every recording they own."""
 
 _segment_fts = table("segment_fts", column("rowid"), column("text"))
 _audio_fts = table("audio_fts", column("rowid"), column("title"), column("notes"), column("tags"))
@@ -164,22 +165,49 @@ def search(
     limit: int = 20,
     offset: int = 0,
 ) -> tuple[list[Hit], int]:
-    """Search the whole archive. Returns the page of recordings and how many matched."""
+    """Search the whole archive. Returns the page of recordings and how many matched.
+
+    Three queries, and each one answers a question the others cannot:
+
+    1. how many recordings match, which is the number the interface shows and pages against;
+    2. which of them belong on this page, ranked and narrowed by the filters;
+    3. the handful of matches to show under each recording *on this page* -- and only those,
+       because the other ninety-nine pages' fragments are work nobody asked for.
+
+    The page is decided in the database rather than by slicing a list, so asking for the tenth
+    page costs what asking for the first costs, and a filter narrows what is counted rather than
+    what happens to have been fetched.
+    """
     match = build_match_query(query)
     if not match:
         return [], 0
-    readable = _readable(user_id)
-    # The cap goes on the union rather than on each half: SQLite refuses parenthesised terms
-    # in a compound select, which is what a per-half LIMIT would force SQLAlchemy to emit.
-    combined = _transcript_matches(match, readable).union_all(_metadata_matches(match, readable))
-    rows = list(session.execute(combined.limit(MAX_MATCHES_SCANNED)).all())
-    grouped = _group(session, rows, filters or Filters(), user_id)
-    return grouped[offset : offset + limit], len(grouped)
-
-
-def _readable(user_id: int) -> Any:
-    """The recordings this user may read, as a subquery the search can sit inside."""
+    # Resolved once and threaded through both halves. Two calls would build two CTEs with the
+    # same name, which is a compile error now that they meet inside one statement.
     acl = audio_acl(user_id)
+    matches = _match_rows(match, _readable(acl))
+    candidates = _candidates(matches, acl, filters or Filters())
+
+    total = int(
+        session.execute(select(func.count()).select_from(candidates.subquery())).scalar_one()
+    )
+    if not total:
+        return [], 0
+
+    page = session.execute(candidates.limit(limit).offset(offset)).all()
+    shown = _matches_for(session, matches, [row[0].id for row in page])
+    return [
+        Hit(
+            audio=audio,
+            level=Level(level),
+            matches=shown.get(audio.id, ()),
+            total_matches=int(total_matches),
+        )
+        for audio, level, _best, total_matches in page
+    ], total
+
+
+def _readable(acl: Any) -> Any:
+    """The recordings this user may read, as a subquery the search can sit inside."""
     return select(acl.c.audio_id).where(acl.c.level >= int(Level.READ))
 
 
@@ -217,42 +245,81 @@ def _metadata_matches(match: str, readable: Any) -> Any:
     )
 
 
-def _group(session: Session, rows: list[Any], filters: Filters, user_id: int) -> list[Hit]:
-    """Collect matches under their recording, best first."""
-    by_audio: dict[int, list[Match]] = {}
-    for row in rows:
-        by_audio.setdefault(int(row.audio_id), []).append(
-            Match(
-                kind=str(row.kind),
-                fragment=str(row.fragment or ""),
-                start_ms=int(row.start_ms) if row.start_ms is not None else None,
-                rank=float(row.rank or 0.0),
-            )
-        )
-    if not by_audio:
-        return []
+def _match_rows(match: str, readable: Any) -> Any:
+    """Every match from both indexes, as one thing the queries below can sit on.
 
-    acl = audio_acl(user_id)
-    query = (
-        select(Audio, acl.c.level)
-        .join(acl, acl.c.audio_id == Audio.id)
-        .where(Audio.id.in_(by_audio.keys()))
+    A recording can match in both -- a title *and* a line of its transcript -- so the two halves
+    are unioned rather than merged afterwards, and the grouping below is what stops that showing
+    up as the same recording listed twice.
+    """
+    return (
+        _transcript_matches(match, readable)
+        .union_all(_metadata_matches(match, readable))
+        .subquery("matches")
     )
-    query = apply_filters(query, filters)
 
-    hits: list[Hit] = []
-    for audio, level in session.execute(query).all():
-        matches = sorted(by_audio[audio.id], key=lambda entry: (entry.rank, entry.start_ms or 0))
-        hits.append(
-            Hit(
-                audio=audio,
-                level=Level(level),
-                matches=tuple(matches[:SHOWN_PER_RECORDING]),
-                total_matches=len(matches),
-            )
+
+def _candidates(matches: Any, acl: Any, filters: Filters) -> Any:
+    """The recordings that matched, ranked best first, with the filters applied.
+
+    ``bm25`` scores better as it gets more negative, so the best match a recording has is the
+    *minimum* over its rows and ascending order is the right way round. ``Audio.id`` breaks the
+    tie, because two recordings with identical scores and no defined order between them is a row
+    that appears on two pages while somebody scrolls.
+    """
+    ranked = (
+        select(
+            matches.c.audio_id.label("audio_id"),
+            func.min(matches.c.rank).label("best_rank"),
+            func.count().label("total_matches"),
         )
-    hits.sort(key=lambda hit: hit.best_rank)
-    return hits
+        .group_by(matches.c.audio_id)
+        .subquery("ranked")
+    )
+    query = (
+        select(Audio, acl.c.level, ranked.c.best_rank, ranked.c.total_matches)
+        .join(acl, acl.c.audio_id == Audio.id)
+        .join(ranked, ranked.c.audio_id == Audio.id)
+    )
+    return apply_filters(query, filters).order_by(ranked.c.best_rank, Audio.id)
+
+
+def _matches_for(
+    session: Session, matches: Any, audio_ids: Sequence[int]
+) -> dict[int, tuple[Match, ...]]:
+    """The few matches shown under each recording on this page (``DEC-4``).
+
+    Asked for the page's recordings only. The fragments are the expensive part of a match -- each
+    one is ``snippet()`` reading the indexed text -- and every recording the caller has not
+    scrolled to is a fragment nobody will read.
+    """
+    if not audio_ids:
+        return {}
+    rows = session.execute(
+        select(
+            matches.c.audio_id,
+            matches.c.kind,
+            matches.c.fragment,
+            matches.c.start_ms,
+            matches.c.rank,
+        )
+        .where(matches.c.audio_id.in_(audio_ids))
+        .order_by(matches.c.audio_id, matches.c.rank, matches.c.start_ms)
+    ).all()
+
+    collected: dict[int, list[Match]] = {}
+    for row in rows:
+        under = collected.setdefault(int(row.audio_id), [])
+        if len(under) < SHOWN_PER_RECORDING:
+            under.append(
+                Match(
+                    kind=str(row.kind),
+                    fragment=str(row.fragment or ""),
+                    start_ms=int(row.start_ms) if row.start_ms is not None else None,
+                    rank=float(row.rank or 0.0),
+                )
+            )
+    return {audio_id: tuple(found) for audio_id, found in collected.items()}
 
 
 def apply_filters(query: Any, filters: Filters) -> Any:
