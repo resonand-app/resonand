@@ -1,4 +1,5 @@
-import type { HTMLAttributes } from 'react';
+import { useLayoutEffect, useRef } from 'react';
+import type { HTMLAttributes, Ref } from 'react';
 
 import { Icon } from '../foundation/Icon';
 import type { IconName } from '../foundation/Icon';
@@ -12,13 +13,25 @@ interface ItemProps {
   active?: boolean;
   collapsed?: boolean;
   onClick?: (() => void) | undefined;
+  /** Given to the active library alone, so the list can bring it back into view. */
+  ref?: Ref<HTMLButtonElement>;
 }
 
 /** One destination. Unexported on purpose: the sidebar's rows are not a public component. */
-function Item({ icon, dot, label, count, active = false, collapsed = false, onClick }: ItemProps) {
+function Item({
+  icon,
+  dot,
+  label,
+  count,
+  active = false,
+  collapsed = false,
+  onClick,
+  ref,
+}: ItemProps) {
   return (
     <button
       type="button"
+      ref={ref}
       onClick={onClick}
       title={collapsed ? label : undefined}
       data-ds="sidebar-item"
@@ -26,6 +39,10 @@ function Item({ icon, dot, label, count, active = false, collapsed = false, onCl
       style={{
         height: 32,
         width: '100%',
+        // The height is a height and not a starting point. As a column flex child the row would
+        // otherwise shrink to share the panel out, and thirteen libraries on a laptop drew
+        // thirteen rows of twenty-two pixels rather than a list that scrolls.
+        flex: '0 0 auto',
         border: 'none',
         borderRadius: 'var(--radius-control)',
         display: 'flex',
@@ -88,6 +105,7 @@ function GroupLabel({ children }: { children: string }) {
   return (
     <div
       style={{
+        flex: '0 0 auto',
         padding: '16px 11px 6px',
         fontFamily: 'var(--font-mono)',
         fontSize: 'var(--type-overline-size)',
@@ -152,6 +170,13 @@ export interface SidebarProps
  *
  * A destination you are not at raises a surface step under the pointer; the one you are at does
  * nothing, because arriving somewhere you already are is not an action (`UI-32a`).
+ *
+ * **Only the libraries scroll.** The Libraries destination stays at the top and Trash and Settings
+ * stay at the bottom however many libraries sit between them, because those three are where
+ * somebody goes when the list is not what they wanted. The alternative -- showing the first few
+ * and a "show all" row -- was rejected: it hides libraries you own behind a count, and every
+ * sensible rule for choosing which few to show reorders the bar as you use it, which is what
+ * makes a sidebar unlearnable.
  */
 export function Sidebar({
   own = [],
@@ -168,6 +193,23 @@ export function Sidebar({
     onSelect?.(id);
   };
   const idOf = (library: SidebarLibrary) => library.id ?? library.name;
+  const list = useRef<HTMLDivElement>(null);
+  const current = useRef<HTMLButtonElement>(null);
+
+  // Arriving at a library the list has scrolled past leaves the bar saying nothing about where
+  // you are. The offsets are read rather than `scrollIntoView` asked, for the reason the
+  // transcript reads them: `nearest` also scrolls whatever is above this, and the frame it sits
+  // in must never move.
+  useLayoutEffect(() => {
+    const column = list.current;
+    const row = current.current;
+    if (column === null || row === null) return;
+    const bottom = row.offsetTop + row.offsetHeight;
+    if (row.offsetTop < column.scrollTop) column.scrollTop = row.offsetTop;
+    else if (bottom > column.scrollTop + column.clientHeight) {
+      column.scrollTop = bottom - column.clientHeight;
+    }
+  }, [activeId, collapsed]);
 
   return (
     <nav
@@ -218,7 +260,25 @@ export function Sidebar({
             onClick={pick('search')}
           />
         ) : (
-          <>
+          <div
+            ref={list}
+            data-ds="sidebar-libraries"
+            style={{
+              flex: 1,
+              minHeight: 0,
+              overflowY: 'auto',
+              // Out to the panel's edges and back in again, so the scrollbar is drawn on the edge
+              // rather than ten pixels inside it -- and so the focus ring, which stands two pixels
+              // clear of a row, has somewhere to be instead of being cut off by the scrollport.
+              margin: '0 -10px',
+              padding: '0 10px',
+              // The offsets the effect above reads are measured from here.
+              position: 'relative',
+              // The content column behind this one scrolls too, and a flick that runs out of
+              // libraries should stop rather than carry on into the recordings.
+              overscrollBehavior: 'contain',
+            }}
+          >
             <GroupLabel>{labels?.yours ?? 'Your libraries'}</GroupLabel>
             {own.map((library) => (
               <Item
@@ -227,6 +287,7 @@ export function Sidebar({
                 label={library.name}
                 count={library.count}
                 active={activeId === idOf(library)}
+                {...(activeId === idOf(library) ? { ref: current } : {})}
                 onClick={pick(idOf(library))}
               />
             ))}
@@ -238,14 +299,16 @@ export function Sidebar({
                 label={library.name}
                 count={library.count}
                 active={activeId === idOf(library)}
+                {...(activeId === idOf(library) ? { ref: current } : {})}
                 onClick={pick(idOf(library))}
               />
             ))}
-          </>
+          </div>
         )}
         <div
           style={{
             marginTop: 'auto',
+            flex: '0 0 auto',
             display: 'flex',
             flexDirection: 'column',
             gap: collapsed ? 6 : 0,
