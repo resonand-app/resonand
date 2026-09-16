@@ -99,6 +99,7 @@ All of them settled. Nothing in the first version is waiting on a conversation.
 | Trash retention | 30 days, configurable per instance | `DEC-3` |
 | Search grouping | Grouped under the recording, 3 shown, "+N more" | `DEC-4` |
 | Export sidecar | JSON + derived `.vtt`/`.srt`, carrying the `uuid` | `DEC-5`. Re-import is idempotent |
+| Sharing one recording | Manage may grant it onwards; listing who has access takes manage | `DEC-25`. `granted_by` keeps a chain legible; an inherited row names the library |
 
 `INF-8` transcribes each one into `docs/adr/`, one file per decision, so they can be revisited
 together with their rationale rather than from memory. The subsections below carry the substance
@@ -652,6 +653,28 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       retried. ⇢ API-11, API-17, JOB-13 🧪
       *Found while building `UI-15`: the running card is where somebody sits for minutes, and it
       was the one state in it with nothing to press.*
+
+- [x] **API-22** · **Grants on one recording, not on the library around it.** `GET`, `PUT` and
+      `DELETE /api/audio/{uuid}/shares`, and `source` on `ShareSummary` so a row says which of the
+      two it came from. The storage needed nothing: `share.audio_id`, its `CHECK` and the partial
+      unique index `ux_share_audio` shipped in the first migration, and `audio_acl` has folded
+      individual grants into its `MAX()` since `DAT-3`. Nothing could write one, because the
+      endpoint was never routed -- so the only way to give somebody a single recording was to give
+      them the library it sits in.
+      **One list, not two.** "Who has access" has one answer, and a panel showing only the grants
+      made here would be as misleading as the library panel is on its own today.
+      **Revoking reaches only a grant made here.** Removing an inherited one from a single
+      recording would mean writing a denial, and the resolution is a `MAX()` with nothing to
+      subtract with; it answers 404, which is what it is.
+      **Listing takes manage, where a library's own list takes read.** There the two match --
+      somebody who can read a library is in it. An individual grant is the case where they are
+      not, and every inherited row names the library, says who administers it, and counts people
+      who were never given this recording.
+      *Done when:* one recording can be granted, raised and revoked without its library becoming
+      visible, and the list says of every row which of the two it came from.
+      ⇢ DAT-3, API-7, DEC-25 🧪
+      🧪 A grant on a recording does not make its library visible, purging one takes its
+      grants with it, and a grantee at read cannot list who else has access.
 
 ---
 

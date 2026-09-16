@@ -158,6 +158,7 @@ def share_summary(share: Share, grantee: User) -> ShareSummary:
         level_description=DESCRIPTIONS[level],
         granted_by=share.granted_by,
         created_at=share.created_at,
+        source="library" if share.library_id is not None else "audio",
     )
 
 

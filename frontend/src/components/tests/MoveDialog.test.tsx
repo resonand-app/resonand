@@ -143,6 +143,7 @@ describe('what it says will happen', () => {
           level: 20,
           level_description: 'Can add recordings and edit their details.',
           granted_by: 1,
+          source: 'library',
           created_at: '2026-02-01T12:00:00Z',
         },
       ],

@@ -411,6 +411,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/audio/{audio_uuid}/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Shares
+         * @description Everybody who can reach this recording, inherited and individual alike (``API-22``).
+         *
+         *     Requires manage. An inherited row names the library this recording sits in and who
+         *     administers it, which is the one thing an individual grant is meant not to hand over.
+         */
+        get: operations["list_shares_api_audio__audio_uuid__shares_get"];
+        /**
+         * Share
+         * @description Grant this one recording, or change the level somebody already has on it. Requires manage.
+         *
+         *     The grant reaches the recording and nothing around it: the library it sits in stays invisible.
+         */
+        put: operations["share_api_audio__audio_uuid__shares_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audio/{audio_uuid}/shares/{grantee_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unshare
+         * @description Revoke a grant made on this recording. An inherited one is revoked on its library.
+         */
+        delete: operations["unshare_api_audio__audio_uuid__shares__grantee_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audio/{audio_uuid}/stream": {
         parameters: {
             query?: never;
@@ -1669,6 +1718,11 @@ export interface components {
             level: components["schemas"]["Level"];
             /** Level Description */
             level_description: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "library" | "audio";
         };
         /** SignIn */
         SignIn: {
@@ -2572,6 +2626,102 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AudioDetail"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_shares_api_audio__audio_uuid__shares_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    share_api_audio__audio_uuid__shares_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateShare"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ShareSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unshare_api_audio__audio_uuid__shares__grantee_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+                grantee_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

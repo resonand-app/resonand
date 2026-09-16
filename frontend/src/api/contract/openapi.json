@@ -1409,6 +1409,14 @@
           "level_description": {
             "title": "Level Description",
             "type": "string"
+          },
+          "source": {
+            "enum": [
+              "library",
+              "audio"
+            ],
+            "title": "Source",
+            "type": "string"
           }
         },
         "required": [
@@ -1416,7 +1424,8 @@
           "level",
           "level_description",
           "granted_by",
-          "created_at"
+          "created_at",
+          "source"
         ],
         "title": "ShareSummary",
         "type": "object"
@@ -3068,6 +3077,149 @@
           }
         },
         "summary": "Restore",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/shares": {
+      "get": {
+        "description": "Everybody who can reach this recording, inherited and individual alike (``API-22``).\n\nRequires manage. An inherited row names the library this recording sits in and who\nadministers it, which is the one thing an individual grant is meant not to hand over.",
+        "operationId": "list_shares_api_audio__audio_uuid__shares_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ShareSummary"
+                  },
+                  "title": "Response List Shares Api Audio  Audio Uuid  Shares Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Shares",
+        "tags": [
+          "recordings"
+        ]
+      },
+      "put": {
+        "description": "Grant this one recording, or change the level somebody already has on it. Requires manage.\n\nThe grant reaches the recording and nothing around it: the library it sits in stays invisible.",
+        "operationId": "share_api_audio__audio_uuid__shares_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateShare"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ShareSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Share",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/shares/{grantee_id}": {
+      "delete": {
+        "description": "Revoke a grant made on this recording. An inherited one is revoked on its library.",
+        "operationId": "unshare_api_audio__audio_uuid__shares__grantee_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "grantee_id",
+            "required": true,
+            "schema": {
+              "title": "Grantee Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unshare",
         "tags": [
           "recordings"
         ]

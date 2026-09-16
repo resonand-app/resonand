@@ -13,7 +13,7 @@ rather than an internal detail. Two rules hold throughout:
 from __future__ import annotations
 
 import re
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
@@ -206,6 +206,10 @@ class UpdateLibrary(Api):
     colour: Colour | None = None
 
 
+ShareSource = Literal["library", "audio"]
+"""Where a grant was made. A ``share`` row carries a library or a recording, never both."""
+
+
 class ShareSummary(Api):
     """Who has access, at what level, granted by whom and when (``UI-17``)."""
 
@@ -214,6 +218,13 @@ class ShareSummary(Api):
     level_description: str
     granted_by: int
     created_at: str
+    source: ShareSource
+    """Whether this grant is on the library or on the one recording (``API-22``).
+
+    A recording's panel draws the two differently and can revoke only the second, so the
+    distinction is the API's rather than something the interface infers from which list it asked
+    for -- both arrive in one.
+    """
 
 
 class CreateShare(Api):

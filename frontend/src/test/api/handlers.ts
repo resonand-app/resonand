@@ -353,6 +353,7 @@ export const handlers: HttpHandler[] = [
       level: body.level,
       level_description: 'Can edit: change titles, categories and tags, but not share.',
       granted_by: archive.me.id,
+      source: 'library',
       created_at: '2026-03-12T10:00:00Z',
     };
     archive.shares = {
@@ -360,6 +361,46 @@ export const handlers: HttpHandler[] = [
       [key]: [...existing.filter((one) => one.grantee.id !== body.grantee_id), made],
     };
     return HttpResponse.json(made);
+  }),
+  http.get('/api/audio/:audio_uuid/shares', ({ params }) => {
+    const uuid = String(params.audio_uuid);
+    const recording = archive.recordings.find((one) => one.uuid === uuid);
+    if (recording === undefined) return NOT_FOUND();
+    // Both halves in one list, inherited first, as the real endpoint orders them.
+    return HttpResponse.json([
+      ...(archive.shares[recording.library_uuid] ?? []),
+      ...(archive.recordingShares[uuid] ?? []),
+    ]);
+  }),
+  http.put('/api/audio/:audio_uuid/shares', async ({ params, request }) => {
+    const uuid = String(params.audio_uuid);
+    if (!archive.recordings.some((one) => one.uuid === uuid)) return NOT_FOUND();
+    const body = (await request.json()) as Schemas['CreateShare'];
+    const made: Schemas['ShareSummary'] = {
+      grantee: { id: body.grantee_id, display_name: 'Sam Rivera', email: 'sam@example.test' },
+      level: body.level,
+      level_description: 'Can edit: change titles, categories and tags, but not share.',
+      granted_by: archive.me.id,
+      source: 'audio',
+      created_at: '2026-03-12T10:00:00Z',
+    };
+    const existing = archive.recordingShares[uuid] ?? [];
+    archive.recordingShares = {
+      ...archive.recordingShares,
+      [uuid]: [...existing.filter((one) => one.grantee.id !== body.grantee_id), made],
+    };
+    return HttpResponse.json(made);
+  }),
+  http.delete('/api/audio/:audio_uuid/shares/:grantee_id', ({ params }) => {
+    const uuid = String(params.audio_uuid);
+    const existing = archive.recordingShares[uuid] ?? [];
+    // An inherited grant is not this recording's to revoke, and answers as though it were absent.
+    if (!existing.some((one) => String(one.grantee.id) === params.grantee_id)) return NOT_FOUND();
+    archive.recordingShares = {
+      ...archive.recordingShares,
+      [uuid]: existing.filter((one) => String(one.grantee.id) !== params.grantee_id),
+    };
+    return new HttpResponse(null, { status: 204 });
   }),
   http.delete('/api/libraries/:library_uuid/shares/:grantee_id', ({ params }) => {
     const key = String(params.library_uuid);
