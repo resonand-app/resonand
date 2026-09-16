@@ -73,7 +73,7 @@ import { useNavigate, useParams } from 'react-router';
 import { isApiProblem } from '@/api/problem';
 import { isPlainClick } from '@/app/links';
 import { transcriptionState } from '@/features/library/recordings';
-import { useCameFromList } from '@/app/came-from';
+import { backToList, useCameFromList, useCameFromOffsets } from '@/app/came-from';
 import { toLibrary } from '@/app/routes';
 import {
   Breadcrumb,
@@ -320,6 +320,10 @@ function Whereabouts({ context }: { context: RecordingContext }) {
   const { t } = useTranslation('recording');
   const navigate = useNavigate();
   const cameFrom = useCameFromList();
+  // The place in it as well as the list itself (`FBK-8`). It cannot ride in the href -- an offset
+  // is not an address -- so it rides in the navigation the plain click performs instead, which is
+  // why a middle click opens the library at the top and is right to.
+  const cameFromOffsets = useCameFromOffsets();
   const { library, categoryName } = context;
   if (library === undefined) return null;
 
@@ -335,7 +339,7 @@ function Whereabouts({ context }: { context: RecordingContext }) {
         onNavigate={(event) => {
           if (!isPlainClick(event)) return;
           event.preventDefault();
-          void navigate(href);
+          void navigate(href, backToList(cameFromOffsets));
         }}
       />
     </div>

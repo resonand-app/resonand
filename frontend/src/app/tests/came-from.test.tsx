@@ -1,13 +1,17 @@
 /**
- * The list a recording was opened from, and the way back to it (`FBK-7`).
+ * The list a recording was opened from, and the way back to it (`FBK-7`, `FBK-8`).
  *
  * The library and the recording are mounted into **one** router rather than tested apart, because
  * the property under test is precisely what passes between them: the list writes its query string
- * into the history entry and the breadcrumb reads it back out. Either view on its own would prove
- * the wiring and miss the wire.
+ * and its offsets into the history entry and the breadcrumb reads them back out. Either view on
+ * its own would prove the wiring and miss the wire.
  *
- * The shell is deliberately absent. It draws a library link per library in the sidebar, and the
- * assertion here is about the one link the recording's own frame offers.
+ * The shell is deliberately absent, with one thing of its own put back. It draws a library link
+ * per library in the sidebar, and the assertion here is about the one link the recording's own
+ * frame offers -- but the box the frame scrolls in is what `FBK-8` restores, so the views are
+ * mounted inside one. jsdom performs no layout and lets a `scrollTop` past the end stand, which
+ * is what makes an offset assertable here at all; what it cannot show is the clamp a real browser
+ * applies while the recordings are still arriving, and that is verified in a browser instead.
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -57,15 +61,24 @@ function renderAt(entry: string) {
   return render(
     <QueryClientProvider client={client}>
       <ThemeProvider>
-        <MemoryRouter initialEntries={[entry]}>
-          <Routes>
-            <Route path={routes.library} element={<LibraryView />} />
-            <Route path={routes.recording} element={<RecordingView />} />
-          </Routes>
-        </MemoryRouter>
+        {/* The frame's scrollport, which is the only part of the shell these views need: it is
+            what they are put back into, and they find it by walking up. */}
+        <div data-testid="scrollport" style={{ overflowY: 'auto' }}>
+          <MemoryRouter initialEntries={[entry]}>
+            <Routes>
+              <Route path={routes.library} element={<LibraryView />} />
+              <Route path={routes.recording} element={<RecordingView />} />
+            </Routes>
+          </MemoryRouter>
+        </div>
       </ThemeProvider>
     </QueryClientProvider>,
   );
+}
+
+/** The box the views scroll in, standing in for whichever frame would have drawn it. */
+function scrollport(): HTMLElement {
+  return screen.getByTestId('scrollport');
 }
 
 /** The breadcrumb's link: the recording view's one way back, and the only one on the page. */
@@ -99,5 +112,40 @@ describe('opening a recording from a library', () => {
     await waitFor(async () => {
       expect((await wayBack()).getAttribute('href')).toBe(toLibrary(RECORDINGS));
     });
+  });
+});
+
+describe('coming back to a library', () => {
+  it('comes back to the place in the list, and not to the top of it', async () => {
+    const user = userEvent.setup();
+    renderAt(toLibrary(RECORDINGS));
+
+    const card = await screen.findByText('Field recording, long take');
+    // The scrolling somebody did to reach the recording they are about to open.
+    scrollport().scrollTop = 420;
+    await user.click(card);
+
+    await screen.findByRole('heading', { name: 'Field recording, long take', level: 1 });
+    // The recording is a different screen and starts where any screen does.
+    scrollport().scrollTop = 0;
+
+    await user.click(await wayBack());
+
+    await waitFor(() => {
+      expect(scrollport().scrollTop).toBe(420);
+    });
+  });
+
+  it('opens at the top when there was no list behind it', async () => {
+    const user = userEvent.setup();
+    renderAt(toRecording(FIELD_TAKE));
+
+    await screen.findByRole('heading', { name: 'Field recording, long take', level: 1 });
+    await user.click(await wayBack());
+
+    // A pasted link, a new tab, the player bar and a search result all arrive here with nothing
+    // behind them, and a library that opened partway down for one of those would be inexplicable.
+    await screen.findByRole('heading', { name: 'Field recordings' });
+    expect(scrollport().scrollTop).toBe(0);
   });
 });

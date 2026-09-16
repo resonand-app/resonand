@@ -30,10 +30,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router';
 
-import { fromList } from '@/app/came-from';
-import { toRecording } from '@/app/routes';
 import { shiftHeld } from '@/app/modifiers';
 import { useUrlState } from '@/app/url-state';
 import type { SortDirection, SortField } from '@/app/url-state';
@@ -43,6 +40,7 @@ import { recordedAt } from '@/i18n/time';
 import { usePlayback } from '@/player/store';
 
 import { transcriptionState } from './recordings';
+import { useKeepPlace } from './use-keep-place';
 import { useLongPress } from './use-long-press';
 import type { Categories, Recording } from './recordings';
 import { useRowCount, useRows } from './rows';
@@ -87,6 +85,9 @@ export function RecordingList({
 
   const { t } = useTranslation('library');
   const scroller = useRef<HTMLDivElement>(null);
+  // Both scrollports: the page the table sits on, and the virtualiser's own, which is the one
+  // that has moved when a library is long enough to want this density (`FBK-8`).
+  const { root, open } = useKeepPlace(scroller);
 
   // The height first, from page zero alone: `total` is in every page response, so the list knows
   // how tall it is one request in and never grows as the rest arrive (§V4).
@@ -109,7 +110,7 @@ export function RecordingList({
   });
 
   return (
-    <div role="table" aria-label={t('list.label')} aria-rowcount={total}>
+    <div ref={root} role="table" aria-label={t('list.label')} aria-rowcount={total}>
       <Columns selecting={selection !== undefined} />
       <div
         ref={scroller}
@@ -144,6 +145,7 @@ export function RecordingList({
                     recording={recording}
                     category={categories.nameOf(recording.category_id)}
                     libraryName={libraryName}
+                    onOpen={open}
                     {...(selection === undefined ? {} : { selection })}
                   />
                 )}
@@ -319,16 +321,16 @@ function Row({
   recording,
   category,
   libraryName,
+  onOpen,
   selection,
 }: {
   recording: Recording;
   category: string | undefined;
   libraryName: string;
+  onOpen: (uuid: string) => void;
   selection?: RecordingListProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
-  const navigate = useNavigate();
-  const { search } = useLocation();
   const isCurrent = usePlayback((state) => state.recording?.uuid === recording.uuid);
   const isPlaying = usePlayback((state) => isCurrent && state.status === 'playing');
   const state = transcriptionState(recording.transcription_state);
@@ -366,7 +368,7 @@ function Row({
         // click as "open me". Opening now would take somebody who asked to select one recording
         // to that recording instead.
         if (longPress.consumedByPress()) return;
-        void navigate(toRecording(recording.uuid), fromList(search));
+        onOpen(recording.uuid);
       }}
       onPlay={() => {
         const player = usePlayback.getState();
