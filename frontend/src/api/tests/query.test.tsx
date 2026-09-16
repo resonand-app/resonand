@@ -15,7 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { invalidate, staleAfter } from '../invalidate';
 import { keys } from '../keys';
-import { usePaged } from '../paged';
+import { pollEvery, usePaged } from '../paged';
 import { ApiProblem } from '../problem';
 import {
   HANDLED,
@@ -117,6 +117,23 @@ describe('a write that failed', () => {
     expect(worthReporting(problem(409), HANDLED_CONFLICT)).toBe(false);
     expect(worthReporting(problem(500), HANDLED_CONFLICT)).toBe(true);
     expect(worthReporting(new Error('offline'), HANDLED_CONFLICT)).toBe(true);
+  });
+});
+
+describe('how often a growing collection asks again', () => {
+  it('stretches the interval by the pages it holds, so the cost of asking stays flat', () => {
+    // A refetch of an infinite query is every page it is holding, because the pages are a chain.
+    // One page loaded is one request every two seconds; three pages must not be three.
+    expect(pollEvery(2_000, 1)).toBe(2_000);
+    expect(pollEvery(2_000, 3)).toBe(6_000);
+  });
+
+  it('treats a collection with nothing in it as one page rather than none', () => {
+    expect(pollEvery(2_000, 0)).toBe(2_000);
+  });
+
+  it('leaves a list at rest alone however deep it is', () => {
+    expect(pollEvery(false, 7)).toBe(false);
   });
 });
 
