@@ -121,9 +121,18 @@ npm run dev                      # :5173, proxies /api to 127.0.0.1:8000
 Pre-commit and CI run the **same** checks so a commit that passes locally passes there. Never
 `--no-verify`. Never claim a task is done without running them.
 
-- Backend: `ruff check` → `ruff format --check` → `mypy` (strict) → `pytest` → `sonarium openapi --check`
-- Frontend: `eslint` → `prettier --check` → `tsc` → `vitest` (+ `vite build` in CI)
+They run at two moments. Everything that reads the code runs **on commit**; the two suites that
+run it run **on push**, because a correction to an open pull request amends its one commit and
+every amend was paying for them again. A push is still gated, and still before anyone else can
+see the branch.
+
+- Backend, on commit: `ruff check` → `ruff format --check` → `mypy` (strict) → `sonarium openapi --check`
+- Frontend, on commit: `eslint` → `prettier --check` → `tsc`
+- On push: `pytest` and `vitest` (CI adds coverage and `vite build`)
 - Pre-commit also refuses to commit `docs/internal/`, any file over 512 kB, and private keys
+
+`uvx pre-commit install` installs all three hook types. A clone that installed only `pre-commit`
+before this split runs the suites nowhere locally until it is run again.
 
 CI additionally builds the image and asserts it migrates itself, reports healthy, serves the
 application shell and the hashed bundle the shell references, and that the CLI runs inside it.
