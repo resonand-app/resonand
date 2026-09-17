@@ -166,9 +166,21 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
         base_path=settings.base_path or "/",
         database=str(settings.resolved_database_path),
         storage=str(settings.resolved_storage_dir),
+        worker="in-process" if settings.run_worker else "off",
     )
 
     owns_database = getattr(app.state, "database", None) is None
+    if owns_database and not settings.run_worker:
+        # The only configuration from which somebody reaches a second writer, so it is the only
+        # one worth a warning (``REV-8``).
+        _logger.warning(
+            "instance.worker_disabled",
+            database=str(settings.resolved_database_path),
+            note=(
+                "no jobs will run in this process, and a second process writing this database "
+                "is not a supported topology"
+            ),
+        )
     if owns_database:
         before, after = migrate_at_startup(settings)
         if before != after:

@@ -233,24 +233,21 @@ The sidecar carries the recording's identifier, so `sonarium import` reads it ba
 rather than duplicates**. That is what makes exporting an archive and importing it into an empty
 instance a way to verify the archive rather than a way to double it.
 
-## Splitting the worker out
+## One process writes
 
-One container runs the API and the job worker together, which is the topology the first version
-ships. To run them apart — a machine with a GPU doing transcodes, say:
+The container runs the API and the job worker in a single process, and that is the whole of the
+supported topology — not a default waiting to be tuned. Every write in the instance serialises
+through one in-process lock, because SQLite allows one writer at a time and a lock is the honest
+way to honour that rather than a generous timeout and the hope that nothing overlaps.
 
-```yaml
-services:
-  sonarium:
-    environment:
-      SONARIUM_RUN_WORKER: "false"
-  sonarium-worker:
-    image: ghcr.io/sonarium-app/sonarium:latest
-    command: ["sonarium", "work"]
-    env_file: .env
-    volumes:
-      - sonarium-data:/data
-```
+A second process against the same database gives you two locks that know nothing about each
+other. Overriding the image's command with `--workers 2`, or running `sonarium work` in its own
+container with `SONARIUM_RUN_WORKER=false`, both do exactly that: the guarantee falls back to the
+five-second `busy_timeout` that exists for a backup or a `sqlite3` shell, and under write
+contention somebody's request fails with `database is locked`. Nothing in the code retries above
+that timeout, and no test covers two processes on one file.
 
-Both containers need the same volume, because the worker reads and writes the originals. Nothing
-in the schema changes; this is the seam that made putting the worker in-process a safe choice
-rather than a shortcut.
+**To do more work at once, raise `SONARIUM_JOB_CONCURRENCY`**, which adds threads inside the one
+process that owns the lock. Splitting the worker onto its own machine is a real thing to want —
+transcoding on a box with a GPU — and it is a change to make when the database is something two
+machines can both write to, not before. Sharing a volume is not that.

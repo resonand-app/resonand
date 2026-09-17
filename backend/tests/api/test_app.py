@@ -177,3 +177,83 @@ def test_a_subpath_instance_publishes_its_document_under_that_path(
     assert app.root_path == "/sonarium"
     with TestClient(app, root_path="/sonarium") as client:
         assert client.get("/api/openapi.json").json()["servers"][0]["url"] == "/sonarium"
+
+
+class _RecordedLog:
+    """Whatever the lifespan logged, as (level, event, fields).
+
+    Against the module's logger rather than the rendered output, because the application
+    configures structlog with ``cache_logger_on_first_use``: a logger bound by an earlier test
+    keeps that test's renderer, and an assertion on the printed line would pass or fail on the
+    order the suite happened to run in.
+    """
+
+    def __init__(self) -> None:
+        self.entries: list[tuple[str, str, dict[str, object]]] = []
+
+    def info(self, event: str, **fields: object) -> None:
+        self.entries.append(("info", event, fields))
+
+    def warning(self, event: str, **fields: object) -> None:
+        self.entries.append(("warning", event, fields))
+
+    def of(self, event: str) -> list[tuple[str, str, dict[str, object]]]:
+        return [entry for entry in self.entries if entry[1] == event]
+
+
+def _start(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> _RecordedLog:
+    """Run one instance through its whole lifespan and return what it said on the way up."""
+    recorded = _RecordedLog()
+    monkeypatch.setattr("sonarium.api.app._logger", recorded)
+    with TestClient(create_app(settings)):
+        pass
+    return recorded
+
+
+def test_the_startup_line_says_where_the_worker_is(
+    tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``REV-8``: the topology was the one thing ``instance.starting`` did not state.
+
+    An operator reading the log saw the version and the paths, and nothing about how many
+    processes may write -- which is the invariant the whole of ``DAT-2`` rests on.
+    """
+    settings = Settings(
+        data_dir=tmp_path_factory.mktemp("with-worker"),
+        secret_key=SecretStr("0" * 64),
+    )
+    _level, _event, fields = _start(settings, monkeypatch).of("instance.starting")[0]
+    assert fields["worker"] == "in-process"
+
+
+def test_turning_the_worker_off_is_loud_about_what_it_does_not_license(
+    tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``REV-11``: the one configuration from which somebody reaches a second writer.
+
+    Nothing can stop them from the outside -- the lock is in this process's memory and the other
+    process would never see it -- so the sentence belongs in the log of the one turned down.
+    """
+    settings = Settings(
+        data_dir=tmp_path_factory.mktemp("no-worker"),
+        secret_key=SecretStr("0" * 64),
+        run_worker=False,
+    )
+    started = _start(settings, monkeypatch)
+    assert started.of("instance.starting")[0][2]["worker"] == "off"
+    warned = started.of("instance.worker_disabled")
+    assert len(warned) == 1
+    assert warned[0][0] == "warning"
+    assert "not a supported topology" in str(warned[0][2]["note"])
+
+
+def test_an_ordinary_instance_does_not_warn_about_a_topology_it_is_not_in(
+    tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    settings = Settings(
+        data_dir=tmp_path_factory.mktemp("ordinary"),
+        secret_key=SecretStr("0" * 64),
+    )
+    started = _start(settings, monkeypatch)
+    assert started.of("instance.worker_disabled") == []
+    assert started.of("instance.starting") != []
