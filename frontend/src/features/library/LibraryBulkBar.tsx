@@ -19,7 +19,15 @@
  * **Every action here is a glyph** (`BulkBar` says why). The four are a category, a tag, a move
  * and the trash, which are the four a person reads off an icon without being told -- and the row
  * has to hold them at 1280 with the sidebar out, beside a count and a select-all that carries a
- * number. The labels are not lost, they are the accessible names.
+ * number. The labels are not lost, they are the accessible names. Move and trash use the same two
+ * glyphs `RecordingActions` uses for the same two things on one recording, because a person who
+ * has learnt them on a recording has learnt them here.
+ *
+ * **Below `COLLAPSE` the last two fold into an overflow menu**, where they are rows with the same
+ * glyphs and their words back. Four icon buttons and a count and a two-step select-all do not fit
+ * a phone's row, and a bar that wraps to two lines is one that moves the list somebody is
+ * selecting in. Which two fold is not arbitrary: category and tag are the ones a popover and a
+ * field hang off, and an overflow row that opens a second overlay is one overlay too many.
  *
  * Move is the one action that opens a dialog, because it has consequences somebody has to have
  * been told about before it happens: it changes who can see the recordings, by name, and it loses
@@ -31,6 +39,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useNarrowerThan } from '@/app/hooks/use-narrower-than';
 import { BulkBar } from '@/components/BulkBar';
 import { MoveDialog } from '@/components/MoveDialog';
 import { Button, IconButton, Menu, StateCard, TextField } from '@/design-system';
@@ -40,6 +49,20 @@ import { reasonsIn } from './bulk';
 import type { Outcome } from './bulk';
 import type { Category, Recording } from './recordings';
 import type { Bulk } from './use-bulk';
+
+/**
+ * Where the bar stops holding its four actions and grows an overflow menu instead.
+ *
+ * Measured rather than chosen. Expanded, the row needs 437px: 16 for the checkbox, 66 for the
+ * count, 91 for select-all, 192 for the five controls, and the gaps and padding between them. It
+ * wraps at a bar 436px wide and fits at 456. The threshold is the viewport that leaves room for
+ * the two labels that grow -- "200 selected" over "1 selected", and "Select all 812" over "Select
+ * all", together about 54px -- which no archive small enough to develop against will show.
+ *
+ * It is deliberately not `--breakpoint-phone`, which answers a different question -- which shell
+ * is drawn -- and is 720, where all four still fit with room to spare.
+ */
+const COLLAPSE = 560;
 
 export interface LibraryBulkBarProps {
   count: number;
@@ -74,6 +97,7 @@ export function LibraryBulkBar({
   const [tagging, setTagging] = useState(false);
   const [moving, setMoving] = useState(false);
   const [tag, setTag] = useState('');
+  const collapsed = useNarrowerThan(COLLAPSE);
   const uuids = selected.map((one) => one.uuid);
 
   const after = (outcome: Outcome) => {
@@ -112,23 +136,42 @@ export function LibraryBulkBar({
                   setTagging(true);
                 }}
               />
-              <Menu
-                label={t('bulk.more')}
-                items={[
-                  { id: 'move', label: t('bulk.move') },
-                  {
-                    id: 'trash',
-                    label: t('bulk.trash'),
-                    icon: 'trash-2',
-                    destructive: true,
-                    separated: true,
-                  },
-                ]}
-                onSelect={(id) => {
-                  if (id === 'move') setMoving(true);
-                  if (id === 'trash') void bulk.trash(uuids).then(after);
-                }}
-              />
+              {collapsed ? (
+                <Menu
+                  label={t('bulk.more')}
+                  items={[
+                    { id: 'move', label: t('bulk.move'), icon: 'folder-input' },
+                    {
+                      id: 'trash',
+                      label: t('bulk.trash'),
+                      icon: 'trash-2',
+                      destructive: true,
+                      separated: true,
+                    },
+                  ]}
+                  onSelect={(id) => {
+                    if (id === 'move') setMoving(true);
+                    if (id === 'trash') void bulk.trash(uuids).then(after);
+                  }}
+                />
+              ) : (
+                <>
+                  <IconButton
+                    icon="folder-input"
+                    label={t('bulk.move')}
+                    onClick={() => {
+                      setMoving(true);
+                    }}
+                  />
+                  <IconButton
+                    icon="trash-2"
+                    label={t('bulk.trash')}
+                    onClick={() => {
+                      void bulk.trash(uuids).then(after);
+                    }}
+                  />
+                </>
+              )}
             </>
           ) : (
             <span

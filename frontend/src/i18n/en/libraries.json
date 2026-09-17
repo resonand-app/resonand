@@ -2,7 +2,7 @@
   "title": "Libraries",
   "card": {
     "options": "Options for {{name}}",
-    "settings": "Settings"
+    "trash": "Move to the trash"
   },
   "create": {
     "action": "Create a library",
