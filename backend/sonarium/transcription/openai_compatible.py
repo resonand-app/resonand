@@ -194,6 +194,13 @@ class OpenAiCompatibleProvider:
                 "already submitted in parts; lower SONARIUM_TRANSCRIPTION_REQUEST_MAX_BYTES so "
                 "the parts are smaller."
             )
+        if response.status_code == HTTPStatus.BAD_REQUEST and "response_format" in detail:
+            raise ProviderError(
+                f"The model {self._model!r} will not answer in verbose_json, which is the only "
+                "response that carries timed segments. Sonarium stores transcripts as segments "
+                "and never as a wall of text, so this model cannot be used: choose one that "
+                f"supports it, such as whisper-1. It said: {detail}"
+            )
         if response.status_code == HTTPStatus.NOT_FOUND:
             raise ProviderError(
                 f"There is no transcription endpoint at {url}. "
