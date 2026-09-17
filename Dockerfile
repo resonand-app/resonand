@@ -14,7 +14,7 @@
 # --- The uv binary, pinned -------------------------------------------------
 # Taken from its own image rather than installed with a script, so the version is a tag and not
 # whatever the network served that morning.
-FROM ghcr.io/astral-sh/uv:0.11.17 AS uv
+FROM ghcr.io/astral-sh/uv:0.12.15 AS uv
 
 # --- Backend build ---------------------------------------------------------
 FROM python:3.12-slim-bookworm AS backend-build
