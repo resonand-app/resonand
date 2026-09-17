@@ -19,13 +19,21 @@ The seam rule: parts overlap, and a segment is kept by whichever part's span con
 **midpoint**. Every moment of audio is inside exactly one part's span, so nothing is emitted twice
 and nothing falls down the gap -- which a rule based on comparing text could not promise, since a
 speaker really can say the same short phrase twice either side of a cut.
+
+**Speaker labels do not survive a seam** (``TRX-13``). An engine names the voices it hears in one
+request, so ``SPEAKER_00`` in part one and ``SPEAKER_00`` in part four are two engines' worth of
+guesswork about two stretches of audio, and nothing connects them. Carrying them through would
+produce a transcript that reads perfectly and attributes speech to the wrong person, which is the
+same class of failure as a dropped offset and is reported just as rarely. So a stitched transcript
+comes back without them -- the waveform's rule, which shows a dashed rule and a duration rather
+than an invented shape.
 """
 
 from __future__ import annotations
 
 import re
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 
 from sonarium.core.processes import run_tool
@@ -173,7 +181,9 @@ def restitch(
     """Put the parts back into one timeline.
 
     Every returned segment is offset by its part's start -- this is the whole task -- and the
-    overlap is removed by the seam rule at the top of this module.
+    overlap is removed by the seam rule at the top of this module. A transcript assembled from
+    more than one part comes back with no speaker labels, for the reason given there: they are
+    per request, and merging two label spaces invents a fact rather than losing one.
     """
     if len(results) != len(plan.parts):
         raise ValueError(
@@ -192,7 +202,7 @@ def restitch(
                 continue
             if upper is not None and middle >= upper:
                 continue
-            stitched.append(shifted)
+            stitched.append(shifted if plan.is_single else replace(shifted, speaker=None))
     stitched.sort(key=lambda segment: (segment.start_ms, segment.end_ms))
     return tuple(stitched)
 

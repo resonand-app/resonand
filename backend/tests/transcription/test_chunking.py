@@ -141,6 +141,38 @@ def test_a_word_in_the_overlap_survives_exactly_once() -> None:
     assert [segment.text for segment in stitched].count("right on the cut") == 1
 
 
+def test_a_transcript_assembled_from_parts_carries_no_speaker_labels() -> None:
+    """``TRX-13``: an engine names the voices it hears in one request, and nothing else.
+
+    A diarising engine asked for four parts returns four independent guesses, each starting again
+    at ``SPEAKER_00``. Carrying them through would say that the person speaking at three hours is
+    the person who spoke at the start, which is a claim nobody made and which reads exactly like a
+    correct transcript.
+    """
+    diarised = [
+        TranscriptSegment(start_ms=at, end_ms=at + 1_000, text=f"at {at}", speaker="SPEAKER_00")
+        for at in range(0, THREE_HOURS_MS, 60_000)
+    ]
+    plan = plan_parts(THREE_HOURS_MS, max_part_ms=TEN_MINUTES_MS)
+    assert not plan.is_single
+    stitched = restitch(plan, transcribe(plan, diarised))
+    assert stitched, "the speech is still there"
+    assert all(segment.speaker is None for segment in stitched)
+    assert [segment.text for segment in stitched] == [segment.text for segment in diarised]
+
+
+def test_a_recording_sent_whole_keeps_the_labels_it_came_back_with() -> None:
+    """The other half of the rule: nothing is dropped where nothing had to be merged."""
+    diarised = [
+        TranscriptSegment(start_ms=0, end_ms=1_000, text="hello", speaker="SPEAKER_00"),
+        TranscriptSegment(start_ms=1_000, end_ms=2_000, text="hello back", speaker="SPEAKER_01"),
+    ]
+    plan = plan_parts(60_000, max_part_ms=TEN_MINUTES_MS)
+    assert plan.is_single
+    stitched = restitch(plan, transcribe(plan, diarised))
+    assert [segment.speaker for segment in stitched] == ["SPEAKER_00", "SPEAKER_01"]
+
+
 def test_the_same_phrase_said_twice_is_kept_twice() -> None:
     said_twice = [
         TranscriptSegment(start_ms=100_000, end_ms=101_000, text="that is right"),

@@ -193,6 +193,14 @@ def handle_transcribe(work: Work, context: Context) -> None:
                 source.unlink(missing_ok=True)
 
     stitched = restitch(plan, per_part)
+    if not plan.is_single and any(segment.speaker for part in per_part for segment in part):
+        # The only signal until the interface has somewhere to say it: an engine that names
+        # speakers was asked for a recording too long to send whole, so the names were dropped.
+        _logger.info(
+            "transcribe.speakers_dropped",
+            audio=audio_uuid,
+            parts=len(plan.parts),
+        )
     with context.database.write_session() as session:
         # Asked in the transaction that writes, not before it: a cancellation landing between
         # the two would be answered with the transcript it was meant to prevent, and a recording
