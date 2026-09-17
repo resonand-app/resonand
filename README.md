@@ -17,10 +17,11 @@
 >
 > The backend, the ingestion pipeline, search and the CLI are written; the web interface is being
 > built against a finished design system. **Nothing is installable, there is no release, and
-> nothing here is asking you to try it.** The first version has to run against a real archive for
-> several months before any of that changes — see [`docs/v0-plan/`](docs/v0-plan/). The
-> reasoning is on the record from the start on purpose. When there is something to install, this
-> section will say so.
+> nothing here is asking you to try it.** The first version has to run against a real archive,
+> without incident, for several weeks before any of that changes — see
+> [`docs/v0-plan/`](docs/v0-plan/). The repository is public ahead of that on purpose: the
+> reasoning is on the record from the start, and reading it costs you nothing. When there is
+> something to install, this section will say so.
 
 ## The problem
 
