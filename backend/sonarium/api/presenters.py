@@ -52,8 +52,8 @@ from sonarium.db.models import (
 from sonarium.jobs import queue
 
 
-def transcription_state(session: DbSession, audio_id: int) -> TranscriptionState:
-    """Which of the four states a recording is in.
+def _state_of(has_transcript: bool, job_states: set[str]) -> TranscriptionState:
+    """The precedence, in one place because both callers below have to agree with it.
 
     A finished transcript wins over a failed job: re-transcribing after a failure leaves the
     failure in the job table, and a recording that has a transcript is not in a failed state
@@ -62,26 +62,52 @@ def transcription_state(session: DbSession, audio_id: int) -> TranscriptionState
     The same question is answered in SQL by :func:`sonarium.db.search.apply_filters`, and the two
     have to agree -- see :mod:`sonarium.core.states`.
     """
-    has_transcript = (
-        session.execute(
-            select(Transcript.id).where(Transcript.audio_id == audio_id, Transcript.is_active == 1)
-        ).first()
-        is not None
-    )
     if has_transcript:
         return TranscriptionState.DONE
-    states = set(
+    if job_states & {queue.PENDING, queue.RUNNING}:
+        return TranscriptionState.RUNNING
+    if queue.FAILED in job_states:
+        return TranscriptionState.FAILED
+    return TranscriptionState.NONE
+
+
+def transcription_states(
+    session: DbSession, audio_ids: Sequence[int]
+) -> dict[int, TranscriptionState]:
+    """Which of the four states each of these recordings is in, in two queries (``REV-3``).
+
+    Two whatever the page holds, following :func:`sonarium.db.tags.tags_for_audios`. Asked one
+    recording at a time it was two queries per card, which is the largest part of what a fifty
+    card page used to cost.
+    """
+    if not audio_ids:
+        return {}
+    wanted = set(audio_ids)
+    transcribed = set(
         session.execute(
-            select(Job.state).where(Job.audio_id == audio_id, Job.kind == queue.KIND_TRANSCRIBE)
+            select(Transcript.audio_id).where(
+                Transcript.audio_id.in_(wanted), Transcript.is_active == 1
+            )
         )
         .scalars()
         .all()
     )
-    if states & {queue.PENDING, queue.RUNNING}:
-        return TranscriptionState.RUNNING
-    if queue.FAILED in states:
-        return TranscriptionState.FAILED
-    return TranscriptionState.NONE
+    jobs: dict[int, set[str]] = {}
+    for audio_id, state in session.execute(
+        select(Job.audio_id, Job.state).where(
+            Job.audio_id.in_(wanted), Job.kind == queue.KIND_TRANSCRIBE
+        )
+    ).all():
+        jobs.setdefault(int(audio_id), set()).add(state)
+    return {
+        audio_id: _state_of(audio_id in transcribed, jobs.get(audio_id, set()))
+        for audio_id in wanted
+    }
+
+
+def transcription_state(session: DbSession, audio_id: int) -> TranscriptionState:
+    """Which of the four states one recording is in, for the paths that have only one."""
+    return transcription_states(session, [audio_id])[audio_id]
 
 
 def transcription_status(session: DbSession, audio_id: int) -> TranscriptionStatus:
@@ -135,9 +161,23 @@ def tag_summary(tag: Tag) -> TagSummary:
     return TagSummary.model_validate(tag)
 
 
-def library_summary(session: DbSession, library: Library, level: Level) -> LibrarySummary:
-    owner = session.get(User, library.owner_id)
-    count, duration = library_repo.library_totals(session, library.id)
+def library_summary(
+    session: DbSession,
+    library: Library,
+    level: Level,
+    *,
+    owner: User | None = None,
+    totals: tuple[int, int] | None = None,
+) -> LibrarySummary:
+    """One library as the sidebar and its header draw it.
+
+    ``owner`` and ``totals`` can be passed in when the caller has already fetched them for a
+    whole list, on the same principle as ``tags`` on :func:`audio_summary`.
+    """
+    owner = owner if owner is not None else session.get(User, library.owner_id)
+    count, duration = (
+        totals if totals is not None else library_repo.library_totals(session, library.id)
+    )
     return LibrarySummary(
         uuid=library.uuid,
         name=library.name,
@@ -175,13 +215,19 @@ def audio_summary(
     *,
     tags: Sequence[Tag] | None = None,
     shared: bool | None = None,
+    library_uuid: str | None = None,
+    state: TranscriptionState | None = None,
 ) -> AudioSummary:
     """A recording as the grid and the list draw it.
 
-    ``tags`` and ``shared`` can be passed in when the caller has already fetched them for a whole
-    page, which is the difference between one query and eighty.
+    Everything after ``level`` can be passed in when the caller has already fetched it for a
+    whole page, which is the difference between one query and eighty. ``session.get(Library,
+    ...)`` is the one worth naming: it is *not* served from the identity map, so fifty cards in
+    one library asked for that row fifty times (``REV-3``).
     """
-    library = session.get(Library, audio.library_id)
+    resolved_library = (
+        library_uuid if library_uuid is not None else _library_uuid(session, audio.library_id)
+    )
     resolved = tags if tags is not None else tag_repo.tags_for_audio(session, audio.id)
     return AudioSummary(
         uuid=audio.uuid,
@@ -192,11 +238,13 @@ def audio_summary(
         recorded_at_source=audio.recorded_at_source,
         created_at=audio.created_at,
         duration_ms=audio.duration_ms,
-        library_uuid=library.uuid if library is not None else "",
+        library_uuid=resolved_library,
         category_id=audio.category_id,
         tags=[tag_summary(tag) for tag in resolved],
         level=level,
-        transcription_state=transcription_state(session, audio.id),
+        transcription_state=(
+            state if state is not None else transcription_state(session, audio.id)
+        ),
         has_waveform=audio.waveform is not None,
         is_shared_individually=(
             shared if shared is not None else bool(_individually_shared(session, [audio.id]))
@@ -226,10 +274,17 @@ def audio_detail(session: DbSession, audio: Audio, level: Level) -> AudioDetail:
 
 
 def audio_summaries(session: DbSession, rows: Sequence[tuple[Audio, int]]) -> list[AudioSummary]:
-    """Many recordings at once, with their tags fetched in one query rather than one per card."""
+    """Many recordings at once, each thing a card needs fetched once for the whole page.
+
+    Five queries for a page of any size (``REV-3``). What it replaced grew three statements per
+    card on a fixed floor of six -- 21 for five cards, 81 for twenty-five, 156 for fifty -- which
+    is the shape somebody meets as the grid getting slower the more they archive.
+    """
     audio_ids = [row[0].id for row in rows]
     tags_by_audio = tag_repo.tags_for_audios(session, audio_ids)
     shared_ids = _individually_shared(session, audio_ids)
+    states = transcription_states(session, audio_ids)
+    library_uuids = _library_uuids(session, [row[0].library_id for row in rows])
     return [
         audio_summary(
             session,
@@ -237,8 +292,33 @@ def audio_summaries(session: DbSession, rows: Sequence[tuple[Audio, int]]) -> li
             Level(level),
             tags=tags_by_audio.get(audio.id, []),
             shared=audio.id in shared_ids,
+            library_uuid=library_uuids.get(audio.library_id, ""),
+            state=states.get(audio.id, TranscriptionState.NONE),
         )
         for audio, level in rows
+    ]
+
+
+def library_summaries(
+    session: DbSession, rows: Sequence[tuple[Library, int]]
+) -> list[LibrarySummary]:
+    """Many libraries at once, with their owners and their totals each asked for once.
+
+    The sidebar's list is not paginated, so this grew with the number of libraries somebody has
+    rather than with a page size: an owner row and a totals query each (``REV-3``).
+    """
+    libraries = [library for library, _level in rows]
+    owners = _users_by_id(session, [library.owner_id for library in libraries])
+    totals = library_repo.totals_for_libraries(session, [library.id for library in libraries])
+    return [
+        library_summary(
+            session,
+            library,
+            Level(level),
+            owner=owners.get(library.owner_id),
+            totals=totals.get(library.id, (0, 0)),
+        )
+        for library, level in rows
     ]
 
 
@@ -303,6 +383,29 @@ def _individually_shared(session: DbSession, audio_ids: Sequence[int]) -> set[in
         session.execute(select(Share.audio_id).where(Share.audio_id.in_(audio_ids))).scalars().all()
     )
     return {audio_id for audio_id in found if audio_id is not None}
+
+
+def _library_uuid(session: DbSession, library_id: int) -> str:
+    """One library's public identifier, for the single-recording paths."""
+    return _library_uuids(session, [library_id]).get(library_id, "")
+
+
+def _library_uuids(session: DbSession, library_ids: Sequence[int]) -> dict[int, str]:
+    """Public identifiers for the libraries a page's recordings are in, in one query."""
+    if not library_ids:
+        return {}
+    rows = session.execute(
+        select(Library.id, Library.uuid).where(Library.id.in_(set(library_ids)))
+    ).all()
+    return {int(library_id): str(uuid) for library_id, uuid in rows}
+
+
+def _users_by_id(session: DbSession, user_ids: Sequence[int]) -> dict[int, User]:
+    """The accounts a list needs to name, in one query rather than one each."""
+    if not user_ids:
+        return {}
+    found = session.execute(select(User).where(User.id.in_(set(user_ids)))).scalars().all()
+    return {user.id: user for user in found}
 
 
 def _unknown_user(user_id: int) -> UserSummary:

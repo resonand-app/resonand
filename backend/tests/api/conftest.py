@@ -53,6 +53,34 @@ def acl_resolutions(database: Database) -> Iterator[list[str]]:
         event.remove(database.engine, "before_cursor_execute", record)
 
 
+@contextmanager
+def statements(database: Database) -> Iterator[list[str]]:
+    """Every statement the archive runs inside the block.
+
+    :func:`acl_resolutions` watches for two CTEs; this counts everything, which is what a test
+    about what a page costs has to assert on (``REV-2``, ``REV-3``). The assertion that matters is
+    never the absolute number -- it moves whenever a query is split or joined -- but whether it
+    grows with the size of the page or of the archive.
+    """
+    seen: list[str] = []
+
+    def record(
+        _connection: object,
+        _cursor: object,
+        statement: str,
+        _parameters: object,
+        _context: object,
+        _executemany: bool,
+    ) -> None:
+        seen.append(statement)
+
+    event.listen(database.engine, "before_cursor_execute", record)
+    try:
+        yield seen
+    finally:
+        event.remove(database.engine, "before_cursor_execute", record)
+
+
 @pytest.fixture
 def settings(tmp_path: Path) -> Settings:
     """A runnable instance that writes nowhere but a temporary directory."""

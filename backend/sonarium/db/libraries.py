@@ -14,6 +14,8 @@ always populated, and losing it would leave an account with recordings and nowhe
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session
 
@@ -48,6 +50,29 @@ def library_totals(session: Session, library_id: int) -> tuple[int, int]:
         )
     ).one()
     return int(row[0]), int(row[1])
+
+
+def totals_for_libraries(
+    session: Session, library_ids: Sequence[int]
+) -> dict[int, tuple[int, int]]:
+    """:func:`library_totals` for many libraries at once (``REV-3``).
+
+    A library with nothing in it produces no group, so the result is filled from the ids asked
+    for rather than from the rows that came back.
+    """
+    if not library_ids:
+        return {}
+    rows = session.execute(
+        select(
+            Audio.library_id,
+            func.count(Audio.id),
+            func.coalesce(func.sum(Audio.duration_ms), 0),
+        )
+        .where(Audio.library_id.in_(set(library_ids)), Audio.deleted_at.is_(None))
+        .group_by(Audio.library_id)
+    ).all()
+    counted = {int(library_id): (int(count), int(total)) for library_id, count, total in rows}
+    return {library_id: counted.get(library_id, (0, 0)) for library_id in library_ids}
 
 
 def create_library(

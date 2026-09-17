@@ -19,7 +19,7 @@ from sonarium.api.deps import (
     ReadSession,
     WriteSession,
 )
-from sonarium.api.pagination import Page, PageRequest, page_of, page_request
+from sonarium.api.pagination import Page, PageRequest, count_of, page_of, page_request
 from sonarium.api.presenters import (
     audio_detail,
     audio_summaries,
@@ -75,7 +75,7 @@ Paging = Annotated[PageRequest, Depends(page_request)]
 @router.get("/audio", response_model=Page[AudioSummary], summary="Every recording you can see")
 def list_audio(caller: CurrentCaller, session: ReadSession, paging: Paging) -> Page[AudioSummary]:
     query = audio_select(caller.id)
-    total = len(session.execute(query).all())
+    total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
         audio_summaries(session, [(row[0], row[1]) for row in rows]),
@@ -181,7 +181,7 @@ def unshare(audio_uuid: str, grantee_id: int, caller: CurrentCaller, session: Wr
 def list_trash(caller: CurrentCaller, session: ReadSession, paging: Paging) -> Page[AudioSummary]:
     """What is in the trash, with the closest to being purged first (``INT-1``)."""
     query = trashed_audio(caller.id)
-    total = len(session.execute(query).all())
+    total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
         audio_summaries(session, [(row[0], row[1]) for row in rows]),

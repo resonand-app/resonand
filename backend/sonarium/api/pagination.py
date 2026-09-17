@@ -14,10 +14,12 @@ than a different response.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import Query
 from pydantic import BaseModel, Field
+from sqlalchemy import Select, func, select
+from sqlalchemy.orm import Session
 
 DEFAULT_LIMIT = 50
 MAX_LIMIT = 200
@@ -56,3 +58,17 @@ class Page[ItemType](BaseModel):
 def page_of[ItemType](items: list[ItemType], *, total: int, request: PageRequest) -> Page[ItemType]:
     """Wrap a query's rows in the envelope, so no endpoint assembles it by hand."""
     return Page(items=items, total=total, limit=request.limit, offset=request.offset)
+
+
+def count_of(session: Session, query: Select[Any]) -> int:
+    """How many rows the query matches, asked of the database rather than counted in Python.
+
+    The reasoning at the top of this module -- that ``COUNT`` over an ACL-filtered set is cheap at
+    this scale -- is only true of a ``COUNT``. Every collection endpoint used to build the whole
+    result set as ORM objects and take its length, which at the "hundreds of hours" scale the
+    project is designed for is what reads on screen as *the grid got slow* (``REV-2``).
+
+    The row type is unconstrained because the count discards the columns: every caller passes a
+    ``Select`` of its own shape, and ``Select`` is invariant in that parameter.
+    """
+    return int(session.execute(select(func.count()).select_from(query.subquery())).scalar_one())
