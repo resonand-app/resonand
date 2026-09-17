@@ -1,0 +1,72 @@
+# Keeping the dependency surface current, so that a known vulnerability is something this
+# repository hears about rather than something a reader finds.
+#
+# Four ecosystems, because the repository has four: the actions CI runs, the base images the
+# Dockerfile builds on, the backend's `uv.lock` and the frontend's `package-lock.json`. Leaving
+# any one out makes the other three misleading -- a clean dependency report that never looked at
+# the image is worse than no report.
+#
+# **Weekly, and grouped.** One person maintains this. A bot that opens twelve pull requests a week
+# is a bot whose pull requests stop being read, and unread update pull requests are the failure
+# this configuration exists to avoid rather than a side effect of it. Minor and patch updates
+# arrive as one pull request per ecosystem; a **major is deliberately left on its own**, because a
+# major is a change to read rather than one to merge with the others.
+#
+# `commit-message.prefix` matches the repository's Conventional Commits: `ci` for the things that
+# run the build, `build` for the things it builds against.
+
+version: 2
+
+updates:
+  - package-ecosystem: "github-actions"
+    # The actions are pinned to commit digests in the workflow, which is what stops a moved tag
+    # running code nobody reviewed. Digests do not expire, so without this they would simply go
+    # stale instead -- the pin and this entry are two halves of one decision.
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker"
+    # `python:3.12-slim-bookworm` and `node:22-bookworm-slim` carry an operating system, and most
+    # of what a scanner reports about a container is in there rather than in the application.
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build"
+    open-pull-requests-limit: 3
+    groups:
+      base-images:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "uv"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build"
+    open-pull-requests-limit: 5
+    groups:
+      backend:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "build"
+    open-pull-requests-limit: 5
+    groups:
+      frontend:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
