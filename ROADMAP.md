@@ -157,7 +157,9 @@ that is being taken now.
   a processor for the audio flowing through it: processing agreement, security obligations, breach
   notification, sub-processor management. There are design answers — audio held transiently and
   never stored, or delegation to a third party under its own contract — but they have to be chosen
-  before the service exists, not after. `JOB-2` already carries the metering this would need.
+  before the service exists, not after. `JOB-2` carries the *interface* this would meter through;
+  the sink that would store the rows is deliberately deferred until something reads them, so the
+  table is part of this item rather than already paid for.
 - **Speaker identification**, only under the design condition in [`VISION.md`](VISION.md): the same
   pattern as transcription, an optional module consuming a service the user configures, never
   integrated into the application. Biometric identification is an Annex III high-risk category
