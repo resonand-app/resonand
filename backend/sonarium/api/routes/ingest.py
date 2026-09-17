@@ -37,7 +37,7 @@ from sonarium.api.deps import (
     settings_of,
 )
 from sonarium.api.presenters import audio_detail
-from sonarium.api.schemas import AudioDetail, DuplicateWarning
+from sonarium.api.schemas import AudioDetail
 from sonarium.api.stream_tokens import issue, redeem
 from sonarium.core.config import Settings
 from sonarium.core.errors import InvalidRequestError, NotFoundError
@@ -45,7 +45,7 @@ from sonarium.core.formats import is_accepted
 from sonarium.core.ids import new_uuid
 from sonarium.core.levels import Level
 from sonarium.core.time import now_instant
-from sonarium.db.audio import create_audio, find_duplicates
+from sonarium.db.audio import create_audio
 from sonarium.jobs.queue import enqueue, enqueue_transcription
 from sonarium.media import ranges, storage, waveform
 
@@ -106,7 +106,7 @@ def upload(
             filename=filename,
         )
         with database.write_session() as write:
-            library, _ = require_library(write, caller.id, library_uuid, Level.EDIT)
+            library, level = require_library(write, caller.id, library_uuid, Level.EDIT)
             audio = create_audio(
                 write,
                 uuid=audio_uuid,
@@ -122,7 +122,10 @@ def upload(
                 enqueue_transcription(
                     write, audio_id=audio.id, audio_uuid=audio_uuid, language=language
                 )
-            return audio_detail(write, audio, Level.OWNER)
+            # The level the library resolved to, not owner: uploading needs edit, and a
+            # recording with no individual grant carries exactly its library's level. The
+            # interface decides what to offer from this field (``REV-S5``).
+            return audio_detail(write, audio, level)
     except BaseException:
         # Whatever went wrong -- a file over the limit, a permission withdrawn between the two
         # checks, a failed commit -- the bytes belong to a recording that does not exist. They
@@ -130,25 +133,6 @@ def upload(
         # should cost the archive nothing.
         storage.delete_recording(settings.resolved_storage_dir, audio_uuid)
         raise
-
-
-@router.get(
-    "/audio/{audio_uuid}/duplicates",
-    response_model=list[DuplicateWarning],
-    summary="Is this exact file already here",
-)
-def check_duplicate(
-    audio_uuid: str, caller: CurrentCaller, session: ReadSession
-) -> list[DuplicateWarning]:
-    """Byte-identical copies of a stored recording, the trash included (``DEC-16``)."""
-    audio, _ = require_audio(session, caller.id, audio_uuid)
-    if audio.sha256 is None:
-        return []
-    return [
-        DuplicateWarning(uuid=other.uuid, title=other.title, in_trash=in_trash, library_uuid="")
-        for other, in_trash in find_duplicates(session, caller.id, audio.sha256)
-        if other.id != audio.id
-    ]
 
 
 @router.post("/audio/{audio_uuid}/playback-token", summary="A short-lived link for the player")

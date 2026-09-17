@@ -119,12 +119,19 @@ def trash_library(session: Session, user_id: int, library_uuid: str) -> Library:
     return library
 
 
-def restore_library(session: Session, user_id: int, library_uuid: str) -> Library:
-    """Take a library back out of the trash."""
-    library, _ = require_library(session, user_id, library_uuid, Level.MANAGE, include_trashed=True)
+def restore_library(session: Session, user_id: int, library_uuid: str) -> tuple[Library, Level]:
+    """Take a library back out of the trash, with the level the caller holds on it.
+
+    The level comes back for the same reason it does from the four writes ``REV-7`` changed: the
+    presenter needs it, and resolving it a second time is two more recursive CTEs inside the
+    write lock.
+    """
+    library, level = require_library(
+        session, user_id, library_uuid, Level.MANAGE, include_trashed=True
+    )
     library.deleted_at = None
     session.flush()
-    return library
+    return library, level
 
 
 def purge_library(session: Session, user_id: int, library_uuid: str) -> list[str]:
