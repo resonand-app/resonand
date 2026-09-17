@@ -239,6 +239,7 @@ not the phase. Cite them in commits, branches and reviews.
 | `UI` | Every view in the interface | `interface.md` |
 | `OPS` | Docker, configuration, backup, observability | `operations.md` |
 | `INT` | Views that cross tracks: trash, administration, security | `integration.md` |
+| `TRX` | What an engine has to look like for Sonarium to consume it | `transcription.md` |
 
 Two more are cited from the code and planned in working documents that are **not in this
 repository**, so an identifier carrying one resolves to the code that applied it and nowhere else:
