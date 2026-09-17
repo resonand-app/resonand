@@ -12,7 +12,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router';
 import { describe, expect, it, vi } from 'vitest';
@@ -103,6 +103,26 @@ describe('where it can go', () => {
     expect(await screen.findByText(/There is nowhere to move this to/)).toBeInTheDocument();
     expect(screen.queryByRole('combobox', { name: 'Move to' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Move it' })).toBeNull();
+  });
+
+  it('opens on the picker, not on the control that closes it', async () => {
+    renderDialog();
+    // The destination is the only reason this dialog is open, and a `Dialog` draws its close
+    // control first -- so without asking, the keyboard lands on the way out of the screen.
+    await waitFor(() => {
+      expect(screen.getByRole('combobox', { name: 'Move to' })).toHaveFocus();
+    });
+  });
+
+  it('falls back to the close control when there is nowhere to go', async () => {
+    archive.libraries = archive.libraries.filter((one) => one.uuid === RECORDINGS);
+    renderDialog();
+    // There is no picker to land on, and a dialog with nothing to choose has nothing to do but
+    // be left -- so the marker going missing has to be ordinary rather than an exception.
+    expect(await screen.findByText(/There is nowhere to move this to/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    });
   });
 
   it('will not move anything until a destination is chosen', async () => {

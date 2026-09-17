@@ -12,6 +12,7 @@ import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { Modal } from '../overlay/Modal';
 import { Select } from './Select';
 import type { SelectOption } from './Select';
 
@@ -130,5 +131,65 @@ describe('Select', () => {
     render(<Select options={SORTS} disabled ariaLabel="Sort" />);
     await userEvent.click(trigger());
     expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
+  /* An overlay opens on the first focusable thing inside it, which in a dialog is the control
+     that closes it. Asserted through a real `Modal` rather than against the attribute, because
+     what was asked for is where the keyboard lands and the attribute is only how it is said. */
+  describe('as the reason a dialog is open', () => {
+    function InModal({ initialFocus }: { initialFocus?: boolean }) {
+      return (
+        <Modal open onClose={vi.fn()}>
+          <div>
+            <button type="button">Close</button>
+            <Select options={SORTS} ariaLabel="Sort" {...(initialFocus === true ? { initialFocus } : {})} />
+          </div>
+        </Modal>
+      );
+    }
+
+    it('takes the focus the dialog would have given its close control', () => {
+      render(<InModal initialFocus />);
+      expect(trigger()).toHaveFocus();
+    });
+
+    it('leaves it alone when it is not asked for', () => {
+      render(<InModal />);
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+    });
+
+    /* Its options are usually a query, so it often arrives after the dialog has opened and the
+       focus has already been placed. It takes it then too -- but not out of somebody's hands. */
+    /** The dialog before its options have arrived, and then with them. */
+    function Loading({ ready }: { ready: boolean }) {
+      return (
+        <Modal open onClose={vi.fn()}>
+          <div>
+            <button type="button" data-ds="dialog-close">
+              Close
+            </button>
+            <button type="button">Cancel</button>
+            {ready && <Select options={SORTS} ariaLabel="Sort" initialFocus />}
+          </div>
+        </Modal>
+      );
+    }
+
+    it('claims the focus when it arrives after the dialog did', () => {
+      const { rerender } = render(<Loading ready={false} />);
+      expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+      rerender(<Loading ready />);
+      expect(trigger()).toHaveFocus();
+    });
+
+    it('does not take it back from somebody who has already moved', async () => {
+      const { rerender } = render(<Loading ready={false} />);
+      // Standing on Cancel when the options land: a list finishing loading is not a reason to
+      // move somebody's keyboard off the control they chose.
+      const cancel = screen.getByRole('button', { name: 'Cancel' });
+      await userEvent.click(cancel);
+      rerender(<Loading ready />);
+      expect(cancel).toHaveFocus();
+    });
   });
 });
