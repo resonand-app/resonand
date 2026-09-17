@@ -3,6 +3,13 @@
 # Two check jobs and an image build. `backend` and `frontend` are deliberately not dependent on
 # each other: they touch disjoint trees, and a Python failure that hides a TypeScript one costs
 # a round trip to find out.
+#
+# Every action is pinned to a commit digest rather than to a tag. A tag is a pointer its owner can
+# move, and these actions run with a token and a checkout of this repository -- so `@v4` is a
+# standing agreement to execute whatever that pointer names on the morning it runs. The version
+# beside each digest is what it resolved to when it was pinned, and it is a comment: the digest is
+# what git checks out. Dependabot moves them, which is the other half of the arrangement and is
+# configured in .github/dependabot.yml.
 
 name: CI
 
@@ -31,7 +38,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Install ffmpeg
         # The media tests are marked `ffmpeg` and use the real binaries. Skipping them here would
@@ -42,7 +49,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends ffmpeg
           ffprobe -version | head -1
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
@@ -91,9 +98,9 @@ jobs:
       run:
         working-directory: frontend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           # The version `package.json` declares as its floor. Pinned to a major rather than to
           # `latest`, so a Node release does not change what CI checked overnight.
@@ -129,12 +136,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
       - name: Build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           push: false
