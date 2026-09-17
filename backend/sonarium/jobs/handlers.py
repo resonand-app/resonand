@@ -215,6 +215,7 @@ def handle_transcribe(work: Work, context: Context) -> None:
                 provider=context.provider.name,
                 model=context.provider.model,
                 language=detected,
+                stitched_from=len(plan.parts),
             ),
         )
         search_index.index_audio(session, audio_id)

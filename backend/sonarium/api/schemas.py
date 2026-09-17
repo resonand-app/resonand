@@ -344,6 +344,32 @@ class SegmentOut(Api):
     text: str
 
 
+class TranscriptFeatures(Api):
+    """What a transcript is, as distinct from where it came from (``TRX-12``).
+
+    ``provider``, ``model`` and ``language`` on the summary say which engine was asked. These say
+    what came back. They are read from the transcript rather than from the instance's current
+    configuration on purpose: the configured engine changes while transcripts persist, and the
+    selector shows the old and the new one side by side.
+    """
+
+    task: str
+    """``transcribe`` | ``translate``."""
+
+    has_speakers: bool
+    speaker_count: int
+    speakers_are_comparable: bool
+    """Whether one label means one person throughout. False where the audio was submitted in
+    parts, because an engine names speakers per request (``TRX-13``)."""
+
+    granularity_ms: int | None
+    """The median segment duration. How precisely a click on a line can seek."""
+
+    stitched_from: int | None
+    """How many parts the audio was submitted in. ``None`` for a transcript written before this
+    was recorded, which is not the same as one submitted whole."""
+
+
 class TranscriptSummary(Api):
     id: int
     is_active: bool
@@ -353,6 +379,7 @@ class TranscriptSummary(Api):
     language: str | None
     created_at: str
     segment_count: int
+    features: TranscriptFeatures
 
 
 class TranscriptDetail(TranscriptSummary):

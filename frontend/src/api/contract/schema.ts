@@ -1814,6 +1814,7 @@ export interface components {
         TranscriptDetail: {
             /** Created At */
             created_at: string;
+            features: components["schemas"]["TranscriptFeatures"];
             /** Id */
             id: number;
             /** Is Active */
@@ -1831,10 +1832,34 @@ export interface components {
             /** Source */
             source: string;
         };
+        /**
+         * TranscriptFeatures
+         * @description What a transcript is, as distinct from where it came from (``TRX-12``).
+         *
+         *     ``provider``, ``model`` and ``language`` on the summary say which engine was asked. These say
+         *     what came back. They are read from the transcript rather than from the instance's current
+         *     configuration on purpose: the configured engine changes while transcripts persist, and the
+         *     selector shows the old and the new one side by side.
+         */
+        TranscriptFeatures: {
+            /** Granularity Ms */
+            granularity_ms: number | null;
+            /** Has Speakers */
+            has_speakers: boolean;
+            /** Speaker Count */
+            speaker_count: number;
+            /** Speakers Are Comparable */
+            speakers_are_comparable: boolean;
+            /** Stitched From */
+            stitched_from: number | null;
+            /** Task */
+            task: string;
+        };
         /** TranscriptSummary */
         TranscriptSummary: {
             /** Created At */
             created_at: string;
+            features: components["schemas"]["TranscriptFeatures"];
             /** Id */
             id: number;
             /** Is Active */

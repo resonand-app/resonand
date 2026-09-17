@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, select, text, update
 from sqlalchemy.orm import Session
 
 from sonarium.core.errors import InvalidRequestError, NotFoundError
@@ -47,6 +47,12 @@ class Origin:
     derived_from: int | None = None
     """The transcript this one was edited from, which is kept."""
 
+    task: str = "transcribe"
+    """``transcribe`` | ``translate`` (``TRX-D6``)."""
+
+    stitched_from: int | None = None
+    """How many parts the audio was submitted in, where the caller submitted it."""
+
 
 def create_transcript(
     session: Session,
@@ -73,6 +79,8 @@ def create_transcript(
         language=provenance.language,
         created_at=now_instant(),
         derived_from=provenance.derived_from,
+        task=provenance.task,
+        stitched_from=provenance.stitched_from,
     )
     session.add(transcript)
     session.flush()
@@ -156,6 +164,82 @@ def segments_of(session: Session, transcript_id: int) -> list[Segment]:
         )
         .scalars()
         .all()
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class Features:
+    """What a transcript *is*, as opposed to where it came from (``TRX-12``).
+
+    Provenance -- provider, model, language -- says which engine was asked. This says what came
+    back, which is what decides how a transcript can be presented and how far it can be trusted:
+    an engine that diarises and one that does not produce different artefacts from the same
+    recording, and the interface has to be able to tell which one it is holding without reading
+    every segment first.
+    """
+
+    task: str
+    segment_count: int
+    speaker_count: int
+    granularity_ms: int | None
+    """The median segment duration, or ``None`` for a transcript with no segments. How coarse the
+    engine's idea of a segment is, which decides how precisely a click can seek."""
+
+    stitched_from: int | None
+
+    @property
+    def has_speakers(self) -> bool:
+        """Whether anything in this transcript is attributed to anybody."""
+        return self.speaker_count > 0
+
+    @property
+    def speakers_are_comparable(self) -> bool:
+        """Whether a speaker label means the same thing across the whole transcript.
+
+        Labels are assigned per request, so a transcript stitched from several parts has several
+        label spaces that cannot be compared (``TRX-13``). ``None`` parts is a transcript from
+        before the count was recorded, and is not evidence that it was submitted whole.
+        """
+        return self.has_speakers and self.stitched_from == 1
+
+
+_SEGMENT_COUNTS = text(
+    """
+    SELECT count(*) AS segments,
+           count(DISTINCT CASE WHEN speaker IS NOT NULL AND speaker <> '' THEN speaker END)
+             AS speakers
+      FROM segment
+     WHERE transcript_id = :transcript_id
+    """
+)
+
+_MEDIAN_DURATION = text(
+    """
+    SELECT end_ms - start_ms AS duration
+      FROM segment
+     WHERE transcript_id = :transcript_id
+     ORDER BY duration
+     LIMIT 1 OFFSET (SELECT count(*) / 2 FROM segment WHERE transcript_id = :transcript_id)
+    """
+)
+# An even number of segments takes the upper of the two middles rather than averaging them. This
+# is an order statistic describing how coarse the engine is, not a measurement to be interpolated.
+
+
+def features_of(session: Session, transcript: Transcript) -> Features:
+    """Read what a transcript is: two columns, and three answers from its segments.
+
+    Answered in SQL rather than by loading the segments, because the versions list asks this for
+    every transcript a recording has and the thing being counted runs to a few hundred rows each.
+    """
+    counts = session.execute(_SEGMENT_COUNTS, {"transcript_id": transcript.id}).one()
+    median = session.execute(_MEDIAN_DURATION, {"transcript_id": transcript.id}).scalar()
+    return Features(
+        task=transcript.task,
+        segment_count=int(counts.segments),
+        speaker_count=int(counts.speakers),
+        granularity_ms=int(median) if median is not None else None,
+        stitched_from=transcript.stitched_from,
     )
 
 

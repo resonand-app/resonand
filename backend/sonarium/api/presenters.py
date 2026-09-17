@@ -27,6 +27,7 @@ from sonarium.api.schemas import (
     ShareSummary,
     TagSummary,
     TranscriptDetail,
+    TranscriptFeatures,
     TranscriptionStatus,
     TranscriptSummary,
     UserSummary,
@@ -36,6 +37,7 @@ from sonarium.core.levels import DESCRIPTIONS, Level
 from sonarium.core.states import TranscriptionState
 from sonarium.db import libraries as library_repo
 from sonarium.db import tags as tag_repo
+from sonarium.db import transcripts
 from sonarium.db.models import (
     Audio,
     Category,
@@ -241,11 +243,7 @@ def audio_summaries(session: DbSession, rows: Sequence[tuple[Audio, int]]) -> li
 
 
 def transcript_summary(session: DbSession, transcript: Transcript) -> TranscriptSummary:
-    count = len(
-        session.execute(select(Segment.id).where(Segment.transcript_id == transcript.id))
-        .scalars()
-        .all()
-    )
+    features = transcripts.features_of(session, transcript)
     return TranscriptSummary(
         id=transcript.id,
         is_active=bool(transcript.is_active),
@@ -254,7 +252,15 @@ def transcript_summary(session: DbSession, transcript: Transcript) -> Transcript
         model=transcript.model,
         language=transcript.language,
         created_at=transcript.created_at,
-        segment_count=count,
+        segment_count=features.segment_count,
+        features=TranscriptFeatures(
+            task=features.task,
+            has_speakers=features.has_speakers,
+            speaker_count=features.speaker_count,
+            speakers_are_comparable=features.speakers_are_comparable,
+            granularity_ms=features.granularity_ms,
+            stitched_from=features.stitched_from,
+        ),
     )
 
 

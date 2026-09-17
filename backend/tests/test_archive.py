@@ -62,7 +62,12 @@ def recording(database: Database, db_settings: Settings) -> str:
                 SegmentDraft(0, 4_200, "She starts by talking about the village."),
                 SegmentDraft(4_200, 9_100, "Then about the factory."),
             ],
-            Origin(provider="openai-compatible", model="whisper-1", language="en"),
+            Origin(
+                provider="openai-compatible",
+                model="whisper-1",
+                language="en",
+                stitched_from=3,
+            ),
         )
         session.flush()
         return audio.uuid
@@ -169,6 +174,58 @@ def test_re_importing_updates_rather_than_duplicating(
         every = session.query(Audio).all()
     assert len(every) == 1
     assert every[0].title == "Grandmother, third afternoon"
+
+
+def test_what_a_transcript_is_survives_the_round_trip(
+    database: Database, recording: str, tmp_path: Path
+) -> None:
+    """``TRX-12``: the part count cannot be recomputed on the far side, so it has to travel."""
+    with database.read_session() as session:
+        audio = find_by_uuid(session, recording)
+        assert audio is not None
+        payload = sidecar_for(session, audio)
+    assert payload["transcript"]["task"] == "transcribe"
+    assert payload["transcript"]["stitched_from"] == 3
+
+    with database.write_session() as session:
+        again = find_by_uuid(session, recording)
+        assert again is not None
+        apply_sidecar(session, again, payload)
+
+    with database.read_session() as session:
+        restored = find_by_uuid(session, recording)
+        assert restored is not None
+        transcript = transcripts.active_transcript(session, restored.id)
+        assert transcript is not None
+        features = transcripts.features_of(session, transcript)
+    assert features.task == "transcribe"
+    assert features.stitched_from == 3
+
+
+def test_a_sidecar_written_before_a_transcript_knew_what_it_was_still_imports(
+    database: Database, recording: str
+) -> None:
+    """An older sidecar carries neither field, and the defaults are what it actually was."""
+    with database.read_session() as session:
+        audio = find_by_uuid(session, recording)
+        assert audio is not None
+        payload = sidecar_for(session, audio)
+    del payload["transcript"]["task"]
+    del payload["transcript"]["stitched_from"]
+
+    with database.write_session() as session:
+        again = find_by_uuid(session, recording)
+        assert again is not None
+        apply_sidecar(session, again, payload)
+
+    with database.read_session() as session:
+        restored = find_by_uuid(session, recording)
+        assert restored is not None
+        transcript = transcripts.active_transcript(session, restored.id)
+        assert transcript is not None
+        features = transcripts.features_of(session, transcript)
+    assert features.task == "transcribe"
+    assert features.stitched_from is None
 
 
 def test_a_sidecar_from_a_future_version_is_refused(tmp_path: Path) -> None:
