@@ -37,7 +37,6 @@ def throttled_settings(tmp_path: Path) -> Settings:
         secret_key=SecretStr("0" * 64),
         transcription_base_url="http://whisper:8000/v1",
         log_format="console",
-        session_cookie_secure=False,
         login_attempts_per_minute=3,
         login_attempts_per_client_per_minute=CLIENT_CEILING,
     )

@@ -49,7 +49,6 @@ def serving(bundle: Path, tmp_path: Path, database: Database) -> FastAPI:
             data_dir=tmp_path / "data",
             secret_key=SecretStr("0" * 64),
             transcription_base_url="http://whisper:8000/v1",
-            session_cookie_secure=False,
             static_dir=bundle,
         )
     )

@@ -26,6 +26,10 @@ GIGABYTE = 1024 * MEGABYTE
 MINIMUM_SECRET_LENGTH = 32
 """A shorter key is not a key. ``openssl rand -hex 32`` is what the message tells you to run."""
 
+CookieSecurity = Literal["auto", "true", "false"]
+"""How :attr:`Settings.session_cookie_secure` is answered. Spelled as the strings an environment
+variable carries, because that is where every value of it comes from."""
+
 
 class Settings(BaseSettings):
     """Everything an instance can be told, and the defaults it runs on when told nothing."""
@@ -75,9 +79,27 @@ class Settings(BaseSettings):
 
     session_cookie_name: str = "sonarium_session"
 
-    session_cookie_secure: bool = True
-    """Set to false only to reach an instance over plain HTTP, which means over localhost.
-    A cookie without this travels in clear text, and it is the whole session."""
+    session_cookie_secure: CookieSecurity = "auto"
+    """Whether the session cookie is marked ``Secure``, which decides whether it survives at all.
+
+    A browser silently discards a ``Secure`` cookie that arrives over plain HTTP unless the origin
+    is loopback. That is a property of the connection rather than of the instance, and one instance
+    is legitimately reached both ways -- through a TLS proxy from outside, and directly on a LAN --
+    so a single answer for every request is wrong for one of them. The three values say which
+    question is being answered:
+
+    * ``auto`` -- the connection decides. Marked ``Secure`` when the request arrived over HTTPS,
+      which is what :meth:`cookie_secure_for` reads. Every deployment works, and each connection
+      gets a cookie as safe as the channel it crossed.
+    * ``true`` -- this instance is HTTPS, and plain HTTP is a mistake rather than a fallback. The
+      cookie is always marked, and signing in over plain HTTP is refused outright instead of
+      accepted and then dropped, so the password never crosses in clear either.
+    * ``false`` -- never marked. For an instance that is plain HTTP on purpose and would rather
+      pin that than have it inferred.
+
+    ``true`` and ``false`` are the spellings this setting has always taken, so an existing
+    environment keeps its meaning.
+    """
 
     login_attempts_per_minute: int = Field(default=10, gt=0)
     """Per address *and* client together. Enough that nobody notices; too few to grind through a
@@ -164,7 +186,51 @@ class Settings(BaseSettings):
         """Whether this instance is running against an in-memory database, as tests do."""
         return str(self.resolved_database_path) == ":memory:"
 
+    # --- The session cookie ------------------------------------------------
+
+    def cookie_secure_for(self, scheme: str) -> bool:
+        """Whether the cookie set on a request that arrived over ``scheme`` is marked ``Secure``.
+
+        The scheme is the one the browser used: uvicorn rewrites it from ``X-Forwarded-Proto``
+        only for a peer inside ``--forwarded-allow-ips``, so it can be raised to ``https`` by a
+        proxy that was trusted and by nothing else. A client that forges the header is ignored
+        rather than believed, which is why this is safe to read.
+        """
+        if self.session_cookie_secure == "auto":
+            return scheme == "https"
+        return self.session_cookie_secure == "true"
+
+    def refuses_plain_http(self) -> bool:
+        """Whether signing in over plain HTTP is refused rather than allowed to half-succeed.
+
+        Only under ``true``, where the operator has said this instance is HTTPS. Accepting the
+        password and answering with a cookie the browser is about to discard tells somebody their
+        credentials were wrong when they were right -- and takes the password over the clear
+        channel first, which is the part marking the cookie was never going to protect.
+        """
+        return self.session_cookie_secure == "true"
+
     # --- Normalisation -----------------------------------------------------
+
+    @field_validator("session_cookie_secure", mode="before")
+    @classmethod
+    def _read_cookie_security(cls, value: object) -> object:
+        """Read a boolean, or the spellings an environment variable writes one in.
+
+        The setting used to be a plain boolean, so ``true``, ``1``, ``yes`` and ``on`` -- and their
+        opposites -- have to keep meaning what they meant. Anything else is left alone for the
+        ``Literal`` to refuse by name, which is a better error than a silent ``false``.
+        """
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if isinstance(value, str):
+            spelling = value.strip().lower()
+            if spelling in {"true", "1", "yes", "on"}:
+                return "true"
+            if spelling in {"false", "0", "no", "off"}:
+                return "false"
+            return spelling
+        return value
 
     @field_validator("base_path")
     @classmethod

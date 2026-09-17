@@ -194,7 +194,6 @@ def test_the_credential_is_never_reported_in_any_form(
         secret_key=SecretStr("0" * 64),
         transcription_base_url="http://whisper:8000/v1",
         transcription_api_key=SecretStr(secret),
-        session_cookie_secure=False,
     )
     app = create_app(settings)
     app.state.database = database

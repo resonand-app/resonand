@@ -103,9 +103,40 @@ each, and where they disagree the browser takes the stricter one, which is usual
 anybody intended. Pass them through rather than adding a second set.
 
 **If the proxy runs on a different host** from the container, uvicorn will not trust its
-`X-Forwarded-*` headers — it trusts `127.0.0.1` only — and every session will be recorded as
-coming from the proxy. Add `--forwarded-allow-ips=<the proxy's address>` to the command. Not `*`:
-that lets any client claim any address.
+`X-Forwarded-*` headers — it trusts `127.0.0.1` only. Add `--forwarded-allow-ips=<the proxy's
+address>` to the command. Not `*`: that lets any client claim any address.
+
+That flag governs the address a session is recorded against, and the address the sign-in limiter
+counts (`SEC-3`). It is deliberately narrow: anything trusted here can claim to be anybody, and a
+whole LAN able to rotate `X-Forwarded-For` would walk through both login counters.
+
+**The session cookie does not wait for it.** Whether the browser was on HTTPS is read from
+`X-Forwarded-Proto` for any proxy on a loopback, link-local or private address, so a proxy in a
+container network — the ordinary homelab shape, and outside `--forwarded-allow-ips` by default —
+still produces a cookie marked `Secure`. The two are separated because their failure modes are
+opposite: forging the scheme costs the forger their own sign-in and nobody else anything, while
+forging the address is the protection `SEC-3` exists to provide.
+
+### The session cookie and how you are reached
+
+`SONARIUM_SESSION_COOKIE_SECURE` decides whether the cookie is marked `Secure`, and a browser
+silently discards a `Secure` cookie that arrived over plain HTTP unless the address is loopback.
+It is silent on both sides: the instance logs a successful sign-in, the browser keeps nothing, and
+the person is returned to the sign-in screen as though their password were wrong.
+
+| Value | What it does | When |
+|---|---|---|
+| `auto` (default) | Marked when the request arrived over HTTPS | Almost always. Each connection gets a cookie as safe as the channel it crossed, so an instance reached both ways works both ways |
+| `true` | Always marked, **and signing in over plain HTTP is refused** with a message rather than accepted and dropped | An instance that is HTTPS and only HTTPS, where reaching it any other way is a mistake worth being told about |
+| `false` | Never marked | An instance that is plain HTTP on purpose and would rather pin that than have it inferred |
+
+`true` refuses before the password is read. Accepting it would take a credential over the clear
+channel to answer with a cookie that cannot survive — which marking the cookie was never going to
+protect.
+
+**If people reach the instance by IP as well as by name**, `auto` is the value you want. The
+common cause is a device that does not resolve the hostname — no DNS, or a split-horizon rewrite
+it does not see — falling back to `http://<address>:8000` and hitting the published port directly.
 
 ## Backups
 

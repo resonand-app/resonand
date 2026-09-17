@@ -51,7 +51,6 @@ def _instance(
         data_dir=tmp_path,
         secret_key=SecretStr("0" * 64),
         transcription_base_url="http://whisper:8000/v1",
-        session_cookie_secure=False,
         base_path=base_path,
     )
     app = create_app(settings)

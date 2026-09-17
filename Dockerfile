@@ -121,9 +121,11 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 # also runs the job worker in-process; set `SONARIUM_RUN_WORKER=false` and run `sonarium work`
 # in a second container to split them.
 #
-# `--proxy-headers` is on because this is meant to sit behind a reverse proxy (`OPS-4`), and
-# without it every session is recorded as coming from the proxy. uvicorn only trusts those
-# headers from 127.0.0.1 by default; a proxy on another host needs
-# `--forwarded-allow-ips` set to its address, and deliberately not to `*`.
+# `--proxy-headers` is on because this is meant to sit behind a reverse proxy (`OPS-4`). Without
+# it every session is recorded as coming from the proxy, and `X-Forwarded-Proto` is ignored -- so
+# the instance reads an HTTPS request as plain HTTP and, under the default cookie setting, sends
+# the session cookie unmarked. uvicorn only trusts those headers from 127.0.0.1 by default; a
+# proxy on another host needs `--forwarded-allow-ips` set to its address, and deliberately not
+# to `*`.
 CMD ["uvicorn", "sonarium.api.app:create_app", "--factory", \
      "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

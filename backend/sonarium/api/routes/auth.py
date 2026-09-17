@@ -28,6 +28,7 @@ from sonarium.api.schemas import (
     UpdateMe,
 )
 from sonarium.api.security import hash_password, needs_rehash, verify_password
+from sonarium.api.transport import scheme_of
 from sonarium.core import formats
 from sonarium.core.config import Settings
 from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
@@ -63,16 +64,43 @@ def _client_limiter(request: Request, settings: Settings) -> AttemptLimiter:
     return made
 
 
-def _set_cookie(response: Response, token: str, settings: Settings) -> None:
+def _cookie_path(settings: Settings) -> str:
+    """Where the cookie is scoped, which is what the browser asked for rather than what we got."""
+    return f"{settings.base_path}/" if settings.base_path else "/"
+
+
+def _set_cookie(response: Response, token: str, settings: Settings, request: Request) -> None:
+    """Put the session on the response, marked for the connection it is crossing.
+
+    ``Secure`` is the one attribute that describes the browser's channel rather than the instance,
+    and a browser discards a ``Secure`` cookie that arrived over plain HTTP without saying so. Read
+    per request for the same reason the path is read per deployment: both are facts about what the
+    browser did, and an instance reachable two ways has two answers.
+    """
     response.set_cookie(
         settings.session_cookie_name,
         token,
         httponly=True,
         samesite="lax",
-        secure=settings.session_cookie_secure,
+        secure=settings.cookie_secure_for(scheme_of(request)),
         max_age=settings.session_ttl_days * 24 * 3600,
-        path=f"{settings.base_path}/" if settings.base_path else "/",
+        path=_cookie_path(settings),
     )
+
+
+def _require_secure_transport(request: Request, settings: Settings) -> None:
+    """Refuse to take a password over a channel the instance has said it does not use.
+
+    Raised before the password is read rather than after, because the alternative is checking a
+    credential that has already crossed in clear and then answering with a cookie the browser is
+    about to throw away -- which reads, from the sign-in form, as a wrong password.
+    """
+    if settings.refuses_plain_http() and scheme_of(request) != "https":
+        raise InvalidRequestError(
+            "This instance is reached over HTTPS. This connection is not, so a session opened "
+            "here would not be kept. Use the HTTPS address.",
+            code="insecure_transport",
+        )
 
 
 @router.get("/instance", response_model=InstanceState, summary="What this instance is")
@@ -106,6 +134,7 @@ def bootstrap(
     Refused the moment any account exists, so this is not a way in later. The first run is the
     only moment an instance has nobody to authorise the request.
     """
+    _require_secure_transport(request, settings)
     if users.count_users(session) > 0:
         raise ConflictError("This instance already has an account. Sign in instead.")
     if len(body.password) < MINIMUM_PASSWORD_LENGTH:
@@ -126,7 +155,7 @@ def bootstrap(
         user_agent=request.headers.get("user-agent"),
         ip=request.client.host if request.client else None,
     )
-    _set_cookie(response, token, settings)
+    _set_cookie(response, token, settings, request)
     return Me.model_validate(user)
 
 
@@ -139,6 +168,7 @@ def sign_in(
     request: Request,
 ) -> Me:
     """Exchange an email and a password for a session cookie."""
+    _require_secure_transport(request, settings)
     client = request.client.host if request.client else None
     key = address_key(normalise_email(str(body.email)), client)
     limiter = _limiter(request, settings)
@@ -169,7 +199,7 @@ def sign_in(
         user_agent=request.headers.get("user-agent"),
         ip=request.client.host if request.client else None,
     )
-    _set_cookie(response, token, settings)
+    _set_cookie(response, token, settings, request)
     return Me.model_validate(user)
 
 
@@ -179,11 +209,17 @@ def sign_out(
     session: WriteSession,
     settings: InstanceSettings,
     response: Response,
+    request: Request,
 ) -> None:
     sessions.revoke(session, caller.id, caller.session.id)
+    # The same attributes it was set with: a browser matches a deletion on name, domain and path,
+    # and will not let a plain-HTTP response clear a cookie marked `Secure`.
     response.delete_cookie(
         settings.session_cookie_name,
-        path=f"{settings.base_path}/" if settings.base_path else "/",
+        path=_cookie_path(settings),
+        httponly=True,
+        samesite="lax",
+        secure=settings.cookie_secure_for(scheme_of(request)),
     )
 
 
