@@ -12,6 +12,11 @@
 # arrive as one pull request per ecosystem; a **major is deliberately left on its own**, because a
 # major is a change to read rather than one to merge with the others.
 #
+# **An update this repository cannot take is ignored here rather than closed weekly.** Two kinds
+# qualify: one held back by something outside this repository, and one that is a decision to make
+# rather than a bump to receive. Every ignore below names the condition that ends it, because an
+# ignore nobody can tell is stale outlives its reason.
+#
 # `commit-message.prefix` matches the repository's Conventional Commits: `ci` for the things that
 # run the build, `build` for the things it builds against.
 
@@ -34,8 +39,21 @@ updates:
         update-types: ["minor", "patch"]
 
   - package-ecosystem: "docker"
-    # `python:3.12-slim-bookworm` and `node:22-bookworm-slim` carry an operating system, and most
-    # of what a scanner reports about a container is in there rather than in the application.
+    # What this entry watches is `ghcr.io/astral-sh/uv`, which is pinned to one exact version and
+    # so goes stale on its own. The language images do not: `python:3.12-slim-bookworm` and
+    # `node:22-bookworm-slim` are floating tags that upstream rebuilds with the operating system
+    # fixes already in them, so those arrive when the image is built rather than when a tag is
+    # edited here.
+    #
+    # Which is why both are ignored below the patch level. On a language tag the minor segment is
+    # the language version, so `update-types: ["minor", "patch"]` reads `python:3.12 -> 3.14` as
+    # routine and proposes it inside the group, where it is merged with something else. It is not
+    # routine and it is not one line: the interpreter is named in `.python-version`,
+    # `requires-python`, ruff's `target-version`, mypy's `python_version` and two Dockerfile
+    # stages, and moving one of the six moves nothing. Node is the same shape across the
+    # Dockerfile, `engines`, `@types/node` and the version CI installs. Both are upgraded as a
+    # task that changes every place at once, and neither has a patch segment in its tag for this
+    # entry to bump.
     directory: "/"
     schedule:
       interval: "weekly"
@@ -46,6 +64,11 @@ updates:
       base-images:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
   - package-ecosystem: "uv"
     directory: "/backend"
@@ -70,3 +93,21 @@ updates:
       frontend:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    ignore:
+      # ESLint 10 is held back by `eslint-plugin-jsx-a11y`, which peers on 9 and has no 10 yet --
+      # the constraint AGENTS.md already states for anyone about to "fix" the 9 in `package.json`.
+      # `@eslint/js` is the same release train and moves with it or not at all. Both ignores end
+      # when that plugin ships a 10.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+      # TypeScript 7 is held back by `typescript-eslint`, whose peer range stops below it. Ends
+      # when that range opens.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # These describe the Node the build runs on, so they follow the floor in `engines` rather
+      # than lead it -- typing against APIs the runtime does not have is a compile that passes and
+      # a container that does not. Ends with the Node upgrade.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
