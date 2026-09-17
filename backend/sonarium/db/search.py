@@ -5,9 +5,25 @@ The product's flagship feature and the sentence the whole project rests on: *you
 
 **One ranked list over both indexes.** Transcripts and metadata -- titles, notes, tag names --
 are separate FTS5 tables for good reasons (one is external content over ``segment``, the other is
-a projection across three tables), and the interface must not care. They are ranked together with
-the same function, so a recording whose title is *The factory* and one that says "factory" in the
-middle can be compared.
+a projection across three tables), and the interface must not care.
+
+**What makes the two scores comparable is not that both are ``bm25``** (``REV-4a``). Two corpora
+scored with one function are still two corpora. What makes them comparable is that ``bm25`` is
+bounded by the term's inverse document frequency *in the corpus it was computed against*, so each
+side answers the same question -- how unusual is this word here -- and interleaving them puts
+whichever side the word is distinctive on first. A word that is in every title says nothing about
+which recording was meant and scores near zero; so does a word said in three quarters of every
+transcript. A fixed multiplier between the two sides was considered and rejected for that reason:
+it would go on promoting titles in an archive where every recording is called *factory*, which is
+the one case where the title is worthless.
+
+**The three metadata columns are not equal**, because the evidence they carry is not: a word that
+is the recording's name is what somebody meant, and the same word inside a paragraph of notes
+usually is not. Hence ``_METADATA_COLUMN_WEIGHTS``. They are weights and not tiers, and ``bm25``
+saturates, so a weight pushes a column towards the ceiling its IDF sets and cannot push it past --
+ten is most of the way there, a hundred buys another seven per cent and ten thousand another one.
+That is what leaves room for a recording that says a word throughout to still outrank one that
+merely has it in its notes.
 
 **The ACL is inside the query.** Not applied afterwards to a list of results, which would either
 leak the existence of matches through the result count or require fetching everything to filter
@@ -47,6 +63,9 @@ MATCH_METADATA = "metadata"
 
 SHOWN_PER_RECORDING = 3
 """``DEC-4``: three matches visible, the rest behind "+N more"."""
+
+_METADATA_COLUMN_WEIGHTS = (10.0, 1.0, 4.0)
+"""``bm25`` weights for ``audio_fts``, in that table's own column order: title, notes, tags."""
 
 _segment_fts = table("segment_fts", column("rowid"), column("text"))
 _audio_fts = table("audio_fts", column("rowid"), column("title"), column("notes"), column("tags"))
@@ -237,7 +256,7 @@ def _metadata_matches(match: str, readable: Any) -> Any:
             literal(MATCH_METADATA).label("kind"),
             func.snippet(text("audio_fts"), -1, "<mark>", "</mark>", "...", 24).label("fragment"),
             literal(None).label("start_ms"),
-            func.bm25(text("audio_fts")).label("rank"),
+            func.bm25(text("audio_fts"), *_METADATA_COLUMN_WEIGHTS).label("rank"),
         )
         .select_from(_audio_fts)
         .where(text("audio_fts MATCH :match").bindparams(match=match))
