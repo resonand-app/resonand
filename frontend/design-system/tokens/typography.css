@@ -15,9 +15,10 @@
   --type-page-title-tracking: -0.02em;
   --type-page-title-leading: 1.1;
 
-  /* Wordmark — Chillax, and only the wordmark. */
-  --type-wordmark-size: 19px;
-  --type-wordmark-tracking: -0.015em;
+  /* Wordmark — Chillax, and only the wordmark. The mark is the S, so the artwork fixes both of
+     these against the mark's height: the lockup has one set of proportions, not one per site. */
+  --type-wordmark-scale: 0.9615;
+  --type-wordmark-lead: 0.101em;
 
   /* Section and card titles — Geist, not Chillax. */
   --type-title-size: 17px;

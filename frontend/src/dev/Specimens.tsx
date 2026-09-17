@@ -335,10 +335,10 @@ export default function Specimens() {
 
       <Section title="Foundation">
         <Panel label="Logo">
-          <Logo size={26} />
+          <Logo size={22} />
         </Panel>
         <Panel label="Logo, mark only">
-          <Logo size={26} showWordmark={false} />
+          <Logo size={22} showWordmark={false} />
         </Panel>
         <Panel label={`Icon · ${String(GLYPHS.length)} registered glyphs`}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, maxWidth: 560 }}>
