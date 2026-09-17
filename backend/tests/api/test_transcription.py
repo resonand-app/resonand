@@ -78,7 +78,6 @@ def test_the_credential_is_never_reported_in_any_form(
         secret_key=SecretStr("0" * 64),
         transcription_base_url=f"https://someone:{secret}@whisper.example.com/v1",
         transcription_api_key=SecretStr(secret),
-        session_cookie_secure=False,
     )
     app = create_app(settings)
     app.state.database = database
@@ -96,7 +95,6 @@ def test_no_provider_configured_is_a_state_and_not_an_error(
     settings = Settings(
         data_dir=tmp_path_factory.mktemp("bare"),
         secret_key=SecretStr("0" * 64),
-        session_cookie_secure=False,
     )
     app = create_app(settings)
     app.state.database = database

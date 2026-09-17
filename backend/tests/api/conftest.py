@@ -61,7 +61,6 @@ def settings(tmp_path: Path) -> Settings:
         secret_key=SecretStr("0" * 64),
         transcription_base_url="http://whisper:8000/v1",
         log_format="console",
-        session_cookie_secure=False,
     )
 
 

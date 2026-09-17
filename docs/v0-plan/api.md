@@ -205,6 +205,22 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *Found while building `UI-15`: the running card is where somebody sits for minutes, and it
       was the one state in it with nothing to press.*
 
+- [x] **API-24** · 🔒 🧪 **The connection decides whether the session survives it.**
+      `SONARIUM_SESSION_COOKIE_SECURE` was a static `true`, so every cookie was marked `Secure`
+      and a browser on plain HTTP discarded it without a word — the instance logged a successful
+      sign-in, the next request was answered `401`, and `UI-4a`'s guard returned somebody to the
+      sign-in screen as though their password were wrong. `Secure` describes the connection and
+      not the instance, and one instance is legitimately reached both ways, so it is read per
+      request from the scheme a trusted proxy resolved. Three values: `auto` reads the connection,
+      `true` pins it *and* refuses a plain-HTTP sign-in before the password is read, `false` pins
+      it off. The scheme is read from `X-Forwarded-Proto` for any proxy on a local address, which
+      `--forwarded-allow-ips` does not cover by default and a homelab's container-network proxy
+      always needs; the address that flag governs stays narrow, because `SEC-3`'s counters are
+      keyed on it. **Done when** a session opened over plain HTTP is still there on the next
+      request, when a proxy uvicorn did not trust still yields a marked cookie, and when the suite
+      no longer sets the flag to make itself work — nine fixtures did, which is why nothing caught
+      this.
+
 - [x] **API-22** · **Grants on one recording, not on the library around it.** `GET`, `PUT` and
       `DELETE /api/audio/{uuid}/shares`, and `source` on `ShareSummary` so a row says which of the
       two it came from. The storage needed nothing: `share.audio_id`, its `CHECK` and the partial

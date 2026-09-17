@@ -46,7 +46,6 @@ def bundled(tmp_path: Path, database: Database) -> Iterator[TestClient]:
         secret_key=SecretStr("0" * 64),
         transcription_base_url="http://whisper:8000/v1",
         log_format="console",
-        session_cookie_secure=False,
     )
     app: FastAPI = create_app(settings)
     app.state.database = database

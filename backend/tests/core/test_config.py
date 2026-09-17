@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 from sonarium.core.config import Settings
 from sonarium.core.errors import ConfigurationError
 
@@ -76,3 +77,55 @@ def test_settings_are_read_from_the_environment(
     settings = Settings()
     assert settings.data_dir == tmp_path
     assert settings.trash_retention_days == 7
+
+
+@pytest.mark.parametrize(
+    ("given", "expected"),
+    [
+        (True, "true"),
+        (False, "false"),
+        ("true", "true"),
+        ("TRUE", "true"),
+        ("1", "true"),
+        ("yes", "true"),
+        ("on", "true"),
+        ("false", "false"),
+        ("0", "false"),
+        ("off", "false"),
+        ("auto", "auto"),
+    ],
+)
+def test_the_cookie_setting_keeps_every_spelling_it_ever_took(
+    tmp_path: Path, given: object, expected: str
+) -> None:
+    """It was a boolean, and an existing compose file must not stop the instance booting."""
+    assert _runnable(tmp_path, session_cookie_secure=given).session_cookie_secure == expected
+
+
+def test_the_cookie_setting_refuses_a_spelling_it_cannot_read(tmp_path: Path) -> None:
+    """Silently reading an unknown word as `false` would turn a typo into an unmarked cookie."""
+    with pytest.raises(ValidationError):
+        _runnable(tmp_path, session_cookie_secure="maybe")
+
+
+@pytest.mark.parametrize(
+    ("setting", "scheme", "marked"),
+    [
+        ("auto", "https", True),
+        ("auto", "http", False),
+        ("true", "http", True),
+        ("true", "https", True),
+        ("false", "https", False),
+    ],
+)
+def test_who_decides_whether_the_cookie_is_marked(
+    tmp_path: Path, setting: str, scheme: str, marked: bool
+) -> None:
+    settings = _runnable(tmp_path, session_cookie_secure=setting)
+    assert settings.cookie_secure_for(scheme) is marked
+
+
+def test_only_an_instance_that_says_it_is_https_refuses_plain_http(tmp_path: Path) -> None:
+    assert _runnable(tmp_path, session_cookie_secure="true").refuses_plain_http()
+    assert not _runnable(tmp_path, session_cookie_secure="auto").refuses_plain_http()
+    assert not _runnable(tmp_path, session_cookie_secure="false").refuses_plain_http()
