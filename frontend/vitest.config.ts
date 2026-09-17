@@ -22,6 +22,18 @@ export default mergeConfig(
       // anchored overlays are all measured behaviour, and the more faithful DOM is worth the
       // slower start.
       environment: 'jsdom',
+      // Five seconds is vitest's default and it is not enough here, because this machine runs
+      // several agents at once: each has its own worktree and its own copy of this suite, and a
+      // second one testing turns a one-second test into a six-second one. The failures that
+      // caused were scattered, different every run, and never in the code being committed --
+      // which is the worst kind, because the honest reading of a red gate is that you broke
+      // something. Capping workers was measured and is the wrong lever: it fixes contention a
+      // run inflicts on itself, and the contention here comes from the other worktrees, so all
+      // it does is stretch the run and widen the window it is exposed for -- three times slower
+      // and still red. Twenty seconds costs nothing on a quiet machine and only delays the
+      // report of a test that really has hung.
+      testTimeout: 20_000,
+      hookTimeout: 30_000,
       // `describe`, `it` and `expect` are imported, not ambient. A test file that says where
       // its own vocabulary comes from is one the type checker and ESLint can both read without
       // a second global namespace to be told about.

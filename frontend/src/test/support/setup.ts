@@ -8,7 +8,7 @@
 
 import '@testing-library/jest-dom/vitest';
 
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
 import { createI18n } from '@/i18n';
@@ -18,6 +18,17 @@ import { createI18n } from '@/i18n';
 // is only possible because the base language is the one the strings are written in. A test that
 // needs another language switches this instance; nothing needs a provider.
 createI18n('en');
+
+/**
+ * How long `findBy` waits, which is a second by default and is a different clock from vitest's.
+ *
+ * The two are easy to confuse and both had to move: a starved test fails as `Test timed out in
+ * 5000ms` on vitest's clock, or as `Unable to find role=...` on this one, and raising only the
+ * first leaves half the flakes in place. A second is a long time for an element to appear and
+ * no time at all for one that is behind a mock request and a `user-event` gesture on a machine
+ * with several agents testing at once.
+ */
+configure({ asyncUtilTimeout: 5_000 });
 
 /**
  * Pointer capture, which jsdom does not implement.
