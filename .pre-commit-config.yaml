@@ -1,8 +1,18 @@
-# Pre-commit runs the same checks as CI, so a commit that passes here passes there (INF-4).
+# The same checks as CI, so what passes here passes there (INF-4) -- split across two moments
+# rather than run at one. Everything that reads the code runs on commit; the two suites that run
+# it run on push.
+#
+# The split is about the amend, not about the clock. A correction to an open pull request amends
+# its one commit, and with the suites on commit every amend paid for them again -- 52s of vitest
+# or 92s of pytest to reword a sentence in a body. Nothing is skipped: a push is still gated, and
+# it is still gated before anything reaches a branch anybody else can see.
 #
 # Install once per clone:
 #
 #     uvx pre-commit install
+#
+# That installs all three hook types named below. A clone that installed only pre-commit before
+# this change must run it again, or the suites run nowhere locally.
 #
 # The Python hooks are `local` and `system` rather than the usual mirror repositories. That is
 # deliberate: mypy needs this project's own environment to resolve fastapi, sqlalchemy and
@@ -11,7 +21,11 @@
 # them through `uv run` means there is exactly one description of the toolchain -- backend/
 # pyproject.toml -- and pre-commit, CI and a developer's terminal all use it.
 
-default_install_hook_types: [pre-commit, commit-msg]
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+# Every hook is a commit hook unless it says otherwise, and the two that say otherwise say
+# `pre-push`. Without this a hook with no stage runs at both, so a push would re-run the six
+# checks the commit just passed over the same tree -- 34s to re-read code nothing has touched.
+default_stages: [pre-commit]
 fail_fast: false
 
 repos:
@@ -73,11 +87,13 @@ repos:
         name: pytest
         # The fast subset. The ffmpeg-backed tests run in CI, where ffmpeg is installed as part
         # of the job rather than as part of somebody's laptop.
+        # On push rather than on commit: 92s, which is 91% of everything a backend commit pays.
         entry: bash -c 'cd backend && uv run pytest -q -m "not slow"'
         language: system
         types: [python]
         pass_filenames: false
         require_serial: true
+        stages: [pre-push]
 
   # --- The frontend --------------------------------------------------------
   #
@@ -126,9 +142,12 @@ repos:
         # No coverage here, and coverage in CI. The threshold is a property of the whole suite
         # and the fast loop is a property of the commit -- the same split as the backend's
         # `-m "not slow"` above.
+        #
+        # On push rather than on commit: 52s, which is 60% of everything a frontend commit pays.
         entry: bash -c 'cd frontend && { [ -d node_modules ] || npm ci --silent; } && npm run --silent test:unit'
         language: system
         files: '^frontend/'
         exclude: '^frontend/(dist|coverage|node_modules)/'
         pass_filenames: false
         require_serial: true
+        stages: [pre-push]
