@@ -106,6 +106,39 @@ describe('one state, two presentations', () => {
   });
 });
 
+describe('what is playing, when it changes underneath', () => {
+  it('takes a new title for the recording that is playing', () => {
+    usePlayback.getState().play(FIELD_TAKE);
+    usePlayback.getState().retitle(FIELD_TAKE.uuid, 'Long take, second pass');
+    expect(usePlayback.getState().recording?.title).toBe('Long take, second pass');
+  });
+
+  it('keeps everything else about it, including where it had got to', () => {
+    usePlayback.getState().play(FIELD_TAKE);
+    usePlayback
+      .getState()
+      .report({ status: 'playing', durationMs: 2_892_000, positionMs: 600_000 });
+    usePlayback.getState().retitle(FIELD_TAKE.uuid, 'Long take, second pass');
+    const { recording, status, positionMs } = usePlayback.getState();
+    // A rename is not a reload: the sound does not restart and the transport does not blink.
+    expect(status).toBe('playing');
+    expect(positionMs).toBe(600_000);
+    expect(recording?.library).toBe('Field recordings');
+    expect(recording?.durationMs).toBe(2_892_000);
+  });
+
+  it('ignores a rename of anything that is not playing', () => {
+    usePlayback.getState().play(FIELD_TAKE);
+    usePlayback.getState().retitle('some-other-recording', 'Not this one');
+    expect(usePlayback.getState().recording?.title).toBe('Field recording, long take');
+  });
+
+  it('does nothing at all when nothing is playing', () => {
+    usePlayback.getState().retitle(FIELD_TAKE.uuid, 'Long take, second pass');
+    expect(usePlayback.getState().recording).toBeNull();
+  });
+});
+
 describe('moving through a recording', () => {
   it('seeks into the last minute of a three-hour file', () => {
     // The case Range exists for: the browser fetches that minute, not the three hours before it.
