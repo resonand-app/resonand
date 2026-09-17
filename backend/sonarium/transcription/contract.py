@@ -40,6 +40,8 @@ from typing import Final, Protocol
 
 from pydantic import SecretStr
 
+from sonarium.transcription.capabilities import Capabilities
+
 AUTO_DETECT: Final = "auto"
 """Asks for detection explicitly, which the instance default may not override."""
 
@@ -184,6 +186,16 @@ class TranscriptionProvider(Protocol):
     @property
     def model(self) -> str:
         """The model an engine will use, recorded so a re-transcription can be compared to it."""
+        ...
+
+    @property
+    def capabilities(self) -> Capabilities:
+        """What this engine can do, so that no caller has to assume it (``TRX-3``).
+
+        Read per submission rather than cached by the worker: an engine's account of itself is
+        allowed to improve once something has probed it, and a worker holding a copy from process
+        start would go on chunking against an answer that has since been replaced.
+        """
         ...
 
     def submit(self, request: TranscriptionRequest) -> TranscriptionHandle:

@@ -25,6 +25,7 @@ from pydantic import SecretStr
 
 from sonarium.core.errors import ProviderError
 from sonarium.core.ids import new_uuid
+from sonarium.transcription.capabilities import Capabilities, Support, TimeUnit
 from sonarium.transcription.contract import (
     TranscriptionHandle,
     TranscriptionRequest,
@@ -37,6 +38,19 @@ from sonarium.transcription.metering import UsageRecord, UsageSink, record
 
 PROVIDER_NAME = "openai-compatible"
 DEFAULT_MODEL = "whisper-1"
+
+UNPROBED = Capabilities(
+    time_unit=TimeUnit.UNKNOWN,
+    diarisation=Support.UNKNOWN,
+)
+"""What this family declares about itself before anything has asked it, which is nothing.
+
+The protocol fixes only that the audio is uploaded rather than fetched. Everything else varies
+between servers that all answer the same URL -- whether the model returns segments at all, in what
+unit, how coarse, and whether it names speakers -- so the honest declaration is that none of it is
+known and ``TRX-1``'s probe is what replaces it. The limits stay ``None`` so the caller falls back
+to what the instance was configured with rather than to a number invented here.
+"""
 
 _SECONDS_TO_MS = 1000
 _PLAUSIBLE_MS_FACTOR = 10.0
@@ -63,6 +77,7 @@ class OpenAiCompatibleProvider:
         timeout: float = 900.0,
         usage: UsageSink | None = None,
         client: httpx.Client | None = None,
+        capabilities: Capabilities | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._api_key = api_key
@@ -71,6 +86,7 @@ class OpenAiCompatibleProvider:
         self._timeout = timeout
         self._usage = usage
         self._client = client or httpx.Client(timeout=timeout)
+        self._capabilities = capabilities or UNPROBED
 
     @property
     def name(self) -> str:
@@ -79,6 +95,10 @@ class OpenAiCompatibleProvider:
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def capabilities(self) -> Capabilities:
+        return self._capabilities
 
     def submit(self, request: TranscriptionRequest) -> TranscriptionHandle:
         """Send one part and keep the answer on the handle."""

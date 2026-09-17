@@ -29,6 +29,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from sonarium.core.processes import run_tool
+from sonarium.transcription.capabilities import Capabilities
 from sonarium.transcription.contract import TranscriptSegment
 
 SILENCE_NOISE_DB = -30.0
@@ -93,6 +94,26 @@ def max_part_ms_for(max_bytes: int, *, bitrate_bps: int = 48_000) -> int:
     """
     seconds = (max_bytes * 8) / bitrate_bps
     return max(MIN_PART_MS, int(seconds * 900))
+
+
+def submission_ceiling(
+    capabilities: Capabilities, *, configured_max_bytes: int, configured_max_part_ms: int
+) -> int:
+    """The longest part the configured engine will accept (``TRX-3``).
+
+    **Each configured value is a fallback for the declaration it stands in for**, and is replaced
+    rather than combined with it. Both settings describe the engine rather than a preference --
+    ``transcription_request_max_bytes`` is there because "the hosted path caps a request here" and
+    ``transcription_max_part_seconds`` because ten minutes "keeps a local server inside its memory
+    and timeout ceilings" -- so an engine that states its own limits has answered the question they
+    were guessing at, and keeping the guess as a second ceiling would mean a five-gigabyte engine
+    still cut a forty-minute interview into four parts for nothing.
+
+    Where an engine declares neither, both configured values apply exactly as they did before.
+    """
+    from_bytes = max_part_ms_for(capabilities.max_request_bytes or configured_max_bytes)
+    from_duration = capabilities.max_duration_ms or configured_max_part_ms
+    return min(from_bytes, from_duration)
 
 
 def plan_parts(
