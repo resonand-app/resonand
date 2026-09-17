@@ -106,6 +106,7 @@ export function MoveDialog({ recordings, categoryName, onClose, onConfirm }: Mov
             <Select
               label={t('destination')}
               value={destination}
+              initialFocus
               placeholder={t('choose')}
               options={available.map((one) => ({ value: one.uuid, label: one.name }))}
               onChange={setDestination}

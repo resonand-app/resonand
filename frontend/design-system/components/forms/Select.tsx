@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 
 import { Icon } from '../foundation/Icon';
@@ -29,6 +29,18 @@ export interface SelectProps<Value extends string = string> {
   onOpenChange?: (open: boolean) => void;
   /** Names the control for a screen reader when there is no visible `label`. */
   ariaLabel?: string;
+  /**
+   * Whether an overlay containing this should open with focus on it.
+   *
+   * For the dialog whose whole point is the choice -- `MoveDialog` picks a destination and shows
+   * the consequences of picking it. A dialog otherwise opens on its close control, which is the
+   * first focusable thing a `Dialog` draws, and so on the one control that throws it away.
+   *
+   * A prop rather than a `data-initial-focus` passed through, because this component takes named
+   * props and spreads nothing: the attribute is the design system's own, and a caller should not
+   * have to know its spelling to ask for the behaviour.
+   */
+  initialFocus?: boolean;
 }
 
 /**
@@ -60,6 +72,7 @@ export function Select<Value extends string = string>({
   open: openProp,
   onOpenChange,
   ariaLabel,
+  initialFocus = false,
 }: SelectProps<Value>) {
   const [openState, setOpenState] = useState(false);
   const open = openProp ?? openState;
@@ -81,6 +94,20 @@ export function Select<Value extends string = string>({
     placement: 'bottom',
     align: 'start',
   });
+
+  /* An overlay places focus once, as it opens, and must not keep taking it afterwards. So a
+     control that arrives later -- this one, whose options are a query that had not answered when
+     the dialog appeared -- cannot be focused by that pass and has to claim it. Only from where
+     the dialog parked it provisionally: once a pointer or a Tab has moved focus somewhere
+     deliberate, the list loading is not a reason to move it back. */
+  const claimed = useRef(false);
+  useEffect(() => {
+    if (!initialFocus || claimed.current) return;
+    claimed.current = true;
+    const active = document.activeElement as HTMLElement | null;
+    const parked = active === null || active === document.body || active.dataset.ds === 'dialog-close';
+    if (parked) anchorRef.current?.focus();
+  }, [anchorRef, initialFocus]);
 
   const selectedIndex = options.findIndex((option) => option.value === value);
   const [active, setActive] = useState(Math.max(0, selectedIndex));
@@ -168,6 +195,7 @@ export function Select<Value extends string = string>({
         disabled={disabled}
         data-ds="select-trigger"
         data-hit-target=""
+        {...(initialFocus ? { 'data-initial-focus': '' } : {})}
         // A button that opens a list of values is a combobox, and saying so is what makes a
         // screen reader announce the current value and the expanded state rather than "button".
         role="combobox"
