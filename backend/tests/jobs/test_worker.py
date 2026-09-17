@@ -113,7 +113,9 @@ def stored(database: Database, db_settings: Settings) -> tuple[str, int]:
     """A recording on disk whose bytes are not audio.
 
     A recording short enough to go to the provider in one part is never decoded on the way, so a
-    test about what the provider answers does not need ffmpeg to have made the file.
+    test about what the provider answers does not need ffmpeg to have made the file. It carries a
+    duration, as every probed recording does: being short is what keeps it in one part, and not
+    knowing its length is a different state with its own test.
     """
     root = db_settings.resolved_storage_dir
     with database.write_session() as session:
@@ -132,6 +134,7 @@ def stored(database: Database, db_settings: Settings) -> tuple[str, int]:
         audio.storage_path = storage.relative(root, path)
         audio.sha256 = digest.sha256
         audio.size_bytes = digest.size_bytes
+        audio.duration_ms = 2_000
         session.flush()
         return audio.uuid, audio.id
 
@@ -502,6 +505,57 @@ def test_an_engine_that_takes_the_whole_recording_is_sent_it_whole(
         queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
     assert Worker(context_for(database, settings, generous)).run_once() is True
     assert len(generous.submitted) == 1
+
+
+@needs_ffmpeg
+@pytest.mark.ffmpeg
+def test_a_recording_whose_probe_never_ran_is_measured_rather_than_sent_whole(
+    database: Database, tmp_path: Path
+) -> None:
+    """``TRX-8``: not knowing how long a recording is meant assuming it was short.
+
+    Everything about a submission is decided from the duration, and with none the plan collapsed
+    to a single part and the file went up entire -- so a three-hour original was uploaded in full
+    to an endpoint that refuses it at 25 MB, after the upload.
+    """
+    settings = Settings(
+        data_dir=tmp_path / "instance",
+        database_path=tmp_path / "instance" / "sonarium.db",
+        transcription_max_part_seconds=5,
+    )
+    root = settings.resolved_storage_dir
+    with database.write_session() as session:
+        owner = users.create_user(session, email="u@x.test", display_name="U")
+        library = libraries.create_library(session, owner.id, name="L")
+        audio = create_audio(
+            session,
+            library_id=library.id,
+            uploaded_by=owner.id,
+            storage_path="placeholder",
+            original_filename="unprobed.wav",
+        )
+        source = make_audio(tmp_path / "unprobed.wav", seconds=30.0)
+        path, digest = storage.store_original(
+            root, audio.uuid, [source.read_bytes()], filename="unprobed.wav"
+        )
+        audio.storage_path = storage.relative(root, path)
+        audio.sha256 = digest.sha256
+        audio.size_bytes = digest.size_bytes
+        # The probe failed, or never ran. This is the state the fallback was reading.
+        audio.duration_ms = None
+        session.flush()
+        audio_id = audio.id
+
+    provider = FakeProvider()
+    with database.write_session() as session:
+        queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
+    assert Worker(context_for(database, settings, provider)).run_once() is True
+
+    assert len(provider.submitted) > 1, "thirty seconds at five-second parts is not one request"
+    # Five-second parts, plus the three seconds of run-up each one after the first carries.
+    assert all(request.duration_ms <= 8_000 for request in provider.submitted)
+    with database.read_session() as session:
+        assert transcripts.active_transcript(session, audio_id) is not None
 
 
 @needs_ffmpeg

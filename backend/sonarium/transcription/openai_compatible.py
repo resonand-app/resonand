@@ -53,9 +53,13 @@ to what the instance was configured with rather than to a number invented here.
 """
 
 _SECONDS_TO_MS = 1000
-_PLAUSIBLE_MS_FACTOR = 10.0
-"""How far past the submitted duration a value has to be before it is obviously milliseconds
-already rather than seconds. Ten times is not a close call."""
+
+_LATEST_PLAUSIBLE = 1.5
+"""How far past its part a server may legitimately time its last segment.
+
+Servers do round the final end past the audio they were handed, so the bound cannot be the part's
+own length exactly. Half as long again absorbs that and nothing like a factor of a thousand, which
+is what both readings below are guarding against."""
 
 
 class OpenAiCompatibleProvider:
@@ -212,6 +216,7 @@ class OpenAiCompatibleProvider:
         segments = tuple(self._segment(entry, scale) for entry in raw if isinstance(entry, dict))
         if not segments and raw:
             raise ProviderError("The transcription service returned segments it could not read.")
+        self._refuse_impossible_timings(segments, request.duration_ms)
         language = payload.get("language")
         return TranscriptionResult(
             provider=self.name,
@@ -223,10 +228,27 @@ class OpenAiCompatibleProvider:
     def _time_scale(self, raw: list[Any], duration_ms: int) -> float:
         """Whether this server speaks seconds or milliseconds.
 
-        The submitted duration is the only trustworthy anchor. Servers in this family disagree,
-        and getting it wrong is invisible on the page and wrong by a factor of a thousand in the
-        player -- so the question is answered rather than assumed.
+        **A declared unit is used and not second-guessed**; the inference below is for an engine
+        nothing has asked, which is every engine in this family until one is probed.
+
+        The submitted duration is the only trustworthy anchor, and it bounds one reading and not
+        the other: a value counted in seconds cannot meaningfully exceed its part's own length in
+        seconds, so anything past that is milliseconds whatever else it resembles. The reverse
+        does not hold -- a millisecond value below that bound is indistinguishable from a seconds
+        one -- so the test is written to catch the mistake that costs the most. Reading
+        milliseconds as seconds multiplies by a thousand and puts the last line of a recording
+        hours past its end; reading seconds as milliseconds divides by a thousand and puts
+        everything in the first second, which is visible immediately.
+
+        What survives is a part carrying under a second of speech, where both readings are
+        plausible and the wrong one is chosen silently. :meth:`_refuse_impossible_timings` is the
+        backstop for it, and a declared unit removes the question.
         """
+        declared = self._capabilities.time_unit
+        if declared is TimeUnit.SECONDS:
+            return _SECONDS_TO_MS
+        if declared is TimeUnit.MILLISECONDS:
+            return 1.0
         ends = [
             float(entry["end"])
             for entry in raw
@@ -234,10 +256,28 @@ class OpenAiCompatibleProvider:
         ]
         if not ends or duration_ms <= 0:
             return _SECONDS_TO_MS
-        furthest = max(ends)
-        if furthest > duration_ms / _PLAUSIBLE_MS_FACTOR:
-            return 1.0
-        return _SECONDS_TO_MS
+        plausible_seconds = (duration_ms / _SECONDS_TO_MS) * _LATEST_PLAUSIBLE
+        return 1.0 if max(ends) > plausible_seconds else _SECONDS_TO_MS
+
+    def _refuse_impossible_timings(
+        self, segments: tuple[TranscriptSegment, ...], duration_ms: int
+    ) -> None:
+        """Fail rather than store a transcript that seeks nowhere.
+
+        The scale is decided from one number, and where a part carries almost no speech there may
+        be nothing in the answer that distinguishes the two readings. This is the backstop for
+        that: a transcript reading perfectly while every click lands hours away is worse than a
+        job that failed, because only one of the two gets reported.
+        """
+        if duration_ms <= 0 or not segments:
+            return
+        furthest = max(segment.end_ms for segment in segments)
+        if furthest > duration_ms * _LATEST_PLAUSIBLE:
+            raise ProviderError(
+                f"The transcription service timed its last segment at {furthest}ms in audio "
+                f"{duration_ms}ms long, so its timestamps cannot be read with confidence. This "
+                "usually means it reports in a unit this client could not identify."
+            )
 
     def _segment(self, entry: dict[str, Any], scale: float) -> TranscriptSegment:
         start = float(entry.get("start") or 0) * scale
