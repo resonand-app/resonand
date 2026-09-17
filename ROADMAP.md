@@ -15,12 +15,12 @@ one-person project cannot keep, and breaking it costs more credibility than neve
 
 The first version has one job: to replace what I do today with my own audio, privately. This
 milestone has a different one: to go from *working* to *installable and maintainable by somebody
-who is not me*. It ends with the first public release, tagged `v0.1.0`, and with the repository
-made public.
+who is not me*. It ends with the first public release, tagged `v0.1.0`.
 
 Nothing here starts until the first version's exit criteria are met — my real archive is in it, a
 second real person uses it, the integrity check runs clean after an upgrade, the export
-round-trips, and several months have gone by with all of that true.
+round-trips, and several weeks have gone by with all of that true and nothing going wrong in
+them.
 
 ### The rest of the multi-user model
 
@@ -116,8 +116,10 @@ it only makes sense once the API is stable enough that tools built on it do not 
   schedule — a writable public demo is first-party hosting of other people's voice at small scale,
   which the project has deliberately declined. A good recording of the real thing is an acceptable
   substitute.
-- **REL-5** · Semantic versioning, `CHANGELOG.md`, the `v0.1.0` tag with the published image, and
-  making the repository public.
+- **REL-5** · Semantic versioning, `CHANGELOG.md`, and the `v0.1.0` tag with the published image.
+  *Making the repository public was part of this task and was done ahead of it — there is no
+  release to wait for in order to read the code, and the rule that governs the wait is in
+  [`docs/v0-plan/`](docs/v0-plan/).*
 
 ### Open decision for this milestone
 

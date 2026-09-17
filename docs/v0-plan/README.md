@@ -18,11 +18,19 @@ in the first version would mean competing on ground that is already lost.
 
 ### The rule that governs this milestone
 
-**Do not publish until it has run against the real archive for several months.** In this niche
-credibility comes exclusively from the author using the tool, and the fastest way to destroy it is
-to ship something that loses files. The repository stays private until the milestone in
-[`ROADMAP.md`](../../ROADMAP.md) is met; making it public is `REL-5`, at the end of that
-milestone.
+**Do not offer an installable release until it has run against the real archive without
+incident.** In this niche credibility comes exclusively from the author using the tool, and the
+fastest way to destroy it is to ship something that loses files. The bar is **several weeks of
+real personal use with nothing going wrong in them**, and with what went wrong before that fixed
+rather than noted — not a date, and not a checklist that can be ticked while the archive in it is
+a test fixture.
+
+**The repository being public is a separate thing, and it came first.** It was originally bundled
+with the release in `REL-5`, on the reasoning that there is nothing to show anybody yet. That
+reasoning stopped holding once there was: the code, the plan and the decisions behind them are
+worth reading before there is anything to install, and [`README.md`](../../README.md) is
+unambiguous that there is nothing to install. What stays gated is the release — the tag, the
+published image, and anything that invites somebody to trust an archive to this.
 
 ### What is cut, and what is not
 
@@ -164,6 +172,6 @@ Not when the checkboxes are ticked. When all of these hold:
    **`OPS-6`'s restore has been performed for real**, not just tested in CI.
 4. **`ING-11`'s export round-trips**: export the whole archive, import it into an empty instance,
    and get the same thing back.
-5. **Several months have passed** with all of the above true.
+5. **Several weeks have passed** with all of the above true and nothing going wrong in them.
 
 Only then does the milestone in [`ROADMAP.md`](../../ROADMAP.md) begin.
