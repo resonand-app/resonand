@@ -1,16 +1,23 @@
 """Usage metering (``JOB-2``).
 
-Audio-seconds submitted, per user, per provider, recorded from the first implementation. The plan
-is explicit that the provider interface is a future revenue surface rather than an architecture
-detail, and that a credit-based service without metering is a rewrite -- so this exists before
-anything charges for it.
+Audio-seconds submitted, per user, per provider. The plan is explicit that the provider interface
+is a future revenue surface rather than an architecture detail, and that a credit-based service
+without metering is a rewrite -- so the shape of it exists before anything charges for it.
+
+**Nothing stores any of this yet, and that is the decision rather than an omission** (``REV-5``).
+There is no ``usage`` table, and ``build_provider`` is called without a sink from both the API and
+the CLI, so the only implementation below is the in-memory one. A table now would buy three
+standing obligations -- ``export``, ``import`` and ``fsck`` each have to keep it honest, and their
+round trip is ``ING-11``'s exit criterion -- for a consumer that does not exist. ``DEC-10`` is a
+reason for the interface, which is here and costs nothing; it is not by itself a reason for the
+rows. The table lands with the first thing that reads it.
 
 **Metering records what was submitted, not what succeeded.** A paid endpoint bills for the audio
 it received whether or not it then failed, and a meter that only counted successes would drift
 away from the invoice in the direction that costs the operator money. A failed submission is
 recorded with its outcome, so the two questions -- what was sent, what worked -- stay separable.
 
-Nothing here touches the database. The worker owns the sink.
+Nothing here touches the database. The worker owns the sink, on the day there is one.
 """
 
 from __future__ import annotations
@@ -38,7 +45,7 @@ class UsageRecord:
 
 
 class UsageSink(Protocol):
-    """Wherever usage goes. The worker implements this against the database."""
+    """Wherever usage goes. The worker is where a database implementation would be wired in."""
 
     def record(self, usage: UsageRecord) -> None:
         """Store one record. Must not raise: a metering failure cannot lose a transcription."""
