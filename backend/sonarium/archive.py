@@ -83,6 +83,8 @@ def sidecar_for(session: Session, audio: Audio) -> dict[str, Any]:
                 "model": transcript.model,
                 "language": transcript.language,
                 "source": transcript.source,
+                "task": transcript.task,
+                "stitched_from": transcript.stitched_from,
                 "created_at": transcript.created_at,
                 "segments": [
                     {
@@ -188,6 +190,10 @@ def apply_sidecar(session: Session, audio: Audio, payload: dict[str, Any]) -> No
                 provider=transcript.get("provider"),
                 model=transcript.get("model"),
                 language=transcript.get("language"),
+                # A sidecar written before these existed carries neither, and the defaults are
+                # what such a transcript actually was: a transcription, of unrecorded shape.
+                task=str(transcript.get("task") or "transcribe"),
+                stitched_from=transcript.get("stitched_from"),
             ),
         )
     session.flush()

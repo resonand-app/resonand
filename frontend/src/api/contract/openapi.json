@@ -1656,6 +1656,9 @@
             "title": "Created At",
             "type": "string"
           },
+          "features": {
+            "$ref": "#/components/schemas/TranscriptFeatures"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -1722,9 +1725,64 @@
           "language",
           "created_at",
           "segment_count",
+          "features",
           "segments"
         ],
         "title": "TranscriptDetail",
+        "type": "object"
+      },
+      "TranscriptFeatures": {
+        "additionalProperties": false,
+        "description": "What a transcript is, as distinct from where it came from (``TRX-12``).\n\n``provider``, ``model`` and ``language`` on the summary say which engine was asked. These say\nwhat came back. They are read from the transcript rather than from the instance's current\nconfiguration on purpose: the configured engine changes while transcripts persist, and the\nselector shows the old and the new one side by side.",
+        "properties": {
+          "granularity_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granularity Ms"
+          },
+          "has_speakers": {
+            "title": "Has Speakers",
+            "type": "boolean"
+          },
+          "speaker_count": {
+            "title": "Speaker Count",
+            "type": "integer"
+          },
+          "speakers_are_comparable": {
+            "title": "Speakers Are Comparable",
+            "type": "boolean"
+          },
+          "stitched_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stitched From"
+          },
+          "task": {
+            "title": "Task",
+            "type": "string"
+          }
+        },
+        "required": [
+          "task",
+          "has_speakers",
+          "speaker_count",
+          "speakers_are_comparable",
+          "granularity_ms",
+          "stitched_from"
+        ],
+        "title": "TranscriptFeatures",
         "type": "object"
       },
       "TranscriptSummary": {
@@ -1733,6 +1791,9 @@
           "created_at": {
             "title": "Created At",
             "type": "string"
+          },
+          "features": {
+            "$ref": "#/components/schemas/TranscriptFeatures"
           },
           "id": {
             "title": "Id",
@@ -1792,7 +1853,8 @@
           "model",
           "language",
           "created_at",
-          "segment_count"
+          "segment_count",
+          "features"
         ],
         "title": "TranscriptSummary",
         "type": "object"

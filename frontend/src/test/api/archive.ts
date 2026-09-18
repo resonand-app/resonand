@@ -41,6 +41,28 @@ const SAM: Schemas['UserSummary'] = {
 /** Minutes, as the API counts durations. */
 const minutes = (count: number): number => Math.round(count * 60_000);
 
+/**
+ * What a transcript is, derived from the segments it actually ships (`TRX-12`).
+ *
+ * The real endpoint derives every one of these from the stored segments, so a fixture that stated
+ * them as literals would go on claiming speakers after somebody edited the speakers out.
+ */
+function featuresOf(
+  segments: Schemas['SegmentOut'][],
+  stitchedFrom: number | null,
+): Schemas['TranscriptFeatures'] {
+  const speakers = new Set(segments.map((one) => one.speaker).filter((one) => Boolean(one)));
+  const durations = segments.map((one) => one.end_ms - one.start_ms).sort((a, b) => a - b);
+  return {
+    task: 'transcribe',
+    has_speakers: speakers.size > 0,
+    speaker_count: speakers.size,
+    speakers_are_comparable: speakers.size > 0 && stitchedFrom === 1,
+    granularity_ms: durations[Math.floor(durations.length / 2)] ?? null,
+    stitched_from: stitchedFrom,
+  };
+}
+
 function library(over: Partial<Library> & Pick<Library, 'uuid' | 'name'>): Library {
   return {
     colour: 'amber',
@@ -155,6 +177,20 @@ export const VOICE_NOTE = 'aaaaaaaa-0000-4000-8000-000000000004';
 export const INTERVIEW = 'aaaaaaaa-0000-4000-8000-000000000005';
 
 function fresh(): Archive {
+  const fieldTakeSegments: Schemas['SegmentOut'][] = [
+    'The first segment of the transcript, which is where playback starts.',
+    'The second segment, long enough to wrap onto a second line in the panel.',
+    'The third segment mentions rehearsal, which is the word search is asked for.',
+    'The fourth segment is a short one.',
+    'The fifth segment is the one a click seeks to.',
+    'The sixth segment, and the last one in this transcript.',
+  ].map((text, index) => ({
+    idx: index,
+    start_ms: minutes(17) + 31_000 + index * 13_000,
+    end_ms: minutes(17) + 42_000 + index * 13_000,
+    speaker: null,
+    text,
+  }));
   return {
     instance: {
       name: 'sonarium',
@@ -271,21 +307,9 @@ function fresh(): Archive {
         provider: 'faster-whisper',
         source: 'machine',
         created_at: '2026-03-12T10:02:00Z',
-        segment_count: 6,
-        segments: [
-          'The first segment of the transcript, which is where playback starts.',
-          'The second segment, long enough to wrap onto a second line in the panel.',
-          'The third segment mentions rehearsal, which is the word search is asked for.',
-          'The fourth segment is a short one.',
-          'The fifth segment is the one a click seeks to.',
-          'The sixth segment, and the last one in this transcript.',
-        ].map((text, index) => ({
-          idx: index,
-          start_ms: minutes(17) + 31_000 + index * 13_000,
-          end_ms: minutes(17) + 42_000 + index * 13_000,
-          speaker: null,
-          text,
-        })),
+        segment_count: fieldTakeSegments.length,
+        features: featuresOf(fieldTakeSegments, 1),
+        segments: fieldTakeSegments,
       },
     },
     categories: {

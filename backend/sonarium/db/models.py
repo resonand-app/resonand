@@ -283,6 +283,14 @@ class Transcript(Base):
     derived_from: Mapped[int | None] = mapped_column(Integer, ForeignKey("transcript.id"))
     """The transcript a manual edit was made from, which is kept. Unread in v0, stored anyway."""
 
+    task: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'transcribe'"))
+    """``transcribe`` | ``translate`` -- what separates another attempt in the recording's own
+    language from a rendering of it into a different one (``TRX-D6``)."""
+
+    stitched_from: Mapped[int | None] = mapped_column(Integer)
+    """How many parts the audio was submitted in, or ``NULL`` where it was not recorded. Speaker
+    labels are per request, so above one they cannot be compared across the whole (``TRX-13``)."""
+
 
 class Segment(Base):
     """A timed span of one transcript. Text, subtitles and highlighting all derive from these."""
