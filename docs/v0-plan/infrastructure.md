@@ -6,39 +6,49 @@
 
 Short and mechanical, but it conditions everything that comes after. No product code.
 
-- [ ] **INF-1** · Monorepo structure.
+- [x] **INF-1** · Monorepo structure.
       ```
-      backend/sonarium/{api,core,db,acl,media,jobs,transcription,mcp,cli}/
+      backend/sonarium/{api,core,db,acl,media,jobs,transcription,migrations,cli}/
       backend/tests/
-      frontend/src/{app,components,features,lib,i18n}/
-      deploy/            docs/            scripts/
+      frontend/src/{api,app,components,features,i18n,player,test}/
+      deploy/            docs/
       ```
       *Done when:* `backend/` and `frontend/` install and start up empty, each with its own "hello".
+      *As built the shape differs in three places, and each is a decision taken since: `mcp/` is
+      `ROADMAP.md`'s and no directory was created for it; `lib/` never earned one, so what the
+      views share is `api/`, `player/` and `test/`; and `scripts/` holds nothing, because the two
+      scripts this would have carried are `npm run` entries instead.*
 
-- [ ] **INF-2** · Python tooling: `uv` for dependencies and environment, `ruff` (lint + format),
+- [x] **INF-2** · Python tooling: `uv` for dependencies and environment, `ruff` (lint + format),
       `mypy` in strict mode, `pytest` + `pytest-cov`. ⇢ INF-1
 
-- [ ] **INF-3** · Frontend tooling: Vite + React + strict TS, ESLint, Prettier, Vitest,
+- [x] **INF-3** · Frontend tooling: Vite + React + strict TS, ESLint, Prettier, Vitest,
       Testing Library. ⇢ INF-1
 
-- [ ] **INF-4** · `pre-commit` with both toolchains, failing identically locally and in CI. ⇢ INF-2, INF-3
+- [x] **INF-4** · `pre-commit` with both toolchains, failing identically locally and in CI. ⇢ INF-2, INF-3
 
-- [ ] **INF-5** · CI on GitHub Actions: lint + typecheck + tests on both sides, plus a build of the
+- [x] **INF-5** · CI on GitHub Actions: lint + typecheck + tests on both sides, plus a build of the
       Docker image. ⇢ INF-4
 
-- [ ] **INF-6** · **Push to the remote.** `sonarium-app/sonarium` exists, is private and is
-      empty; the local remote is attached and points at it through the `github.com-personal` SSH
-      alias (key `id_rsa_personal`), never plain `github.com`.
+- [x] **INF-6** · **Push to the remote.** `sonarium-app/sonarium` exists and the local remote is
+      attached to it through the `github.com-personal` SSH alias (key `id_rsa_personal`), never
+      plain `github.com`. It was empty and private when this was written; it has carried the
+      history since, and whether it is still private is `REL-5`'s question rather than this one's.
       ```fish
       git push -u origin main
       ```
       *Done when:* `main` is on the remote and `gh repo view sonarium-app/sonarium` no longer
       reports the repository as empty.
 
-- [ ] **INF-8** · `docs/adr/` with the decisions already made, one per file, with the discarded
-      alternatives and the rationale.
+- **INF-8** · `docs/adr/` with the decisions already made, one per file, with the discarded
+      alternatives and the rationale. **Decided against, and carrying no box for that reason.**
+      `REV-10` asked the same question last and answered it by building the three track files this
+      folder now has — `review.md`, `security.md` and `defects.md` — rather than a second place
+      where a decision lives. A page per decision beside a plan that already states each decision
+      with its rationale is two sources of truth for one fact, and they disagree eventually. The
+      identifier stays here, spent, so that nobody proposes the folder a third time.
 
-- [ ] **INF-9** · The three identifier repairs the interface plan is written against. Shipped in
+- [x] **INF-9** · The three identifier repairs the interface plan is written against. Shipped in
       `dda44b6`, which is what settles the number: `ROADMAP.md` used it for the community
       scaffolding too, and that one is now **`INF-10`**.
 
@@ -76,7 +86,7 @@ today. Follow them.
       _Done when:_ the image serves the built SPA from `/app/static` and `/readyz` still answers.
       ⇢ INF-3a 🧪 the existing image smoke test also loads the shell
 
-- [x] **INF-9** · The three repairs above: `UI-36` in `ROADMAP.md`, `JOB-11b` here, the component
+- **INF-9** · The three repairs above: `UI-36` in `ROADMAP.md`, `JOB-11b` here, the component
       count in the specification, and `UI-32`–`UI-35` plus `JOB-11b` registered in
       the plan.
       _Done when:_ `UI-31` means one thing, the component count means one number, and no identifier

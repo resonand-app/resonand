@@ -8,25 +8,25 @@ for a documented HTTP surface rather than for whatever the interface happens to 
 
 From the end of this phase onwards the four parallel tracks open up.
 
-- [ ] **API-1** 🔒 · FastAPI skeleton: configuration through environment variables, uniform errors
+- [x] **API-1** 🔒 · FastAPI skeleton: configuration through environment variables, uniform errors
       (`type`/`title`/`detail`), pagination, and published OpenAPI. ⇢ DAT-3
 
-- [ ] **API-2** 🔒 · Authentication dependency that resolves the user and injects the ACL level into
+- [x] **API-2** 🔒 · Authentication dependency that resolves the user and injects the ACL level into
       every endpoint. **No endpoint checks permissions on its own**, and anything unreadable
       returns **404 rather than 403**. ⇢ API-1, DAT-3 🧪
 
-- [ ] **API-3** · Local accounts: login, cookie session (`HttpOnly`/`SameSite=Lax`) carrying an
+- [x] **API-3** · Local accounts: login, cookie session (`HttpOnly`/`SameSite=Lax`) carrying an
       opaque `session` id, Argon2id hashing, password change, and revocation of one session or all
       of them. Registration is admin-only in v0. ⇢ API-2, DAT-1 🧪
 
-- [ ] **API-7** · Bootstrap: the first user created is an administrator, who then creates the rest
+- [x] **API-7** · Bootstrap: the first user created is an administrator, who then creates the rest
       by hand. ⇢ API-3
 
-- [ ] **API-8** · CRUD endpoints for `library`, `category`, `tag` and `share`, with the correct
+- [x] **API-8** · CRUD endpoints for `library`, `category`, `tag` and `share`, with the correct
       levels (sharing requires 30). Library-level shares only in v0; the endpoint shape already
       accepts `audio_id`. Libraries are addressed by `uuid`. ⇢ API-2, DAT-4 🧪
 
-- [ ] **API-9** · CRUD endpoints for `audio` (metadata: title, notes, recording date, category,
+- [x] **API-9** · CRUD endpoints for `audio` (metadata: title, notes, recording date, category,
       tags) at level 20. ⇢ API-8 🧪
 
 **The seven endpoints the interface needs and does not have.** Every one was found by specifying a
@@ -34,7 +34,7 @@ view against the API as built and discovering the view could not be drawn. They 
 because they share a cause — the interface specification is a client of the API and this is what
 being a client uncovered — and because `UI-*` tasks depend on them individually.
 
-- [ ] **API-10** · **Filter and sort a library's recordings.** `GET /libraries/{uuid}/audio`
+- [x] **API-10** · **Filter and sort a library's recordings.** `GET /libraries/{uuid}/audio`
       currently takes only `limit` and `offset`. It gains the parameters search already
       supports — category, tags (all of which must match), the four transcription states,
       recording-date range, duration range — plus a sort over recording date / upload date /
@@ -42,7 +42,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *`UI-8`'s entire filter bar and `UI-7`'s column sort are unbuildable without it, and the two
       must resolve to the same sort.*
 
-- [ ] **API-11** · **Request or retry a transcription on an existing recording.** Only possible at
+- [x] **API-11** · **Request or retry a transcription on an existing recording.** Only possible at
       upload time today. `POST /audio/{uuid}/transcribe` at level 20, with the optional language
       from `JOB-2`'s contract. **A recording with a pending or running job returns 409 rather than
       queueing a second one** — the call to action and the retry button are the same endpoint, and a
@@ -50,7 +50,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *`UI-15`'s call to action, its retry and re-transcribe all depend on it; so, in practice, does
       `UI-14`, since without it a second transcript can never exist.*
 
-- [ ] **API-12** 🔒 · **The transcription destination, readable by any caller.** The provider is
+- [x] **API-12** 🔒 · **The transcription destination, readable by any caller.** The provider is
       only visible through the administrator-only `GET /admin/transcription`, so **a non-admin
       cannot be told where their audio is going** — which makes `UI-25` unimplementable for exactly
       the people principle 2 protects. A narrow `GET /transcription/destination` returns the
@@ -59,18 +59,18 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *This is principle 2's only implementation. Until it exists, "no silent egress" is a sentence
       in a document rather than a property of the software, which is why it carries the lock.*
 
-- [ ] **API-13** · **Update your own profile.** Only password change exists. `PATCH /auth/me` takes
+- [x] **API-13** · **Update your own profile.** Only password change exists. `PATCH /auth/me` takes
       display name, email and language, re-deriving `email_normalised` and answering 409 on a
       collision. Theme is not here: it is per-device and lives in browser storage. ⇢ API-3, DAT-1 🧪
 
-- [ ] **API-14** · **Trashed libraries, and retention everybody can read.** Only trashed recordings
+- [x] **API-14** · **Trashed libraries, and retention everybody can read.** Only trashed recordings
       can be listed, and `trash_retention_days` is only on the administrator-only `/admin/status`,
       so a non-admin cannot be told how long anything has left. Add `GET /trash/libraries` mirroring
       `/trash/audio`, and put `trash_retention_days` on `GET /instance`, where instance facts
       already live. ⇢ API-8 🧪
       *`INT-1` shows one list with the time each item has left, and cannot do either half today.*
 
-- [ ] **API-15** · **A narrow person lookup for sharing.** Only administrators can list accounts, so
+- [x] **API-15** · **A narrow person lookup for sharing.** Only administrators can list accounts, so
       a non-admin library manager cannot resolve who to share with. `GET /users/lookup` is available
       to anyone holding level 30 on at least one library, matches on the **full normalised email and
       nothing else**, and returns **at most one** account. ⇢ API-8 🧪
@@ -80,7 +80,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *Sharing needs to confirm one address somebody was given out of band. It does not need a
       directory, and the difference is the whole design of the endpoint.*
 
-- [ ] **API-16** · **One namespace for the API, one for the interface.** Every router moves under
+- [x] **API-16** · **One namespace for the API, one for the interface.** Every router moves under
       `/api`, and the published document and its viewer move with them. The API is mounted at the
       root today, so the interface's routes and the API's paths are a single namespace that the API
       already occupies — `/search` is the clearest case, but every top-level name the API takes is
@@ -92,7 +92,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *It runs before `UI-3a`, because the snapshot `UI-3a` commits carries every path in it and a
       rename afterwards is a second regeneration plus a second review of the diff.*
 
-- [ ] **API-17** · **How a transcription is going, readable by whoever can read the recording.**
+- [x] **API-17** · **How a transcription is going, readable by whoever can read the recording.**
       `transcription_state` says which of the four states a recording is in and nothing more, but
       `UI-15b` says how long it has been running and which attempt this is, and `UI-15c` shows
       **the real error text**. All three live on the job, and the only way to read a job was the
@@ -134,7 +134,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       component, which is a label rather than a second copy of the sentence and is exactly the
       drift `UI-34k` exists to prevent.*
 
-- [ ] **API-19** · **Emptying the trash now, rather than at the end of the month.** Deletion is
+- [x] **API-19** · **Emptying the trash now, rather than at the end of the month.** Deletion is
       always a trash with retention (principle 5), and `INT-2` empties it on a schedule -- but
       `INT-1` offers **Delete now** behind a typed confirmation, and there is no endpoint under it.
       `DELETE /audio/{uuid}` and `DELETE /libraries/{uuid}` both trash, deliberately: *"there is no
@@ -162,7 +162,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *Found while building `INT-1c`: §6 listed nine gaps and this was not one of them, because
       the trash was read as a listing problem. Restore had an endpoint and Delete now never did.*
 
-- [ ] **API-20** · **Which accounts are disabled, and which run the instance.** `GET /admin/users`
+- [x] **API-20** · **Which accounts are disabled, and which run the instance.** `GET /admin/users`
       answers `UserSummary` -- `id`, `display_name`, `email` -- and the `User` row's `is_admin` and
       `disabled_at` are both dropped by the presenter. `INT-3b` lists accounts and offers
       **disable** or **re-enable**, which is a choice it cannot make without knowing which one the
@@ -265,29 +265,29 @@ goes first. The other six touch disjoint files.
 These are backend tasks. They belong to this plan only because the interface cannot be finished
 without them.
 
-- [x] **API-12** · 🔒 `GET /transcription/destination` — the provider, its host, whether it is
+- **API-12** · 🔒 `GET /transcription/destination` — the provider, its host, whether it is
       local, whether it is configured, readable by **any authenticated caller**.
       _Done when:_ a non-admin can be told where their audio goes. Until then `UI-25` — principle
       2's only implementation — is unbuildable for exactly the people it protects. 🧪 a non-admin
       gets the same answer an admin does, minus the credential.
 
-- [x] **API-10** · Filter and sort a library's recordings. `GET /libraries/{uuid}/audio` takes
+- **API-10** · Filter and sort a library's recordings. `GET /libraries/{uuid}/audio` takes
       today only `limit` and `offset`, newest first. It gains search's filter parameters plus
       `sort` and `direction`.
       _Done when:_ `UI-8`'s filter bar and `UI-7d`'s column sort are expressible as one request.
       🧪 every sort field, both directions, stable under pagination.
 
-- [x] **API-11** · `POST /audio/{uuid}/transcribe`, level 20, 202 with the job, **409 when one is
+- **API-11** · `POST /audio/{uuid}/transcribe`, level 20, 202 with the job, **409 when one is
       already pending or running**.
       _Done when:_ `UI-15a`'s call to action, `UI-15c`'s retry and `UI-14`'s re-transcription have
       an endpoint. 🧪 the 409, because the interface renders it as a state and not as an error.
 
-- [x] **API-13** · `PATCH /auth/me` for display name, email and language. Only the password can be
+- **API-13** · `PATCH /auth/me` for display name, email and language. Only the password can be
       changed today.
       _Done when:_ V10's Account and Appearance sections can save. 🧪 email uniqueness against
       `user.email_normalised`, which already exists.
 
-- [x] **API-14** · `GET /trash/libraries` as `Page[LibrarySummary]`, and the instance facts the
+- **API-14** · `GET /trash/libraries` as `Page[LibrarySummary]`, and the instance facts the
       interface reads before it can draw: `trash_retention_days`, `max_upload_bytes` and the
       accepted formats, all added to `GET /instance`.
       _Done when:_ the trash can show one mixed list, everybody — not only admins — can be told how
@@ -295,7 +295,7 @@ without them.
       the one call made without a session and already gives out the version; none of these four is
       a secret. The retention half is the cheapest of the ten.
 
-- [x] **API-15** · `GET /users/lookup?email=` — **full normalised email only, at most one result**,
+- **API-15** · `GET /users/lookup?email=` — **full normalised email only, at most one result**,
       for any holder of level 30 on at least one library.
       _Done when:_ V7 can add a person without an administrator. It is deliberately not a
       directory: a prefix search would let any library manager enumerate the instance. 🧪 a partial
@@ -307,7 +307,7 @@ without them.
 Decomposed by the frontend track, because that is where the collision was
 found, and kept here because it is the API's own shape.
 
-- [x] **API-16** · Move every router under `/api`, and the published document and its viewer with
+- **API-16** · Move every router under `/api`, and the published document and its viewer with
       them. `/healthz` and `/readyz` stay at the root; so does `/`. The test that asserts where the
       two namespaces collide becomes the test that asserts they cannot.
       _Done when:_ every route in §2.1 can be hard-refreshed into. ⇢ DEC-24 🧪

@@ -145,29 +145,34 @@ graph TD
 
 ---
 
-## Where to start
+## What is left
 
-Every decision the first version needs is settled, so **`INF-1` can start now** and nothing
-upstream of it is waiting on a conversation.
+Every track has now been read against the code, so an unticked box is one somebody checked rather
+than one nobody reached. Thirteen are open, in five files, and none of them blocks another — the
+ordering this section used to carry is spent along with the tasks in it.
 
-The order that matters:
+| Task | What is outstanding |
+|---|---|
+| `OPS-3` | The validator exists and nothing calls it, so an instance configured from the shipped example starts with an empty signing key |
+| `OPS-4` | The backend half is done and tested; the bundle has no base path, so the subpath arrangement serves a shell that cannot fetch itself |
+| `OPS-6` | Both halves of its marker: a restore into a container, and an upgrade that crosses a revision rather than proving a no-op is a no-op |
+| `ING-9` | The watch folder, which two shipped documents already describe to a reader as something the software does |
+| `ING-11` | The round trip — exit criterion 4 — and the four defects that would each break it before anybody got to run it |
+| `ING-12` | Whether a derived date carries a time of day, rather than being presented as midnight |
+| `ING-13` | The `fsck` command's own test, and the two file kinds its orphan scan cannot see |
+| `INT-6` | Playwright over the utility threshold; nothing exists yet |
+| `API-18` | The permission vocabulary on `GET /instance`, which nothing implements |
+| `JOB-2` | The metering rows, which `REV-5` deferred deliberately |
+| `JOB-3` | A run against a real engine, rather than against the mocked transport the tests use |
+| `DAT-7` | The rename half of a test whose other three halves are covered |
+| `REV-S6` | The comment voice, in [`review.md`](review.md) |
 
-1. **`INF-1` → `INF-2` → `INF-3` → `INF-4` → `INF-5`.** Scaffolding and both toolchains, with
-   pre-commit and CI failing identically in each. Then `INF-6` pushes to the remote, which is
-   already attached.
-2. **`INF-8`** in parallel, transcribing each decision into `docs/adr/`, one file per decision. It
-   is transcription, not fresh thinking — the reasoning is already written.
-3. **`DAT-1`**, using **What the first migration contains** in [`decisions.md`](decisions.md) as
-   its checklist. Nothing else in the project can be written first, and this is the one place
-   where getting it wrong is expensive.
-4. **`DAT-2` → `DAT-3`.** The ACL entry point, whose test matrix is the most important one in the
-   repository.
-5. From `API-2` onwards the four tracks open up and order stops mattering much.
+`INF-8` is spent rather than open and carries no box at all: the folder it asks for was decided
+against when `REV-10` built [`review.md`](review.md), [`security.md`](security.md) and
+[`defects.md`](defects.md) instead.
 
-Two things worth starting early because they need nothing from the schema: **`UI-1`/`UI-2`** —
-adopting the design system and building the waveform, which draws against generated peaks until
-`ING-5` produces real ones — and **`JOB-13`** (chunking and timestamp re-stitching), which is the
-highest-risk piece in the whole plan and the one most likely to need a second attempt.
+Three of the five conditions below are acts rather than tasks — performed against the real
+archive, and not tickable anywhere.
 
 ---
 
