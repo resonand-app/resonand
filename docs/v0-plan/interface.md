@@ -11,7 +11,7 @@ in the second half is new scope -- it is the same work, cut small enough to star
 
 `UI-1`/`UI-2` can start during Phase 1, and `UI-3`/`UI-4` against mocks during Phase 2.
 
-- [ ] **UI-1** · **Adopt the design system**, which is already built and vendored at
+- [x] **UI-1** · **Adopt the design system**, which is already built and vendored at
       `frontend/design-system/` (`DEC-8`). This task is not a design task: it is wiring the
       finished system into the application. Link `styles.css`, port each component from its `.jsx`
       to strict TSX against the `.d.ts` that ships beside it, **self-host Geist and bundle Lucide**
@@ -21,7 +21,7 @@ in the second half is new scope -- it is the same work, cut small enough to star
       *Done when:* every component in the system renders in the app in both themes, and the
       no-hardcoded-colour test passes.
 
-- [ ] **UI-2** · **Waveform component** — the product's signature visual element, specified by the
+- [x] **UI-2** · **Waveform component** — the product's signature visual element, specified by the
       system: amplitude in rounded bars at the five documented sizes (20 dense row · 38 library
       card · 52 recording card · 34 player · 130 audio detail), played vs pending bars, a 2px
       rounded playhead, click to seek on the large one, and minimum bar height equal to bar width
@@ -29,11 +29,11 @@ in the second half is new scope -- it is the same work, cut small enough to star
       pixel width — a 48-minute recording is ~28,800 pairs — and when the peaks job has not run it
       renders **a dashed rule and the duration, never an invented shape**. ⇢ UI-1, ING-5
 
-- [ ] **UI-3** · API client generated from the OpenAPI spec (`openapi-typescript`), with shared
+- [x] **UI-3** · API client generated from the OpenAPI spec (`openapi-typescript`), with shared
       types. ⇢ API-1
       *This is what keeps the interface a client of the API rather than a privileged path into it.*
 
-- [ ] **UI-4** · Navigation shell, in the two forms the interface specification settles. **Desktop:**
+- [x] **UI-4** · Navigation shell, in the two forms the interface specification settles. **Desktop:**
       the floating shell — a 52px top nav carrying the mark, the global search field, upload and the
       account; a 224px sidebar (52px collapsed) listing your libraries and, separately, libraries
       shared with you, then Trash and Settings; the content area; and the 64px player pinned along
@@ -42,27 +42,27 @@ in the second half is new scope -- it is the same work, cut small enough to star
       docked directly above them as a compact strip that expands to a full-screen player. The
       sidebar's contents become the Libraries tab. ⇢ UI-1, UI-3
 
-- [ ] **UI-31** · **Libraries landing**, the application's home: the create tile first, then a card
+- [x] **UI-31** · **Libraries landing**, the application's home: the create tile first, then a card
       per library carrying its name, its user-chosen colour, its recording count and total duration,
       and the waveform of its most recent recording. Libraries shared with you are a second,
       separately titled group that **disappears entirely rather than sitting empty**. A brand-new
       account has exactly one library — the personal one — and that state is an invitation to upload,
       not an empty grid. ⇢ UI-4, API-8
 
-- [ ] **UI-5** · **Persistent player**: it survives view changes, and a decision on whether the
+- [x] **UI-5** · **Persistent player**: it survives view changes, and a decision on whether the
       large player and the compact one are the same component in two states or two synchronised
       components (*recommendation: a single global state, two presentations*). Integration with the
       **Media Session API** for system controls on mobile. ⇢ UI-2, UI-4
 
-- [ ] **UI-6** · **View A · Library grid**: header with owner, shares, count and total duration;
+- [x] **UI-6** · **View A · Library grid**: header with owner, shares, count and total duration;
       audio card with the **four transcription states visually distinguishable**, category, tags
       with overflow, and a play button on the card. ⇢ UI-5, API-9
 
-- [ ] **UI-7** · **View A' · Dense compact list** — for 800 audios the grid is useless. Fixed-height
+- [x] **UI-7** · **View A' · Dense compact list** — for 800 audios the grid is useless. Fixed-height
       36px row, virtualised, and the scrollbar honest about the full length before everything is
       fetched. ⇢ UI-6, API-10, ING-14
 
-- [ ] **UI-8** · Filters and sorting, as **one filter bar under the page header** rather than a
+- [x] **UI-8** · Filters and sorting, as **one filter bar under the page header** rather than a
       second rail: a category popover holding the tree, tag chips, the four transcription states as
       toggles, the sort control, and the grid/list switch. A permanent rail would drop the card grid
       from three columns to two at 1280 and is a lot of chrome for a family archive; a popover also
@@ -70,35 +70,35 @@ in the second half is new scope -- it is the same work, cut small enough to star
       title, and **the list's column headings and the bar's sort control are the same sort**.
       ⇢ UI-6, API-10, DAT-6, DAT-7, ING-12
 
-- [ ] **UI-9** · Multiple selection and bulk actions: assign category, add tag, move between
+- [x] **UI-9** · Multiple selection and bulk actions: assign category, add tag, move between
       libraries, send to trash. ⇢ UI-7
 
-- [ ] **UI-10** · Grid states: empty (an invitation to upload, not a sad drawing), loading
+- [x] **UI-10** · Grid states: empty (an invitation to upload, not a sad drawing), loading
       (skeletons), and error. ⇢ UI-6
 
-- [ ] **UI-11** · **View B · Detail** with a large player and a seekable waveform, 0.75×–2× speed
+- [x] **UI-11** · **View B · Detail** with a large player and a seekable waveform, 0.75×–2× speed
       and ±15 s skips. ⇢ UI-5, ING-7
 
-- [ ] **UI-12** · **Synchronised transcript** — the central moment of the product: the active
+- [x] **UI-12** · **Synchronised transcript** — the central moment of the product: the active
       segment is highlighted as it plays, clicking a segment seeks to that moment, and the scroll
       follows playback without hijacking the user's manual scrolling. ⇢ UI-11, JOB-6
 
-- [ ] **UI-13** · Metadata panel, inline-editable according to permission, technical metadata
+- [x] **UI-13** · Metadata panel, inline-editable according to permission, technical metadata
       collapsed, and a **read-only state that clearly reads as non-editable without looking
       broken**. It is a 320px panel to the right of the transcript on desktop, collapsible, and a
       **bottom sheet on a phone** opened from the essentials line — the transcript needs the full
       width and it is the centre of the product. ⇢ UI-11, API-9
 
-- [ ] **UI-14** · Transcript selector when there is more than one (model, language, date, which one
+- [x] **UI-14** · Transcript selector when there is more than one (model, language, date, which one
       is active). `JOB-7` makes re-transcription possible, so without this it is unreachable from
       the interface. The manual editor is a later milestone. ⇢ UI-13, JOB-7, API-11
 
-- [ ] **UI-15** · Transcription states in the detail view: missing (with a call to action), in
+- [x] **UI-15** · Transcription states in the detail view: missing (with a call to action), in
       progress (with progress if the provider offers it), and **failed with the real error message
       and a retry button** — the error explains what happened and what to do, it does not
       apologise. ⇢ UI-13, JOB-2, API-11
 
-- [ ] **UI-16** · **View C · Search**, which is two surfaces over one endpoint: the **quick-hits
+- [x] **UI-16** · **View C · Search**, which is two surfaces over one endpoint: the **quick-hits
       dropdown** anchored under the nav search field for the three-second case, and the **full
       search view** that `Enter` and its see-all row lead to, carrying the filters (library, date
       range, duration range, tags, transcription state). Both show transcript results with a context
@@ -107,21 +107,21 @@ in the second half is new scope -- it is the same work, cut small enough to star
       metadata match has no timestamp and no play-from-here, and needs a form that says so. The
       recall note from `GET /search/about` is shown, not hard-coded. ⇢ UI-5, JOB-10, JOB-11
 
-- [ ] **UI-17** · **View D · Library and sharing**: edit name and description, manage the category
+- [x] **UI-17** · **View D · Library and sharing**: edit name and description, manage the category
       tree, a panel with who has access, at what level, who granted it and when, and the level
       selector **explained in plain language**, rendered from the API's own `level_description` so
       the wording cannot drift. Library-level grants only in v0. ⇢ UI-4, API-8, API-15
 
-- [ ] **UI-18** · **View E · Upload dialog**: drag and drop, multiple files, per-file progress,
+- [x] **UI-18** · **View E · Upload dialog**: drag and drop, multiple files, per-file progress,
       destination (library + category), the transcription request from `UI-25`, handling of hash
       duplicates and unsupported formats, and **an upload that is not lost when switching tabs**.
       ⇢ UI-4, ING-2, ING-3, UI-25
 
-- [ ] **UI-19** · **View F · Move audio dialog** — its own design, because it has non-obvious
+- [x] **UI-19** · **View F · Move audio dialog** — its own design, because it has non-obvious
       consequences. It must explicitly warn that it will change who can see the audio and that the
       category will be lost. ⇢ UI-13, ING-10
 
-- [ ] **UI-20** · **View G · Settings**, one destination with sections rather than a scattering of
+- [x] **UI-20** · **View G · Settings**, one destination with sections rather than a scattering of
       screens: **Account** (display name, email, password change), **Sessions** (every active
       sign-in with the current one marked and not revocable by mistake, revoke one or sign out
       everywhere), **Appearance** (language, and theme as light / dark / follow the system), and —
@@ -130,7 +130,7 @@ in the second half is new scope -- it is the same work, cut small enough to star
       one from an external service would violate principle 2, so identity is initials or a derived
       mark. Tokens are not in v0. ⇢ UI-4, API-3, API-13
 
-- [ ] **UI-21** · **View J · Authentication**: local sign-in, and the first-run screen that creates
+- [x] **UI-21** · **View J · Authentication**: local sign-in, and the first-run screen that creates
       the initial administrator when `GET /instance` reports the instance needs bootstrapping.
       **There is no sign-up path and the screen must not imply one** — registration is
       administrator-only in v0, so the design system's app kit, whose login screen offers to create
@@ -138,19 +138,19 @@ in the second half is new scope -- it is the same work, cut small enough to star
       a disabled account are **indistinguishable on purpose**; rate-limiting is a real state.
       ⇢ API-3, API-7
 
-- [ ] **UI-22** · i18n plumbing: English as the base, **every literal externalised**, localised date
+- [x] **UI-22** · i18n plumbing: English as the base, **every literal externalised**, localised date
       and duration formatting. Shipping actual translations is a later milestone; making them
       possible without touching components is v0. ⇢ UI-4
 
-- [ ] **UI-23** · Accessibility as the floor: visible keyboard focus, `prefers-reduced-motion`
+- [x] **UI-23** · Accessibility as the floor: visible keyboard focus, `prefers-reduced-motion`
       respected, AA contrast, full keyboard navigation of the player and the transcript.
       ⇢ UI-12 🧪 axe audit on every view.
 
-- [ ] **UI-24** · A real mobile-first pass: much of the consumption happens on a phone, with
+- [x] **UI-24** · A real mobile-first pass: much of the consumption happens on a phone, with
       headphones, on the move. Gestures, touch target sizes, and the player coexisting with the
       system controls. PWA installability and offline behaviour are a later milestone. ⇢ UI-23
 
-- [ ] **UI-25** · **External transcription disclosure** — principle 2 made visible. Wherever a
+- [x] **UI-25** · **External transcription disclosure** — principle 2 made visible. Wherever a
       transcription is requested, the interface names **which provider the audio will be sent to**
       and that it will leave the instance, before the request is made; per `DEC-9`, the
       administration view says the same thing for every watched folder configured to transcribe on
@@ -163,18 +163,18 @@ work. They are registered here because this document hands out the numbers, and 
 lives in only one of the two would eventually be handed out twice. Their tasks are written out
 there, not here.
 
-- [ ] **UI-32** · **The CSS interaction layer.** The design system is written entirely in inline
+- [x] **UI-32** · **The CSS interaction layer.** The design system is written entirely in inline
       style objects, so `:hover`, `:focus-visible`, `:active` and `@media` cannot be expressed at
       all — which means the interaction rules its README states, the single focus treatment `UI-23`
       requires and the 44px hit targets the accessibility floor demands are documented and none of
       them is implemented. ⇢ UI-1 🧪
-- [ ] **UI-33** · **Token reconciliation.** Six values in shipped components bypass the tokens, and
+- [x] **UI-33** · **Token reconciliation.** Six values in shipped components bypass the tokens, and
       four token groups the views need — a z-index scale, breakpoints, a disabled opacity, border
       widths — do not exist. ⇢ UI-1 🧪
-- [ ] **UI-34** · **The thirteen components the design system owes**, named by the interface
+- [x] **UI-34** · **The thirteen components the design system owes**, named by the interface
       specification's §5 and drawn in the prototype. `UI-1` is a porting task; authoring thirteen
       new components with keyboard and positioning behaviour is not porting. ⇢ UI-32
-- [ ] **UI-35** · **The ten composites the prototype invented** — the filter bar, the bulk bar, the
+- [x] **UI-35** · **The ten composites the prototype invented** — the filter bar, the bulk bar, the
       upload tray, the skeletons and the rest. Each exists once as markup inside a single artboard,
       and each is needed by three or more views. ⇢ UI-34
 

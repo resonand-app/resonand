@@ -40,7 +40,7 @@ only the endpoint is configured today.
 
 ## Phase G · Making one provider into a boundary
 
-- [ ] **TRX-3** 🔒 · **The capability declaration.** A provider states what it can do, and the
+- [x] **TRX-3** 🔒 · **The capability declaration.** A provider states what it can do, and the
       worker asks rather than the operator being made responsible for it: maximum request bytes,
       maximum duration, the granularity it returns, whether it diarises, what unit its timestamps
       are in, and whether it needs a reachable URL. `handle_transcribe` currently derives its
@@ -51,7 +51,7 @@ only the endpoint is configured today.
       `Settings`**, so that `TRX-14` and `TRX-15` are additive rather than a rewrite. ⇢ JOB-2 🧪
       *Everything else in this track depends on it, and it is the one thing that should not wait.*
 
-- [ ] **TRX-12** · **What a transcript is, not only where it came from.** `transcript` records
+- [x] **TRX-12** · **What a transcript is, not only where it came from.** `transcript` records
       `provider`, `model` and `language` and nothing about the artefact, so the interface cannot
       tell a diarised transcript from an undiarised one without reading every segment, and cannot
       tell *diarisation returned nothing* from *diarisation was never asked for* at all. Most of
@@ -70,7 +70,7 @@ only the endpoint is configured today.
       a guess about a shape that has not been designed. `stitched_from` is the one that genuinely
       cannot be reconstructed afterwards.*
 
-- [ ] **TRX-13** · **Speaker labels across a seam.** `Segment.speaker` has existed since the first
+- [x] **TRX-13** · **Speaker labels across a seam.** `Segment.speaker` has existed since the first
       migration, the parser already reads it and the transcript already renders it, so a server
       with diarisation in front of it returns labels **today** — and `restitch` will merge them
       confidently and wrongly, because `SPEAKER_00` in part 1 is not `SPEAKER_00` in part 4. Do not
@@ -83,7 +83,7 @@ only the endpoint is configured today.
       or merging label spaces heuristically produces a transcript that is confidently wrong about
       who spoke, which nobody reports as a transcription bug.*
 
-- [ ] **TRX-1** · **A preflight probe, as a CLI verb.** Submit three seconds of generated audio
+- [x] **TRX-1** · **A preflight probe, as a CLI verb.** Submit three seconds of generated audio
       and report what came back: endpoint reachable, credentials accepted, and — the question the
       task exists for — whether the engine answers in the shape that carries segments at all. It
       **returns a capability record as a value** rather than caching into process state, so
@@ -101,7 +101,7 @@ only the endpoint is configured today.
       recording. This turns that into a sentence before any audio moves. Fixtures are generated
       with ffmpeg at test time and the binary is already in the image, so the audio costs nothing.*
 
-- [ ] **TRX-10** · **The connection test proves the wrong thing.** `POST /admin/transcription/test`
+- [x] **TRX-10** · **The connection test proves the wrong thing.** `POST /admin/transcription/test`
       fetches `/models` and reports success on any 2xx, so against a model that cannot return
       segments it goes **green** and the first transcription then fails after the upload. The one
       button an operator presses to check their configuration succeeds on precisely the
@@ -110,7 +110,7 @@ only the endpoint is configured today.
       *The panel that shows the result is not in the interface specification, so the endpoint and
       the CLI verb can land before the view does.*
 
-- [ ] **TRX-7** · **`_time_scale` mis-scales by 1000× on a mostly-silent part.** Seconds-versus-
+- [x] **TRX-7** · **`_time_scale` mis-scales by 1000× on a mostly-silent part.** Seconds-versus-
       milliseconds is decided by comparing the furthest reported `end` against a tenth of the
       submitted duration. For a seconds-reporting server that is always safe; for a
       millisecond-reporting one it fails whenever speech ends before a tenth of the part — a
@@ -120,7 +120,7 @@ only the endpoint is configured today.
       provider-declared unit removes the guess for every engine that documents one.
       ⇢ TRX-3 🧪
 
-- [ ] **TRX-8** · **An unprobed recording is submitted whole, whatever its size.** When the probe
+- [x] **TRX-8** · **An unprobed recording is submitted whole, whatever its size.** When the probe
       has not run or failed, `duration_ms` is 0, the plan becomes a single part, and a three-hour
       file is uploaded in full to an endpoint that rejects it at 25 MB — after the upload. The
       fallback also assumes a recording is *short* when it does not know, which is the wrong
