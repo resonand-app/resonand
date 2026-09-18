@@ -82,10 +82,17 @@ Layered, and the dependency runs one way:
 
 ### The plans, and the ones that are not here
 
-`docs/v0-plan/` is the first version: every decision with its rationale, and every task with its
-done-criterion. It is **one file per work track**, indexed by `docs/v0-plan/README.md`, so the
-prefix of an identifier is the file it is in and there is no exception to remember. `ROADMAP.md`
-is Milestone 1 and beyond — where a deferred task goes, keeping its identifier.
+A plan is **one file per work track**, indexed by its own `README.md`, so the prefix of an
+identifier is the file it is in and there is no exception to remember. There are two kinds, and
+they have the same shape:
+
+- **`docs/<version>-plan/`** — one per version, holding what that version contained.
+  `docs/v0-plan/` is the first: the first version's working set now, its record once it ships.
+- **`docs/next-plan/`** — what is scoped and waiting for a version to claim it. Always this name,
+  whichever version is being built.
+
+`ROADMAP.md` is everything further out and **carries no identifiers at all**: it holds features,
+and a number is minted by the plan that cuts one of them into tasks.
 
 **`docs/internal/` is absent from a fresh clone.** It holds the authoritative functional and
 UI/UX specifications, kept local while the first version is built. A task needing real fields,
@@ -226,6 +233,15 @@ branch and its own pull request, and says in one line which pull request it came
 Every task has a **stable identifier that is never renumbered**. The prefix is the work track,
 not the phase. Cite them in commits, branches and reviews.
 
+**A number is minted when work is scoped, and by the plan that scopes it.** `ROADMAP.md` hands out
+none: a feature there gets an identifier on the day it is cut into tasks, in the file that holds
+them. A roadmap that numbers unstarted work is how one identifier comes to mean two things, which
+happened to `UI-31` and then to `UI-36`.
+
+**The number stays with the work, not with the folder.** A task scoped into `docs/next-plan/` keeps
+its identifier when a version claims it and it moves into that version's folder — the number says
+what the work is, and the folder says which version did it.
+
 **The prefix is the file.** Everything under `docs/v0-plan/`, one file per track:
 
 | Prefix | Track | Lives in |
@@ -257,7 +273,9 @@ repository**, so an identifier carrying it resolves to the code that applied it 
 Notation in the plans: `⇢ X, Y` depends on those · `🔒` critical path · `🧪` carries a mandatory
 test. **A task is done when it meets the criterion written next to it, not when it works.**
 
-Gaps in the numbering are expected: a task that moves to `ROADMAP.md` keeps its identifier.
+Gaps in the numbering are expected: a task that moves to `docs/next-plan/` keeps its identifier,
+and one that turns out not to be scoped work at all becomes a feature in `ROADMAP.md` and gives its
+number up — which is only safe while nothing cites it.
 
 ### Comments
 

@@ -1,8 +1,12 @@
 # v0 — the archive I use
 
 The build plan for the **first version**, which has one job: to replace what I currently do with
-my own audio. Publishing is not part of this milestone. Everything that comes after it lives in
+my own audio. Publishing is not part of this milestone. What is scoped and waiting for a version to
+claim it is in [`docs/next-plan/`](../next-plan/); what is wanted and not yet scoped is
 [`ROADMAP.md`](../../ROADMAP.md).
+
+This is the first of the per-version plans: the working set while the first version is being built,
+and the record of what it contained once it ships. It keeps this name either way.
 
 This page is the index. Every task lives in the file for its track, and this one carries what is
 true across all of them: what the first version is for, the order the work was done in, and what
@@ -34,7 +38,7 @@ again.
 Two gates, then, and neither is a date: **the repository opens when every task here is closed**,
 and **the release waits for several weeks of real use on top of that**. The argument for reading
 the code early was never wrong in itself; what it left out is that the reader would arrive at a
-plan with twenty-seven open tasks in it, several of which are defects in work this plan calls
+plan with twenty-six open tasks in it, several of which are defects in work this plan calls
 shipped. Opening on the day that list is empty costs a few weeks and means the first person
 through the door is reading a finished thing.
 
@@ -49,8 +53,9 @@ the foundation everything else stands on.
 What is cut is surface: v0 ships with **local accounts only**, users created by hand by the
 administrator, and **sharing at library level only**. Left out: OIDC, proxy-header authentication,
 individual-recording sharing, ownership transfer (users with content simply cannot be deleted),
-API tokens, MCP, manual transcript editing and LLM suggestions. Every one of those keeps its task
-identifier and is listed in [`ROADMAP.md`](../../ROADMAP.md).
+API tokens, MCP, manual transcript editing and LLM suggestions. Every one of those is a feature in
+[`ROADMAP.md`](../../ROADMAP.md), which carries no identifiers: each gets a number on the day it is
+cut into tasks.
 
 ---
 
@@ -59,8 +64,11 @@ identifier and is listed in [`ROADMAP.md`](../../ROADMAP.md).
 Every task has a **stable identifier** (`DAT-3`, `UI-7`…) that can be referenced from commits,
 branches and issues. The prefix indicates the **work track**, not the phase, and **the prefix is
 the file**: `UI-7` is in `interface.md`, `DAT-3` is in `data.md`, with no exceptions to remember.
-**Identifiers never get renumbered** — a task deferred to `ROADMAP.md` keeps the number it has
-here, which is why gaps in the numbering are expected and are not mistakes.
+**Identifiers never get renumbered** — a task deferred to [`docs/next-plan/`](../next-plan/) keeps
+the number it has here, which is why gaps in the numbering are expected and are not mistakes. A
+task that turns out not to be scoped work at all becomes a feature in
+[`ROADMAP.md`](../../ROADMAP.md) and gives its number up, which is only safe while nothing cites
+it.
 
 | Prefix | Track | What it covers | Where |
 |---|---|---|---|
@@ -156,10 +164,10 @@ graph TD
 ## What is left
 
 Every track has now been read against the code, so an unticked box is one somebody checked rather
-than one nobody reached. Twenty-seven are open and none of them blocks another — the ordering this
+than one nobody reached. Twenty-six are open and none of them blocks another — the ordering this
 section used to carry is spent along with the tasks in it.
 
-Thirteen are what the plan always held:
+Twelve are what the plan always held:
 
 | Task | What is outstanding |
 |---|---|
@@ -172,7 +180,6 @@ Thirteen are what the plan always held:
 | `ING-13` | The `fsck` command's own test, and the two file kinds its orphan scan cannot see |
 | `INT-6` | Playwright over the utility threshold; nothing exists yet |
 | `API-18` | The permission vocabulary on `GET /instance`, which nothing implements |
-| `JOB-2` | The metering rows, which `REV-5` deferred deliberately |
 | `JOB-3` | A run against a real engine, rather than against the mocked transport the tests use |
 | `DAT-7` | The rename half of a test whose other three halves are covered |
 | `REV-S6` | The comment voice, in [`review.md`](review.md) |
@@ -221,4 +228,5 @@ Not when the checkboxes are ticked. When all of these hold:
    and get the same thing back.
 5. **Several weeks have passed** with all of the above true and nothing going wrong in them.
 
-Only then does the milestone in [`ROADMAP.md`](../../ROADMAP.md) begin.
+Only then does [`docs/next-plan/`](../next-plan/) begin — the repository opening, and then a
+release.

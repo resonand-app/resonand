@@ -1,21 +1,20 @@
 """Usage metering (``JOB-2``).
 
-Audio-seconds submitted, per user, per provider. The plan is explicit that the provider interface
-is a future revenue surface rather than an architecture detail, and that a credit-based service
-without metering is a rewrite -- so the shape of it exists before anything charges for it.
+Audio-seconds submitted, per user, per provider. An engine charges the operator by the second, so
+how much an instance sent is a question somebody eventually asks -- and counting it afterwards is a
+migration rather than a feature, which is why the shape exists before anything reads it.
 
 **Nothing stores any of this yet, and that is the decision rather than an omission** (``REV-5``).
 There is no ``usage`` table, and ``build_provider`` is called without a sink from both the API and
 the CLI, so the only implementation below is the in-memory one. A table now would buy three
 standing obligations -- ``export``, ``import`` and ``fsck`` each have to keep it honest, and their
-round trip is ``ING-11``'s exit criterion -- for a consumer that does not exist. ``DEC-10`` is a
-reason for the interface, which is here and costs nothing; it is not by itself a reason for the
-rows. The table lands with the first thing that reads it.
+round trip is ``ING-11``'s exit criterion -- for a consumer that does not exist. The interface
+costs nothing and stays; the rows land with the first thing that reads them.
 
-**Metering records what was submitted, not what succeeded.** A paid endpoint bills for the audio
-it received whether or not it then failed, and a meter that only counted successes would drift
-away from the invoice in the direction that costs the operator money. A failed submission is
-recorded with its outcome, so the two questions -- what was sent, what worked -- stay separable.
+**Metering records what was submitted, not what succeeded.** An engine bills for the audio it
+received whether or not it then failed, and a meter that only counted successes would drift away
+from the bill in the direction that costs the operator money. A failed submission is recorded with
+its outcome, so the two questions -- what was sent, what worked -- stay separable.
 
 Nothing here touches the database. The worker owns the sink, on the day there is one.
 """

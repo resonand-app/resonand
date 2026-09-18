@@ -108,9 +108,10 @@ today. Follow them.
 - **`UI-31` names two different things.** It is the libraries landing in [`interface.md`](interface.md) and
   shipping actual translations in `ROADMAP.md`. Both documents promise identifiers are never
   renumbered, so one of them is wrong. **`UI-31` stays the libraries landing** — it is the one with
-  dependents — and the roadmap's becomes `UI-36`. *It is `UI-40` now: `UI-36` was handed out a
-  second time, to the lockup, which shipped under it. The same repair, the same way round, and the
-  second occurrence is why the plan is the only document that mints a number.*
+  dependents — and the roadmap's becomes `UI-36`. *Which was handed out a second time, to the
+  lockup, and repaired again the same way round. Twice was enough: `ROADMAP.md` now carries no
+  identifiers at all and the translations entry is a feature there rather than a number, so this
+  particular repair cannot happen a third time.*
 - **The component count is stated three ways.** The filesystem holds twenty-one; the design
   system's README enumerates those twenty-one by name without ever stating a number; the
   specification says nineteen, and that `UI-1` will port thirty-two. The filesystem is right:
@@ -120,8 +121,8 @@ today. Follow them.
 - **The four-state search widening had a parent already.** `JOB-11` in [`jobs.md`](jobs.md) promises
   search's transcription state as "all four states, repeatable", and the rest of `JOB-11` is built —
   so the widening is a split of a partly-done task, not a new one. It is **`JOB-11b`**, following
-  the `API-7b` precedent, and not `API-10b`: `API-10` is the library grid, and a suffix names its
-  parent. Renaming is free only until something cites it, which is now.
+  the `API-7`/`API-7b` precedent, and not `API-10b`: `API-10` is the library grid, and a suffix
+  names its parent. Renaming is free only until something cites it, which is now.
 
 `INF-9` makes those three true, in one commit, across `ROADMAP.md`, the plan, this
 document and the specification. It also **registers `UI-32`–`UI-35` and `JOB-11b` in

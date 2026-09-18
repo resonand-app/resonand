@@ -986,7 +986,8 @@ for, the third because it is the surface a phone offers to install.
 
 - [ ] **UI-37** · The administrator's control for `API-25`, inside `INT-3b`'s users panel: set a
       password, say plainly that every session the account holds is about to end, and show the
-      value exactly once in the way `UI-26` describes for tokens rather than sending it anywhere.
+      value exactly once, the way an access token will have to be shown, rather than sending it
+      anywhere.
       ⇢ API-25, INT-3b
 
 - [ ] **UI-38** · **The instance offers its source.** Section 13 is the clause `AGPL-3.0` was
