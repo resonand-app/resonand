@@ -183,6 +183,25 @@ def require_audio(
     return audio, level
 
 
+def library_level(
+    session: Session, user_id: int, library_uuid: str, *, include_trashed: bool = False
+) -> Level | None:
+    """The level this user holds on one library, or ``None`` when they hold nothing.
+
+    The library-side twin of :func:`audio_level`, and for the same caller: one that has to tell
+    "cannot" from "is not there" without being handed an exception.
+    """
+    acl = library_acl(user_id, include_trashed=include_trashed)
+    found = session.execute(
+        select(acl.c.level)
+        .join(Library, Library.id == acl.c.library_id)
+        .where(Library.uuid == library_uuid)
+    ).scalar_one_or_none()
+    if found is None or found < int(Level.READ):
+        return None
+    return Level(found)
+
+
 def require_library(
     session: Session,
     user_id: int,

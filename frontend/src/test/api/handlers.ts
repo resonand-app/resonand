@@ -551,6 +551,20 @@ export const handlers: HttpHandler[] = [
 
   // --- Search, tags and the trash ------------------------------------------
 
+  // An open stream that never says anything, which is what a quiet archive's does. A test that
+  // wants a change to arrive builds its own stream rather than driving this one: the whole point
+  // of the endpoint is that it stays open, and a handler that closes would make every component
+  // mounting it reconnect in a loop (`REV-12`).
+  http.get('/api/events', () => {
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(': ready\n\n'));
+      },
+    });
+    return new HttpResponse(body, {
+      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-store' },
+    });
+  }),
   http.get('/api/search', ({ request }) => {
     const url = new URL(request.url);
     const query = (url.searchParams.get('q') ?? '').toLowerCase();

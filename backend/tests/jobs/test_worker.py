@@ -8,9 +8,11 @@ the real message rather than taking the worker down.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
+from sonarium.core.changes import AUDIO, Change, Changes
 from sonarium.core.config import Settings
 from sonarium.core.errors import ProviderError
 from sonarium.db import libraries, transcripts, users
@@ -609,3 +611,56 @@ def test_a_cancelled_transcription_stops_sending_the_parts_that_are_left(
     assert len(provider.submitted) == 2
     with database.read_session() as session:
         assert transcripts.active_transcript(session, audio_id) is None
+
+
+# --- Saying that something changed (``REV-12``) ----------------------------
+
+
+class Announcements(Changes):
+    """A fan-out that keeps what it was handed.
+
+    Subscribing properly needs a running event loop, and the worker has none -- it is threads. The
+    question here is what the worker announces, not how it reaches anybody, which is
+    ``tests/api/test_events_stream.py``.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.announced: list[Change] = []
+
+    def publish(self, change: Change) -> None:
+        self.announced.append(change)
+
+
+def test_a_finished_job_says_which_recording_changed(
+    database: Database, db_settings: Settings, stored: tuple[str, int]
+) -> None:
+    """The instant a transcript becomes readable, which used to be discarded.
+
+    Before this, the only way anybody learned it was a request that happened to arrive afterwards
+    -- so a client polled for it, and two clocks disagreeing about which poll won is how a screen
+    ends up saying nothing at all.
+    """
+    audio_uuid, audio_id = stored
+    changes = Announcements()
+    with database.write_session() as session:
+        queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
+    context = replace(context_for(database, db_settings, FakeProvider()), changes=changes)
+
+    assert Worker(context).run_once() is True
+
+    assert changes.announced == [Change(kind=AUDIO, uuid=audio_uuid)]
+
+
+def test_a_worker_with_nowhere_to_announce_still_runs_its_jobs(
+    database: Database, db_settings: Settings, stored: tuple[str, int]
+) -> None:
+    """``sonarium work`` on its own has no stream attached, and the archive does not care."""
+    _, audio_id = stored
+    with database.write_session() as session:
+        queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
+
+    assert Worker(context_for(database, db_settings, FakeProvider())).run_once() is True
+
+    with database.read_session() as session:
+        assert transcripts.active_transcript(session, audio_id) is not None

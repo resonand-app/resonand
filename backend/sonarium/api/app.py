@@ -30,6 +30,7 @@ from sonarium.api.routes import (
     admin,
     audio,
     auth,
+    events,
     health,
     ingest,
     libraries,
@@ -39,6 +40,7 @@ from sonarium.api.routes import (
     users,
 )
 from sonarium.api.spa import inline_script_hashes, install_spa
+from sonarium.core.changes import Changes
 from sonarium.core.config import Settings, get_settings
 from sonarium.db.engine import Database, build_engine
 from sonarium.db.migrate import migrate_at_startup
@@ -85,6 +87,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
     )
     app.state.settings = resolved
+    # One per application rather than per module, so that two instances in one process -- which
+    # is what a test suite is -- cannot reach each other's subscribers.
+    app.state.changes = Changes()
     app.state.login_limiter = AttemptLimiter(resolved.login_attempts_per_minute)
     app.state.login_client_limiter = AttemptLimiter(resolved.login_attempts_per_client_per_minute)
 
@@ -111,6 +116,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         libraries.trash_router,
         audio.router,
         ingest.router,
+        events.router,
         search.router,
         transcription.router,
         users.router,
@@ -206,7 +212,12 @@ def _start_worker(app: FastAPI, settings: Settings) -> Worker:
     """Start the in-process job worker (``JOB-1``)."""
     provider = build_provider(settings) if settings.transcription_base_url else None
     worker = Worker(
-        Context(database=app.state.database, settings=settings, provider=provider),
+        Context(
+            database=app.state.database,
+            settings=settings,
+            provider=provider,
+            changes=app.state.changes,
+        ),
         concurrency=settings.job_concurrency,
     )
     worker.start()

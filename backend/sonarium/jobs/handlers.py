@@ -19,6 +19,7 @@ from pathlib import Path
 import structlog
 from sqlalchemy.orm import Session
 
+from sonarium.core.changes import Changes
 from sonarium.core.config import Settings
 from sonarium.core.errors import InvalidRequestError, NotFoundError
 from sonarium.db import search_index, transcripts
@@ -56,6 +57,13 @@ class Context:
     database: Database
     settings: Settings
     provider: TranscriptionProvider | None = None
+    changes: Changes | None = None
+    """Where to announce that a recording changed (``REV-12``).
+
+    Optional because a handler must run without one: ``sonarium work`` on its own and every test
+    that drives a job directly have nobody listening, and a job that finished has finished
+    whether or not anybody heard.
+    """
 
     @property
     def storage_root(self) -> Path:

@@ -21,8 +21,12 @@ import time
 from dataclasses import dataclass
 
 import structlog
+from sqlalchemy import select
 
+from sonarium.core import changes
+from sonarium.core.changes import Change
 from sonarium.core.errors import SonariumError
+from sonarium.db.models import Audio
 from sonarium.jobs import queue, retention
 from sonarium.jobs.handlers import HANDLERS, Context
 
@@ -125,12 +129,35 @@ class Worker:
             if finished:
                 self.stats.completed += 1
                 _logger.info("job.done", job_id=work.id, kind=work.kind)
+                self._announce(work)
             else:
                 # Cancelled while it ran. The handler returns the same way whether it stopped
                 # early or ran to the end, and the row is what knows the difference.
                 self.stats.cancelled += 1
                 _logger.info("job.cancelled", job_id=work.id, kind=work.kind)
         return True
+
+    def _announce(self, work: queue.Work) -> None:
+        """Say that the recording this job was about has changed (``REV-12``).
+
+        This is the instant a transcript became readable, a duration became known, a waveform
+        became drawable -- the one every client used to go looking for on a timer.
+
+        Announced whether or not anybody is listening. Skipping the lookup when there are no
+        subscribers would save one indexed read per job and buy a race with the client that
+        connects between the check and the publish, on a path that already ran ffmpeg.
+
+        A failed job announces nothing yet: what a client would refetch has not changed until the
+        queue stops retrying, and the queue draws that distinction nowhere (``JOB-4``).
+        """
+        if work.audio_id is None or self._context.changes is None:
+            return
+        with self._context.database.read_session() as session:
+            audio_uuid = session.execute(
+                select(Audio.uuid).where(Audio.id == work.audio_id)
+            ).scalar_one_or_none()
+        if audio_uuid is not None:
+            self._context.changes.publish(Change(kind=changes.AUDIO, uuid=str(audio_uuid)))
 
     def _record_failure(self, work: queue.Work, message: str) -> None:
         """Store the real message, because ``UI-15`` shows it and a retry button.
