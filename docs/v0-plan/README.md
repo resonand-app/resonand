@@ -65,6 +65,7 @@ here, which is why gaps in the numbering are expected and are not mistakes.
 | `UI` | Frontend | Every view, and the system and spine beneath them | [`interface.md`](interface.md) |
 | `OPS` | Operations | Docker, configuration, backup, observability | [`operations.md`](operations.md) |
 | `INT` | Integration | Views that cross tracks: trash, administration, security | [`integration.md`](integration.md) |
+| `TRX` | Transcription compatibility | What an engine has to look like for Sonarium to consume it | [`transcription.md`](transcription.md) |
 
 Notation:
 
