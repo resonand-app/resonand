@@ -152,9 +152,13 @@ in the second half is new scope -- it is the same work, cut small enough to star
 
 - [x] **UI-25** · **External transcription disclosure** — principle 2 made visible. Wherever a
       transcription is requested, the interface names **which provider the audio will be sent to**
-      and that it will leave the instance, before the request is made; per `DEC-9`, the
-      administration view says the same thing for every watched folder configured to transcribe on
-      arrival. No silent egress anywhere, including the retry path. ⇢ UI-13, JOB-2, API-12 🧪
+      and that it will leave the instance, before the request is made. No silent egress anywhere,
+      including the retry path. ⇢ UI-13, JOB-2, API-12 🧪
+      *`DEC-9` extends the same rule to a folder that transcribes on arrival, which the
+      administration view would have to disclose. That clause travelled with the folder to
+      [`docs/next-plan/ingestion.md`](../next-plan/ingestion.md): nothing in this version sends
+      audio out without somebody asking, so there is nothing for that surface to say, and this
+      task is ticked against the requests a person makes.*
       *This is the one principle with no other implementing task. Without it, principle 2 is a
       sentence in a document rather than a property of the software.*
 

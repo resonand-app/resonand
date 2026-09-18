@@ -2,7 +2,7 @@
 
 The hash comes out of the *same* pass that writes the file. An hours-long upload arrives once and
 must not be walked a second time to be identified: on a cold archive that second walk is disk
-bound and, on the watch-folder path, competes with the transcode of the previous file.
+bound, and it competes with the transcode of whatever arrived before it.
 
 What the interface built on top of this must not imply: the match is over **byte-identical files
 only**. A re-encoded copy of the same recording -- the same voice note exported again by the same

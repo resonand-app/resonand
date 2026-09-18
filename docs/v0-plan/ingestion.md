@@ -45,18 +45,6 @@ structural here rather than aspirational.
 
 - [x] **ING-8** · Download of the original with its original filename. ⇢ ING-7
 
-- [ ] **ING-9** · *Watch folder*: watching a directory, automatic ingestion into a configured
-      library and category, and moving the file to `processed/` or `failed/`. For voice notes this
-      ends up being the main entry path. Transcription on arrival is **opt-in per folder and off
-      by default**, with the destination provider named in the folder's configuration.
-      ⇢ ING-3, JOB-1
-      *Not started, and the only task in this track with nothing behind it at all — no setting, no
-      job kind, no code. It is named here rather than moved to `ROADMAP.md` because two shipped
-      documents describe it to a reader as something the software already does:
-      `deploy/.env.example` explains transcription on arrival in terms of a watched folder, and
-      `UI-25`'s disclosure clause is written against one. Whichever way this goes, those two say
-      the same thing as the code afterwards.*
-
 - [x] **ING-10** · Moving an audio between libraries: clears the category, changes who can see it,
       and **preserves the individual `share` rows**. Single transaction. The preservation clause has
       no visible effect in v0 and is implemented anyway, because retrofitting it is a data-loss bug.
@@ -115,3 +103,11 @@ structural here rather than aspirational.
       ⇢ ING-5 🧪 the downsample of a downsample is the same shape, and a version 1 blob still reads.
 
 ---
+
+## Deferred
+
+`ING-9` — the watch folder — keeps its identifier in
+[`docs/next-plan/ingestion.md`](../next-plan/ingestion.md). It was the only task in this track
+with nothing behind it at all, and the first version's threshold is reached without it: upload is
+already a way in. What held it here was never the feature but the documents that described it as
+built, and correcting those cost less than building it to match them.

@@ -43,7 +43,7 @@ def test_work_comes_back_in_the_order_it_was_added(database: Database) -> None:
 
 
 def test_the_same_work_is_not_queued_twice(database: Database) -> None:
-    """A retried upload, a re-run of the watch folder and a second click all arrive here."""
+    """A retried upload and a second click both arrive here."""
     audio_id = _audio(database)
     with database.write_session() as session:
         assert queue.enqueue(session, "probe", audio_id=audio_id, idempotency_key="probe:1")

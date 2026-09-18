@@ -110,6 +110,11 @@ transcription on arrival, but it is **opt-in per folder and disabled by default*
 destination provider is named in the folder's configuration, and the administration view states
 which folders send audio out and where. No folder transcribes because it happened to be created.
 
+Nothing in the first version watches a folder, so this binds no shipped code. It binds `ING-9`,
+scoped in [`docs/next-plan/ingestion.md`](../next-plan/ingestion.md), and it is recorded in this
+version's plan because this is where it was settled — a folder built without it is the one way
+principle 2 gets lost quietly.
+
 ### What the first migration contains (DEC-8, DEC-11 to DEC-15)
 
 `DAT-1` writes the schema from the specification **plus these seven deltas**, each of which exists
