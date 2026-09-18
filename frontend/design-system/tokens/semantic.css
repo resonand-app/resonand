@@ -11,14 +11,14 @@
   --text-2: var(--ink-100);
   --text-3: var(--ink-200);
 
-  --accent: var(--amber-400);
-  --accent-on: var(--amber-900);
-  --accent-soft: var(--amber-soft-dark);
-  --accent-on-soft: var(--amber-400);
-  --accent-hover: var(--amber-300);
-  --accent-pressed: var(--amber-500);
+  --accent: var(--orange-400);
+  --accent-on: var(--orange-900);
+  --accent-soft: var(--orange-soft-dark);
+  --accent-on-soft: var(--orange-400);
+  --accent-hover: var(--orange-300);
+  --accent-pressed: var(--orange-500);
 
-  --wave: var(--amber-400);
+  --wave: var(--orange-400);
   --wave-dim: var(--ink-300);
 
   --elevation-raised: var(--elevation-raised-dark);
@@ -74,14 +74,14 @@
     --text-2: var(--paper-800);
     --text-3: var(--paper-700);
 
-    --accent: var(--amber-700);
-    --accent-on: var(--amber-700-on);
-    --accent-soft: var(--amber-soft-light);
-    --accent-on-soft: var(--amber-soft-light-on);
-    --accent-hover: var(--amber-800);
-    --accent-pressed: var(--amber-800);
+    --accent: var(--orange-700);
+    --accent-on: var(--orange-700-on);
+    --accent-soft: var(--orange-soft-light);
+    --accent-on-soft: var(--orange-soft-light-on);
+    --accent-hover: var(--orange-800);
+    --accent-pressed: var(--orange-800);
 
-    --wave: var(--amber-700);
+    --wave: var(--orange-700);
     --wave-dim: var(--paper-600);
 
     --elevation-raised: var(--elevation-raised-light);
@@ -121,14 +121,14 @@
   --text-2: var(--paper-800);
   --text-3: var(--paper-700);
 
-  --accent: var(--amber-700);
-  --accent-on: var(--amber-700-on);
-  --accent-soft: var(--amber-soft-light);
-  --accent-on-soft: var(--amber-soft-light-on);
-  --accent-hover: var(--amber-800);
-  --accent-pressed: var(--amber-800);
+  --accent: var(--orange-700);
+  --accent-on: var(--orange-700-on);
+  --accent-soft: var(--orange-soft-light);
+  --accent-on-soft: var(--orange-soft-light-on);
+  --accent-hover: var(--orange-800);
+  --accent-pressed: var(--orange-800);
 
-  --wave: var(--amber-700);
+  --wave: var(--orange-700);
   --wave-dim: var(--paper-600);
 
   --elevation-raised: var(--elevation-raised-light);

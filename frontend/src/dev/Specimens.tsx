@@ -175,7 +175,7 @@ const SETTINGS_TABS = [
 const GUIDELINES = [
   'colors-surfaces-dark',
   'colors-surfaces-light',
-  'colors-amber',
+  'colors-orange',
   'colors-state',
   'colors-library',
   'type-display',
