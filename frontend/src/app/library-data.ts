@@ -5,8 +5,9 @@
  * "shared with you" is `owner.id` against the signed-in account -- which is why both queries are
  * here rather than in the component: the sidebar is presentational and is handed two arrays.
  *
- * The personal library is always first and cannot be deleted. It is first because it is where a
- * recording goes when nobody chose, not because it happens to sort that way.
+ * The personal library is always first. It is first because it is where a recording goes when
+ * nobody chose, not because it happens to sort that way -- and since `DAT-9` that is all the flag
+ * does: what cannot be deleted is an account's last library, whichever one it is.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -71,6 +72,28 @@ export function useTrashCount(): number {
     queryFn: () => get('/api/trash/libraries', { query: { limit: 1 } }),
   });
   return (recordings.data?.total ?? 0) + (libraries.data?.total ?? 0);
+}
+
+/**
+ * Whether this library may be sent to the trash (`DAT-9`).
+ *
+ * An account keeps at least one, so the affordance is absent on the last one rather than present
+ * and answered with a 400 -- the same reason it used to be absent on the personal library, which
+ * is now only the first of them.
+ *
+ * **A library somebody else owns answers `true`**, because the count this asks about is theirs and
+ * this client cannot see it: `GET /api/libraries` returns what the caller can read, not what the
+ * owner has. The API asks the question properly and refuses if it is their last, which is rare
+ * enough to be worth a refusal rather than a second endpoint.
+ */
+export function useCanTrashLibrary(
+  library: { uuid: string; owner: { id: number } } | undefined,
+): boolean {
+  const { account } = useSession();
+  const libraries = useAllLibraries();
+  if (library === undefined || account === undefined) return false;
+  if (library.owner.id !== account.id) return true;
+  return libraries.filter((one) => one.owner.id === account.id).length > 1;
 }
 
 /** The seven colours are names in the API and custom properties in the system. */

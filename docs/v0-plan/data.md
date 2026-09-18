@@ -35,9 +35,11 @@ query is the only source of truth for permissions and everything goes through it
       the caller has already resolved. The invariant is the same one, enforced a layer earlier —
       `tests/api/test_no_route_escapes_the_acl.py` is what holds it.*
 
-- [x] **DAT-5** · User creation → creates the non-deletable `is_personal = 1` personal library,
-      within the same transaction. ⇢ DAT-4
+- [x] **DAT-5** · User creation → creates the `is_personal = 1` personal library, within the same
+      transaction. ⇢ DAT-4
       🧪 There must be no path that creates a user without a personal library.
+      *It was specified as non-deletable, and `DAT-9` moved that guarantee off the flag and onto
+      the count.*
 
 - [x] **DAT-6** · Tag normalisation (`slug` lowercase and without diacritics), **first writer
       owns the display name** on a slug collision, and **ACL-filtered** autocomplete offering the
@@ -55,5 +57,16 @@ query is the only source of truth for permissions and everything goes through it
       built outside the repository by the local development layer, through `sonarium import` and
       the real probe and waveform jobs, so a recording in it is indistinguishable from one
       somebody uploaded. Tests construct exactly the rows they assert on. ⇢ DAT-5
+
+- [x] **DAT-9** · **The last library an account owns cannot be trashed — the personal one can.**
+      What `audio.library_id NOT NULL` actually rests on is that there is always somewhere for a
+      recording to go, and that is the count being at least one, not the `is_personal` flag: an
+      upload names its destination and a trashed library takes its recordings with it, so nothing
+      was ever routed to the personal library by default. Refusing on the flag therefore bought
+      nothing and cost somebody a folder called Personal they did not want. The question is asked
+      of the **owner** rather than of the caller, because manage is grantable. `is_personal`
+      stays, and is now only what puts a library first in a list. ⇢ DAT-4, DAT-5
+      🧪 An account's last library is refused, the personal one goes once a second exists, and the
+      one that remains is refused in its turn.
 
 ---

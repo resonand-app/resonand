@@ -35,7 +35,7 @@ import {
 } from '@/design-system';
 import * as format from '@/i18n/format';
 
-import { colourOf } from '@/app/library-data';
+import { colourOf, useCanTrashLibrary } from '@/app/library-data';
 import { LEVEL } from '@/features/library/data';
 
 import { useLibraryList } from './data';
@@ -130,8 +130,8 @@ export function LibrariesView() {
  * **The corner menu is the settings screen's only door, so it needs the level that screen needs.**
  * Level 30, the same test `LibraryHeader` applies to the button that goes to the same place --
  * without it a library shared at Can edit offered a way in, and the screen behind it was a form
- * whose every field was read-only. Trashing the library needs the same 30 and is refused outright
- * on a personal one, so the row is absent there rather than present and answered with a 400.
+ * whose every field was read-only. Trashing the library needs the same 30 and is refused on an
+ * account's last one, so the row is absent there rather than present and answered with a 400.
  */
 export function Card({
   library,
@@ -143,6 +143,7 @@ export function Card({
 }) {
   const { t } = useTranslation('libraries');
   const navigate = useNavigate();
+  const canTrash = useCanTrashLibrary(library);
   const [trashing, setTrashing] = useState(false);
 
   return (
@@ -175,9 +176,8 @@ export function Card({
               width={200}
               items={[
                 { id: 'edit', label: t('common:action.edit'), icon: 'pencil' },
-                ...(library.is_personal
-                  ? []
-                  : [
+                ...(canTrash
+                  ? [
                       {
                         id: 'trash',
                         label: t('card.trash'),
@@ -185,7 +185,8 @@ export function Card({
                         destructive: true,
                         separated: true,
                       },
-                    ]),
+                    ]
+                  : []),
               ]}
               onSelect={(id) => {
                 if (id === 'edit') void navigate(toLibrarySettings(library.uuid));
@@ -235,8 +236,8 @@ function Skeletons() {
  *
  * One library, nothing in it, and nobody sharing anything -- so this is a new account rather than
  * an empty page, and §V2 is emphatic that it is an invitation to upload and not an empty grid.
- * The personal library's card is still above it, because it is real and it is where the audio
- * will land; what this adds is the reason to put something in it.
+ * The card of the library the account was created with is still above it, because it is real and
+ * it is where the audio will land; what this adds is the reason to put something in it.
  *
  * **It has no action button yet, and that is deliberate.** The action is Upload, the upload
  * dialog is `UI-18a`, and a button that opens nothing is worse than a sentence that names the

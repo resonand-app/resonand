@@ -66,7 +66,15 @@ describe('trashing a library', () => {
     expect(archive.libraries.find((one) => one.uuid === RECORDINGS)?.deleted_at).not.toBeNull();
   });
 
-  it('is not offered at all for the personal library', async () => {
+  it('is offered for the personal library, which is only the first of them', async () => {
+    show(PERSONAL);
+    await screen.findByRole('heading', { name: 'Personal' });
+    expect(await screen.findByRole('button', { name: /move this library/i })).toBeVisible();
+  });
+
+  it('is not offered at all on the only library the account owns', async () => {
+    // `DAT-9`: the API refuses the last one, and a button that always fails is worse than none.
+    archive.libraries = archive.libraries.filter((one) => one.uuid !== RECORDINGS);
     show(PERSONAL);
     await screen.findByRole('heading', { name: 'Personal' });
     expect(screen.queryByRole('button', { name: /move this library/i })).not.toBeInTheDocument();

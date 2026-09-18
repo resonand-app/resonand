@@ -80,7 +80,7 @@ export function TrashLibraryDialog({ library, open, onClose, onTrashed }: TrashL
             }}
             role="alert"
           >
-            {/* Whatever the instance said, shown rather than replaced (§1.9). A personal
+            {/* Whatever the instance said, shown rather than replaced (§1.9). An account's last
                 library reaches this only through a direct request, and the API's own sentence
                 explains it better than a second one written here would. */}
             {isApiProblem(trash.error) ? trash.error.detail : t('error.title')}

@@ -98,7 +98,7 @@ def test_it_needs_an_account(client: TestClient) -> None:
 def test_managing_a_library_is_what_it_takes_and_everybody_does(
     client: TestClient, accounts: dict[str, int]
 ) -> None:
-    """Worth stating plainly: every account owns its personal library at level 40, so this gate
+    """Worth stating plainly: every account owns at least one library at level 40, so this gate
     passes for everybody. It is not the protection -- the full-address match is."""
     sign_in(client, "stranger")
     assert (

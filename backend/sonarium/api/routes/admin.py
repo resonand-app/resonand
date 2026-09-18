@@ -88,7 +88,9 @@ def delete_user(user_id: int, session: WriteSession) -> None:
             "transferring ownership is not built yet. Disable the account instead: it keeps the "
             "recordings and stops the person signing in."
         )
-    personal = user_repo.personal_library(session, user_id)
-    session.delete(personal)
+    # Whatever is left is empty and nobody else's: the count above refused anything the account
+    # made itself, so this is the library it was created with, or nothing where that was purged.
+    for library in session.execute(select(Library).where(Library.owner_id == user_id)).scalars():
+        session.delete(library)
     session.delete(user)
     session.flush()

@@ -230,8 +230,22 @@ export const handlers: HttpHandler[] = [
     return HttpResponse.json(updated);
   }),
   http.delete('/api/libraries/:library_uuid', ({ params }) => {
+    const going = archive.libraries.find((one) => one.uuid === params.library_uuid);
+    if (!going) return NOT_FOUND();
+    // `DAT-9`: the owner keeps at least one. A mock that trashed it anyway would let a view pass
+    // a test for an affordance the real API refuses.
+    const others = archive.libraries.filter(
+      (one) => one.owner.id === going.owner.id && one !== going && one.deleted_at === null,
+    );
+    if (others.length === 0) {
+      return problem(
+        400,
+        'An account keeps at least one library -- it is where a recording goes when nobody ' +
+          'chose another -- and this is the last one. Create another library first.',
+      );
+    }
     archive.libraries = archive.libraries.map((one) =>
-      one.uuid === params.library_uuid ? { ...one, deleted_at: '2026-03-12T10:00:00Z' } : one,
+      one === going ? { ...one, deleted_at: '2026-03-12T10:00:00Z' } : one,
     );
     return new HttpResponse(null, { status: 204 });
   }),

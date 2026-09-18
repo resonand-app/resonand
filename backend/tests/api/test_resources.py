@@ -114,13 +114,24 @@ def test_a_library_colour_is_chosen_and_can_be_changed(
     assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
-def test_a_personal_library_cannot_be_deleted_over_http(
+def test_the_last_library_cannot_be_deleted_over_http(
     client: TestClient, accounts: dict[str, int]
 ) -> None:
+    """``DAT-9``. A fresh account owns exactly one, so the one it was created with is the one."""
     sign_in(client, "friend")
     personal = client.get("/libraries").json()[0]["uuid"]
     refused = client.delete(f"/libraries/{personal}")
     assert refused.status_code == status.HTTP_400_BAD_REQUEST
+
+
+def test_the_personal_library_can_be_deleted_over_http_once_there_is_another(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    sign_in(client, "friend")
+    personal = client.get("/libraries").json()[0]["uuid"]
+    client.post("/libraries", json={"name": "Interviews"})
+    assert client.delete(f"/libraries/{personal}").status_code == status.HTTP_204_NO_CONTENT
+    assert [one["is_personal"] for one in client.get("/libraries").json()] == [False]
 
 
 def test_sharing_requires_manage_and_the_level_is_explained_in_words(

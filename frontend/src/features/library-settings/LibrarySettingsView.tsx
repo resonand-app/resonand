@@ -36,7 +36,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
-import { colourOf } from '@/app/library-data';
+import { colourOf, useCanTrashLibrary } from '@/app/library-data';
 import { isPlainClick } from '@/app/links';
 import { toLibrary } from '@/app/routes';
 import {
@@ -65,6 +65,7 @@ export function LibrarySettingsView() {
   const categoryEdits = useCategoryEdits(uuid);
   const shareEdits = useShareEdits(uuid);
   const library = context.library;
+  const canTrash = useCanTrashLibrary(library);
 
   if (context.error !== null && context.error !== undefined) {
     return <Unavailable error={context.error} />;
@@ -166,9 +167,9 @@ export function LibrarySettingsView() {
 
         <SharePanel library={library} shares={context.shares} edits={shareEdits} canManage />
 
-        {/* The personal library cannot be deleted, and the affordance is absent rather than
+        {/* An account's last library cannot be deleted, and the affordance is absent rather than
             disabled: the API refuses it, and a button that always fails is worse than none. */}
-        {!library.is_personal && <TrashLibrary library={library} />}
+        {canTrash && <TrashLibrary library={library} />}
       </div>
     </section>
   );

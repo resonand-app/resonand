@@ -835,8 +835,11 @@ The reason the product exists: two surfaces over one endpoint.
       result. It is not a directory, and the interface must not look like one. ⇢ UI-17c, API-15
 - [x] **UI-17e** · The three variants: the inherited-versus-individual split kept visible even
       though individual sharing is not in v0, because a moved recording can arrive carrying one;
-      the personal library, which cannot be deleted or shared away; and shared-at-can-edit, where
-      the panel is **read-only rather than absent**. ⇢ UI-17c
+      the personal library, which cannot be shared away; and shared-at-can-edit, where the panel
+      is **read-only rather than absent**. ⇢ UI-17c
+      *It could not be deleted either, until `DAT-9` moved that refusal onto an account's last
+      library. What the settings screen withholds is now the trash section on the only library you
+      own, whichever one it is.*
 - [x] **UI-17f** · Trash this library, and the confirm that counts what goes with it and for how
       long it can come back. ⇢ UI-17a, UI-34a
 
