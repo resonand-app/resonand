@@ -149,12 +149,18 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Test the connection
-         * @description Ask the transcription service whether it is there.
+         * Check it can transcribe
+         * @description Ask the configured engine whether it can produce what the archive stores (``TRX-10``).
          *
-         *     An explicit action, on a button, because contacting a third party is not something a page
-         *     should do because it was opened. No audio is sent -- this asks for the model list, which is
-         *     the cheapest thing an OpenAI-compatible server will answer.
+         *     **An explicit action, on a button**, because contacting a third party is not something a page
+         *     should do because it was opened.
+         *
+         *     It asks by submitting three seconds of tone generated on the spot -- never one of anybody's
+         *     recordings -- because the question that matters cannot be answered any other way. An endpoint
+         *     answering a request for its model list proves that something is listening and nothing more:
+         *     the model behind that URL decides whether anything timed comes back, and the likeliest
+         *     misconfiguration here is a model that answers perfectly and cannot return segments. A check
+         *     that passed it would be worse than no check at all, because an administrator would believe it.
          */
         post: operations["test_transcription_api_admin_transcription_test_post"];
         delete?: never;
@@ -1621,6 +1627,8 @@ export interface components {
             provider: string;
             /** Reachable */
             reachable: boolean | null;
+            /** Usable */
+            usable: boolean | null;
         };
         /** ReorderCategories */
         ReorderCategories: {

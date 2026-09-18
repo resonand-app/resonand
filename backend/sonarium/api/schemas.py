@@ -507,8 +507,13 @@ class ProviderStatus(Api):
     default_language: str | None
     configured: bool
     reachable: bool | None
-    """``None`` until a connection test has been run, because nothing should reach out to a
-    third party just because somebody opened a page (principle 2)."""
+    """Whether anything answered. ``None`` until a check has been run, because nothing should
+    reach out to a third party just because somebody opened a page (principle 2)."""
+
+    usable: bool | None
+    """Whether it can produce what the archive stores, which is a different question and the one
+    that decides whether transcription works. An endpoint can answer everything asked of it and
+    still run a model that cannot return timed segments (``TRX-10``). ``None`` until checked."""
 
     detail: str
 

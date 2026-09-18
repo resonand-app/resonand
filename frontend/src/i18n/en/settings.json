@@ -92,12 +92,13 @@
     "credential": "Credential",
     "credentialSet": "Set",
     "credentialUnset": "Not set",
-    "test": "Test the connection",
-    "testing": "Contacting it",
-    "untested": "Not contacted yet",
-    "reachable": "It answered",
+    "test": "Check it can transcribe",
+    "testing": "Checking",
+    "untested": "Not checked yet",
+    "usable": "It can transcribe",
+    "unusable": "It answered, but it cannot transcribe",
     "unreachable": "It did not answer",
-    "neverAutomatic": "Nothing is contacted until you press this. Opening this page reaches out to nobody.",
+    "neverAutomatic": "Nothing is contacted until you press this. Opening this page reaches out to nobody, and the check sends three seconds of generated tone, never one of your recordings.",
     "unconfigured": "No provider is set up, so nothing on this instance can be transcribed. Set SONARIUM_TRANSCRIPTION_* in the environment and restart."
   },
   "queue": {

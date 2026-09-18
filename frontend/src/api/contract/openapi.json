@@ -1185,6 +1185,17 @@
               }
             ],
             "title": "Reachable"
+          },
+          "usable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usable"
           }
         },
         "required": [
@@ -1195,6 +1206,7 @@
           "default_language",
           "configured",
           "reachable",
+          "usable",
           "detail"
         ],
         "title": "ProviderStatus",
@@ -2478,7 +2490,7 @@
     },
     "/api/admin/transcription/test": {
       "post": {
-        "description": "Ask the transcription service whether it is there.\n\nAn explicit action, on a button, because contacting a third party is not something a page\nshould do because it was opened. No audio is sent -- this asks for the model list, which is\nthe cheapest thing an OpenAI-compatible server will answer.",
+        "description": "Ask the configured engine whether it can produce what the archive stores (``TRX-10``).\n\n**An explicit action, on a button**, because contacting a third party is not something a page\nshould do because it was opened.\n\nIt asks by submitting three seconds of tone generated on the spot -- never one of anybody's\nrecordings -- because the question that matters cannot be answered any other way. An endpoint\nanswering a request for its model list proves that something is listening and nothing more:\nthe model behind that URL decides whether anything timed comes back, and the likeliest\nmisconfiguration here is a model that answers perfectly and cannot return segments. A check\nthat passed it would be worse than no check at all, because an administrator would believe it.",
         "operationId": "test_transcription_api_admin_transcription_test_post",
         "responses": {
           "200": {
@@ -2492,7 +2504,7 @@
             "description": "Successful Response"
           }
         },
-        "summary": "Test the connection",
+        "summary": "Check it can transcribe",
         "tags": [
           "administration"
         ]

@@ -720,13 +720,20 @@ export const handlers: HttpHandler[] = [
 /**
  * The provider as the instance holds it (`INT-3c`).
  *
- * **`reachable` is `null` unless somebody ran the test**, which is the endpoint's own contract and
+ * **`reachable` is `null` unless somebody ran the check**, which is the endpoint's own contract and
  * not a detail: nothing contacts a third party because a page was opened, so a plain read cannot
  * know whether the provider answers. A mock that returned `true` here would make the one state
- * `INT-3c` exists to draw -- untested -- unreachable in a test, and the page would look right
+ * `INT-3c` exists to draw -- unchecked -- unreachable in a test, and the page would look right
  * while proving nothing.
+ *
+ * **`usable` is a second answer and not a synonym** (`TRX-10`). An engine can answer everything
+ * asked of it and still run a model that returns no timed segments, so a handler that tied the
+ * two together would make the state the check exists to catch untestable.
  */
-function providerStatus(reachable: boolean | null = null): Schemas['ProviderStatus'] {
+function providerStatus(
+  reachable: boolean | null = null,
+  usable: boolean | null = reachable,
+): Schemas['ProviderStatus'] {
   return {
     provider: archive.destination.provider,
     base_url: 'http://whisper:8000/v1',
@@ -735,6 +742,7 @@ function providerStatus(reachable: boolean | null = null): Schemas['ProviderStat
     configured: archive.destination.configured,
     has_credential: false,
     reachable,
+    usable,
     detail: reachable === null ? '' : 'Answering on whisper:8000.',
   };
 }

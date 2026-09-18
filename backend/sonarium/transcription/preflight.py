@@ -33,7 +33,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from pathlib import Path
 
-from sonarium.core.errors import ProviderError
+from sonarium.core.errors import ProviderError, ProviderUnreachableError
 from sonarium.core.processes import run_tool
 from sonarium.transcription.capabilities import Capabilities, Support
 from sonarium.transcription.contract import TranscriptionProvider, TranscriptionRequest
@@ -68,6 +68,10 @@ class ProbeReport:
     detail: str
     capabilities: Capabilities
     findings: tuple[Finding, ...]
+
+    reached: bool = True
+    """Whether anything answered at all. An address nobody is listening at and a model that
+    refuses the request are both unusable and are fixed differently, so they are reported apart."""
 
 
 def sample_audio(destination: Path, *, seconds: float = SAMPLE_SECONDS) -> Path:
@@ -117,6 +121,14 @@ def probe(
     try:
         handle = provider.submit(request)
         result = provider.poll(handle)
+    except ProviderUnreachableError as error:
+        return ProbeReport(
+            usable=False,
+            reached=False,
+            detail=str(error),
+            capabilities=provider.capabilities,
+            findings=(Finding("Answers at all", "nothing answered", False),),
+        )
     except ProviderError as error:
         return ProbeReport(
             usable=False,

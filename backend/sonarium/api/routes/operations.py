@@ -15,9 +15,9 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Annotated
 
-import httpx
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 
@@ -32,11 +32,13 @@ from sonarium.api.schemas import (
     SystemStatus,
 )
 from sonarium.core.config import Settings
-from sonarium.core.errors import NotFoundError
+from sonarium.core.errors import NotFoundError, ToolError
 from sonarium.db.engine import build_engine
 from sonarium.db.migrate import revisions
 from sonarium.db.models import Audio, Job, Library
 from sonarium.jobs import queue
+from sonarium.transcription import preflight
+from sonarium.transcription.registry import build_provider
 
 router = APIRouter(prefix="/admin", tags=["administration"], dependencies=[Depends(current_admin)])
 
@@ -113,48 +115,43 @@ def transcription_status(settings: InstanceSettings) -> ProviderStatus:
     return _provider_status(settings)
 
 
-@router.post("/transcription/test", response_model=ProviderStatus, summary="Test the connection")
+@router.post(
+    "/transcription/test", response_model=ProviderStatus, summary="Check it can transcribe"
+)
 def test_transcription(settings: InstanceSettings) -> ProviderStatus:
-    """Ask the transcription service whether it is there.
+    """Ask the configured engine whether it can produce what the archive stores (``TRX-10``).
 
-    An explicit action, on a button, because contacting a third party is not something a page
-    should do because it was opened. No audio is sent -- this asks for the model list, which is
-    the cheapest thing an OpenAI-compatible server will answer.
+    **An explicit action, on a button**, because contacting a third party is not something a page
+    should do because it was opened.
+
+    It asks by submitting three seconds of tone generated on the spot -- never one of anybody's
+    recordings -- because the question that matters cannot be answered any other way. An endpoint
+    answering a request for its model list proves that something is listening and nothing more:
+    the model behind that URL decides whether anything timed comes back, and the likeliest
+    misconfiguration here is a model that answers perfectly and cannot return segments. A check
+    that passed it would be worse than no check at all, because an administrator would believe it.
     """
     status = _provider_status(settings)
-    if not status.configured or settings.transcription_base_url is None:
+    if not status.configured:
         return status
-    url = f"{settings.transcription_base_url.rstrip('/')}/models"
-    headers = {}
-    if settings.transcription_api_key is not None:
-        headers["Authorization"] = f"Bearer {settings.transcription_api_key.get_secret_value()}"
+    provider = build_provider(settings)
     try:
-        response = httpx.get(url, headers=headers, timeout=CONNECTION_TEST_TIMEOUT)
-    except httpx.ConnectError:
+        with TemporaryDirectory(prefix="sonarium-probe-") as workspace:
+            sample = preflight.sample_audio(Path(workspace) / "sample.opus")
+            report = preflight.probe(
+                provider, audio=sample, duration_ms=int(preflight.SAMPLE_SECONDS * 1000)
+            )
+    except ToolError:
         return status.model_copy(
             update={
-                "reachable": False,
-                "detail": f"Nothing answered at {url}. Check that the service is running and "
-                "that the address is right.",
+                "detail": "ffmpeg could not produce the sample this check submits, so the engine "
+                "was not contacted and nothing was sent."
             }
         )
-    except httpx.TimeoutException:
-        return status.model_copy(
-            update={
-                "reachable": False,
-                "detail": f"{url} did not answer within {CONNECTION_TEST_TIMEOUT:.0f}s.",
-            }
-        )
-    if response.is_success:
-        return status.model_copy(
-            update={"reachable": True, "detail": "The transcription service answered."}
-        )
+    finally:
+        provider.close()
     return status.model_copy(
-        update={
-            "reachable": False,
-            "detail": f"The transcription service answered {response.status_code}. "
-            "A 401 means the key is wrong; a 404 usually means the address is missing /v1.",
-        }
+        update={"reachable": report.reached, "usable": report.usable, "detail": report.detail}
     )
 
 
@@ -191,6 +188,7 @@ def _provider_status(settings: Settings) -> ProviderStatus:
         default_language=settings.transcription_language,
         configured=configured,
         reachable=None,
+        usable=None,
         detail=(
             "Configured. Run a connection test to check it answers."
             if configured
