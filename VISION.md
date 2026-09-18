@@ -193,10 +193,10 @@ free-software exemptions do not cover high-risk systems.
 
 ## 7. Licence and governance
 
-**AGPL-3.0, with no CLA.** The AGPL keeps every door open: it allows selling complementary
-services, it allows third parties to host it provided they publish their modifications, and it
-prevents anyone from building a better closed version. Declining a CLA builds trust, and the only
-model it closes off is open core — which was the worst fit anyway.
+**AGPL-3.0, with no CLA.** The AGPL keeps every door open: it allows third parties to host it
+provided they publish their modifications, and it prevents anyone from building a better closed
+version. Declining a CLA builds trust, and the only model it closes off is open core — which was
+the worst fit anyway.
 
 The **name** is what protects official status, independently of the code licence.
 

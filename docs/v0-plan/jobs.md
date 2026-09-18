@@ -9,13 +9,14 @@ lives here, because none of it may happen inside the request that uploaded the f
       with exponential backoff, `idempotency_key`, and recovery of jobs left `running` across a
       restart. ⇢ API-1, DAT-2 🧪
 
-- [ ] **JOB-2** · Transcription provider interface (**asynchronous** contract, never a synchronous
+- [x] **JOB-2** · Transcription provider interface (**asynchronous** contract, never a synchronous
       call) and a provider registry driven by configuration. Carries **per-instance credentials and
       usage metering** — audio-seconds submitted, per user, per provider — from the first
       implementation, and a **language parameter** that is optional per request, falls back to an
       instance default and means auto-detect when `null`. ⇢ JOB-1
-      *The provider interface is a future revenue surface, not an architecture detail. It does not
-      get simplified to save work, and a credit-based service without metering is a rewrite.*
+      *The provider boundary does not get simplified to save work. Somebody pays an engine by the
+      second, and a count of what was sent — per user, per provider — is a migration to add later
+      rather than a feature.*
       *Outstanding: only the metering rows. The interface exists and `build_provider` is called
       without a sink, so nothing in a running instance is metered — which `REV-5` settled as the
       decision rather than the omission. The table lands with the first thing that reads it.*

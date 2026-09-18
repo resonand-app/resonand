@@ -21,8 +21,8 @@ each of them is a rewrite if it arrives second:
 * **Per-instance credentials**, read from configuration, never hard-coded and never logged. A
   provider composing a message from anything a server said runs it through :func:`redact` first:
   gateways do echo the key back in an error body.
-* **Usage metering** -- see :mod:`sonarium.transcription.metering`. A credit-based service without
-  metering is a rewrite, not a feature.
+* **Usage metering** -- see :mod:`sonarium.transcription.metering`. Counting what was sent after
+  the fact is a migration, not a feature.
 * **A language parameter**, optional per request, falling back to the instance default and meaning
   auto-detect when it resolves to ``None`` (``DEC-18``).
 

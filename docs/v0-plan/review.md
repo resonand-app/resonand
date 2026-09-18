@@ -114,7 +114,8 @@ number with a letter (`REV-4` → `REV-4a`).
       the metering this would need". There is no `usage` table and no sink outside the in-memory
       one. Settled by saying so rather than by building it: an unused table is three standing
       obligations — `export`, `import` and `fsck` each have to keep it honest — bought for a
-      consumer that does not exist. `DEC-10` is a reason for the interface, not for the rows.
+      consumer that does not exist. The interface costs nothing and stays; the rows wait for
+      something that reads them.
 
 - [x] **REV-10** · **All decision provenance pointed at an unpublished document.** Ten thousand
       lines of comments cite `DAT-3`, `DEC-14`, `JOB-13`, which lived in a plan that was not in
@@ -170,6 +171,7 @@ number with a letter (`REV-4` → `REV-4a`).
 ## Named, and deliberately not acted on
 
 - **REV-S3** · The `db/` modules are called repositories but are application services: they
-  resolve permissions, enqueue jobs and write the search index. Worth naming honestly before
-  `MCP-4`, which requires every MCP tool to be a thin wrapper over an *endpoint* — while these
-  services are the real reuse point. Those two pulls will meet; nothing to change until then.
+  resolve permissions, enqueue jobs and write the search index. Worth naming honestly before an
+  MCP server arrives, since the rule that keeps one honest is that every tool is a thin wrapper
+  over an *endpoint* — while these services are the real reuse point. Those two pulls will meet;
+  nothing to change until then.
