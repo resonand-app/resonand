@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
-import { MEETINGS, RECORDINGS, ALEX, PERSONAL, archive } from '@/test/api/archive';
+import { CASSETTE, MEETINGS, RECORDINGS, ALEX, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { AppShell } from '../AppShell';
@@ -95,11 +95,29 @@ describe('the sidebar', () => {
     expect(screen.queryByText(/shared with you/i)).not.toBeInTheDocument();
   });
 
-  it('counts what is in the trash, and says nothing when it is empty', async () => {
+  it('says nothing on the trash entry when there is nothing in it', async () => {
     renderShell();
     await screen.findByText('Personal');
-    // The archive starts with an empty trash, so the entry is there without a number.
-    expect(screen.getByText(/trash/i)).toBeInTheDocument();
+    // The entry is there whether or not there is anything in it, and an exact name is what says
+    // there is no number beside it.
+    expect(screen.getByRole('button', { name: 'Trash' })).toBeInTheDocument();
+  });
+
+  it('counts the libraries in the trash as well as the recordings', async () => {
+    // Both are things somebody put there and both are rows they will come looking for, so the
+    // badge is the sum -- the same one the trash screen itself arrives at.
+    const when = new Date().toISOString();
+    archive.libraries = archive.libraries.map((one) =>
+      one.uuid === RECORDINGS ? { ...one, deleted_at: when } : one,
+    );
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === CASSETTE ? { ...one, deleted_at: when } : one,
+    );
+    renderShell();
+    const trash = await screen.findByRole('button', { name: /^Trash/ });
+    await waitFor(() => {
+      expect(within(trash).getByText('2')).toBeInTheDocument();
+    });
   });
 
   it('goes where an entry points', async () => {
