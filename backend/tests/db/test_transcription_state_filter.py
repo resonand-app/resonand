@@ -48,9 +48,13 @@ def four_states(database: Database) -> dict[str, int]:
 
         # One at a time, because ``claim`` takes the oldest pending job rather than a named one.
         # ``queued`` is enqueued last so that it is the only job left in ``pending``.
+        #
+        # The limit is lifted because this builds states rather than exercising ``JOB-15``:
+        # ``running`` stays running throughout, so the default of one would refuse every claim
+        # after it.
         def claim_for(name: str) -> int:
             queue.enqueue_transcription(session, audio_id=made[name], audio_uuid=name)
-            work = queue.claim(session)
+            work = queue.claim(session, transcription_limit=len(made))
             assert work is not None and work.audio_id == made[name]
             return work.id
 
