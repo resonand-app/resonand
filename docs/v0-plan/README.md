@@ -38,7 +38,7 @@ again.
 Two gates, then, and neither is a date: **the repository opens when every task here is closed**,
 and **the release waits for several weeks of real use on top of that**. The argument for reading
 the code early was never wrong in itself; what it left out is that the reader would arrive at a
-plan with twenty-six open tasks in it, several of which are defects in work this plan calls
+plan whose open list was still long, and several of those tasks defects in work this plan calls
 shipped. Opening on the day that list is empty costs a few weeks and means the first person
 through the door is reading a finished thing.
 
