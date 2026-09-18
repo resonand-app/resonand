@@ -195,6 +195,100 @@ written up with the decisions governing all of them.
 
 ---
 
+## Asked for while using it
+
+Written down as they came up, in the order they stopped being tolerable rather than any order of
+value. **None of them carries an identifier**, deliberately: [`docs/v0-plan/`](docs/v0-plan/) is
+where a number is minted, and a number that exists only in this document is one the plan will
+hand out twice — which has now happened to `UI-31` and again to `UI-36`. Each of these gets one
+when it is scheduled, and not before.
+
+Three things on the list turned out to be somewhere already. **Editing a transcript** is `JOB-8`
+and `UI-29` above. **A mobile application** is `UI-28`, and the entry under *Beyond that* that
+says why it stays a PWA until that is disproved. And **uploading from a library that is empty** is
+not a wish but a defect — it is `UI-18a1` in the first version, because `UI-10a`'s empty state
+already promises an invitation it has no way to accept.
+
+### Transcription, and what comes back from it
+
+- **More than one transcriber**, perhaps one per language, chosen per recording or per library
+  instead of per instance. `TRX-3` is what makes this describable: an engine already declares what
+  it can do, so the open question is only which of several to ask.
+- **Segments that break on sentences rather than on clock time.** What comes back is bounded by the
+  engine's own windowing, so this is a stitching decision on this side of the boundary — the
+  transcript reads as prose while the timing stays fine enough to seek with.
+- **The fragment length as configuration**, checked against what a model actually accepts. Worth
+  noting that `TRX-3` deliberately moved this the other way, the engine declaring its ceiling and
+  the worker cutting to it, so this is a setting that overrides a declaration and has to say what
+  happens when the two disagree.
+- **What a transcription cost**: how long it took, which model answered, which engine. The
+  `transcript` row already carries `task` and `stitched_from`; this is the rest of that provenance.
+- **Recordings marked never to transcribe** — music, ambience, a sound kept for its own sake. It
+  also stops the queue spending on things nobody will ever search.
+- **Recordings with no speech in them**, which is the same question from the other end: today they
+  come back empty and are indistinguishable from a failure. Deciding what an empty transcript
+  *means* is the task.
+
+### Inside a transcript
+
+- **Parts of a recording attached to ideas**, so a moment can be named and returned to.
+- **Those ideas organised** within the transcript rather than left in a flat list.
+- **Two readings of one transcript**: continuous prose, and segment by segment. The segments are
+  the stored form (`JOB-6`), so both are views over the same rows rather than two formats.
+- **Exporting one recording's transcript from the interface.** `ING-11` already writes `.vtt` and
+  `.srt` beside an export, so what is missing is the gesture and not the format.
+
+### Sharing
+
+- **Suggestions while sharing**, instead of typing a full address. `API-15` is deliberately narrow
+  — full normalised email, at most one result — precisely because a directory of everybody on the
+  instance is what it exists to prevent. So this is a decision about what a manager may see, not a
+  widening of the lookup.
+- **Sharing a transcript without the audio.** That is a real separation in the permission model
+  rather than a flag on a share: a level that reads text but not bytes does not exist today.
+- **Telling somebody that something was shared with them.** There is no notification surface at
+  all; `REV-12`'s event stream is the seam one would arrive on.
+
+### A library and its furniture
+
+- **Category management that is pleasant to use.** The tree itself is `DAT-7` and works; the screen
+  is the part nobody enjoys.
+- **Colours chosen freely for a library**, rather than the seven `DEC-8` fixed. Worth weighing
+  against the reason they were fixed: seven named colours are a vocabulary, and a free picker is a
+  way to end up with two libraries nobody can tell apart.
+- **Tags with colours of their own.**
+- **A library's settings in two blocks** rather than one column.
+
+### Working through a lot of recordings at once
+
+- **Sending to transcribe from the list**, not only from inside a recording.
+- **The bulk actions in the main header** once a selection exists, rather than behind a menu — the
+  trash especially, which is the one everybody reaches for first.
+- **Emptying the trash in bulk**, which today is one row at a time.
+- **Favourites**, kept with a heart.
+
+### The recording itself
+
+- **Editing the large title in place**, rather than only the field in the panel beside it.
+- **Looping or stopping at the end, as a setting**, stopping by default.
+- **A waveform whose shape somebody can choose.**
+- **The list view's headers rounded.** It is the one screen that still looks like a table.
+- **On a phone, the metadata panel closed on arrival**, so that the recording is what is on screen.
+
+### Accounts, and what comes in
+
+- **A profile picture.**
+- **Refusing an upload that has no duration**, which is otherwise a file that fails three jobs
+  later and gives nobody a reason why.
+- **Where a recording was made**, when the container already carries it. This one is different in
+  kind from everything above and is listed last on purpose: location is the most sensitive thing a
+  voice note carries, it is frequently present in phone recordings without the person having
+  thought about it, and reading it is a decision about what this archive keeps rather than a
+  feature to add. If it ever ships, it ships as something visible and removable — never as a
+  column quietly filled in at ingest.
+
+---
+
 ## Beyond that · Intentions, not commitments
 
 Conditional, undated, and listed here mostly so they do not sneak in early and distort a decision
