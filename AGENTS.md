@@ -240,14 +240,19 @@ not the phase. Cite them in commits, branches and reviews.
 | `OPS` | Docker, configuration, backup, observability | `operations.md` |
 | `INT` | Views that cross tracks: trash, administration, security | `integration.md` |
 | `TRX` | What an engine has to look like for Sonarium to consume it | `transcription.md` |
+| `SEC` | What was hardened before the source was readable by anybody | `security.md` |
+| `BUG` | Defects found by using the archive rather than by reading it | `defects.md` |
+| `REV` | Backend review findings, and what settled each one | `review.md` |
 
-Two more are cited from the code and planned in working documents that are **not in this
-repository**, so an identifier carrying one resolves to the code that applied it and nowhere else:
+One more is cited from the code and planned in a working document that is **not in this
+repository**, so an identifier carrying it resolves to the code that applied it and nowhere else:
 
 | Prefix | Track | Planned in |
 |---|---|---|
-| `REV` | Backend review findings | `docs/internal/backend-review-v0.md` (local only) |
 | `FBK` | Feedback and liveness: what the interface says while it works | `docs/internal/feedback-plan.md` (local only) |
+
+`REV` has both: `review.md` carries the findings and what settled them, and
+`docs/internal/backend-review-v0.md` (local only) keeps the reading that produced them.
 
 Notation in the plans: `⇢ X, Y` depends on those · `🔒` critical path · `🧪` carries a mandatory
 test. **A task is done when it meets the criterion written next to it, not when it works.**
