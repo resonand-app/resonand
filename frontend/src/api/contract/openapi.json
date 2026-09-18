@@ -2914,53 +2914,6 @@
         ]
       }
     },
-    "/api/audio/{audio_uuid}/duplicates": {
-      "get": {
-        "description": "Byte-identical copies of a stored recording, the trash included (``DEC-16``).",
-        "operationId": "check_duplicate_api_audio__audio_uuid__duplicates_get",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "audio_uuid",
-            "required": true,
-            "schema": {
-              "title": "Audio Uuid",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/DuplicateWarning"
-                  },
-                  "title": "Response Check Duplicate Api Audio  Audio Uuid  Duplicates Get",
-                  "type": "array"
-                }
-              }
-            },
-            "description": "Successful Response"
-          },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Is this exact file already here",
-        "tags": [
-          "ingestion"
-        ]
-      }
-    },
     "/api/audio/{audio_uuid}/move": {
       "post": {
         "description": "Move a recording into another library.\n\nThree consequences, all of which ``UI-19`` has to state before confirming: who can see it\nchanges, the category is cleared, and grants made on the recording itself survive.",

@@ -106,8 +106,8 @@ def trash_library(library_uuid: str, caller: CurrentCaller, session: WriteSessio
 def restore_library(
     library_uuid: str, caller: CurrentCaller, session: WriteSession
 ) -> LibrarySummary:
-    library = library_repo.restore_library(session, caller.id, library_uuid)
-    return library_summary(session, library, Level.OWNER)
+    library, level = library_repo.restore_library(session, caller.id, library_uuid)
+    return library_summary(session, library, level)
 
 
 @router.get("/{library_uuid}/audio", response_model=Page[AudioSummary])

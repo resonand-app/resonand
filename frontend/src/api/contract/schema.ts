@@ -307,26 +307,6 @@ export interface paths {
         patch: operations["update_audio_api_audio__audio_uuid__patch"];
         trace?: never;
     };
-    "/api/audio/{audio_uuid}/duplicates": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Is this exact file already here
-         * @description Byte-identical copies of a stored recording, the trash included (``DEC-16``).
-         */
-        get: operations["check_duplicate_api_audio__audio_uuid__duplicates_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/audio/{audio_uuid}/move": {
         parameters: {
             query?: never;
@@ -2489,37 +2469,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AudioDetail"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    check_duplicate_api_audio__audio_uuid__duplicates_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                audio_uuid: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DuplicateWarning"][];
                 };
             };
             /** @description Validation Error */

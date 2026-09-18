@@ -459,7 +459,6 @@ export const handlers: HttpHandler[] = [
     );
     return found(detailOf(String(params.audio_uuid)));
   }),
-  http.get('/api/audio/:audio_uuid/duplicates', () => HttpResponse.json([])),
   http.post('/api/audio/:audio_uuid/transcribe', ({ params }) => {
     const existing = archive.recordings.find((one) => one.uuid === params.audio_uuid);
     if (!existing) return NOT_FOUND();
