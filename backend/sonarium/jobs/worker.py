@@ -147,8 +147,11 @@ class Worker:
         subscribers would save one indexed read per job and buy a race with the client that
         connects between the check and the publish, on a path that already ran ffmpeg.
 
-        A failed job announces nothing yet: what a client would refetch has not changed until the
-        queue stops retrying, and the queue draws that distinction nowhere (``JOB-4``).
+        **Every state a client can see is announced, and only those.** A job that finished, one
+        that has run out of attempts and one that was cancelled all change what the recording says
+        it is; a job going back to pending for another try does not, because pending and running
+        are one state on the other side of the API and announcing it would be a refetch that finds
+        what the last one did.
         """
         if work.audio_id is None or self._context.changes is None:
             return
@@ -170,9 +173,11 @@ class Worker:
         if state == queue.CANCELLED:
             self.stats.cancelled += 1
             _logger.info("job.cancelled", job_id=work.id, kind=work.kind)
+            self._announce(work)
         elif state == queue.FAILED:
             self.stats.failed += 1
             _logger.error("job.failed", job_id=work.id, kind=work.kind, error=message)
+            self._announce(work)
         else:
             self.stats.retried += 1
             _logger.warning(

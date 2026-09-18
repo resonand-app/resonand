@@ -652,6 +652,51 @@ def test_a_finished_job_says_which_recording_changed(
     assert changes.announced == [Change(kind=AUDIO, uuid=audio_uuid)]
 
 
+def test_a_transcription_that_fails_says_so_too(
+    database: Database, db_settings: Settings, stored: tuple[str, int]
+) -> None:
+    """The half a client cannot poll for once it has stopped polling.
+
+    A screen that says "Transcribing" until somebody navigates away and back is the failure
+    ``REV-12`` is about, and turning the interval off is what would have moved it here.
+    """
+    audio_uuid, audio_id = stored
+    changes = Announcements()
+    provider = FakeProvider(fail_with="whisper.local refused the connection")
+    with database.write_session() as session:
+        queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
+        # On its last attempt, so the failure is the terminal one rather than another retry.
+        session.execute(select(Job)).scalars().one().attempts = queue.MAX_ATTEMPTS
+    context = replace(context_for(database, db_settings, provider), changes=changes)
+
+    assert Worker(context).run_once() is True
+
+    with database.read_session() as session:
+        failed = session.execute(select(Job)).scalars().one()
+    assert failed.state == queue.FAILED
+    assert changes.announced == [Change(kind=AUDIO, uuid=audio_uuid)]
+
+
+def test_a_job_going_back_for_another_try_says_nothing(
+    database: Database, db_settings: Settings, stored: tuple[str, int]
+) -> None:
+    """Pending and running are one state on the other side of the API.
+
+    Announcing a retry would be a refetch that finds exactly what the last one did, once per
+    attempt, for every client watching.
+    """
+    _, audio_id = stored
+    changes = Announcements()
+    provider = FakeProvider(fail_with="whisper.local refused the connection")
+    with database.write_session() as session:
+        queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
+    context = replace(context_for(database, db_settings, provider), changes=changes)
+
+    assert Worker(context).run_once() is True
+
+    assert changes.announced == []
+
+
 def test_a_worker_with_nowhere_to_announce_still_runs_its_jobs(
     database: Database, db_settings: Settings, stored: tuple[str, int]
 ) -> None:
