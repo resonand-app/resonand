@@ -23,10 +23,17 @@ import { useEffect, useRef } from 'react';
 
 import { get, post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
+import { useLiveArchive } from '@/app/live-archive';
 import { keys } from '@/api/keys';
 import { HANDLED_CONFLICT } from '@/api/query-client';
 import type { components } from '@/api/contract/schema';
 import type { TranscriptionState } from '@/design-system';
+
+const RUNNING_STATUS_POLL_MS = 10_000;
+/** Short enough to notice a transcription finishing, long enough not to poll a provider's queue.
+
+    Only reached when there is no stream: the instance announces the same fact the moment it is
+    true, and this is what the interface falls back to when it cannot be told. */
 
 export type TranscriptionDestination = components['schemas']['TranscriptionDestination'];
 export type TranscriptionStatus = components['schemas']['TranscriptionStatus'];
@@ -70,15 +77,17 @@ export function useTranscriptionStatus(
   showing: TranscriptionState,
 ): UseQueryResult<TranscriptionStatus> {
   const client = useQueryClient();
+  const live = useLiveArchive();
   // A recording with a transcript has nothing left to report, and the endpoint is not asked.
   const enabled = showing !== 'done' && uuid !== '';
   const query = useQuery({
     queryKey: keys.transcription(uuid),
     queryFn: () => get('/api/audio/{audio_uuid}/transcription', { path: { audio_uuid: uuid } }),
     enabled,
-    // A transcription that is running finishes while somebody watches, and there is no push. The
-    // window is short enough to notice and long enough not to poll a provider's queue.
-    refetchInterval: (one) => (one.state.data?.state === 'running' ? 10_000 : false),
+    // A transcription that is running finishes while somebody watches. The stream says so the
+    // moment it happens (`REV-12`); this is what notices when there is no stream to say it.
+    refetchInterval: (one) =>
+      !live && one.state.data?.state === 'running' ? RUNNING_STATUS_POLL_MS : false,
   });
 
   const reported = query.data?.state;

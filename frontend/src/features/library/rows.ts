@@ -26,6 +26,7 @@ import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
 import type { Query } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
+import { useLiveArchive } from '@/app/live-archive';
 import { keys } from '@/api/keys';
 import { PAGE_SIZE } from '@/api/paged';
 import type { Page } from '@/api/paged';
@@ -46,7 +47,7 @@ export function pagesFor(
 }
 
 /** The query one page of this list is cached under, so the count and the rows share it. */
-function pageQuery(uuid: string, query: Record<string, unknown>, page: number) {
+function pageQuery(uuid: string, query: Record<string, unknown>, page: number, live: boolean) {
   const parameters = { ...query, limit: PAGE_SIZE, offset: page * PAGE_SIZE };
   return {
     queryKey: keys.libraryAudio(uuid, parameters),
@@ -60,7 +61,10 @@ function pageQuery(uuid: string, query: Record<string, unknown>, page: number) {
     staleTime: 60_000,
     // Only the page that has something still being made on it asks again (`FBK-3`). Scrolling
     // back over settled ground stays free.
-    refetchInterval: (one: Query<Page<Recording>>) => intervalFor(one.state.data?.items ?? []),
+    // Off while the instance is telling us what changed (`REV-12`); the interval is the
+    // fallback for a stream that could not be held, not the ordinary path.
+    refetchInterval: (one: Query<Page<Recording>>) =>
+      live ? false : intervalFor(one.state.data?.items ?? []),
   };
 }
 
@@ -81,7 +85,8 @@ export interface RowCount {
  * the same key, so it is one request and the cache answers the second caller.
  */
 export function useRowCount(uuid: string, query: Record<string, unknown>): RowCount {
-  const first = useQuery({ ...pageQuery(uuid, query, 0), placeholderData: keepPreviousData });
+  const live = useLiveArchive();
+  const first = useQuery({ ...pageQuery(uuid, query, 0, live), placeholderData: keepPreviousData });
   return {
     total: first.data?.total ?? 0,
     isPending: first.isPending,
@@ -99,8 +104,9 @@ export function useRows(
   query: Record<string, unknown>,
   range: { start: number; end: number },
 ): Rows {
+  const live = useLiveArchive();
   const pages = pagesFor(range);
-  const results = useQueries({ queries: pages.map((page) => pageQuery(uuid, query, page)) });
+  const results = useQueries({ queries: pages.map((page) => pageQuery(uuid, query, page, live)) });
 
   const loaded = new Map<number, Page<Recording>>();
   pages.forEach((page, index) => {

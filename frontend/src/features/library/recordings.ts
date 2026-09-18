@@ -21,6 +21,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 
 import { get } from '@/api/client';
+import { useLiveArchive } from '@/app/live-archive';
 import { keys } from '@/api/keys';
 import { MAX_PAGE_SIZE, useInfinitePages } from '@/api/paged';
 import type { InfiniteResult, Page } from '@/api/paged';
@@ -55,6 +56,7 @@ export function useRecordings(
   uuid: string,
   query: Record<string, unknown>,
 ): InfiniteResult<Recording> {
+  const live = useLiveArchive();
   return useInfinitePages<Recording>(
     // The window is deliberately absent from the key: the pages of one filter are one cached
     // thing, and an offset in the key would make each of them a separate one.
@@ -69,7 +71,9 @@ export function useRecordings(
       // A card uploaded into a grid somebody is looking at grows its duration and its shape where
       // it stands, and the grid stops asking the moment nothing on it is still being made
       // (`FBK-3`).
-      refetchInterval: (items) => intervalFor(items),
+      // Off while the instance is telling us what changed (`REV-12`); the interval is the
+      // fallback for a stream that could not be held, not the ordinary path.
+      refetchInterval: (items) => (live ? false : intervalFor(items)),
     },
   );
 }

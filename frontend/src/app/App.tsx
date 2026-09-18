@@ -26,6 +26,7 @@ import { SettingsView } from '@/features/settings/SettingsView';
 import { TrashView } from '@/features/trash/TrashView';
 import { SignInView } from '@/features/sign-in/SignInView';
 
+import { LiveArchive } from './events';
 import { AppShell } from './shell/AppShell';
 import { NotFound } from './shell/NotFound';
 import { RequireSession } from './shell/RequireSession';
@@ -107,8 +108,12 @@ export function AppRoutes() {
 /** The shell, with whichever view the route resolved to inside it. */
 function Framed() {
   return (
-    <AppShell>
-      <Outlet />
-    </AppShell>
+    // Outside the shell and inside the session guard: one stream for the whole application,
+    // opened when there is somebody to open it for and closed when they sign out (`REV-12`).
+    <LiveArchive>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </LiveArchive>
   );
 }

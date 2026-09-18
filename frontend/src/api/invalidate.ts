@@ -32,6 +32,8 @@ export type Change =
   | { kind: 'upload'; library: string }
   /** Transcription was asked for, finished, or failed. */
   | { kind: 'transcription'; recording: string }
+  /** The instance said a recording changed: a job finished and something derived now exists. */
+  | { kind: 'recording-settled'; recording: string }
   /** Who a library is shared with. */
   | { kind: 'share'; library: string }
   /** The signed-in account: display name, address, language. */
@@ -88,6 +90,12 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
       // The four states are derived from the job, and the badge, the filter and the detail view
       // all read them -- so the recording and everything that lists it.
       return [keys.recording(change.recording), keys.search(), keys.libraries()];
+    case 'recording-settled':
+      // Which job finished is deliberately not in the event, so this has to cover all of them: a
+      // probe changes a duration and so a library's total, a waveform changes a card, a
+      // transcription changes what search can find. That union is what `transcription` already
+      // asks for, and saying so here is what keeps the two from drifting apart.
+      return staleAfter({ kind: 'transcription', recording: change.recording });
     case 'share':
       return [keys.libraryShares(change.library), keys.libraries()];
     case 'account':

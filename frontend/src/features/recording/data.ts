@@ -20,6 +20,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { get } from '@/api/client';
+import { useLiveArchive } from '@/app/live-archive';
 import { keys } from '@/api/keys';
 import { intervalForOne } from '@/api/settling';
 import type { components } from '@/api/contract/schema';
@@ -69,13 +70,16 @@ export interface RecordingContext {
 }
 
 export function useRecording(uuid: string): RecordingContext {
+  const live = useLiveArchive();
   const recording = useQuery({
     queryKey: keys.recording(uuid),
     queryFn: () => get('/api/audio/{audio_uuid}', { path: { audio_uuid: uuid } }),
     enabled: uuid !== '',
     // A recording opened the moment it was uploaded fills in its duration, its technical details
     // and its waveform without a reload (`FBK-3`).
-    refetchInterval: (one) => intervalForOne(one.state.data),
+    // Off while the instance is telling us what changed (`REV-12`); the interval is the
+    // fallback for a stream that could not be held, not the ordinary path.
+    refetchInterval: (one) => (live ? false : intervalForOne(one.state.data)),
   });
   const libraries = useQuery({
     queryKey: keys.libraries(),

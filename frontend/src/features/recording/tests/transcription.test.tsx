@@ -16,12 +16,14 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { keys } from '@/api/keys';
 import { createQueryClient } from '@/api/query-client';
+import { LiveArchive } from '@/app/events';
 import { REHEARSAL, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
+import { FakeEventSource, withEventSource, withoutEventSource } from '@/test/support/event-source';
 
 import { useTranscriptionSettled, useTranscriptionStatus } from '../transcription';
 
@@ -159,6 +161,68 @@ describe('a recording that learned it first', () => {
 
     await waitFor(() => {
       expect(client.getQueryState([...keys.recording(REHEARSAL)])?.isInvalidated).toBe(false);
+    });
+  });
+});
+
+describe('the poll, once the instance can say so itself', () => {
+  /**
+   * What the query would do next, asked of the options the hook actually installed.
+   *
+   * Through the resolved `refetchInterval` rather than by counting requests over fake timers:
+   * the question is whether the interval is on, and a test that waits for a second request to
+   * not arrive can only ever say "not yet".
+   */
+  function nextInterval(client: QueryClient): number | false {
+    const found = client.getQueryCache().find({ queryKey: [...keys.transcription(REHEARSAL)] });
+    // The cache's own view of a query is typed without the fetching options, which are the ones
+    // being asked about here.
+    const resolve = (found?.options as { refetchInterval?: unknown } | undefined)?.refetchInterval;
+    expect(resolve).toBeTypeOf('function');
+    const running = { state: { data: { state: 'running' } } };
+    return (resolve as (one: unknown) => number | false)(running);
+  }
+
+  function framed(client: QueryClient) {
+    return function Wrapper({ children }: { children: ReactNode }) {
+      return (
+        <QueryClientProvider client={client}>
+          <LiveArchive>{children}</LiveArchive>
+        </QueryClientProvider>
+      );
+    };
+  }
+
+  beforeEach(withEventSource);
+  afterEach(withoutEventSource);
+
+  it('keeps asking while nothing has told it anything', async () => {
+    const client = showing('running');
+    const view = renderHook(() => useTranscriptionStatus(REHEARSAL, 'running'), {
+      wrapper: framed(client),
+    });
+    await waitFor(() => {
+      expect(view.result.current.isFetched).toBe(true);
+    });
+
+    // The stream is open and has not connected, which is what a proxy that accepted the socket
+    // and will never flush it looks like. The interval has to survive exactly that.
+    expect(nextInterval(client)).toBe(10_000);
+  });
+
+  it('stands down while the instance is telling it', async () => {
+    const client = showing('running');
+    const view = renderHook(() => useTranscriptionStatus(REHEARSAL, 'running'), {
+      wrapper: framed(client),
+    });
+    await waitFor(() => {
+      expect(view.result.current.isFetched).toBe(true);
+    });
+
+    FakeEventSource.latest().open();
+
+    await waitFor(() => {
+      expect(nextInterval(client)).toBe(false);
     });
   });
 });

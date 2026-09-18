@@ -136,19 +136,32 @@ number with a letter (`REV-4` → `REV-4a`).
 - [x] **REV-S1** · `Level` was re-exported through `db/models.py`, a `core` enum leaking through
       the model module. Removed; no call site moved.
 
-## Open
+## Liveness
 
-- [ ] **REV-12** · **Nothing in the instance can tell a client that anything changed.** No SSE, no
-      websocket, no cursor to ask "what has changed since". The instance knows the exact moment a
-      transcription became readable — `jobs/worker.py` writes `finished_at` — and discards it, so
-      every client discovers it by asking again on a timer. A recording being transcribed is
-      polled from two places on two clocks and whichever answers first is the one that learns the
-      job finished, which is a client reconstructing an event the server already had. The shape is
-      `GET /api/events` as SSE, carrying **the identity of what changed and never its contents**,
-      resolving the same `MAX()` per subscriber as every other read — an event naming a recording
-      somebody cannot read is a permission leak, which is one of the two failure modes this design
-      is aimed at. ⇢ REV-11 🧪 *A transcription that finishes updates a connected client with no
-      further poll, and a subscriber is never told about a recording it would be refused on `GET`.*
+- [x] **REV-12a** · **Nothing in the instance could tell a client that anything changed.** No SSE,
+      no websocket, no cursor to ask "what has changed since". The instance knew the exact moment
+      a transcription became readable — `jobs/worker.py` writes `finished_at` — and discarded it,
+      so every client discovered it by asking again on a timer. `GET /api/events` is that channel,
+      carrying **the identity of what changed and never its contents**: a stream that carried a
+      title would be a second way to read one, with its own rules to keep in step with the ACL.
+      Every event resolves the same `MAX()` as any other read, per subscriber, because an event
+      naming a recording somebody cannot read is a permission leak — and a stream is a worse place
+      for one than an endpoint, since nobody asked. The fan-out is in `core/` because `api/` and
+      `jobs/` are peers; that it can be in-process queues at all is what `REV-11` settled.
+      ⇢ REV-11 🧪 *A subscriber is never told about a recording it would be refused on `GET`.*
+
+- [x] **REV-12b** · **The interface listens instead of asking.** One `EventSource` behind the
+      session guard, turning what arrives into a `Change` and handing it to `invalidate` — the map
+      that already knew what each change makes stale, and which the feedback plan named as the
+      seam a stream would plug into. **The scoped polling stays as the fallback**: a stream can
+      still fail to be held by a proxy that buffers or a browser out of connections, so the
+      intervals read whether the stream is connected rather than being deleted. Changes are
+      gathered for 200ms, because one upload finishes three jobs within about a tenth of a second
+      and three rounds of invalidation where one would do is worse than the interval it replaces.
+      ⇢ REV-12a 🧪 *A connected client's interval resolves to nothing; a dropped stream brings it
+      back.*
+
+## Open
 
 - [ ] **REV-S6** · The code comments are longer than the rule now asks for, almost entirely in the
       frontend. Not worth a pass of its own — the risk of a wholesale rewrite is deleting the one
