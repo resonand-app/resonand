@@ -88,8 +88,8 @@ def enqueue(
     """Add work, or recognise that it is already there.
 
     Returns ``None`` when the key is already queued, which is not a failure: it is the whole point
-    of the key. A retried upload, a re-run of the watch folder and a second click on "transcribe"
-    all arrive here, and only one of them should cost anything.
+    of the key. A retried upload and a second click on "transcribe" both arrive here, and only
+    one of them should cost anything.
     """
     if idempotency_key is not None:
         existing = session.execute(

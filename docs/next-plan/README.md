@@ -30,6 +30,7 @@ working set today and becomes the record of it the day it ships.
 | File | Track | What it covers |
 |---|---|---|
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
+| [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
 
