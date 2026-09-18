@@ -148,8 +148,10 @@ graph TD
 ## What is left
 
 Every track has now been read against the code, so an unticked box is one somebody checked rather
-than one nobody reached. Thirteen are open, in five files, and none of them blocks another — the
-ordering this section used to carry is spent along with the tasks in it.
+than one nobody reached. Twenty-seven are open and none of them blocks another — the ordering this
+section used to carry is spent along with the tasks in it.
+
+Thirteen are what the plan always held:
 
 | Task | What is outstanding |
 |---|---|
@@ -170,6 +172,25 @@ ordering this section used to carry is spent along with the tasks in it.
 `INF-8` is spent rather than open and carries no box at all: the folder it asks for was decided
 against when `REV-10` built [`review.md`](review.md), [`security.md`](security.md) and
 [`defects.md`](defects.md) instead.
+
+The other fourteen came from reading the finished product rather than this plan, which is why
+most of them are numbered children of the task that produced them:
+
+| Task | What it is |
+|---|---|
+| `UI-4f1` | A phone has no way to reach the trash, so nothing deleted there can be restored |
+| `UI-10a1` | Filtering by category with no matches renders the translation key itself |
+| `UI-18a1` | Neither empty state can start an upload, so the invitation cannot be accepted |
+| `UI-22a1` | Three accessible names in the upload tray are English in the source |
+| `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
+| `UI-32b1` | The 44px exemption list has outgrown the account of it |
+| `UI-33a1` | Raw type values returned in components written after the reconciliation |
+| `UI-34a1` | `Dialog` carries no `aria-modal` and nothing makes the background inert |
+| `INT-3b1` | Deleting an account that uploaded elsewhere meets a foreign key, not the refusal |
+| `API-25`, `UI-37` | There is no way back into an account whose password was forgotten |
+| `UI-38` | The instance offers no source, which is the clause `AGPL-3.0` was chosen for |
+| `UI-39` | The web-app manifest: white in a dark product, and root-absolute under `OPS-4` |
+| `INF-11` | A webfont is redistributed with no licence beside it, unlike the one next to it |
 
 Three of the five conditions below are acts rather than tasks — performed against the real
 archive, and not tickable anywhere.

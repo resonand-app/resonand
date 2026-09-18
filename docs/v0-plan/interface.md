@@ -303,6 +303,12 @@ Both are cheap now and expensive after thirty views reference them.
       _Done when:_ every value in every component is a token, and `--radius-chip` is either used or
       deleted. ⇢ UI-1i
 
+- [ ] **UI-33a1** · The type values came back. `TranscriptLine` and several components written
+      after `UI-33a` set raw `lineHeight` and `letterSpacing` instead of reading the scale, and the
+      guard cannot see them: `token-adherence` reads colour and font family only. Widening the
+      guard is the task rather than the handful of edits, because a rule that holds only while
+      somebody remembers it is what produced this second entry. ⇢ UI-33a 🧪
+
 - [x] **UI-33b** · The four missing groups: a **z-index scale** (the player, the tray, dialogs,
       menus, toasts and the scrim all stack today by DOM order), **breakpoint tokens** for 1280 /
       1180 / 900 / 720 (which exist only in specification prose), an **opacity token** for the 0.38
@@ -341,6 +347,11 @@ faked them with a prototyping harness that does not ship.
       of a panel in the other. The list is in `focus-and-targets.ts` and is checked in both
       directions, like the colour guard's.
 
+- [ ] **UI-32b1** · The 44px exemption list has outgrown the account of it written here, and one
+      entry defers to a task that has since finished. Either an exemption earns a sentence saying
+      why it is one, or it stops being exempt; a list nobody reconciles is how a floor quietly
+      becomes a suggestion. ⇢ UI-32b
+
 - [x] **UI-32c** · `prefers-reduced-motion` verified end to end: the two duration tokens already
       zero themselves, but the transcript's follow-scroll is a script and has to opt in by itself.
       _Done when:_ with reduced motion set, nothing moves on its own. ⇢ UI-32a
@@ -362,6 +373,13 @@ the rest consume it.
 - [x] **UI-34a** · The anchored-overlay primitive underneath the five overlay components: portal,
       placement, focus trap, `Esc`, outside click, and inert background. Not itself exported as a
       component in the index. ⇢ UI-32a 🔒
+
+- [ ] **UI-34a1** · `Dialog` announces nothing. `UI-34a` promised a focus trap, `Esc`, an outside
+      click and an **inert background**; the trap holds and the background does not, and `Dialog`
+      carries no `aria-modal` — so every create, rename, share, move and upload panel is a div a
+      screen reader walks straight out of, into a page that is still operable behind it. `Sheet`
+      and `TypedConfirm` both have the attribute, which is what makes this an omission rather than
+      a position. ⇢ UI-34a 🧪
 - [x] **UI-34b** · `Select` — picks one value from a list: the filter bar, sort, the level
       selector, the category picker, playback speed. Not for two or three short options; those are
       chips. States: resting, labelled, disabled, open, focused. ⇢ UI-34a
@@ -479,6 +497,11 @@ mistake here that cannot be undone cheaply.
 
 - [x] **UI-22a** · i18next with `en` as the base, one namespace per view, and an ESLint rule that
       fails on a bare string literal in JSX. ⇢ INF-3b
+
+- [ ] **UI-22a1** · Three accessible names in the upload tray are English in the source. They are
+      `aria-label` values assembled by expression, which is exactly where `UI-22a`'s ESLint rule
+      cannot reach: it sees literals, and these are not literals. The copy moves to
+      `src/i18n/en/`, and what stops the next one is a test rather than a reviewer. ⇢ UI-22a 🧪
 - [x] **UI-22b** · The formatters, once: `48:12` under an hour and `1:12:40` over, `149 h 44 min`
       for totals, counts with thin spaces and never rounded, `284 MB` from `size_bytes`,
       `0.75x`–`2.0x`. All mono, all `tabular-nums`. 🧪 each format ⇢ UI-22a
@@ -518,6 +541,13 @@ mistake here that cannot be undone cheaply.
       account avatar moves into the per-screen header; the sidebar's contents become the Libraries
       tab; Upload is a tab rather than a modal. Below 720 it replaces the desktop shell entirely.
       ⇢ UI-4c, UI-34g, DEC-23
+
+- [ ] **UI-4f1** · **The phone cannot reach the trash.** `UI-4f` says the sidebar's contents
+      become the Libraries tab, and `UI-4d` makes the trash a sidebar entry carrying its count; the
+      four tabs are Libraries, Search, Upload and Settings, and nothing under them links to it. A
+      recording deleted on a phone can be restored only by typing the URL — the one gesture the
+      whole retention promise exists to make safe. `useTrashCount` already has the number.
+      ⇢ UI-4f, INT-1a 🧪
 - [x] **UI-4g** · §1.8's keyboard model as **one** global handler, not per view: `⌘K`/`Ctrl+K` and
       `/` focus search, `Space` plays and pauses when no field has focus, `←`/`→` seek ∓5s,
       `⇧←`/`⇧→` ∓15s, `↑`/`↓` move transcript segments, `Enter` opens, `Space` toggles a
@@ -619,6 +649,12 @@ The screens the product is used from, and the largest view in the plan.
 - [x] **UI-10a** · The **two different empty states**: nothing uploaded yet, an invitation rather
       than a sad drawing; and the filter matched nothing, which **names the filter and offers to
       clear it** while saying how many recordings are there. ⇢ UI-35c, UI-8a
+
+- [ ] **UI-10a1** · Filtering a library by category with nothing matching renders
+      `empty.matched.category` — the key itself — because `library.json` has no such key. `UI-10a`
+      asks that sentence to **name the filter**, which the tag branch does and this branch never
+      could. Both halves land together: the missing key, and the category's own name inside it.
+      ⇢ UI-10a 🧪
 - [x] **UI-10b** · Loading skeletons for both densities, the error state, and the unreachable state
       in which **what is already buffered keeps playing**. ⇢ UI-35c
 - [x] **UI-10c** · Read-only: no checkboxes, no bulk bar, no Settings button, one quiet line. The
@@ -758,6 +794,11 @@ The reason the product exists: two surfaces over one endpoint.
 - [x] **UI-18a** · The dialog: a drop zone and a picker, multiple files, the accepted formats and
       the size limit read from the instance rather than hard-coded, and the line that video files
       are kept whole and played as audio. ⇢ UI-34a, ING-2
+
+- [ ] **UI-18a1** · **Neither empty state can start an upload.** `UI-10a`'s invitation is an
+      invitation with no way to accept it, because `uploadOpen` lives in `AppShell` and nothing
+      below it can ask. Lifting that state is the task, and the destination should arrive already
+      set to the library being looked at rather than empty. ⇢ UI-18a, UI-10a1
 - [x] **UI-18b** · The destination: library and category selects, defaulting to where you came from.
       Upload needs level 20 or above on the destination. ⇢ UI-18a, UI-34b
 - [x] **UI-18c** · The transcribe switch with its inline egress line — the disclosure at the moment
@@ -841,6 +882,13 @@ checked once everything exists because that is the only point at which they can 
 
 - [x] **UI-23a** · 🧪 An axe audit as a test **on every view**, in both themes.
       _Done when:_ a new view without one fails CI. ⇢ every view
+
+- [ ] **UI-23a1** · The harness says the upload and move dialogs are "audited where they are
+      raised", and no test raises either. `UI-23a`'s criterion — a new view without an audit fails
+      CI — is met for the eight routed views and silently unmet for everything behind a trigger.
+      The same pass owes the trash with rows in it, the permanent-delete confirmation, and the
+      Sessions, Appearance and Administration panels, each of which is audited only in the state
+      where it is empty. ⇢ UI-23a 🧪
 - [x] **UI-23b** · 🧪 Full keyboard operation of the player and the transcript verified end to end,
       including seeking and moving between segments. ⇢ UI-4g, UI-12c
 - [x] **UI-23c** · The focus treatment visible on every interactive element in every view, and AA
@@ -926,6 +974,37 @@ Then F, which cannot start early.
 five conversion tasks (`UI-1d`–`UI-1h`) touch disjoint folders, and `UI-34b`–`UI-34n` touch one
 file each after `UI-34a`. In Phase E, V6 search, V7 sharing, V1 sign-in and V10 settings touch
 disjoint routes once the shell exists.
+
+---
+
+## Three the plan never carried
+
+Found by reading the finished product against its own principles rather than against this file,
+which is why none of them has a parent here. Each is v0 work: the first because the milestone ends
+with somebody who is not me using this, the second because it is the clause the licence was chosen
+for, the third because it is the surface a phone offers to install.
+
+- [ ] **UI-37** · The administrator's control for `API-25`, inside `INT-3b`'s users panel: set a
+      password, say plainly that every session the account holds is about to end, and show the
+      value exactly once in the way `UI-26` describes for tokens rather than sending it anywhere.
+      ⇢ API-25, INT-3b
+
+- [ ] **UI-38** · **The instance offers its source.** Section 13 is the clause `AGPL-3.0` was
+      chosen over `GPL` for: somebody interacting with this over a network is owed the
+      Corresponding Source. A signed-in person is offered no link, no About surface and no licence
+      line anywhere, and the only licence string the instance emits points at gnu.org — which is
+      the licence text, not the source. One line in Settings naming the version and linking the
+      repository closes it. It has to survive being forked, so the link is a build-time fact
+      rather than this repository hard-coded. ⇢ UI-20a
+
+- [ ] **UI-39** · The web-app manifest, which nobody has read since it was generated. Both colours
+      are `#FFFFFF` in a product whose default is dark, so an installed instance flashes white
+      before it goes dark; there is no `start_url`, no `scope` and no `id`; and all three icon
+      paths are root-absolute, so they break under the arrangement `OPS-4` documents.
+      `display: standalone` means a phone offers to install this, which is the path exit
+      criterion 2 names. ⇢ UI-24a, OPS-4
+
+---
 
 ## When the interface is done
 
