@@ -19,9 +19,9 @@
 > built against a finished design system. **Nothing is installable, there is no release, and
 > nothing here is asking you to try it.** The first version has to run against a real archive,
 > without incident, for several weeks before any of that changes — see
-> [`docs/v0-plan/`](docs/v0-plan/). The repository is public ahead of that on purpose: the
-> reasoning is on the record from the start, and reading it costs you nothing. When there is
-> something to install, this section will say so.
+> [`docs/v0-plan/`](docs/v0-plan/), which also carries the two gates: this repository opens when
+> the first version's tasks are closed, and the release waits for the weeks of real use on top of
+> that. When there is something to install, this section will say so.
 
 ## The problem
 

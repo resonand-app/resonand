@@ -25,12 +25,20 @@ real personal use with nothing going wrong in them**, and with what went wrong b
 rather than noted — not a date, and not a checklist that can be ticked while the archive in it is
 a test fixture.
 
-**The repository being public is a separate thing, and it came first.** It was originally bundled
-with the release in `REL-5`, on the reasoning that there is nothing to show anybody yet. That
-reasoning stopped holding once there was: the code, the plan and the decisions behind them are
-worth reading before there is anything to install, and [`README.md`](../../README.md) is
-unambiguous that there is nothing to install. What stays gated is the release — the tag, the
-published image, and anything that invites somebody to trust an archive to this.
+**The repository is a separate gate, and it opens when the tasks in this plan are closed.** It was
+bundled with the release in `REL-5` to begin with; it was then taken out and opened ahead of the
+release, on the reasoning that the code, the plan and the decisions behind them are worth reading
+before there is anything to install. That is now reversed, and publication belongs to `REL-5`
+again.
+
+Two gates, then, and neither is a date: **the repository opens when every task here is closed**,
+and **the release waits for several weeks of real use on top of that**. The argument for reading
+the code early was never wrong in itself; what it left out is that the reader would arrive at a
+plan with twenty-seven open tasks in it, several of which are defects in work this plan calls
+shipped. Opening on the day that list is empty costs a few weeks and means the first person
+through the door is reading a finished thing.
+
+Until then this is one person's working repository, and it says so in one place — here.
 
 ### What is cut, and what is not
 
