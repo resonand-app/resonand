@@ -51,17 +51,26 @@ export function useLibraries(): Libraries {
 }
 
 /**
- * How many recordings are in the trash.
+ * How many things are in the trash.
  *
- * The count on the sidebar entry, from `GET /api/trash/audio`'s `total` -- the entry is there
- * whether or not there is anything in it, and shows no number when there is nothing.
+ * The count on the sidebar entry. Two endpoints, because a library and a recording are both
+ * things somebody put there and both rows they will come looking for -- the same sum
+ * `useTrash` shows the view, so the badge and the list it opens cannot disagree.
+ *
+ * Asked for at `limit: 1`: the sidebar wants the `total` from the envelope and never the rows,
+ * and these two queries run on every screen. The entry is there whether or not there is anything
+ * in it, and shows no number when there is nothing.
  */
 export function useTrashCount(): number {
-  const { data } = useQuery({
+  const recordings = useQuery({
     queryKey: keys.trashedAudio({ limit: 1 }),
     queryFn: () => get('/api/trash/audio', { query: { limit: 1 } }),
   });
-  return data?.total ?? 0;
+  const libraries = useQuery({
+    queryKey: keys.trashedLibraries({ limit: 1 }),
+    queryFn: () => get('/api/trash/libraries', { query: { limit: 1 } }),
+  });
+  return (recordings.data?.total ?? 0) + (libraries.data?.total ?? 0);
 }
 
 /** The seven colours are names in the API and custom properties in the system. */

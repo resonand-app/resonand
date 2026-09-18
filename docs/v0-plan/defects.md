@@ -34,3 +34,23 @@ something about the gate. Anything smaller is a commit and nothing more.
       This is also `REV-4`, found independently by a read of the backend. The half it did not
       settle — how two corpora scored with one function compare — is `REV-4a` in
       [`review.md`](review.md).
+
+---
+
+- [x] **BUG-2** · **The number beside Trash counted half of what was in the trash.**
+      Sending a library there moved it and left the badge where it was; opening the trash showed
+      the library sitting in it. Sending a *recording* did move the number, which is what made
+      this look like a refresh that had not fired rather than a count asking the wrong question.
+
+      It came from `GET /api/trash/audio` and nothing else. The trash holds two kinds of thing
+      and the screen already knew that — `useTrash` sums both endpoints' `total` for the view —
+      so the badge and the list it opens were two answers to one question, and the badge was the
+      one somebody reads first. It now asks the second endpoint too, at `limit: 1` like the
+      first, and adds them.
+
+      Invalidation was never the fault, which is worth saying because it is where the eye goes:
+      trashing a library already marks `['trash']` stale and that is a prefix of both keys. The
+      number moves the instant it has both halves to add, and a second `limit: 1` request on
+      every screen is the whole cost. 🧪 *`src/app/shell/tests/AppShell.test.tsx`, which covered
+      the trash entry when the trash was empty and nowhere else — the one case in which a
+      missing half cannot show.*
