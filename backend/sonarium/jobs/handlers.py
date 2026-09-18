@@ -20,7 +20,7 @@ import structlog
 from sqlalchemy.orm import Session
 
 from sonarium.core.config import Settings
-from sonarium.core.errors import NotFoundError
+from sonarium.core.errors import InvalidRequestError, NotFoundError
 from sonarium.db import search_index, transcripts
 from sonarium.db.audio import remove_recording
 from sonarium.db.engine import Database
@@ -144,6 +144,7 @@ def handle_transcribe(work: Work, context: Context) -> None:
         audio_id = audio.id
         uploader = audio.uploaded_by
     language = work.payload.get("language")
+    duration_ms = duration_ms or _measure(path, audio_uuid)
 
     ceiling = submission_ceiling(
         context.provider.capabilities,
@@ -152,7 +153,7 @@ def handle_transcribe(work: Work, context: Context) -> None:
     )
     silences = detect_silences(path) if duration_ms > ceiling else ()
     plan = plan_parts(
-        duration_ms or ceiling,
+        duration_ms,
         silences=silences,
         max_part_ms=ceiling,
         overlap_ms=int(context.settings.transcription_overlap_seconds * 1000),
@@ -228,6 +229,29 @@ def handle_transcribe(work: Work, context: Context) -> None:
             ),
         )
         search_index.index_audio(session, audio_id)
+
+
+def _measure(path: Path, audio_uuid: str) -> int:
+    """How long this recording is, for a recording whose probe never produced an answer.
+
+    Everything about a submission is decided from the duration -- how many parts, and which unit a
+    server answered in -- and without one the plan used to collapse to a single part and send the
+    file whole, whatever its length. That assumes a recording is *short* when it does not know,
+    which is the wrong direction: a three-hour original went in full to an endpoint that refuses
+    it at 25 MB, after the upload.
+
+    ``ffprobe`` reads the container rather than the audio, so asking again costs a header read
+    rather than the walk over a multi-gigabyte file that ``handle_probe`` exists to avoid. Where
+    even that has no answer the job fails, because the alternative is to upload blind.
+    """
+    measured = probe(path).duration_ms
+    if measured:
+        _logger.info("transcribe.measured_late", audio=audio_uuid, duration_ms=measured)
+        return measured
+    raise InvalidRequestError(
+        "This recording's length could not be read, and a transcription cannot be planned "
+        "without it. The file may be truncated or in a container ffprobe cannot describe."
+    )
 
 
 def handle_purge(work: Work, context: Context) -> None:
