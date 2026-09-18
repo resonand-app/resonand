@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 from datetime import timedelta
 
 import pytest
@@ -253,3 +254,78 @@ def test_the_payload_survives_the_round_trip(database: Database) -> None:
 def test_a_job_created_now_is_ready_now(database: Database) -> None:
     job = Job(kind="probe", state=queue.PENDING, attempts=0, created_at=now_instant())
     assert queue.ready_at(job) == job.created_at
+
+
+def test_a_second_transcription_waits_while_one_is_running(database: Database) -> None:
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="a")
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="b")
+    with database.write_session() as session:
+        assert queue.claim(session) is not None
+    with database.write_session() as session:
+        assert queue.claim(session) is None
+
+
+def test_the_waiting_transcription_runs_once_the_first_one_finishes(database: Database) -> None:
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="a")
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="b")
+        first = queue.claim(session)
+    assert first is not None
+    with database.write_session() as session:
+        queue.finish(session, first.id)
+    with database.write_session() as session:
+        assert queue.claim(session) is not None
+
+
+def test_other_work_is_not_held_up_behind_a_transcription(database: Database) -> None:
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="a")
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="b")
+        queue.enqueue(session, "probe", audio_id=audio_id, idempotency_key="c")
+    with database.write_session() as session:
+        assert queue.claim(session) is not None
+    with database.write_session() as session:
+        work = queue.claim(session)
+    assert work is not None
+    assert work.kind == "probe"
+
+
+def test_the_limit_is_a_number_and_not_a_lock(database: Database) -> None:
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="a")
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="b")
+        queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key="c")
+    claimed = []
+    for _ in range(3):
+        with database.write_session() as session:
+            claimed.append(queue.claim(session, transcription_limit=2))
+    assert [work is not None for work in claimed] == [True, True, False]
+
+
+def test_two_threads_claiming_at_once_get_one_transcription_between_them(
+    database: Database,
+) -> None:
+    audio_id = _audio(database)
+    with database.write_session() as session:
+        for key in ("a", "b", "c", "d"):
+            queue.enqueue(session, "transcribe", audio_id=audio_id, idempotency_key=key)
+    claimed: list[queue.Work | None] = []
+    guard = threading.Lock()
+
+    def take() -> None:
+        with database.write_session() as session:
+            work = queue.claim(session)
+        with guard:
+            claimed.append(work)
+
+    threads = [threading.Thread(target=take) for _ in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert len([work for work in claimed if work is not None]) == 1

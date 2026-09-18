@@ -104,7 +104,9 @@ class Worker:
         The whole worker in one testable step: everything the loop does is call this.
         """
         with self._context.database.write_session() as session:
-            work = queue.claim(session)
+            work = queue.claim(
+                session, transcription_limit=self._context.settings.transcription_concurrency
+            )
         if work is None:
             return False
         handler = HANDLERS.get(work.kind)

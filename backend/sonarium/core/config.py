@@ -138,6 +138,14 @@ class Settings(BaseSettings):
     job_concurrency: int = Field(default=2, gt=0)
     """How many jobs the in-process worker runs at once. Reads are free; writes serialise."""
 
+    transcription_concurrency: int = Field(default=1, gt=0)
+    """How many transcriptions may be in flight at once, whatever :attr:`job_concurrency` is.
+
+    One, because the reference deployment is a local server with one device: a second request
+    does not halve the wall clock, it competes for the same memory, and the way that shows up is
+    a job failing mid-recording rather than a queue running slow. A hosted endpoint would take
+    several happily, which is why this is a number and not a lock."""
+
     run_worker: bool = True
     """Whether this process runs the job worker.
 

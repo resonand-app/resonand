@@ -251,3 +251,13 @@ that timeout, and no test covers two processes on one file.
 process that owns the lock. Splitting the worker onto its own machine is a real thing to want —
 transcoding on a box with a GPU — and it is a change to make when the database is something two
 machines can both write to, not before. Sharing a volume is not that.
+
+Transcription is the exception, and has a second number of its own. However many threads the
+worker runs, only `SONARIUM_TRANSCRIPTION_CONCURRENCY` of them will have a recording at the engine
+at any moment — one, by default. The threads are this machine's; the engine is not, and a local
+server with a single GPU answers two requests slower than it answers them one after the other,
+with a real chance that the second runs it out of memory and fails a recording halfway. The other
+work is not held up behind it: a thread that finds only a transcription it may not start takes the
+next probe or waveform instead, so a file uploaded during a long transcription still gets its
+duration and its waveform straight away. Raise it for a hosted endpoint, or for a server you know
+serves several at a time.

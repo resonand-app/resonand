@@ -13,6 +13,11 @@ there and already mean the right thing.
 
 **Every claim is one serialised write.** Two workers cannot take the same job, because taking one
 is an ``UPDATE ... WHERE state = 'pending'`` guarded by the same lock as every other write.
+
+**Not every kind is equally cheap to run twice.** Three of the four are this machine's own work
+and scale with the threads given to them; the fourth is a request to somebody else's engine, which
+is usually one server with one device and gets slower, not faster, when asked for two at a time.
+So transcription carries a limit of its own alongside the thread count (``JOB-15``).
 """
 
 from __future__ import annotations
@@ -130,6 +135,19 @@ def transcription_in_flight(session: Session, audio_id: int) -> Job | None:
     )
 
 
+def running_transcriptions(session: Session) -> int:
+    """How many transcriptions are in flight across the whole archive (``JOB-15``).
+
+    Only ``running`` counts. A pending one is precisely what the limit is asking for: work that
+    waits its turn rather than work that is refused.
+    """
+    return int(
+        session.execute(
+            select(func.count(Job.id)).where(Job.kind == KIND_TRANSCRIBE, Job.state == RUNNING)
+        ).scalar_one()
+    )
+
+
 def latest_transcription(session: Session, audio_id: int) -> Job | None:
     """The most recent transcribe job for a recording, whatever became of it (``API-17``).
 
@@ -179,18 +197,37 @@ def enqueue_transcription(
     )
 
 
-def claim(session: Session, *, kinds: tuple[str, ...] | None = None) -> Work | None:
+def claim(
+    session: Session,
+    *,
+    kinds: tuple[str, ...] | None = None,
+    transcription_limit: int = 1,
+) -> Work | None:
     """Take the oldest job that is ready to run, or return ``None``.
 
     The readiness rule and the state change are one write, so two workers racing for the last job
-    cannot both get it.
+    cannot both get it. The same holds for ``transcription_limit`` (``JOB-15``): the count and the
+    claim are inside one write session, and a write session holds the process's only write lock,
+    so two threads cannot both read the same count and both act on it.
+
+    A transcription held back by the limit is **skipped, not waited on** -- the thread carries on
+    down the queue and takes a probe or a waveform instead. Returning ``None`` here would leave
+    somebody who has just uploaded a file with no duration and no waveform until an hour of audio
+    finished transcribing, which is the thing the limit exists to prevent the expensive version
+    of, not to cause a cheap version of.
     """
     query = select(Job).where(Job.state == PENDING).order_by(Job.created_at, Job.id)
     if kinds:
         query = query.where(Job.kind.in_(kinds))
+    in_flight: int | None = None
     for job in session.execute(query).scalars().all():
         if not _is_ready(job):
             continue
+        if job.kind == KIND_TRANSCRIBE:
+            if in_flight is None:
+                in_flight = running_transcriptions(session)
+            if in_flight >= transcription_limit:
+                continue
         changed = session.execute(
             update(Job)
             .where(Job.id == job.id, Job.state == PENDING)
