@@ -3920,6 +3920,26 @@
         ]
       }
     },
+    "/api/events": {
+      "get": {
+        "description": "Subscribe to changes in the archive this caller can see.\n\nAnswers ``text/event-stream``. Each event names one thing -- ``audio`` or ``library`` and a\nuuid -- and carries nothing about it; ``resync`` names nothing and means fetch everything you\nare showing.",
+        "operationId": "events_api_events_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "What has changed, as it changes",
+        "tags": [
+          "events"
+        ]
+      }
+    },
     "/api/instance": {
       "get": {
         "description": "Answered without a session, because the sign-in screen needs it before there is one.\n\nIt is also where the facts every view needs live, so that nothing hard-codes them: how long\nthe trash keeps things (``INT-1``) and what an upload may be (``UI-18a``).",
