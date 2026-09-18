@@ -23,10 +23,11 @@ from sonarium.api.deps import (
     WriteSession,
 )
 from sonarium.api.filters import RecordingFilters, RecordingSort
-from sonarium.api.pagination import Page, PageRequest, page_of, page_request
+from sonarium.api.pagination import Page, PageRequest, count_of, page_of, page_request
 from sonarium.api.presenters import (
     audio_summaries,
     category_summary,
+    library_summaries,
     library_summary,
     share_summary,
 )
@@ -59,10 +60,7 @@ Paging = Annotated[PageRequest, Depends(page_request)]
 @router.get("", response_model=list[LibrarySummary], summary="Libraries you can see")
 def list_libraries(caller: CurrentCaller, session: ReadSession) -> list[LibrarySummary]:
     """Owned libraries first, then shared ones -- which is the sidebar's own order (``UI-4``)."""
-    return [
-        library_summary(session, library, level)
-        for library, level in library_repo.list_libraries(session, caller.id)
-    ]
+    return library_summaries(session, library_repo.list_libraries(session, caller.id))
 
 
 @router.post("", response_model=LibrarySummary, status_code=status.HTTP_201_CREATED)
@@ -129,7 +127,7 @@ def list_library_audio(
     query = library_audio(
         session, caller.id, library_uuid, filters=filters, sort=sort, direction=direction
     )
-    total = len(session.execute(query).all())
+    total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
         audio_summaries(session, [(row[0], row[1]) for row in rows]),
@@ -285,10 +283,10 @@ def list_trashed_libraries(
     business being told it is on its way out.
     """
     query = library_repo.trashed_libraries(caller.id)
-    total = len(session.execute(query).all())
+    total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
-        [library_summary(session, library, Level(level)) for library, level in rows],
+        library_summaries(session, [(row[0], row[1]) for row in rows]),
         total=total,
         request=paging,
     )
