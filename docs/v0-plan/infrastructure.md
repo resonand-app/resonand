@@ -52,6 +52,13 @@ Short and mechanical, but it conditions everything that comes after. No product 
       `dda44b6`, which is what settles the number: `ROADMAP.md` used it for the community
       scaffolding too, and that one is now **`INF-10`**.
 
+- [ ] **INF-11** · **The Chillax licence, beside Geist's.** `design-system/assets/fonts/` ships two
+      families and one licence file: `Geist-OFL.txt` covers Geist, and nothing covers
+      `Chillax-Variable.woff2`. The build copies it into the image and serves it to every visitor,
+      so this is redistribution rather than local use, and the asymmetry with the file sitting next
+      to it is what says the omission was not a decision. Either the foundry's licence text ships
+      beside the font, or the font does not ship. ⇢ INF-1
+
 ---
 
 

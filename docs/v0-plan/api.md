@@ -243,6 +243,18 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       🧪 A grant on a recording does not make its library visible, purging one takes its
       grants with it, and a grantee at read cannot list who else has access.
 
+- [ ] **API-25** · **A way back into an account.** Nothing can set a password except the account
+      itself, which has to supply the current one: there is no reset, no administrator action and
+      no CLI verb. Somebody who forgets theirs is locked out permanently, and `INT-3b` also refuses
+      to delete an account that holds content, so the instance cannot even be tidied up around
+      them. An administrator-only `POST /admin/users/{id}/password` is the smallest thing that
+      closes it, on the same `AdminUser` surface as disable and enable, and it revokes every
+      session the account holds rather than leaving the old ones open behind the new password.
+      Exit criterion 2 is a second real person using this; this is what happens to them.
+      ⇢ API-20, API-3, INT-3b 🧪
+      🧪 The account signs in with what the administrator set and not with what it had; every
+      session it held is gone; and no caller but an administrator can reach the route.
+
 ---
 
 

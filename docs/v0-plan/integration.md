@@ -58,6 +58,14 @@ Everything that needs two finished tracks at once.
       names the libraries and recordings in the way**. Transferring content between accounts is a
       later task, so until then an account can be disabled but not deleted. ⇢ INT-3a, API-7,
       API-20
+
+- [ ] **INT-3b1** · Deleting an account counts only what it **owns**, so an account that uploaded
+      into somebody else's library, or granted a share on one, meets a foreign key instead of the
+      considered refusal `INT-3b` exists to give. `audio.uploaded_by` and `share.granted_by` are
+      `NOT NULL` with no `ON DELETE`, so the statement aborts, the transaction rolls back and the
+      administrator is shown "Unexpected error" — the one outcome the refusal was written to avoid.
+      Two further counts in the same check, and a sentence that names what they found.
+      ⇢ INT-3b, API-20 🧪
 - [x] **INT-3c** · The transcription provider: its fields, the egress notice in its calm register,
       and a test that is **explicit and never automatic** — opening the page contacts nothing. Plus
       the no-provider state, which says plainly that nothing on this instance can be transcribed.
