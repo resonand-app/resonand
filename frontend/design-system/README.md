@@ -8,7 +8,7 @@ This system was designed from scratch for v0. There was no prior visual language
 
 **This is the final visual language for v0 — `DEC-8` in [`docs/v0-plan/decisions.md`](../../docs/v0-plan/decisions.md).** It supersedes the *Archive* palette (a warm neutral with an indigo ink accent, Instrument Serif / Instrument Sans / IBM Plex Mono) and the interface proposal that carried it, both of which have been retired. There is no palette left to choose between and no earlier proposal to reconcile against.
 
-What this system does **not** decide is where anything goes. Navigation, routes, and every view with its real fields, states and actions are in the **interface specification** (`docs/internal/design/ui-ux-specification.md`), which is checked against the backend as built. Read it before designing a screen. Like the functional specification and the strategy notes, it is a working document and is not published while the first version is being built — so it is present in a working tree and absent from a fresh clone of the public repository.
+What this system does **not** decide is where anything goes. Navigation, routes, and every view with its real fields, states and actions are in the **interface specification** (`docs/internal/design/ui-ux-specification.md`), which is checked against the backend as built. Read it before designing a screen. Like the functional specification and the strategy notes, it is a working document and is not published while the first version is being built — so it is present in a working tree and absent from a fresh clone.
 
 ## Sources
 

@@ -108,7 +108,9 @@ today. Follow them.
 - **`UI-31` names two different things.** It is the libraries landing in [`interface.md`](interface.md) and
   shipping actual translations in `ROADMAP.md`. Both documents promise identifiers are never
   renumbered, so one of them is wrong. **`UI-31` stays the libraries landing** — it is the one with
-  dependents — and the roadmap's becomes `UI-36`.
+  dependents — and the roadmap's becomes `UI-36`. *It is `UI-40` now: `UI-36` was handed out a
+  second time, to the lockup, which shipped under it. The same repair, the same way round, and the
+  second occurrence is why the plan is the only document that mints a number.*
 - **The component count is stated three ways.** The filesystem holds twenty-one; the design
   system's README enumerates those twenty-one by name without ever stating a number; the
   specification says nineteen, and that `UI-1` will port thirty-two. The filesystem is right:

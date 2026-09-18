@@ -151,8 +151,12 @@ written up with the decisions governing all of them.
 - **OPS-11** · Packaging for one-click installation platforms. ⇢ DEC-6
 - **UI-28** · Real PWA quality on mobile: installability, offline shell, and behaviour on a flaky
   connection with headphones in.
-- **UI-36** · Shipping actual translations. The plumbing is in the first version (`UI-22`); this is
+- **UI-40** · Shipping actual translations. The plumbing is in the first version (`UI-22`); this is
   the part where Catalan, and then others, genuinely exist.
+  *Was `UI-36` until the lockup shipped under that number, with a test and commits citing it. The
+  shipped one keeps it, exactly as `UI-31` did in `INF-9`. That this is the second time this
+  document has handed out a number the plan was already using is the argument for the plan being
+  the only place that mints them.*
 - **REL-1** · The README's screenshots — two of them, light and dark. Interface quality is the one
   claim that cannot be verified from a list, which is exactly why it gets shown rather than
   asserted.
@@ -165,9 +169,19 @@ written up with the decisions governing all of them.
   which the project has deliberately declined. A good recording of the real thing is an acceptable
   substitute.
 - **REL-5** · Semantic versioning, `CHANGELOG.md`, and the `v0.1.0` tag with the published image.
-  *Making the repository public was part of this task and was done ahead of it — there is no
-  release to wait for in order to read the code, and the rule that governs the wait is in
-  [`docs/v0-plan/`](docs/v0-plan/).*
+  *Making the repository public belongs here again. It was taken out and done ahead of the release
+  on the reasoning that the code and the plan are worth reading before there is anything to
+  install; that is reversed, and the rule now gating both is in
+  [`docs/v0-plan/`](docs/v0-plan/) — the repository opens when the first version's tasks are
+  closed, the release when it has run against a real archive for several weeks.*
+- **REL-6** · **The README stops describing a project being built and starts describing the first
+  version**, and this document is brought level with it: every task still open in
+  [`docs/v0-plan/`](docs/v0-plan/) at that point either ships or is moved here keeping its
+  identifier, so that a reader arriving at the repository the day it opens finds one account of
+  what exists rather than three. The status block is the part that has drifted furthest — it still
+  says the interface is being built, which stopped being true before the cross-cutting pass — and
+  `REL-1`'s screenshots land in the same pass, because a README describing a finished interface
+  and showing none is the same problem in the other direction. ⇢ REL-1
 
 ### Open decision for this milestone
 
