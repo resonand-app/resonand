@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Annotated
 
 import typer
@@ -35,6 +36,8 @@ from sonarium.jobs.handlers import Context
 from sonarium.jobs.queue import enqueue, enqueue_transcription
 from sonarium.jobs.worker import Worker, drain
 from sonarium.media import storage
+from sonarium.media.probe import probe as probe_media
+from sonarium.transcription import preflight
 from sonarium.transcription.registry import build_provider
 
 SNAPSHOT = (
@@ -257,6 +260,46 @@ def work(
             worker._stopping.wait(3600)
     except KeyboardInterrupt:  # pragma: no cover
         worker.stop()
+
+
+@app.command("check-transcription")
+def check_transcription(
+    audio: Annotated[
+        Path | None,
+        typer.Option("--audio", help="A real recording to ask about, instead of a generated tone."),
+    ] = None,
+) -> None:
+    """Ask the configured engine what it can do, before any recording is sent to it (``TRX-1``).
+
+    Three seconds of tone is generated and submitted, so this says nothing about anybody's audio
+    and works on an instance with nothing in it yet. A tone has no speech in it, so an engine that
+    answers correctly may still return no segments for it -- pass ``--audio`` with a real recording
+    to see how coarse its segments are and whether it names speakers.
+    """
+    settings = _settings()
+    if not settings.transcription_base_url:
+        typer.echo("No transcription service is configured, so there is nothing to ask.")
+        raise typer.Exit(code=1)
+    provider = build_provider(settings)
+    try:
+        with TemporaryDirectory(prefix="sonarium-probe-") as workspace:
+            if audio is None:
+                sample = preflight.sample_audio(Path(workspace) / "sample.opus")
+                duration_ms = int(preflight.SAMPLE_SECONDS * 1000)
+            else:
+                sample = audio
+                duration_ms = probe_media(audio).duration_ms or 0
+            report = preflight.probe(provider, audio=sample, duration_ms=duration_ms)
+    finally:
+        provider.close()
+
+    typer.echo(f"{settings.transcription_provider} · {settings.transcription_model}")
+    typer.echo(f"  {report.detail}")
+    for finding in report.findings:
+        mark = "?" if finding.ok is None else ("ok" if finding.ok else "no")
+        typer.echo(f"  [{mark:>2}] {finding.question}: {finding.answer}")
+    if not report.usable:
+        raise typer.Exit(code=1)
 
 
 @app.command("create-admin")
