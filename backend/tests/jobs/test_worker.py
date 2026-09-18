@@ -21,6 +21,7 @@ from sonarium.jobs import handlers, queue
 from sonarium.jobs.handlers import Context
 from sonarium.jobs.worker import Worker, drain
 from sonarium.media import storage, waveform
+from sonarium.transcription.capabilities import Capabilities
 from sonarium.transcription.chunking import Plan, restitch
 from sonarium.transcription.contract import (
     TranscriptionHandle,
@@ -41,13 +42,19 @@ class FakeProvider:
         *,
         fail_with: str | None = None,
         segments: tuple[TranscriptSegment, ...] | None = None,
+        capabilities: Capabilities | None = None,
     ) -> None:
         self.fail_with = fail_with
         self.segments = segments
         self.submitted: list[TranscriptionRequest] = []
+        self.declared = capabilities or Capabilities()
 
     name = "fake"
     model = "fake-1"
+
+    @property
+    def capabilities(self) -> Capabilities:
+        return self.declared
 
     def submit(self, request: TranscriptionRequest) -> TranscriptionHandle:
         self.submitted.append(request)
@@ -443,6 +450,58 @@ def test_a_cancelled_transcription_is_not_a_failure_worth_retrying(
     assert job.state == queue.CANCELLED
     assert worker.stats.retried == 0
     assert worker.stats.cancelled == 1
+
+
+@needs_ffmpeg
+@pytest.mark.ffmpeg
+def test_an_engine_that_takes_the_whole_recording_is_sent_it_whole(
+    database: Database, tmp_path: Path
+) -> None:
+    """``TRX-3``: the ceiling comes from the engine, not from a number the operator guessed.
+
+    The instance is configured to split at five seconds, which is what it does for an engine that
+    says nothing. An engine declaring that it takes an hour is handed the thirty seconds in one
+    request -- which is four requests saved, four times less failure surface, and on a
+    per-request biller four minimums instead of one.
+    """
+    settings = Settings(
+        data_dir=tmp_path / "instance",
+        database_path=tmp_path / "instance" / "sonarium.db",
+        transcription_max_part_seconds=5,
+    )
+    root = settings.resolved_storage_dir
+    with database.write_session() as session:
+        owner = users.create_user(session, email="w@x.test", display_name="W")
+        library = libraries.create_library(session, owner.id, name="L")
+        audio = create_audio(
+            session,
+            library_id=library.id,
+            uploaded_by=owner.id,
+            storage_path="placeholder",
+            original_filename="long.wav",
+        )
+        source = make_audio(tmp_path / "long.wav", seconds=30.0)
+        path, digest = storage.store_original(
+            root, audio.uuid, [source.read_bytes()], filename="long.wav"
+        )
+        audio.storage_path = storage.relative(root, path)
+        audio.sha256 = digest.sha256
+        audio.size_bytes = digest.size_bytes
+        audio.duration_ms = 30_000
+        session.flush()
+        audio_id = audio.id
+
+    undeclared = FakeProvider()
+    with database.write_session() as session:
+        queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
+    assert Worker(context_for(database, settings, undeclared)).run_once() is True
+    assert len(undeclared.submitted) > 1, "five-second parts, because nothing was declared"
+
+    generous = FakeProvider(capabilities=Capabilities(max_duration_ms=3_600_000))
+    with database.write_session() as session:
+        queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)
+    assert Worker(context_for(database, settings, generous)).run_once() is True
+    assert len(generous.submitted) == 1
 
 
 @needs_ffmpeg

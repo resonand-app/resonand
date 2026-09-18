@@ -40,9 +40,9 @@ from sonarium.media import storage, transcode, waveform
 from sonarium.media.probe import probe
 from sonarium.transcription.chunking import (
     detect_silences,
-    max_part_ms_for,
     plan_parts,
     restitch,
+    submission_ceiling,
 )
 from sonarium.transcription.contract import TranscriptionProvider, TranscriptionRequest
 
@@ -145,9 +145,10 @@ def handle_transcribe(work: Work, context: Context) -> None:
         uploader = audio.uploaded_by
     language = work.payload.get("language")
 
-    ceiling = min(
-        context.settings.transcription_max_part_seconds * 1000,
-        max_part_ms_for(context.settings.transcription_request_max_bytes),
+    ceiling = submission_ceiling(
+        context.provider.capabilities,
+        configured_max_bytes=context.settings.transcription_request_max_bytes,
+        configured_max_part_ms=context.settings.transcription_max_part_seconds * 1000,
     )
     silences = detect_silences(path) if duration_ms > ceiling else ()
     plan = plan_parts(
