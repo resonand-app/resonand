@@ -94,6 +94,7 @@ export function Provider() {
           <KeyValueList rows={rows} layout="inline" />
           <Reachability
             reachable={status.reachable}
+            usable={status.usable}
             detail={status.detail}
             isPending={test.isPending}
             onTest={() => {
@@ -121,23 +122,39 @@ export function Provider() {
 }
 
 /**
- * Whether it answers, and the button that is the only way to find out.
+ * Whether it can transcribe, and the button that is the only way to find out.
  *
- * Three states and not two. Unknown is the state the page opens in, and it says so -- an unknown
- * that rendered as a failure would train an operator to ignore a real one.
+ * **Answering and being usable are two questions** (`TRX-10`). An endpoint can accept every
+ * request made of it and still run a model that returns prose with no timings, which this archive
+ * cannot store -- and that is the likeliest misconfiguration on this page, not an address nobody
+ * is listening at. A control reporting only the first would go green on it, so the middle state
+ * is named: it answered, and it still cannot do this.
+ *
+ * Unknown is the state the page opens in, and it says so -- an unknown that rendered as a failure
+ * would train an operator to ignore a real one.
  */
 function Reachability({
   reachable,
+  usable,
   detail,
   isPending,
   onTest,
 }: {
   reachable: boolean | null;
+  usable: boolean | null;
   detail: string;
   isPending: boolean;
   onTest: () => void;
 }) {
   const { t } = useTranslation('settings');
+  const verdict =
+    reachable === null
+      ? { label: t('provider.untested'), colour: 'var(--text-3)' }
+      : usable === true
+        ? { label: t('provider.usable'), colour: 'var(--state-done)' }
+        : reachable
+          ? { label: t('provider.unusable'), colour: 'var(--state-failed)' }
+          : { label: t('provider.unreachable'), colour: 'var(--state-failed)' };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
@@ -148,19 +165,10 @@ function Reachability({
           style={{
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size-sm)',
-            color:
-              reachable === null
-                ? 'var(--text-3)'
-                : reachable
-                  ? 'var(--state-done)'
-                  : 'var(--state-failed)',
+            color: verdict.colour,
           }}
         >
-          {reachable === null
-            ? t('provider.untested')
-            : reachable
-              ? t('provider.reachable')
-              : t('provider.unreachable')}
+          {verdict.label}
         </span>
       </div>
       {reachable !== null && detail !== '' && (

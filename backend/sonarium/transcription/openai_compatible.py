@@ -23,7 +23,7 @@ from typing import Any
 import httpx
 from pydantic import SecretStr
 
-from sonarium.core.errors import ProviderError
+from sonarium.core.errors import ProviderError, ProviderUnreachableError
 from sonarium.core.ids import new_uuid
 from sonarium.transcription.capabilities import Capabilities, Support, TimeUnit
 from sonarium.transcription.contract import (
@@ -157,12 +157,12 @@ class OpenAiCompatibleProvider:
                     timeout=self._timeout,
                 )
         except httpx.ConnectError as error:
-            raise ProviderError(
+            raise ProviderUnreachableError(
                 f"Could not reach the transcription service at {url}. Check that it is running "
                 "and that SONARIUM_TRANSCRIPTION_BASE_URL points at it."
             ) from error
         except httpx.TimeoutException as error:
-            raise ProviderError(
+            raise ProviderUnreachableError(
                 f"The transcription service at {url} did not answer within "
                 f"{self._timeout:.0f}s. A long recording is submitted in parts, so a timeout "
                 "here usually means the service is overloaded rather than the file being large."

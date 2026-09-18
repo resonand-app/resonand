@@ -7,17 +7,22 @@ expects.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import httpx
 import pytest
-from fastapi import FastAPI, status
+from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sonarium.api.app import create_app
+from sonarium.api.routes import operations
 from sonarium.core.config import Settings
 from sonarium.db import libraries as library_repo
 from sonarium.db.audio import create_audio, trash_audio
 from sonarium.db.engine import Database
 from sonarium.jobs import queue
+from sonarium.transcription import preflight
+from sonarium.transcription.openai_compatible import OpenAiCompatibleProvider
 
 from tests.api.conftest import API_BASE, sign_in
 
@@ -204,36 +209,102 @@ def test_the_credential_is_never_reported_in_any_form(
     assert response.json()["has_credential"] is True
 
 
-def test_a_connection_test_reports_an_unreachable_service_usefully(
-    app: FastAPI, client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
+def _answering(
+    monkeypatch: pytest.MonkeyPatch,
+    payload: dict[str, object] | None = None,
+    *,
+    status_code: int = 200,
+    text: str | None = None,
+    raises: Exception | None = None,
 ) -> None:
-    def refuse(*_: object, **__: object) -> httpx.Response:
-        raise httpx.ConnectError("no route to host", request=httpx.Request("GET", "http://x"))
+    """Point the check at a transcription service that answers however this test needs.
 
-    monkeypatch.setattr(httpx, "get", refuse)
+    The sample is stubbed as well: the provider is mocked, so what is in the file never reaches a
+    decoder, and the endpoint's own logic is what these are about. That ffmpeg really produces one
+    is pinned in ``tests/transcription/test_preflight.py``.
+    """
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        if raises is not None:
+            raise raises
+        if text is not None:
+            return httpx.Response(status_code, text=text)
+        return httpx.Response(status_code, json=payload or {})
+
+    def build(settings: Settings, *, usage: object = None) -> OpenAiCompatibleProvider:
+        return OpenAiCompatibleProvider(
+            base_url=settings.transcription_base_url or "http://whisper:8000/v1",
+            model=settings.transcription_model,
+            client=httpx.Client(transport=httpx.MockTransport(handle)),
+        )
+
+    def sample(destination: Path, *, seconds: float = 3.0) -> Path:
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(b"three seconds of tone, as far as a mocked engine can tell")
+        return destination
+
+    monkeypatch.setattr(operations, "build_provider", build)
+    monkeypatch.setattr(preflight, "sample_audio", sample)
+
+
+SPEECH: dict[str, object] = {
+    "language": "en",
+    "segments": [{"start": 0.0, "end": 1.4, "text": "one two"}],
+}
+
+
+def test_a_connection_test_reports_an_unreachable_service_usefully(
+    client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _answering(
+        monkeypatch,
+        raises=httpx.ConnectError("no route to host", request=httpx.Request("POST", "http://x")),
+    )
     sign_in(client, "admin")
     tested = client.post("/admin/transcription/test").json()
     assert tested["reachable"] is False
+    assert tested["usable"] is False
     assert "whisper" in tested["detail"]
 
 
 def test_a_connection_test_reports_success(
     client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(httpx, "get", lambda *_, **__: httpx.Response(200, json={"data": []}))
+    _answering(monkeypatch, SPEECH)
     sign_in(client, "admin")
-    assert client.post("/admin/transcription/test").json()["reachable"] is True
+    tested = client.post("/admin/transcription/test").json()
+    assert tested["reachable"] is True
+    assert tested["usable"] is True
+
+
+def test_a_model_that_cannot_return_segments_is_reported_unusable_rather_than_reachable(
+    client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``TRX-10``: the misconfiguration this check exists to catch.
+
+    The endpoint is there, the credentials are accepted, every request is answered -- and the
+    model behind it returns prose with no timings, which this archive cannot store. A check that
+    only asked whether something was listening would go green on it, and an administrator would
+    believe it until the first recording had been uploaded.
+    """
+    _answering(monkeypatch, {"text": "one two three, and no timings anywhere"})
+    sign_in(client, "admin")
+    tested = client.post("/admin/transcription/test").json()
+    assert tested["reachable"] is True, "it answered perfectly well"
+    assert tested["usable"] is False, "and it still cannot transcribe for this archive"
+    assert "segments" in tested["detail"]
 
 
 def test_a_rejected_key_is_explained_rather_than_just_reported(
     client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setattr(httpx, "get", lambda *_, **__: httpx.Response(401, text="nope"))
+    """A service that refuses a key has answered: the address is right and the credential is not."""
+    _answering(monkeypatch, status_code=401, text="nope")
     sign_in(client, "admin")
     tested = client.post("/admin/transcription/test").json()
-    assert tested["reachable"] is False
-    assert "401" in tested["detail"]
-    assert "/v1" in tested["detail"]
+    assert tested["reachable"] is True
+    assert tested["usable"] is False
+    assert "SONARIUM_TRANSCRIPTION_API_KEY" in tested["detail"]
 
 
 # --- The instance ---------------------------------------------------------

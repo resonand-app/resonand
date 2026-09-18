@@ -50,13 +50,13 @@ function show() {
 describe('opening the page', () => {
   it('reaches out to nobody, and says so', async () => {
     show();
-    expect(await screen.findByText('Not contacted yet')).toBeVisible();
+    expect(await screen.findByText('Not checked yet')).toBeVisible();
     expect(screen.getByText(/Opening this page reaches out to nobody/)).toBeVisible();
   });
 
   it('makes no request that could contact the provider', async () => {
     show();
-    await screen.findByText('Not contacted yet');
+    await screen.findByText('Not checked yet');
     // Reading the configuration is the instance answering about itself. Testing it is the only
     // call that leaves, and nothing has pressed it.
     expect(sent).toContain('GET /api/admin/transcription');
@@ -74,40 +74,70 @@ describe('opening the page', () => {
   });
 });
 
-describe('testing the connection', () => {
+/** A check result the endpoint could really return. */
+function answered(over: Record<string, unknown>) {
+  return HttpResponse.json({
+    provider: 'faster-whisper',
+    base_url: 'http://whisper:8000/v1',
+    model: 'large-v3',
+    default_language: null,
+    configured: true,
+    has_credential: false,
+    reachable: true,
+    usable: true,
+    detail: '',
+    ...over,
+  });
+}
+
+describe('checking that it can transcribe', () => {
   it('happens only when it is pressed, and then reports what came back', async () => {
     show();
-    await userEvent.click(await screen.findByRole('button', { name: 'Test the connection' }));
-    expect(await screen.findByText('It answered')).toBeVisible();
+    await userEvent.click(await screen.findByRole('button', { name: 'Check it can transcribe' }));
+    expect(await screen.findByText('It can transcribe')).toBeVisible();
     expect(sent).toContain('POST /api/admin/transcription/test');
   });
 
   it('says it did not answer without pretending that is the resting state', async () => {
     server.use(
       http.post('/api/admin/transcription/test', () =>
-        HttpResponse.json({
-          provider: 'faster-whisper',
-          base_url: 'http://whisper:8000/v1',
-          model: 'large-v3',
-          default_language: null,
-          configured: true,
-          has_credential: false,
+        answered({
           reachable: false,
+          usable: false,
           detail: 'Connection refused after 5s.',
         }),
       ),
     );
     show();
-    await userEvent.click(await screen.findByRole('button', { name: 'Test the connection' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Check it can transcribe' }));
     expect(await screen.findByText('It did not answer')).toBeVisible();
     expect(screen.getByText('Connection refused after 5s.')).toBeVisible();
+  });
+
+  it('distinguishes an engine that answers from one that can transcribe', async () => {
+    // `TRX-10`: the misconfiguration this control exists to catch. Everything is reachable, the
+    // credentials are accepted, and the model returns prose with no timings -- which a check
+    // that only asked whether something was listening would report as success.
+    server.use(
+      http.post('/api/admin/transcription/test', () =>
+        answered({
+          reachable: true,
+          usable: false,
+          detail: 'The transcription service returned no segments.',
+        }),
+      ),
+    );
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Check it can transcribe' }));
+    expect(await screen.findByText('It answered, but it cannot transcribe')).toBeVisible();
+    expect(screen.queryByText('It can transcribe')).toBeNull();
   });
 });
 
 describe('where the audio goes', () => {
   it('says it here too, in the same words as everywhere else', async () => {
     show();
-    await screen.findByText('Not contacted yet');
+    await screen.findByText('Not checked yet');
     // The shared component rather than a paraphrase this page invented: `UI-25b` enforces that
     // every surface that can send audio draws this one, and this is the surface where an
     // operator decides where audio goes in the first place.
@@ -120,7 +150,7 @@ describe('no provider at all', () => {
     archive.destination = { ...archive.destination, configured: false };
     show();
     expect(await screen.findByText(/nothing on this instance can be transcribed/)).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Test the connection' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Check it can transcribe' })).toBeNull();
     await waitFor(() => {
       expect(sent).not.toContain('POST /api/admin/transcription/test');
     });

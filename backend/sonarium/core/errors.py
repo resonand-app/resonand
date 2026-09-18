@@ -70,3 +70,15 @@ class ProviderError(SonariumError):
     """A transcription provider refused, failed or answered something unusable."""
 
     code = "provider_error"
+
+
+class ProviderUnreachableError(ProviderError):
+    """Nothing answered at all -- no connection, or no reply within the timeout.
+
+    A subclass rather than a flag because the two failures have different remedies and a caller
+    that cannot tell them apart reports the wrong one: an address nobody is listening at is fixed
+    by correcting the address, and a model that refuses the request is fixed by choosing another.
+    Every caller that only cares that something went wrong still catches :class:`ProviderError`.
+    """
+
+    code = "provider_unreachable"
