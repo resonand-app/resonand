@@ -141,9 +141,9 @@ class Settings(BaseSettings):
     run_worker: bool = True
     """Whether this process runs the job worker.
 
-    One container runs both, which is the topology v0 ships. Setting this false and running
-    ``sonarium work`` beside it splits them without a schema change -- which is the whole
-    reason the worker was allowed in-process to begin with."""
+    One process runs both, and ``DAT-2`` rests on there being only one (``REV-11``). Turning this
+    off stops jobs running here; it does not make a second process safe to point at the same
+    database, because the write lock is in this one's memory and the other would not see it."""
 
     transcription_provider: str = "openai-compatible"
     transcription_base_url: str | None = None
