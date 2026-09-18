@@ -66,6 +66,9 @@ here, which is why gaps in the numbering are expected and are not mistakes.
 | `OPS` | Operations | Docker, configuration, backup, observability | [`operations.md`](operations.md) |
 | `INT` | Integration | Views that cross tracks: trash, administration, security | [`integration.md`](integration.md) |
 | `TRX` | Transcription compatibility | What an engine has to look like for Sonarium to consume it | [`transcription.md`](transcription.md) |
+| `SEC` | Pre-publication hardening | What was fixed before anybody could read the source | [`security.md`](security.md) |
+| `BUG` | Defects found in use | Faults found by using the archive rather than by reading it | [`defects.md`](defects.md) |
+| `REV` | Backend review | What a read of the finished backend found, and what settled each finding | [`review.md`](review.md) |
 
 Notation:
 
@@ -77,18 +80,27 @@ Notation:
 
 A task is done when it meets the criterion written next to it, not when it "works".
 
+The last four tracks were not planned in advance. `TRX`, `SEC`, `BUG` and `REV` are what came
+back from building the thing, hardening it and reading it, and they are here for the same reason
+the rest is: an identifier in a commit message or a comment has to resolve to something a reader
+of this repository can open.
+
 ### Identifiers you will meet in the code that are not here
 
-Two tracks were planned in working documents that are **not in this repository**, and their
-identifiers are cited from code and commit messages all the same:
+One track is planned in a working document that is **not in this repository**, and its identifiers
+are cited from code and commit messages all the same:
 
 | Prefix | Track | Why it is not here |
 |---|---|---|
-| `REV` | Backend review findings | A worklist written against the finished backend, kept local |
-| `FBK` | Feedback and liveness: what the interface says while it works | The same |
+| `FBK` | Feedback and liveness: what the interface says while it works | A working document, kept local while the first version is built |
 
-A comment citing `REV-1` is pointing at a decision that was taken and is described where it was
-applied, in the code itself. Nothing in this plan depends on either document.
+A comment citing `FBK-3` is pointing at a decision that was taken and is described where it was
+applied, in the code itself. Nothing in this plan depends on that document.
+
+[`review.md`](review.md) is the same shape from the other side: the findings and what settled
+them are here, and the reading that produced them — severity, assessment, the measurements taken
+at the time — is a working document too. A candid reading of your own code stops being candid
+once it is a published artefact.
 
 For the same reason the per-view field tables, state tables and copy are **not reproduced here**.
 They live in the interface specification, which is a working document kept out of the repository
