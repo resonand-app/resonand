@@ -11,16 +11,15 @@ nobody can back up or upgrade is one nobody should trust an archive to.
 - [x] **OPS-2** · Example `docker-compose.yml` with volumes for the database and the storage, plus a
       documented `.env.example`. ⇢ OPS-1
 
-- [ ] **OPS-3** · Configuration **through environment variables only**, validated at startup with
+- [x] **OPS-3** · Configuration **through environment variables only**, validated at startup with
       useful messages (not a stack trace). ⇢ API-1
-      *Outstanding: the calling. `Settings.validate_runtime` exists and produces exactly the
-      messages this asks for, and nothing outside its own test ever calls it — `create_app` runs
-      `prepare_directories` and no more. The instance an operator gets by copying
-      `deploy/.env.example` verbatim therefore starts: that file ships `SONARIUM_SECRET_KEY=`
-      empty, pydantic reads it as a zero-length `SecretStr` rather than as absent, so the
-      `is None` guard in front of the playback signer never fires and tokens are signed with an
-      empty key. Validating on the branch that reads the environment leaves the tests, which pass
-      settings in, untouched.*
+      *A misconfigured instance now says what to fix, one line per problem, and exits 1 without a
+      traceback — checked only on the branch that reads the environment, which is the container's
+      entry point and the only place a person wrote the configuration. An empty
+      `SONARIUM_SECRET_KEY` reads as absent rather than as a zero-length secret, which is what
+      `deploy/.env.example` ships and what used to walk past every `is None` guard in front of
+      the signer. A missing transcription endpoint is said rather than refused: it costs one
+      feature, and refusing would cost the archive.*
 
 - [ ] **OPS-4** · **Subdomain and subpath** support (`/sonarium`), both tested behind a reverse
       proxy. In v0 because retrofitting a base path into an SPA is genuinely painful, and the
