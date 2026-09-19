@@ -66,9 +66,13 @@ and the specimen boards are kept for the record under `docs/internal/design/prov
 
 What it decides:
 
-- **One chromatic family: amber.** `--amber-300…900`, 400 as the accent on dark and 700 on light,
-  every step declaring the on-colour that clears AA against it. A played waveform, a primary
-  button and an active nav item are visibly the same signal.
+- **One chromatic family: orange.** `--orange-300…900`, 400 as the accent on dark and 700 on
+  light, every step declaring the on-colour that clears AA against it. A played waveform, a
+  primary button and an active nav item are visibly the same signal. **It was amber until
+  `UI-40`**, when the brand settled on `#E98A5F` and the family was rotated 19 degrees toward red
+  — every step keeping its saturation and lightness, so what moved is the hue and not the ramp
+  that was signed off. `clay` moved with it, held apart from the accent on saturation rather than
+  hue because a library swatch announces its own name.
 - **Two neutral ramps.** `--ink-*` (blue-black) for dark, `--paper-*` (warm) for light, aliased
   through semantic names that flip on `[data-theme="light"]`. **Dark is the default and light is a
   full peer** — a token redefinition, never a second stylesheet.

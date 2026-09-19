@@ -1009,6 +1009,18 @@ for, the third because it is the surface a phone offers to install.
       `display: standalone` means a phone offers to install this, which is the path exit
       criterion 2 names. ⇢ UI-24a, OPS-4
 
+- [x] **UI-40** · **The chromatic family becomes orange.** `DEC-8` chose amber; the brand settled
+      on `#E98A5F` and never moved, so the stylesheet, the decision and the mark have disagreed
+      with each other ever since — and the README's screenshots (`REL-1`) would have shipped the
+      disagreement to everybody. The family rotates 19 degrees toward red with every step's
+      saturation and lightness untouched, which puts `400` on the brand value and leaves the ramp
+      that was signed off otherwise intact. `clay` moves with it: it sits within two degrees of
+      the new accent, and at the 9px a library dot is drawn, hue is the only thing telling them
+      apart.
+      _Done when:_ no `--amber-*` token survives outside the library ramp, the three mark
+      treatments and the lock-screen artwork carry the new value, and `contrast.node.test.ts`
+      passes every pair in both themes.
+
 ---
 
 ## When the interface is done

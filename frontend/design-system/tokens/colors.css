@@ -1,17 +1,17 @@
 :root {
-  /* Amber — the only chromatic family in the interface. */
-  --amber-300: #F2C87E;
-  --amber-400: #E8B45C;
-  --amber-500: #D89A38;
-  --amber-600: #B8811F;
-  --amber-700: #8F5810;
-  --amber-800: #6E4310;
-  --amber-900: #3A2609;
+  /* Orange — the only chromatic family in the interface. */
+  --orange-300: #F2A37E;
+  --orange-400: #E98A5F;
+  --orange-500: #D86738;
+  --orange-600: #B8511F;
+  --orange-700: #8F3010;
+  --orange-800: #6E2510;
+  --orange-900: #3A1609;
 
-  /* On-colours: the text colour that clears AA on each amber step. */
-  --amber-400-on: #3A2609;
-  --amber-600-on: #241C10;
-  --amber-700-on: #FFFFFF;
+  /* On-colours: the text colour that clears AA on each orange step. */
+  --orange-400-on: #3A1609;
+  --orange-600-on: #241610;
+  --orange-700-on: #FFFFFF;
 
   /* Ink — the dark neutral ramp. Blue-black, never grey. */
   --ink-900: #07080B;
@@ -37,10 +37,10 @@
   --paper-100: #F4F4F2;
   --paper-050: #FFFFFF;
 
-  /* Amber tints used as active-state fills. */
-  --amber-soft-dark: #241C10;
-  --amber-soft-light: #F5E7CF;
-  --amber-soft-light-on: #8A5410;
+  /* Orange tints used as active-state fills. */
+  --orange-soft-dark: #241610;
+  --orange-soft-light: #F5DBCF;
+  --orange-soft-light-on: #8A2D10;
 
   /* Transcription state. Each pairs with a glyph and a word — colour is never the only signal.
      Two ramps, like the neutrals, because these carry text: the dark values fail AA on a light
@@ -68,7 +68,7 @@
      interface drew the dark values and an amber library sat at 1.89 against a white card, well
      under the 3:1 a 9px dot needs to be seen at all (`UI-33c`). */
   --library-amber-dark: #E8B45C;
-  --library-clay-dark: #C97F5A;
+  --library-clay-dark: #AE6E5B;
   --library-slate-dark: #6F8FB0;
   --library-moss-dark: #7E9A6B;
   --library-stone-dark: #8A8F9C;
@@ -76,7 +76,7 @@
   --library-teal-dark: #5F9E96;
 
   --library-amber-light: #AE781C;
-  --library-clay-light: #A85F3C;
+  --library-clay-light: #8D513F;
   --library-slate-light: #4E6E90;
   --library-moss-light: #5C7A49;
   --library-stone-light: #6A7080;
