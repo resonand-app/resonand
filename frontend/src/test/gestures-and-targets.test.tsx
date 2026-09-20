@@ -20,7 +20,7 @@
  *   handles a drag it started itself.
  */
 
-import { screen, waitFor, within } from '@testing-library/react';
+import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -195,6 +195,26 @@ describe('the 44px floor, in the views', WHOLE_SYSTEM, () => {
         return `${element.tagName.toLowerCase()} in ${owner} (${name.trim()})`;
       });
     expect(small).toEqual([]);
+  });
+
+  it('holds no excuse for application markup that is no longer small', async () => {
+    // The other direction, which this list was missing while the design system's own had it. An
+    // exemption that outlives the thing it excuses is how a floor becomes a suggestion, and the
+    // asymmetry meant only one of the two lists could ever be reconciled by a check.
+    const named = new Set<string>();
+    for (const one of VIEWS) {
+      // One view at a time, deliberately: they share a document, and mounting them together
+      // would let one view's markup excuse another's.
+      await mountView(one, { width: PHONE });
+      for (const element of document.body.querySelectorAll<HTMLElement>('*')) {
+        if (element.tabIndex < 0 || meetsTheFloor(element)) continue;
+        const app = element.closest<HTMLElement>('[data-app]')?.dataset.app;
+        if (app !== undefined) named.add(app);
+      }
+      cleanup();
+    }
+    const stale = KNOWN_SMALL_TARGETS_IN_VIEWS.filter((entry) => !named.has(entry.component));
+    expect(stale).toEqual([]);
   });
 
   it('says why for each control it excuses', () => {

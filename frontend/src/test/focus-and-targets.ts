@@ -86,7 +86,7 @@ export const KNOWN_SMALL_TARGETS: TargetExemption[] = [
   },
   {
     component: 'sidebar-item',
-    why: 'A full-bleed 32px destination in a stacked list. Collapsed to 52px it is 32x32 and the sidebar is the one place a 44px target would push a library off the screen; `UI-4c` revisits it with the phone shell.',
+    why: 'A full-bleed 32px destination in a stacked list, and desktop-only: `UI-4f` replaces the sidebar with four bottom tabs below 720, so no finger ever meets one. Collapsed to 52px it is 32x32, and the sidebar is the one place where growing the target would push a library off the screen.',
   },
   {
     component: 'menu-row',
