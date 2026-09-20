@@ -1498,6 +1498,19 @@ export interface components {
             /** Uuid */
             uuid: string;
         };
+        /**
+         * GrantableLevel
+         * @description One level a share may carry, and the sentence that explains it (``API-18``).
+         *
+         *     The wording lives in :mod:`sonarium.core.levels` and is sent from there, so the interface has
+         *     no copy of it to go stale -- which is the whole of ``UI-34k``.
+         */
+        GrantableLevel: {
+            /** Description */
+            description: string;
+            /** Level */
+            level: number;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1514,6 +1527,8 @@ export interface components {
         InstanceState: {
             /** Accepted Extensions */
             accepted_extensions: string[];
+            /** Levels */
+            levels: components["schemas"]["GrantableLevel"][];
             /** Max Upload Bytes */
             max_upload_bytes: number;
             /** Name */

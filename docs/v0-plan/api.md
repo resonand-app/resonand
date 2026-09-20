@@ -108,7 +108,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       *Found while building `UI-15`: §6 assumed the job was readable and no task made it so, which
       is why the identifier comes after `API-16` rather than beside `API-11`.*
 
-- [ ] **API-18** · **The permission vocabulary, so the interface can describe a level nobody
+- [x] **API-18** · **The permission vocabulary, so the interface can describe a level nobody
       holds.** `level_description` is sent on a `ShareSummary`, which means the API describes the
       levels **in use** rather than the levels that exist: a library shared with one person at
       `edit` carries that one sentence and no other. `UI-34k`'s whole design is that the selector
@@ -128,6 +128,12 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       own description of what sharing means.
       *Done when:* `UI-17c`'s level selector renders three sentences with one share in the
       library, and the interface has no copy of the wording left in it. ⇢ API-14, DAT-1 🧪
+      *Both halves met, and checked by a test that asserts all three clauses are on screen with
+      the mock library shared at one level. The short name the panel used to fall back to is gone
+      along with the helper that chose it; `common:level.*` survives for the library byline, which
+      wants a name rather than a sentence. `string-expansion`'s server-authored list grew from one
+      entry to three, which is the honest consequence: the interface renders three sentences
+      Python wrote, and a second language makes all three backend work.*
       *Found while building `UI-17c`: §6 listed nine gaps and this was not one of them, because
       the panel reads correctly for the level somebody already has -- it is the two they might
       change to that are blank. The interface ships a short name in the gap and says so in the

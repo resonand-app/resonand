@@ -62,8 +62,16 @@ const PSEUDO = 'pseudo';
  */
 const AUTHORED_BY_THE_SERVER: { text: string; why: string }[] = [
   {
+    text: 'Can read',
+    why: 'The head of a sentence in `sonarium.core.levels.DESCRIPTIONS`, which `GET /instance` now sends for all three grantable levels (`API-18`) and `LevelSelector` splits on its colon. It used to be only the levels a library had granted; the selector explains the ones it has not, which is the whole point of the endpoint carrying the vocabulary.',
+  },
+  {
     text: 'Can edit',
-    why: 'The head of `level_description`, which `sonarium.core.levels.DESCRIPTIONS` sends already worded and `LevelSelector` splits on its colon. The client has the same words in common.json but does not choose them here.',
+    why: 'The head of another sentence in `sonarium.core.levels.DESCRIPTIONS`, sent by `GET /instance`. The client holds the same short name in common.json for the library byline, and deliberately does not choose it here: the selector renders the API`s wording so the two cannot drift.',
+  },
+  {
+    text: 'Can manage',
+    why: 'The third sentence in `sonarium.core.levels.DESCRIPTIONS`, sent by `GET /instance`. It appears now where it did not before, because the selector explains every grantable level rather than only the ones a library has already granted (`API-18`).',
   },
 ];
 

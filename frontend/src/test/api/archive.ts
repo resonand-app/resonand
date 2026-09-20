@@ -204,6 +204,20 @@ function fresh(): Archive {
       name: 'sonarium',
       version: '0.1.0',
       needs_bootstrap: false,
+      // The vocabulary, in the API's own words and its own order (`API-18`). The sentences are
+      // `sonarium.core.levels.DESCRIPTIONS` verbatim, because a mock that paraphrased them would
+      // let the panel pass a test while rendering something the real instance never sends.
+      levels: [
+        { level: 10, description: 'Can read: listen and read the transcript, and change nothing.' },
+        {
+          level: 20,
+          description: 'Can edit: change titles, categories and tags, but not share.',
+        },
+        {
+          level: 30,
+          description: 'Can manage: everything above, plus sharing with other people.',
+        },
+      ],
       trash_retention_days: 30,
       max_upload_bytes: 2 * 1024 * 1024 * 1024,
       accepted_extensions: ['.m4a', '.mp3', '.wav', '.flac', '.ogg', '.opus', '.mp4', '.mov'],

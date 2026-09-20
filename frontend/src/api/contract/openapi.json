@@ -688,6 +688,26 @@
         "title": "DuplicateWarning",
         "type": "object"
       },
+      "GrantableLevel": {
+        "additionalProperties": false,
+        "description": "One level a share may carry, and the sentence that explains it (``API-18``).\n\nThe wording lives in :mod:`sonarium.core.levels` and is sent from there, so the interface has\nno copy of it to go stale -- which is the whole of ``UI-34k``.",
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "level": {
+            "title": "Level",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "level",
+          "description"
+        ],
+        "title": "GrantableLevel",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -710,6 +730,13 @@
               "type": "string"
             },
             "title": "Accepted Extensions",
+            "type": "array"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/GrantableLevel"
+            },
+            "title": "Levels",
             "type": "array"
           },
           "max_upload_bytes": {
@@ -747,7 +774,8 @@
           "trash_retention_days",
           "max_upload_bytes",
           "accepted_extensions",
-          "video_extensions"
+          "video_extensions",
+          "levels"
         ],
         "title": "InstanceState",
         "type": "object"

@@ -157,6 +157,17 @@ class SessionSummary(Api):
     is_current: bool
 
 
+class GrantableLevel(Api):
+    """One level a share may carry, and the sentence that explains it (``API-18``).
+
+    The wording lives in :mod:`sonarium.core.levels` and is sent from there, so the interface has
+    no copy of it to go stale -- which is the whole of ``UI-34k``.
+    """
+
+    level: int
+    description: str
+
+
 class InstanceState(Api):
     """What the interface needs to know about the instance itself (``UI-21``, ``API-14``).
 
@@ -181,6 +192,19 @@ class InstanceState(Api):
     """``UI-18a`` states the size limit and the formats **before** somebody picks a file, and is
     told to read them here rather than hard-code them. Video containers are listed separately
     because the dialog says they are kept whole and played as audio (``DEC-17``)."""
+
+    levels: list[GrantableLevel]
+    """The permission vocabulary (``API-18``).
+
+    ``ShareSummary`` carries ``level_description`` too, which describes the levels **in use**: a
+    library shared with one person at ``edit`` explains that one and nothing else, so the two
+    options somebody might change *to* had nothing to show. This is the vocabulary rather than
+    the usage, so a selector can render all three.
+
+    **Owner is not in it.** It is read off ``library.owner_id``, a ``CHECK`` refuses a share row
+    carrying it, and an option nobody can ever pick is one ``UI-34c`` says not to draw. None of
+    this is a secret -- it is the product's own description of what sharing means -- which is why
+    it rides on the endpoint that is answered without a session."""
 
 
 # --- Libraries ------------------------------------------------------------

@@ -11,13 +11,12 @@
  * to go stale. Somebody choosing what another person may do has to be able to read what it means
  * at the moment they choose it.
  *
- * **A level nobody has been granted yet has no sentence to show.** `level_description` arrives
- * attached to a grant, so the API describes the levels in use rather than the vocabulary -- and
- * for the rest this falls back to the interface's own short name, which is a label rather than a
- * second copy of the API's sentence. Every description the panel has seen is collected across the
- * shares on screen, so in practice a library that uses a level explains it. Closing this properly
- * means the API answering the vocabulary once; until it does, the panel is honest about showing a
- * name where it has no sentence.
+ * **The vocabulary comes from `GET /instance`, not from the shares** (`API-18`).
+ * `level_description` arrives attached to a grant, so it describes the levels *in use*: a library
+ * shared with one person at `edit` carried that one sentence and no other, and the two options
+ * somebody might change *to* had nothing to render -- at exactly the moment they are choosing
+ * what another person may do. `/instance` answers the three grantable levels once, with the same
+ * sentences from the same place, so the panel explains a level nobody holds yet.
  *
  * **Revoking says what the person loses, in numbers.** "Are you sure?" is not a consequence;
  * "Sam Rivera loses access to all 41 recordings" is.
@@ -54,7 +53,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import { useSession } from '@/app/session';
+import { useInstance, useSession } from '@/app/session';
 import { Button, Dialog, LevelSelector, Modal, TextField } from '@/design-system';
 import type { LevelOption } from '@/design-system';
 import { LEVEL } from '@/features/library/data';
@@ -77,12 +76,10 @@ export interface SharePanelProps {
   canManage: boolean;
 }
 
-/** The three a share may carry. Owner is held, never granted. */
-const GRANTABLE: readonly Level[] = [LEVEL.read, LEVEL.edit, LEVEL.manage];
-
 export function SharePanel({ library, shares, edits, canManage }: SharePanelProps) {
   const { t, i18n } = useTranslation('librarySettings');
   const { account } = useSession();
+  const instance = useInstance();
   const [revoking, setRevoking] = useState<ShareSummary | null>(null);
 
   // Everybody this screen can put a name to, which is not everybody the API might name.
@@ -92,12 +89,13 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
     ...shares.map((share): [number, string] => [share.grantee.id, share.grantee.display_name]),
   ]);
 
-  // Every sentence the API has sent on this screen, by the level it describes.
-  const described = new Map(shares.map((share) => [share.level, share.level_description]));
-  const levels: LevelOption[] = GRANTABLE.map((level) => ({
-    level,
-    description: described.get(level) ?? t(`common:level.${nameOf(level)}`),
-  }));
+  // The instance's own vocabulary, in its order. A share's `level_description` says the same
+  // thing for the level somebody already has, so there is nothing to reconcile between them.
+  const levels: LevelOption[] =
+    instance.data?.levels.map((one) => ({
+      level: one.level,
+      description: one.description,
+    })) ?? [];
 
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
@@ -295,13 +293,6 @@ function AddPerson({
       )}
     </div>
   );
-}
-
-/** The interface's own short name for a level, for one it has no sentence for. */
-function nameOf(level: Level): string {
-  if (level === LEVEL.read) return 'read';
-  if (level === LEVEL.edit) return 'edit';
-  return 'manage';
 }
 
 const heading = {
