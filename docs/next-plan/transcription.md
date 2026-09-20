@@ -32,6 +32,18 @@ the identifiers they were found under because the code cites several of them by 
       every engine whose finest unit is the word. This is what widens the market past the Whisper
       family. ⇢ TRX-3
 
+- [ ] **TRX-17** · **Normalise the reported language at the boundary.** The detected language is
+      whatever the engine chose to call it, and it is stored that way: a `faster-whisper` server
+      answers `ja`, Groq's `whisper-large-v3` answers `English`, and `transcript.language` carries
+      both spellings of the same kind of fact through the presenter to the API. Parse it to a code
+      where `resolve_language` already sends one — an engine whose answer is in a vocabulary it
+      will not accept back cannot round-trip its own detection, and an archive whose engine changed
+      holds two vocabularies in one column with nothing recording which row is in which. Small
+      today because only the transcript panel reads it; not small once anything filters or groups
+      by it, because by then the column has to be repaired rather than constrained. ⇢ TRX-3
+      *Found by `JOB-3`'s second deployment. One engine cannot show this, however carefully it is
+      read, which is most of the argument for the second one.*
+
 - [ ] **TRX-9** · **Say plainly why an untimed engine is declined.** Wyoming — the Home Assistant
       voice ecosystem, which is precisely the homelab audience [`VISION.md`](../../VISION.md) names
       — returns text with no timestamps and cannot satisfy this archive. Somebody already running

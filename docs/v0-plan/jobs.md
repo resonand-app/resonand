@@ -21,12 +21,24 @@ lives here, because none of it may happen inside the request that uploaded the f
       without a sink, so nothing in a running instance is metered — which `REV-5` settled as the
       decision rather than the omission. The table lands with the first thing that reads it.*
 
-- [ ] **JOB-3** · OpenAI-compatible `/v1/audio/transcriptions` provider, verified against a local
+- [x] **JOB-3** · OpenAI-compatible `/v1/audio/transcriptions` provider, verified against a local
       `faster-whisper` server as the reference deployment and against a hosted endpoint as the
       alternative. ⇢ JOB-2, JOB-13 🧪
-      *Outstanding: only the verification. The provider is built and tested, but every test runs
-      against a mocked transport and nothing here records a run against either deployment.
-      `sonarium check-transcription` (`TRX-1`) is the verb that would produce that record.*
+      *Verified on 2026-09-20 with `sonarium check-transcription` (`TRX-1`), which this entry named
+      as the verb that would produce the record, against both deployments: a `faster-whisper`
+      server on the local network running a Catalan `large-v3`, and Groq's hosted
+      `whisper-large-v3` behind an OpenAI-compatible base URL. Both accept the request, answer in
+      `verbose_json`, and return segments whose timings land inside a sample whose length we chose.
+      The probe submits three seconds of tone generated on the spot, so neither run moved anybody's
+      audio — which is the property that made a hosted deployment testable at all.*
+      *What the second deployment was for. The two engines disagree on the one field neither the
+      contract nor the tests constrain: the reference server reports the detected language as `ja`,
+      Groq reports it as `English`, and `transcript.language` carries both spellings straight
+      through to the API. That is `TRX-17`, in [`next-plan`](../next-plan/transcription.md) — found
+      here because a second engine is the only thing that could have found it.*
+      *Not verified: that either engine transcribes speech correctly. A tone establishes the shape
+      of the answer and nothing about the words in it, and there is no speech fixture to send that
+      would not be somebody's recording.*
 
 - [x] **JOB-6** · Transcript model: **always segments** with `start_ms`/`end_ms` and a `speaker`
       field present even if diarisation is not implemented. Plain text, subtitles and synchronised
