@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from sonarium.cli.integrity import CHANGED, MISSING, ORPHAN, check
+from sonarium.cli.integrity import CHANGED, LEFTOVER, MISSING, ORPHAN, check
 from sonarium.core.config import Settings
 from sonarium.db import libraries, users
 from sonarium.db.audio import create_audio, trash_audio
@@ -153,3 +153,54 @@ def test_the_summary_counts_each_kind_of_problem(
     summary = report.summary()
     assert "1 missing" in summary
     assert "1 orphan" in summary
+
+
+# --- What a killed process leaves behind ----------------------------------
+
+
+def _recording_dir(db_settings: Settings, uuid: str) -> Path:
+    return storage.recording_dir(db_settings.resolved_storage_dir, uuid)
+
+
+def test_a_killed_transcode_leaves_a_fragment_the_scan_can_see(
+    database: Database, db_settings: Settings, archive: str
+) -> None:
+    """The staging name the transcode writes under, if ffmpeg is killed halfway.
+
+    It starts with a dot, which is what kept it out of `stored_files`' `original.*` glob -- so an
+    archive with one in it reported "all present and unchanged" while the fragment sat there.
+    """
+    (_recording_dir(db_settings, archive) / ".derived.opus.partial").write_bytes(b"half")
+    with database.read_session() as session:
+        report = check(session, db_settings.resolved_storage_dir)
+    assert [finding.kind for finding in report.findings] == [LEFTOVER]
+    assert not report.is_clean
+
+
+def test_a_killed_worker_leaves_its_parts_where_the_scan_can_see_them(
+    database: Database, db_settings: Settings, archive: str
+) -> None:
+    """A long recording is cut into `.part-NNNN.opus` beside the original before it is submitted."""
+    directory = _recording_dir(db_settings, archive)
+    (directory / ".part-0001.opus").write_bytes(b"one")
+    (directory / ".part-0002.opus").write_bytes(b"two")
+    with database.read_session() as session:
+        report = check(session, db_settings.resolved_storage_dir)
+    assert [finding.kind for finding in report.findings] == [LEFTOVER, LEFTOVER]
+
+
+def test_a_fragment_is_not_called_an_orphan(
+    database: Database, db_settings: Settings, archive: str
+) -> None:
+    """An orphan is a whole recording the database has forgotten, and losing one is the failure
+    this check exists for. Spending the word on a fragment would blunt it."""
+    (_recording_dir(db_settings, archive) / ".derived.opus.partial").write_bytes(b"half")
+    storage.store_original(
+        db_settings.resolved_storage_dir,
+        "11111111-1111-4111-8111-111111111111",
+        [b"a whole recording nothing points at"],
+        filename="orphan.m4a",
+    )
+    with database.read_session() as session:
+        report = check(session, db_settings.resolved_storage_dir)
+    assert sorted(finding.kind for finding in report.findings) == [LEFTOVER, ORPHAN]

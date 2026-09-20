@@ -158,6 +158,33 @@ def stored_files(root: Path) -> list[Path]:
     )
 
 
+LEFTOVER_GLOBS = ("*/*/.*.partial", "*/*/.part-*.opus")
+"""What a process that died mid-write leaves in a recording's directory (``ING-13``).
+
+Both are written under a leading dot, on purpose: the transcode stages its derivative as
+``.derived.opus.partial`` so that a crash cannot leave a truncated file under the name the player
+asks for, and a long transcription cuts ``.part-0001.opus`` and friends beside it. The dot is what
+keeps them out of ``stored_files``, whose glob is ``original.*`` -- and it is also why the orphan
+scan could not see them, so an archive with a killed ffmpeg in it reported "all present and
+unchanged" while the pieces sat on the disk.
+"""
+
+
+def leftover_files(root: Path) -> list[Path]:
+    """Files left behind by a process that did not finish, which no row will ever point at.
+
+    Not orphans. An orphan is a complete recording the database has forgotten, and losing one is
+    the failure this whole check exists for; these are fragments nothing was ever going to point
+    at. Reporting them apart is what keeps the frightening word meaning the frightening thing.
+    """
+    return sorted(
+        path
+        for pattern in LEFTOVER_GLOBS
+        for path in root.glob(pattern)
+        if path.is_file() and len(path.parent.parent.name) == SHARD_WIDTH
+    )
+
+
 def _sync_directory(directory: Path) -> None:
     """Make the rename itself durable, not only the bytes it renamed."""
     handle = os.open(directory, os.O_RDONLY)

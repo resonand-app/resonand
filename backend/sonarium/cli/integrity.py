@@ -32,6 +32,7 @@ MISSING = "missing"
 CHANGED = "changed"
 ORPHAN = "orphan"
 UNHASHED = "unhashed"
+LEFTOVER = "leftover"
 
 
 @dataclass(frozen=True, slots=True)
@@ -107,5 +108,16 @@ def check(session: Session, storage_root: Path, *, verify_hashes: bool = True) -
             report.findings.append(
                 Finding(ORPHAN, f"no recording points at {storage.relative(storage_root, path)}")
             )
+
+    # Reported, and reported separately. A fragment is not a lost recording, and calling it an
+    # orphan would spend the word this check most needs to keep its force.
+    for path in storage.leftover_files(storage_root):
+        report.findings.append(
+            Finding(
+                LEFTOVER,
+                f"{storage.relative(storage_root, path)} was left behind by something that did "
+                f"not finish",
+            )
+        )
 
     return report

@@ -175,7 +175,6 @@ These are what the plan always held:
 | `OPS-6` | Both halves of its marker: a restore into a container, and an upgrade that crosses a revision rather than proving a no-op is a no-op |
 | `ING-11` | The round trip — exit criterion 4 — and the four defects that would each break it before anybody got to run it |
 | `ING-12` | Whether a derived date carries a time of day, rather than being presented as midnight |
-| `ING-13` | The `fsck` command's own test, and the two file kinds its orphan scan cannot see |
 | `INT-6` | Playwright over the utility threshold; nothing exists yet |
 | `REV-S6` | The comment voice, in [`review.md`](review.md) |
 
