@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "The Sonarium web interface -- one client of the API among others.",
   "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sonarium-app/sonarium"
+  },
   "private": true,
   "type": "module",
   "engines": {

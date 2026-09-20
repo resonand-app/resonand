@@ -163,5 +163,10 @@
       "at": "Database is at",
       "expected": "This build expects"
     }
+  },
+  "about": {
+    "offer": "Sonarium {{version}}, free software under the AGPL-3.0.",
+    "unknownVersion": "Sonarium, free software under the AGPL-3.0.",
+    "source": "Get the source"
   }
 }

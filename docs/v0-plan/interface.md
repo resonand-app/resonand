@@ -1010,13 +1010,18 @@ for, the third because it is the surface a phone offers to install.
       to show it twice: the API stores a hash, and a copy kept so it could be shown again would be
       the thing worth stealing. The sessions clause is above the button, not after it.*
 
-- [ ] **UI-38** · **The instance offers its source.** Section 13 is the clause `AGPL-3.0` was
+- [x] **UI-38** · **The instance offers its source.** Section 13 is the clause `AGPL-3.0` was
       chosen over `GPL` for: somebody interacting with this over a network is owed the
       Corresponding Source. A signed-in person is offered no link, no About surface and no licence
       line anywhere, and the only licence string the instance emits points at gnu.org — which is
       the licence text, not the source. One line in Settings naming the version and linking the
       repository closes it. It has to survive being forked, so the link is a build-time fact
       rather than this repository hard-coded. ⇢ UI-20a
+      *One line under the section tabs, so it is on screen whichever section is open rather than
+      behind a guess at which tab hides it. The link is baked from `package.json`'s `repository`
+      at build time, so a fork that changes the field it already changes offers its own source;
+      the version beside it comes from `GET /instance`, and the offer renders without it, because
+      section 13 is owed whether or not the API is answering.*
 
 - [ ] **UI-39** · The web-app manifest, which nobody has read since it was generated. Both colours
       are `#FFFFFF` in a product whose default is dark, so an installed instance flashes white

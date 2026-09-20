@@ -7,6 +7,7 @@
  * later, from a subpath (`OPS-4`), so every request the client makes is same-origin and relative.
  */
 
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import react from '@vitejs/plugin-react';
@@ -27,8 +28,27 @@ const API_PREFIX = '/api';
 
 const BACKEND = 'http://127.0.0.1:8000';
 
+/**
+ * Where this build's Corresponding Source is (`UI-38`).
+ *
+ * `AGPL-3.0` section 13 is the clause this licence was chosen over `GPL` for: somebody who only
+ * ever interacts with an instance over the network is owed its source. So the interface has to
+ * offer a link, and the link has to be to *this* build -- a fork that ships its own instance owes
+ * its own source and not ours.
+ *
+ * Read from `package.json` rather than written here, because `repository` is where a fork already
+ * changes it and where npm, GitHub and every tool that reads a manifest look for it. Baked at
+ * build time rather than served from the API: it is a fact about the bundle, and an instance whose
+ * API is unreachable still owes the offer.
+ */
+const { repository } = JSON.parse(
+  readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf8'),
+) as { repository: { url: string } };
+
 export default defineConfig({
   plugins: [react()],
+
+  define: { __SOURCE_URL__: JSON.stringify(repository.url) },
 
   resolve: {
     // Matching `paths` in tsconfig.app.json. Two descriptions of the same mapping is one too
