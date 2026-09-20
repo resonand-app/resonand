@@ -68,7 +68,7 @@ export function Logo({
             fontSize: `calc(var(--type-wordmark-scale) * ${String(size)}px)`,
             marginLeft: 'var(--type-wordmark-lead)',
             // The mark sets the lockup's height; leading below the baseline would only pad it.
-            lineHeight: 1,
+            lineHeight: 'var(--type-wordmark-leading)',
             color: 'var(--text)',
           }}
         >

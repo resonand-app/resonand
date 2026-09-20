@@ -159,7 +159,7 @@ export function LevelSelector({ levels, value, onChange, label, disabled = false
                 <span
                   style={{
                     fontSize: 'var(--type-ui-size-sm)',
-                    lineHeight: 1.5,
+                    lineHeight: 'var(--type-ui-leading)',
                     color: 'var(--text-3)',
                   }}
                 >

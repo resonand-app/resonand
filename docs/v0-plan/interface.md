@@ -307,11 +307,30 @@ Both are cheap now and expensive after thirty views reference them.
       _Done when:_ every value in every component is a token, and `--radius-chip` is either used or
       deleted. ⇢ UI-1i
 
-- [ ] **UI-33a1** · The type values came back. `TranscriptLine` and several components written
+- [x] **UI-33a1** · The type values came back. `TranscriptLine` and several components written
       after `UI-33a` set raw `lineHeight` and `letterSpacing` instead of reading the scale, and the
       guard cannot see them: `token-adherence` reads colour and font family only. Widening the
       guard is the task rather than the handful of edits, because a rule that holds only while
       somebody remembers it is what produced this second entry. ⇢ UI-33a 🧪
+      *`TranscriptLine` is not among them: `UI-33a` had already put it on `--type-body-leading`,
+      and the entry named it from the reading rather than from the file.*
+      *The scale had to be decided before it could be read: there was nothing at 1.45, 1.5 or 1.55,
+      and the six components carrying them are one job at one size — a tooltip, three descriptions
+      under a label, two paragraphs in a notice. They collapse into `--type-ui-leading: 1.5`, and
+      three components disagreeing by one and a third pixels is what says nobody chose them. Two
+      values were not a scale question: the wordmark's `1` joins the lockup's own group beside
+      `--type-wordmark-lead`, and `RecordingCard`'s `-0.005em` reads `--type-title-tracking`,
+      because a card title is a title and 0.08px a character is not a step.*
+      *The guard reads **properties**, where the colour rule reads values: `1.5` means nothing
+      until it is next to `lineHeight`, so a pattern over the text would have had to ban every
+      number in the tree. It covers `lineHeight`, `letterSpacing`, `fontSize` and `fontWeight`
+      across the system **and the application** — which is how `MoveDialog` was in this list —
+      and it found two the entry had not: `Sidebar`'s `600 : 400` and the specimen board's two.
+      `fontFamily` stays with the font rule, which gained the generic families, because a family
+      is a name wherever it is written. Spacing is untouched; `UI-33b` is a different argument.*
+      *The arrangement carries one trap, and a test guards it: flat config **replaces** a rule's
+      options rather than merging them, so the three `no-restricted-syntax` blocks cover disjoint
+      file sets, and a fourth that matched one of them would silently switch its selectors off.*
 
 - [x] **UI-33b** · The four missing groups: a **z-index scale** (the player, the tray, dialogs,
       menus, toasts and the scrim all stack today by DOM order), **breakpoint tokens** for 1280 /

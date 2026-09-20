@@ -77,7 +77,7 @@ function Item({
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
-              fontWeight: active ? 600 : 400,
+              fontWeight: active ? 'var(--weight-semibold)' : 'var(--weight-regular)',
             }}
           >
             {label}

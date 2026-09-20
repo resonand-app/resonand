@@ -149,7 +149,7 @@ export function EgressNotice({
           // 190 made the notice wider than the column holding it.
           minWidth: 'min(190px, 100%)',
           fontSize: 'var(--type-ui-size-sm)',
-          lineHeight: 1.55,
+          lineHeight: 'var(--type-ui-leading)',
           color: 'var(--text-2)',
           textWrap: 'pretty',
         }}

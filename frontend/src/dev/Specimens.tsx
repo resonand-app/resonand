@@ -244,7 +244,7 @@ function Panel({
       <span
         style={{
           fontFamily: 'var(--font-mono)',
-          fontSize: '11px',
+          fontSize: 'var(--type-overline-size)',
           color: 'var(--text-3)',
         }}
       >
@@ -882,7 +882,7 @@ export default function Specimens() {
             margin: 0,
             fontSize: 'var(--type-ui-size)',
             color: 'var(--text-3)',
-            lineHeight: 1.6,
+            lineHeight: 'var(--type-body-leading)',
             maxWidth: 620,
           }}
         >

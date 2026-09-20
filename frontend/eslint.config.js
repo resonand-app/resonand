@@ -8,10 +8,11 @@
  * `eslint-config-prettier` turns off every rule that would argue with it, which is why that entry
  * is last. It is not a substitute for the type checker -- `npm run typecheck` is a separate
  * script and a separate CI step, because `tsc` reports things ESLint cannot and the two failing
- * for the same reason would hide that. It **is** the fast half of the tokens-only guard (`UI-1i`):
- * a colour or a font stack written inside a component fails while it is being typed, and
- * `token-adherence.node.test.ts` fails on the same thing in CI. Both read one description of the
- * rule, in `scripts/token-adherence.mjs`, because two copies of a regex are two rules.
+ * for the same reason would hide that. It **is** the fast half of the tokens-only guard (`UI-1i`,
+ * `UI-33a1`): a colour, a font stack or a raw leading written inside a component fails while it is
+ * being typed, and `token-adherence.node.test.ts` fails on the same thing in CI. Both read one
+ * description of the rule, in `scripts/token-adherence.mjs`, because two copies of a regex are two
+ * rules.
  *
  * **ESLint 9 and not 10, because of `jsx-a11y`.** `eslint-plugin-jsx-a11y@6.10.2` declares
  * `eslint: ^3 || ... || ^9` and there is no 10-compatible release. Accessibility is a criterion
@@ -35,6 +36,9 @@ import {
   COLOUR_PATTERN,
   FONT_MESSAGE,
   FONT_PATTERN,
+  TYPE_MESSAGE,
+  TYPE_PROPERTY_PATTERN,
+  TYPE_VALUE_PATTERN,
 } from './scripts/token-adherence.mjs';
 
 /**
@@ -54,6 +58,53 @@ const DESIGN_SYSTEM_BARREL = {
   message:
     'Import from `@/design-system`, not from a file inside it. The two exceptions are `@/design-system/styles.css` from the entry point and a `?raw` stylesheet from a test.',
 };
+
+/**
+ * `no-restricted-syntax` holds a list, and flat config replaces a rule's options rather than
+ * merging them -- so two blocks matching one file means only the later block's selectors run.
+ * The three lists below are therefore composed into blocks over **disjoint** file sets rather than
+ * layered, and a fourth block matching anything the others do would silently switch one off.
+ */
+
+/** Copy belongs in `src/i18n/en/` (`UI-22a`). */
+const I18N_SELECTORS = [
+  {
+    selector: 'JSXText[value=/[A-Za-z]{2,}/]',
+    message: "Copy belongs in `src/i18n/en/`, not in a component. Use `t('namespace:key')`.",
+  },
+  {
+    selector:
+      'JSXAttribute[name.name=/^(title|placeholder|alt|aria-label|aria-description)$/] > Literal[value=/[A-Za-z]{2,}/]',
+    message:
+      'This attribute is read by a person or by a screen reader, so it is copy: put it in `src/i18n/en/` and pass `t(...)`.',
+  },
+];
+
+/** No colour and no font stack inside a component (`UI-1i`). Values, wherever they are written. */
+const COLOUR_AND_FONT_SELECTORS = [
+  { selector: `Literal[value=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
+  { selector: `TemplateElement[value.raw=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
+  { selector: `Literal[value=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
+  { selector: `TemplateElement[value.raw=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
+];
+
+/**
+ * No type value inside a component either (`UI-33a1`). Properties, not values: `1.5` means
+ * nothing until it is next to `lineHeight`.
+ *
+ * Two shapes, and deliberately not a descendant selector: `lineHeight: x === 'a' ? p : q` would
+ * put `'a'` under the property, and a rule that flagged that is a rule somebody turns off.
+ */
+const TYPE_SELECTORS = [
+  {
+    selector: `Property[key.name=/^${TYPE_PROPERTY_PATTERN}$/] > Literal[value!=/${TYPE_VALUE_PATTERN}/]`,
+    message: TYPE_MESSAGE,
+  },
+  {
+    selector: `Property[key.name=/^${TYPE_PROPERTY_PATTERN}$/] > ConditionalExpression > Literal[value!=/${TYPE_VALUE_PATTERN}/]`,
+    message: TYPE_MESSAGE,
+  },
+];
 
 export default defineConfig(
   globalIgnores([
@@ -156,19 +207,18 @@ export default defineConfig(
     files: ['src/**/*.tsx'],
     ignores: ['src/**/*.test.tsx', 'src/dev/**', 'src/test/**'],
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'JSXText[value=/[A-Za-z]{2,}/]',
-          message: "Copy belongs in `src/i18n/en/`, not in a component. Use `t('namespace:key')`.",
-        },
-        {
-          selector:
-            'JSXAttribute[name.name=/^(title|placeholder|alt|aria-label|aria-description)$/] > Literal[value=/[A-Za-z]{2,}/]',
-          message:
-            'This attribute is read by a person or by a screen reader, so it is copy: put it in `src/i18n/en/` and pass `t(...)`.',
-        },
-      ],
+      'no-restricted-syntax': ['error', ...I18N_SELECTORS, ...TYPE_SELECTORS],
+    },
+  },
+
+  // The rest of the application, which the block above excludes: the specimen board and the test
+  // support modules write no copy, and they do write styles. `UI-33a1` reaches them because a
+  // scale everything reads except one folder is a scale with a folder to remember.
+  {
+    files: ['src/**/*.ts', 'src/dev/**/*.tsx', 'src/test/**/*.tsx'],
+    ignores: ['src/**/*.test.{ts,tsx}'],
+    rules: {
+      'no-restricted-syntax': ['error', ...TYPE_SELECTORS],
     },
   },
 
@@ -224,28 +274,23 @@ export default defineConfig(
     },
   },
 
-  // --- The tokens-only guard (`UI-1i`) ------------------------------------
+  // --- The tokens-only guard (`UI-1i`, `UI-33a1`) -------------------------
   //
-  // No colour is ever written inside a component, and no font stack either. This is the half that
-  // fails in the editor; the other half is a test, and both read the patterns above so they cannot
-  // come to disagree. It covers the whole system rather than only `components/`, because
-  // `library-colors.ts` and `transcription-states.ts` are exactly where a literal would look
-  // least out of place.
+  // No colour, no font stack and no type value inside a component. This is the half that fails in
+  // the editor; the other half is a test, and both read one description in
+  // `scripts/token-adherence.mjs` so they cannot come to disagree. It covers the whole system
+  // rather than only `components/`, because `library-colors.ts` and `transcription-states.ts` are
+  // exactly where a literal would look least out of place.
   //
-  // The two bypasses that predate the rule carry a disable comment naming `UI-33a`, which is the
-  // task that removes them. The test's exemption list is the same two, and it fails if either
-  // stops existing -- so the excuses cannot outlive the code they excuse.
+  // The colour and font halves stop here rather than reaching `src/` as the type half does. Two
+  // values there would need excusing -- the mark drawn into a data URI for the lock screen, which
+  // cannot hold a `var()`, and a specimen label that names Chillax in prose -- and the exemption
+  // list `UI-33a` emptied is not somewhere to put two things on the way past.
   {
     files: ['design-system/**/*.{ts,tsx}'],
     ignores: ['design-system/**/*.test.{ts,tsx}'],
     rules: {
-      'no-restricted-syntax': [
-        'error',
-        { selector: `Literal[value=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
-        { selector: `TemplateElement[value.raw=/${COLOUR_PATTERN}/]`, message: COLOUR_MESSAGE },
-        { selector: `Literal[value=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
-        { selector: `TemplateElement[value.raw=/${FONT_PATTERN}/]`, message: FONT_MESSAGE },
-      ],
+      'no-restricted-syntax': ['error', ...COLOUR_AND_FONT_SELECTORS, ...TYPE_SELECTORS],
     },
   },
 

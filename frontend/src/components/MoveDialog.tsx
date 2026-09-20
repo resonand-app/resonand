@@ -130,7 +130,7 @@ const PROSE = {
   margin: 0,
   fontFamily: 'var(--font-sans)',
   fontSize: 'var(--type-ui-size-sm)',
-  lineHeight: 1.55,
+  lineHeight: 'var(--type-ui-leading)',
   color: 'var(--text-2)',
 } as const;
 
