@@ -192,7 +192,7 @@ are numbered children of the task that produced them:
 | `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
 | `UI-33a1` | Raw type values returned in components written after the reconciliation |
 | `UI-39` | The web-app manifest: white in a dark product, and root-absolute under `OPS-4` |
-| `INF-11` | A webfont is redistributed with no licence beside it, unlike the one next to it |
+| `INF-11` | A webfont is redistributed that its own licence forbids redistributing — from the tree, and from the history |
 
 Three of the five conditions below are acts rather than tasks — performed against the real
 archive, and not tickable anywhere.

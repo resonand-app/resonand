@@ -52,12 +52,39 @@ Short and mechanical, but it conditions everything that comes after. No product 
       `dda44b6`, which is what settles the number: `ROADMAP.md` used it for the community
       scaffolding too, and that one is now **`INF-10`**.
 
-- [ ] **INF-11** · **The Chillax licence, beside Geist's.** `design-system/assets/fonts/` ships two
-      families and one licence file: `Geist-OFL.txt` covers Geist, and nothing covers
-      `Chillax-Variable.woff2`. The build copies it into the image and serves it to every visitor,
-      so this is redistribution rather than local use, and the asymmetry with the file sitting next
-      to it is what says the omission was not a decision. Either the foundry's licence text ships
-      beside the font, or the font does not ship. ⇢ INF-1
+- [ ] **INF-11** · **Chillax cannot ship, and the licence is explicit rather than silent.**
+      `design-system/assets/fonts/` ships two families and one licence file: `Geist-OFL.txt`
+      covers Geist, and nothing covers `Chillax-Variable.woff2`. This entry read that as an
+      omission, and offered two ways out — ship the foundry's licence text beside the font, or
+      drop the font. **The first does not exist.** The ITF Free Font License (v2.0, 17 August
+      2026) withholds permission in §02 rather than by silence: the file may not be
+      “distributed … or otherwise made available to any other person or entity, whether for free
+      or for a fee … through another … repository, download service, application or platform …
+      publicly accessible servers”. A public git repository is both of those, and so is a
+      published image. So the font goes — **and it goes from the history as well**, because the
+      breach is the distribution rather than the checkout, and the repository opens on the day
+      this plan closes.
+
+      **The brand survives it, which is why this is smaller than it looks.** §01 grants the use
+      of the font to create “logos, wordmarks, graphic elements, images, vector files, scalable
+      drawings”, and the Definitions place those outside Derivative Work — ownership “remains
+      with its respective creator”. So the lockup stops being text set in Chillax and becomes
+      artwork: `Logo.tsx` already draws the mark as a path, and `onarium` joins it as a second
+      one, under 10 KB of SVG at weight 600 and identical to what is on screen now.
+
+      **An instance may still serve the real font.** §02 closes by exempting “the self-hosting
+      … for the Licensee's own websites”, so an operator holding their own copy — free, from
+      Fontshare — can mount it and keep Chillax page titles. What the repository ships in its
+      absence is the part still open: Geist already ships and needs no new file, and of the nine
+      OFL faces held against Chillax none is close to it, so adding a third family buys a
+      resemblance rather than the thing.
+
+      One cost is already visible: `self-hosted-fonts.node.test.ts` asserts that every declared
+      face points at a file that is here, so a face that is deliberately optional is a case it
+      does not have yet.
+      _Done when:_ no Chillax in the tree or in the history, the lockup renders with no font
+      loaded, and `--font-display` resolves to something redistributable. ⇢ INF-1 🧪
+      🧪 *The shipped faces are all redistributable, and the lockup draws without one.*
 
 ---
 
