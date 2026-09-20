@@ -18,10 +18,19 @@ from typing import Annotated
 
 import typer
 from pydantic import SecretStr
+from sqlalchemy.orm import Session
 
 from sonarium import __version__
 from sonarium.api.app import create_app
-from sonarium.archive import apply_sidecar, export_recording, find_by_uuid, read_sidecar
+from sonarium.archive import (
+    SIDECAR_NAME,
+    SIDECAR_SUFFIX,
+    apply_sidecar,
+    export_recording,
+    find_by_uuid,
+    library_named_by,
+    read_sidecar,
+)
 from sonarium.cli import integrity
 from sonarium.cli.backup import backup_database, storage_note, verify_backup
 from sonarium.core.config import MINIMUM_SECRET_LENGTH, Settings, get_settings
@@ -111,15 +120,22 @@ def openapi(
 @app.command("import")
 def import_files(
     source: Annotated[Path, typer.Argument(help="A file or a directory to take recordings from.")],
-    library: Annotated[str, typer.Option(help="The uuid of the library to import into.")],
+    library: Annotated[
+        str | None,
+        typer.Option(help="The uuid of the library to import into, for anything that names none."),
+    ] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Say what would happen.")] = False,
     transcribe: Annotated[bool, typer.Option(help="Queue transcription for each one.")] = False,
 ) -> None:
-    """Import recordings, recursively, into one library.
+    """Import recordings, recursively.
 
     **Re-import is idempotent.** A file next to a Sonarium sidecar carrying a ``uuid`` that is
     already here updates that recording rather than creating a second copy -- which is what makes
     the export round trip verify the archive instead of doubling it.
+
+    Each recording goes into the library its sidecar names, when this instance has that library,
+    so an export read back lands where it came from. ``--library`` takes everything else, and an
+    import of loose files with no sidecars needs it.
     """
     settings = _settings()
     database = _database(settings)
@@ -132,8 +148,7 @@ def import_files(
     for path in candidates:
         sidecar = _sidecar_beside(path)
         if dry_run:
-            action = "update" if _would_update(database, sidecar) else "add"
-            typer.echo(f"would {action}: {path.name}")
+            typer.echo(f"{_dry_run_verdict(database, sidecar, library)}: {path.name}")
             continue
         try:
             if _import_one(database, settings, path, library, sidecar, transcribe=transcribe):
@@ -156,6 +171,9 @@ def export(
     ] = False,
 ) -> None:
     """Export the archive: the originals, a JSON sidecar each, and derived .vtt and .srt.
+
+    One directory per recording, named for its identifier, holding all four. Two recordings that
+    were uploaded under the same filename therefore cannot overwrite each other in the export.
 
     The sidecar carries the recording's ``uuid``, so what this writes can be read back into an
     empty instance and produce the same archive rather than a second copy of it.
@@ -408,32 +426,83 @@ def _candidates(source: Path) -> list[Path]:
 
 
 def _sidecar_beside(path: Path) -> Path | None:
-    """The sidecar an export wrote next to this file, if there is one."""
+    """The sidecar an export wrote for this file, if there is one.
+
+    The directory's own ``sonarium.json`` is only taken when this is the one recording in it,
+    which is the shape an export writes. A folder of loose files with a single sidecar dropped in
+    would otherwise hand every one of them the same uuid, and the second file would update what
+    the first had just created.
+    """
+    shared = path.parent / SIDECAR_NAME
+    if shared.is_file() and _holds_one_recording(path.parent):
+        return shared
     for candidate in (
-        path.with_suffix(".sonarium.json"),
-        path.parent / f"{path.stem}.sonarium.json",
+        path.with_suffix(SIDECAR_SUFFIX),
+        path.parent / f"{path.stem}{SIDECAR_SUFFIX}",
     ):
         if candidate.exists():
             return candidate
     return None
 
 
-def _would_update(database: Database, sidecar: Path | None) -> bool:
+def _holds_one_recording(directory: Path) -> bool:
+    found = 0
+    for entry in directory.iterdir():
+        if entry.is_file() and is_accepted(entry.name):
+            found += 1
+            if found > 1:
+                return False
+    return found == 1
+
+
+def _read_sidecar_quietly(sidecar: Path | None) -> dict[str, object] | None:
+    """The sidecar's contents, or nothing at all if it cannot be read as one."""
     if sidecar is None:
-        return False
+        return None
     try:
-        payload = read_sidecar(sidecar)
+        return read_sidecar(sidecar)
     except (ValueError, OSError):
-        return False
+        return None
+
+
+def _dry_run_verdict(database: Database, sidecar: Path | None, library_uuid: str | None) -> str:
+    """What ``--dry-run`` says about one file.
+
+    It resolves the destination library rather than assuming one, because a dry run that reports
+    "would add" for a file the real run will refuse is worse than no dry run.
+    """
+    payload = _read_sidecar_quietly(sidecar)
     with database.read_session() as session:
-        return find_by_uuid(session, str(payload.get("uuid", ""))) is not None
+        if payload is not None and find_by_uuid(session, str(payload.get("uuid", ""))) is not None:
+            return "would update"
+        try:
+            destination = _destination_library(session, payload, library_uuid)
+        except SonariumError as error:
+            return f"would skip ({error.detail})"
+        return f"would add to {destination.name}"
+
+
+def _destination_library(
+    session: Session, payload: dict[str, object] | None, library_uuid: str | None
+) -> Library:
+    """Which library a recording that is not here yet goes into."""
+    if payload is not None:
+        named = library_named_by(session, payload)
+        if named is not None:
+            return named
+    if library_uuid is None:
+        raise SonariumError("there is no library to import into: pass --library")
+    library = session.query(Library).filter(Library.uuid == library_uuid).one_or_none()
+    if library is None:
+        raise SonariumError(f"There is no library with uuid {library_uuid}.")
+    return library
 
 
 def _import_one(
     database: Database,
     settings: Settings,
     path: Path,
-    library_uuid: str,
+    library_uuid: str | None,
     sidecar: Path | None,
     *,
     transcribe: bool,
@@ -453,9 +522,7 @@ def _import_one(
                 apply_sidecar(session, existing, payload)
                 return True
 
-        library = session.query(Library).filter(Library.uuid == library_uuid).one_or_none()
-        if library is None:
-            raise SonariumError(f"There is no library with uuid {library_uuid}.")
+        library = _destination_library(session, payload, library_uuid)
         audio = create_audio(
             session,
             library_id=library.id,
