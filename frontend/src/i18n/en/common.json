@@ -55,7 +55,10 @@
     "group": "Transcript state"
   },
   "upload": {
-    "region": "Uploads"
+    "region": "Uploads",
+    "show": "Show the uploads",
+    "hide": "Hide the uploads",
+    "close": "Close the tray"
   },
   "egress": {
     "none": "No transcription provider is configured. Nothing can be transcribed until an administrator sets one up.",
