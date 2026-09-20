@@ -167,3 +167,24 @@ describe('the sharing panel', () => {
     expect(await screen.findByText('Only you can see this library.')).toBeVisible();
   });
 });
+
+describe('the level selector explains a level nobody holds (API-18)', () => {
+  it("offers every grantable level in the instance's own words", async () => {
+    show();
+    // The mock library is shared at one level only. Before `API-18` the other two had nothing to
+    // render, because `level_description` rides on a grant and describes the levels in use.
+    for (const clause of [
+      /listen and read the transcript, and change nothing/i,
+      /change titles, categories and tags, but not share/i,
+      /everything above, plus sharing with other people/i,
+    ]) {
+      expect((await screen.findAllByText(clause)).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('never offers owner, which is held rather than granted', async () => {
+    show();
+    await screen.findAllByText(/listen and read the transcript/i);
+    expect(screen.queryByText(/the library belongs to them/i)).not.toBeInTheDocument();
+  });
+});

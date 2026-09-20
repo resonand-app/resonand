@@ -21,6 +21,7 @@ from sonarium.api.rate_limit import AttemptLimiter, address_key, client_key
 from sonarium.api.schemas import (
     Bootstrap,
     ChangePassword,
+    GrantableLevel,
     InstanceState,
     Me,
     SessionSummary,
@@ -32,6 +33,7 @@ from sonarium.api.transport import scheme_of
 from sonarium.core import formats
 from sonarium.core.config import Settings
 from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
+from sonarium.core.levels import DESCRIPTIONS, GRANTABLE
 from sonarium.core.text import normalise_email
 from sonarium.db import sessions, users
 
@@ -118,6 +120,9 @@ def instance_state(session: ReadSession, settings: InstanceSettings) -> Instance
         max_upload_bytes=settings.max_upload_bytes,
         accepted_extensions=sorted(formats.ACCEPTED_EXTENSIONS),
         video_extensions=sorted(formats.VIDEO_EXTENSIONS),
+        levels=[
+            GrantableLevel(level=int(level), description=DESCRIPTIONS[level]) for level in GRANTABLE
+        ],
     )
 
 

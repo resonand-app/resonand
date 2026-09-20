@@ -15,7 +15,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from sonarium.core import formats
 from sonarium.core.config import Settings
-from sonarium.core.levels import Level
+from sonarium.core.levels import DESCRIPTIONS, GRANTABLE, Level
 from sonarium.db import libraries as library_repo
 from sonarium.db.audio import create_audio
 from sonarium.db.engine import Database
@@ -133,7 +133,26 @@ def test_the_instance_still_says_nothing_about_who_is_on_it(client: TestClient) 
         "max_upload_bytes",
         "accepted_extensions",
         "video_extensions",
+        "levels",
     }
+
+
+def test_the_instance_names_every_level_a_share_may_carry(client: TestClient) -> None:
+    """``API-18``. `ShareSummary.level_description` describes the levels **in use**, so a library
+    shared with one person at `edit` explained that one and left the two somebody might change
+    *to* with nothing to render."""
+    reported = client.get("/instance").json()
+    assert [row["level"] for row in reported["levels"]] == [int(one) for one in GRANTABLE]
+    assert [row["description"] for row in reported["levels"]] == [
+        DESCRIPTIONS[one] for one in GRANTABLE
+    ]
+
+
+def test_the_instance_does_not_offer_owner_as_something_to_grant(client: TestClient) -> None:
+    """It is read off `library.owner_id`, a CHECK refuses a share row carrying it, and `UI-34c`
+    says not to draw an option nobody can pick."""
+    reported = client.get("/instance").json()
+    assert Level.OWNER not in [row["level"] for row in reported["levels"]]
 
 
 # --- Emptying the trash now (``API-19``) ----------------------------------
