@@ -162,14 +162,28 @@ not have. `sonarium fsck` will tell you exactly which ones.
 1. Stop the container.
 2. Put the backup at `/data/sonarium.db` in the volume, and restore `/data/storage` alongside it
    from whatever took it.
-3. Start the container. It migrates the restored database forward if the image is newer.
-4. `docker compose exec sonarium sonarium fsck` — this is the step that tells you whether the two
-   halves of the backup agree. A restore you have not run `fsck` against is a restore you have not
-   checked.
+3. **Make sure what you restored is owned by uid 10001**, the unprivileged account the image runs
+   as. Restored files carry the ownership of whoever restored them, and a database the process
+   cannot write is a container that exits on `attempt to write a readonly database` before it
+   serves anything — a restore that looks finished and is not.
 
-The restore path and an upgrade of a populated database are both covered by tests. Neither has
-yet been performed against a real archive on real hardware, which is one of the conditions in
-[`../docs/v0-plan/`](../docs/v0-plan/) for the first version being finished.
+   ```bash
+   docker run --rm -u 0 -v <your-volume>:/data sonarium:<tag> chown -R 10001:10001 /data
+   ```
+
+4. Start the container. It migrates the restored database forward if the image is newer.
+5. `docker compose exec sonarium sonarium fsck` — this is the step that tells you whether the two
+   halves of the backup agree. `fsck` re-hashes every original, so a clean report means the
+   database and the files it describes are the same pair that was backed up. A restore you have
+   not run `fsck` against is a restore you have not checked.
+
+Every step above runs in CI on each change: the `image` job fills an instance, backs it up,
+destroys the container *and its volume*, restores into a fresh one, and ends on `fsck`. An upgrade
+of a populated database is covered too, at every revision in the tree rather than only the last
+one.
+
+Neither has yet been performed against a real archive on real hardware, which is one of the
+conditions in [`../docs/v0-plan/`](../docs/v0-plan/) for the first version being finished.
 
 ## Upgrading
 
