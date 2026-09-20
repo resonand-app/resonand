@@ -1,10 +1,15 @@
 """Accounts, and the library that is created with them (``DAT-5``).
 
-The personal library is the reason ``audio.library_id`` can be ``NOT NULL``: there is no such
-thing as a loose recording, so the permission model has one path through it and no special case
-for content that belongs to nobody's library. That only holds if **no path can create a user
-without one**, which is why the two writes are in one function and one transaction rather than in
-a service that remembers to do both.
+An account is created with a library, and that is the reason ``audio.library_id`` can be ``NOT
+NULL``: there is no such thing as a loose recording, so the permission model has one path through
+it and no special case for content that belongs to nobody's library. That only holds if **no path
+can create a user without one**, which is why the two writes are in one function and one
+transaction rather than in a service that remembers to do both -- and, from then on, because
+:func:`sonarium.db.libraries.trash_library` refuses to take an account's last one away.
+
+The library created here carries ``is_personal``, which is what puts it first in every list and
+what the sharing panel reads. It is not what makes it undeletable: since ``DAT-9`` nothing is,
+once a second library exists to take its place.
 """
 
 from __future__ import annotations
@@ -115,12 +120,17 @@ def get_user(session: Session, user_id: int) -> User:
 
 
 def personal_library(session: Session, user_id: int) -> Library:
-    """The library created with this account. Always exists; not being there is a bug."""
+    """The library created with this account, which exists until somebody deletes it.
+
+    It is there from the moment the account is, and ``DAT-9`` made it deletable like any other
+    once a second library exists -- so its absence is an ordinary state rather than the bug this
+    used to report.
+    """
     library = session.execute(
         select(Library).where(Library.owner_id == user_id, Library.is_personal == 1)
     ).scalar_one_or_none()
     if library is None:
-        raise NotFoundError(f"Account {user_id} has no personal library, which cannot happen.")
+        raise NotFoundError(f"Account {user_id} no longer has the library it was created with.")
     return library
 
 

@@ -131,7 +131,7 @@ describe('a card', () => {
     ).toBeVisible();
   });
 
-  it('offers the trash on a library that has one, and never on the personal one', async () => {
+  it('offers the trash on the personal library too, once there is another', async () => {
     const user = userEvent.setup();
     renderView();
     const card = await cardFor('Field recordings');
@@ -140,8 +140,17 @@ describe('a card', () => {
     await user.keyboard('{Escape}');
     const personal = await cardFor('Personal');
     await user.click(within(personal).getByRole('button', { name: 'Options for Personal' }));
-    // Absent rather than refused: the API answers a personal library with a 400, and a row that
-    // exists only to explain itself afterwards is a row nobody should have been offered.
+    expect(await screen.findByRole('menuitem', { name: 'Move to the trash' })).toBeVisible();
+  });
+
+  it('withholds it on the only library the account owns', async () => {
+    // `DAT-9`: absent rather than refused. The API answers the last one with a 400, and a row
+    // that exists only to explain itself afterwards is a row nobody should have been offered.
+    archive.libraries = archive.libraries.filter((one) => one.name !== 'Field recordings');
+    const user = userEvent.setup();
+    renderView();
+    const personal = await cardFor('Personal');
+    await user.click(within(personal).getByRole('button', { name: 'Options for Personal' }));
     expect(await screen.findByRole('menuitem', { name: 'Edit' })).toBeVisible();
     expect(screen.queryByRole('menuitem', { name: 'Move to the trash' })).toBeNull();
   });

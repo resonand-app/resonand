@@ -96,12 +96,50 @@ def test_the_typed_form_is_kept_for_display(database: Database) -> None:
     assert user.email_normalised == "gabriel@x.test"
 
 
-def test_a_personal_library_cannot_be_deleted(database: Database) -> None:
+def test_the_last_library_an_account_owns_cannot_be_deleted(database: Database) -> None:
+    """``DAT-9``: an upload always has a destination, and this is what makes that true."""
     with database.write_session() as session:
         user = users.create_user(session, email="a@x.test", display_name="A")
         personal = users.personal_library(session, user.id)
-        with pytest.raises(InvalidRequestError, match="personal library"):
+        with pytest.raises(InvalidRequestError, match="last one"):
             libraries.trash_library(session, user.id, personal.uuid)
+
+
+def test_the_personal_library_goes_once_there_is_another(database: Database) -> None:
+    """What the rule protects is the count, not the flag: with somewhere else to put things, the
+    library the account was created with is as ordinary as any other."""
+    with database.write_session() as session:
+        user = users.create_user(session, email="a@x.test", display_name="A")
+        personal = users.personal_library(session, user.id)
+        libraries.create_library(session, user.id, name="Interviews")
+        trashed = libraries.trash_library(session, user.id, personal.uuid)
+        assert trashed.deleted_at is not None
+        assert [one.name for one, _ in libraries.list_libraries(session, user.id)] == ["Interviews"]
+
+
+def test_the_one_that_is_left_cannot_go_either(database: Database) -> None:
+    """A trashed library is not a destination, so it does not count towards the one that remains."""
+    with database.write_session() as session:
+        user = users.create_user(session, email="a@x.test", display_name="A")
+        personal = users.personal_library(session, user.id)
+        second = libraries.create_library(session, user.id, name="Interviews")
+        libraries.trash_library(session, user.id, personal.uuid)
+        with pytest.raises(InvalidRequestError, match="last one"):
+            libraries.trash_library(session, user.id, second.uuid)
+
+
+def test_a_manager_cannot_trash_the_owners_last_library(database: Database) -> None:
+    """The question is asked of the owner: manage is grantable, and somebody else's last library
+    is exactly the one this protects."""
+    with database.write_session() as session:
+        owner = users.create_user(session, email="o@x.test", display_name="O")
+        manager = users.create_user(session, email="m@x.test", display_name="M")
+        personal = users.personal_library(session, owner.id)
+        libraries.share_library(
+            session, owner.id, personal.uuid, grantee_id=manager.id, level=Level.MANAGE
+        )
+        with pytest.raises(InvalidRequestError, match="last one"):
+            libraries.trash_library(session, manager.id, personal.uuid)
 
 
 # --- Sharing (API-8) ------------------------------------------------------

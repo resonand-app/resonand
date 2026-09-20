@@ -8,8 +8,10 @@ through :mod:`sonarium.acl.query` rather than by checking anything itself. The l
   recording's metadata, because that is what it is,
 * **manage** to share it onwards or to delete it.
 
-A personal library cannot be deleted or renamed away: it is what makes ``audio.library_id``
-always populated, and losing it would leave an account with recordings and nowhere to put them.
+**The last library an account owns cannot be deleted** (``DAT-9``). What keeps
+``audio.library_id`` populated is that there is always somewhere for a recording to go, and that
+is a fact about the count rather than about the library created with the account: once a second
+one exists, the first is as ordinary as any other and can go the same way.
 """
 
 from __future__ import annotations
@@ -132,16 +134,43 @@ def trash_library(session: Session, user_id: int, library_uuid: str) -> Library:
 
     Deletion is ``deleted_at``, never a ``CASCADE``: the ACL stops resolving it and not a single
     recording row is touched, which is what makes restoring it a one-line operation.
+
+    **What is refused is the owner's last library, not their personal one** (``DAT-9``). The
+    guarantee the interface leans on is that an upload always has a destination, and that is the
+    count being at least one -- so the account created with a library called Personal can trash it
+    the day it has somewhere else to put things. The question is asked of the **owner** and not of
+    the caller, because manage is grantable and somebody else's last library is exactly the one
+    this protects.
     """
     library, _ = require_library(session, user_id, library_uuid, Level.MANAGE)
-    if library.is_personal:
+    if not _owner_has_another_library(session, library):
         raise InvalidRequestError(
-            "A personal library cannot be deleted. It is where recordings go when they belong "
-            "to nobody else's library."
+            "An account keeps at least one library -- it is where a recording goes when nobody "
+            "chose another -- and this is the last one. Create another library first."
         )
     library.deleted_at = now_instant()
     session.flush()
     return library
+
+
+def _owner_has_another_library(session: Session, library: Library) -> bool:
+    """Whether this library's owner would still own one if this went to the trash.
+
+    Trashed ones do not count: the ACL stops resolving them, so a library in the trash is not
+    somewhere a recording can go.
+    """
+    return (
+        session.execute(
+            select(Library.id)
+            .where(
+                Library.owner_id == library.owner_id,
+                Library.id != library.id,
+                Library.deleted_at.is_(None),
+            )
+            .limit(1)
+        ).first()
+        is not None
+    )
 
 
 def restore_library(session: Session, user_id: int, library_uuid: str) -> tuple[Library, Level]:
