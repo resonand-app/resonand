@@ -1,8 +1,13 @@
 """Backup and restore, exercised rather than assumed (``OPS-6``).
 
-The metric the vision names and almost nobody measures is whether instances survive upgrades. The
-two tests that matter here are the ones the plan asks for by name: restore into a clean instance
-and assert the archive is complete, and upgrade a populated database and assert nothing was lost.
+The metric the vision names and almost nobody measures is whether instances survive upgrades.
+This file holds the backup half: a copy taken from a live database, and a restore that is
+performed rather than mocked.
+
+The other half is elsewhere, in two places. ``tests/db/test_upgrading_a_populated_database.py``
+walks the revision tree with an archive already in the database; the restore into a clean
+*container* is in CI's ``image`` job, because a container is the one thing a test in this process
+cannot be.
 """
 
 from __future__ import annotations
@@ -16,8 +21,6 @@ from sonarium.core.errors import ConflictError, InvalidRequestError
 from sonarium.db import libraries, transcripts, users
 from sonarium.db.audio import create_audio, trash_audio
 from sonarium.db.engine import Database, build_engine
-from sonarium.db.migrate import migrate_at_startup
-from sonarium.db.models import Audio, Segment
 from sonarium.db.transcripts import SegmentDraft
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -165,45 +168,6 @@ def test_the_search_index_survives_a_restore(populated: Settings, tmp_path: Path
     finally:
         engine.dispose()
     assert found > 0
-
-
-def test_upgrading_a_populated_database_loses_nothing(tmp_path: Path) -> None:
-    """The other test the plan asks for by name.
-
-    Today there is one revision, so this migrates from nothing and then runs again with content
-    present. It is written now rather than when there are two revisions, because the moment there
-    are two is the moment somebody needs to already have this.
-    """
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
-    settings.prepare_directories()
-    migrate_at_startup(settings)
-
-    engine = build_engine(settings)
-    database = Database(engine)
-    try:
-        with database.write_session() as session:
-            populate(session)
-        with database.read_session() as session:
-            before_audio = session.query(Audio).count()
-            before_segments = session.query(Segment).count()
-    finally:
-        engine.dispose()
-
-    before, after = migrate_at_startup(settings)
-    assert before == after, "an upgrade with nothing to do must do nothing"
-
-    engine = build_engine(settings)
-    try:
-        with engine.connect() as connection:
-            assert (
-                connection.execute(text("SELECT count(*) FROM audio")).scalar_one() == before_audio
-            )
-            assert (
-                connection.execute(text("SELECT count(*) FROM segment")).scalar_one()
-                == before_segments
-            )
-    finally:
-        engine.dispose()
 
 
 def test_the_operator_is_told_what_the_backup_does_not_cover(populated: Settings) -> None:

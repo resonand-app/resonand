@@ -161,21 +161,7 @@ jobs:
             -e SONARIUM_SECRET_KEY="$(openssl rand -hex 32)" \
             -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
             sonarium:ci
-          ready=""
-          for attempt in $(seq 1 30); do
-            if [ "$(docker inspect -f '{{.State.Health.Status}}' sonarium-ci)" = "healthy" ]; then
-              echo "ready after ${attempt}s"
-              ready=yes
-              break
-            fi
-            sleep 1
-          done
-          if [ -z "$ready" ]; then
-            echo "the container never became healthy:"
-            docker logs sonarium-ci
-            docker rm -f sonarium-ci > /dev/null
-            exit 1
-          fi
+          .github/scripts/wait-for-healthy.sh sonarium-ci 30 || { docker rm -f sonarium-ci > /dev/null; exit 1; }
           curl -fsS localhost:8000/readyz
 
           # The shell, asked for the way a browser asks for it. `#root` is what main.tsx mounts
@@ -197,6 +183,82 @@ jobs:
           echo "served the shell and ${bundle}"
 
           docker rm -f sonarium-ci > /dev/null
+
+      - name: Check a backup restores into a clean container
+        # OPS-6. The restore was covered by a test that restored into a clean *database*, which
+        # is the half of it this software controls. What an operator actually does is put a file
+        # into a volume and start an image over it, and the two differ in everything the test
+        # could not see: the volume, the uid the process runs as, and whether the instance comes
+        # up at all afterwards.
+        #
+        # It follows `deploy/README.md`'s restore instructions step for step, so the procedure
+        # somebody reads at four in the morning is the procedure that ran here.
+        #
+        # `fsck` is the assertion and not a flourish. It re-hashes every original and compares it
+        # to what the database recorded, so a clean report is byte-level proof that both halves
+        # of the backup came back and agree -- which a row count is not.
+        run: |
+          set -euo pipefail
+          secret="$(openssl rand -hex 32)"
+
+          # --- An instance with an archive in it ---------------------------------------
+          docker volume create sonarium-live > /dev/null
+          docker run -d --name sonarium-live -v sonarium-live:/data \
+            -e SONARIUM_SECRET_KEY="$secret" \
+            -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
+            sonarium:ci > /dev/null
+          .github/scripts/wait-for-healthy.sh sonarium-live
+
+          library=$(docker exec sonarium-live sonarium create-admin \
+            --email operator@example.test --display-name Operator \
+            --password "a-password-long-enough-to-accept" | sed -n 's/^Personal library: //p')
+          test -n "$library" \
+            || { echo "create-admin did not say which library to import into"; exit 1; }
+
+          # Generated in the container rather than committed: audio never enters this repository,
+          # and the image carries the ffmpeg that makes one.
+          docker exec sonarium-live ffmpeg -loglevel error \
+            -f lavfi -i "sine=frequency=440:duration=3" /data/tmp/recording.flac
+          docker exec sonarium-live sonarium import /data/tmp/recording.flac --library "$library"
+          docker exec sonarium-live sonarium fsck --json
+
+          # --- The backup, taken the way the instructions say to take it ----------------
+          docker exec sonarium-live sonarium backup /data/backup.sqlite
+          docker cp sonarium-live:/data/backup.sqlite backup.sqlite
+          # The originals are not in the backup, on purpose. This is the file-level copy the
+          # note printed above tells the operator to take alongside it.
+          docker cp sonarium-live:/data/storage originals
+
+          # Clean means clean. The volume goes with the container, so nothing below can pass by
+          # reading what this instance left behind.
+          docker rm -f sonarium-live > /dev/null
+          docker volume rm sonarium-live > /dev/null
+
+          # --- The restore, into a volume nothing has ever written ----------------------
+          docker volume create sonarium-restored > /dev/null
+          docker create --name sonarium-restored -v sonarium-restored:/data \
+            -e SONARIUM_SECRET_KEY="$secret" \
+            -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
+            sonarium:ci > /dev/null
+          docker cp backup.sqlite sonarium-restored:/data/sonarium.db
+          docker cp originals/. sonarium-restored:/data/storage
+          # Restored files carry the uid of whoever restored them, and the image runs as 10001.
+          # Without this the instance exits on "attempt to write a readonly database" before it
+          # serves anything, which is a restore that looks done and is not.
+          docker run --rm -u 0 -v sonarium-restored:/data sonarium:ci chown -R 10001:10001 /data
+          docker start sonarium-restored > /dev/null
+          .github/scripts/wait-for-healthy.sh sonarium-restored
+
+          # --- The step the instructions end on -----------------------------------------
+          # `fsck` exits non-zero on any finding by itself; the count is the other half, because
+          # an empty archive is clean and is not what was backed up.
+          docker exec sonarium-restored sonarium fsck --json | tee report.json
+          jq -e '.checked == 1' report.json > /dev/null \
+            || { echo "the restored archive is not the archive that was backed up"; exit 1; }
+          echo "the restored container holds the whole archive, originals included"
+
+          docker rm -f sonarium-restored > /dev/null
+          docker volume rm sonarium-restored > /dev/null
 
       - name: Check the CLI works inside the image
         run: docker run --rm sonarium:ci sonarium version

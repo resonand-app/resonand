@@ -37,19 +37,23 @@ nobody can back up or upgrade is one nobody should trust an archive to.
 - [x] **OPS-7** · Automatic migrations at startup with locking, and a documented rollback path.
       ⇢ DAT-1, OPS-1
 
-- [ ] **OPS-6** · **Backup and restore that are actually exercised.** A consistent copy of the
+- [x] **OPS-6** · **Backup and restore that are actually exercised.** A consistent copy of the
       SQLite database in WAL mode (`VACUUM INTO`) without stopping the service, plus what to copy
       from `storage/`. ⇢ OPS-2 🧪
       🧪 Restore into a clean container and assert the archive is complete, and upgrade a populated
       database from the previous migration revision and assert nothing was lost. Formal
       cross-version documentation is a later milestone; during v0 I am upgrading my own real
       archive continuously, which is when these break.
-      *Outstanding: both halves of the marker, and only those — `VACUUM INTO` against a live
-      instance, the restore, and what to copy from `storage/` are all built and covered. The
-      restore test restores into a clean database rather than a clean container. The upgrade test
-      was written when there was one revision and says so in its own docstring; there are three
-      now, so what it asserts is that an upgrade with nothing to do does nothing, and neither
-      schema change that has shipped has ever run against a populated database. Writing it as a
-      walk over the revision tree rather than a pair also makes it the first instance of `OPS-9`.*
+      *Both halves of the marker are now met. The restore runs in CI's `image` job, which fills an
+      instance, backs it up, destroys the container and its volume, restores into a fresh one
+      following [`deploy/README.md`](../../deploy/README.md) step for step, and ends on `fsck` —
+      which re-hashes every original, so a clean report is byte-level proof that both halves of
+      the backup came back. The rehearsal found a step the instructions did not have: restored
+      files carry the restorer's uid, and the container exits on "attempt to write a readonly
+      database" before it serves anything. The upgrade is written as a walk over the revision
+      tree, so it covers `0004` on the day it lands rather than the session after; `OPS-9` in
+      [`next-plan`](../next-plan/release.md) narrows to the cross-version half accordingly.
+      What remains is not a task: performing the restore against the real archive, which is
+      condition 3 of [when v0 is done](README.md).*
 
 ---

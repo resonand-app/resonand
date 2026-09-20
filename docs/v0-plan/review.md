@@ -162,13 +162,15 @@ number with a letter (`REV-4` → `REV-4a`).
       ⇢ REV-12a 🧪 *A connected client's interval resolves to nothing; a dropped stream brings it
       back.*
 
-## Open
-
-- [ ] **REV-S6** · The code comments are longer than the rule now asks for, almost entirely in the
-      frontend. Not worth a pass of its own — the risk of a wholesale rewrite is deleting the one
-      comment that was load-bearing. Trim as each file is opened for another reason.
-
 ## Named, and deliberately not acted on
+
+- **REV-S6** · The code comments are longer than the rule now asks for, almost entirely in the
+  frontend. Closed as a standing rule rather than carried as a task: what it asks for is a habit,
+  and a habit with a checkbox is a sweep — which is the one thing that would do damage here, since
+  a wholesale rewrite deletes the comment that was load-bearing along with the four that were not.
+  `AGENTS.md` now says to trim what is overlong in a file already open for another reason, which
+  is where a convention belongs and where it is read by everybody rather than by whoever opens
+  this file.
 
 - **REV-S3** · The `db/` modules are called repositories but are application services: they
   resolve permissions, enqueue jobs and write the search index. Worth naming honestly before an

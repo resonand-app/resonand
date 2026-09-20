@@ -83,7 +83,8 @@ export default mergeConfig(
         // A floor, not a target. It is deliberately below where the code sits so that it
         // fails on a real regression rather than on the ordinary shape of a commit -- a
         // threshold that goes red every other push is a threshold everybody learns to raise.
-        // The views raise it; `INT-6` is the check that actually matters.
+        // The views raise it; what actually checks this product is somebody using it
+        // against a real archive.
         thresholds: {
           statements: 80,
           branches: 80,

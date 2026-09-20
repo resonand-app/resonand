@@ -33,9 +33,9 @@ Everything that needs two finished tracks at once.
       that **no endpoint has escaped `API-2`**. ⇢ every track 🧪
       🧪 Test that enumerates every route and fails if any of them skips the ACL.
 
-- [ ] **INT-6** · End-to-end tests (Playwright) of the paths that matter: upload → transcribe →
-      search → play from the result; share a library → the other user sees it at the correct level;
-      move between libraries → who can see it changes. ⇢ INT-5
+- **INT-6** · End-to-end tests (Playwright) of the paths that matter. **Decided against rather
+      than deferred, and so carries no box at all** — the reasoning is under the passes over the
+      finished interface, below. ⇢ INT-5
 
 ---
 
@@ -91,9 +91,15 @@ they cross is the whole product rather than any one view.
 
 - **INT-5** · The security pass over the finished client: no token in a URL that persists, no
       privileged path, and the 404-not-403 rule holding everywhere. ⇢ UI-3b
-- **INT-6** · 🧪 Playwright over **the utility threshold itself**: put audio in, have it
-      transcribed, find a specific moment by searching everything, and play from that moment. If
-      that path passes, the interface does the thing the product exists to do.
-      **Deferred, not skipped** — it is the one task here that needs a browser and a live
-      instance rather than jsdom, so it follows the backend review worklist and lands against a
-      backend that has settled. ⇢ every view
+- **INT-6** · Playwright over **the utility threshold itself**: put audio in, have it
+      transcribed, find a specific moment by searching everything, and play from that moment.
+      **Decided against, not deferred** — the version of this test that is worth having is the
+      one a pipeline cannot run. The threshold includes *have it transcribed*, so in CI it is
+      either a real engine, with a key, the minutes and a flake nobody can reproduce, or a fake
+      provider — and against a fake provider the run no longer proves the threshold, it proves
+      the wiring that `msw` and jsdom already cover. Meanwhile the path itself is exercised
+      continuously by the gate that governs the release: several weeks of real personal use
+      against the real archive. A browser assertion is a weaker statement of something a person
+      is already doing daily. Driving a slot with a browser stays available to anybody who wants
+      it — it is how interface work is checked here — but as a local practice rather than as a
+      check on every push. ⇢ every view

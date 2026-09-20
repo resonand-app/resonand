@@ -272,7 +272,7 @@ Chosen once, here, so no task chooses again.
 | i18n              | **i18next** + react-i18next                                                            | `UI-22` wants every literal externalised and a pseudo-locale for the +30% check                                                                                |
 | Icons             | **lucide-react**                                                                       | Replaces the CDN UMD build and its `createIcons` effect. Bundled, tree-shaken, no outbound request                                                             |
 | Fonts             | **Fontsource's** Geist and Geist Mono, vendored                                        | Both faces as subset woff2. Closes the Google Fonts `@import` that `UI-1` was already told to close                                                            |
-| Tests             | **Vitest** + Testing Library + jsdom; **Playwright** for `INT-6`; **axe-core** in both | Mirrors the backend's arrangement: the same checks locally and in CI                                                                                           |
+| Tests             | **Vitest** + Testing Library + jsdom; **axe-core** in both                             | Mirrors the backend's arrangement: the same checks locally and in CI                                                                                           |
 | Test doubles      | **MSW 2**                                                                              | The API is real by the time views are built, but a view test must not need a running instance                                                                  |
 
 Nothing here is a framework. Everything is replaceable one file at a time, which is the property
@@ -283,6 +283,13 @@ registry's `previous` tag and 8 was `latest`; Vitest had reached 5 and ESLint 10
 says what actually landed, because a decision record that disagrees with `package-lock.json` is
 worse than no record. The exact versions live in the lock file, which is the only place a version
 should be written twice.
+
+**The Tests row also said Playwright, for `INT-6`.** That task was decided against rather than
+deferred: the path it covers includes transcription, which a pipeline can only reach through a
+fake provider, and against a fake provider the run proves the wiring rather than the threshold.
+Nothing was ever installed for it — Playwright appears in `package-lock.json` only as an optional
+peer that `vitest` declares and nothing selects — so the row now describes what is in
+`package.json` rather than retracting a dependency.
 
 **The fonts row said the `geist` package, and that package is the wrong object.** It ships TTF
 and no woff2 — 169 KB and 171 KB for the two variable faces, against 84 KB for all four files
