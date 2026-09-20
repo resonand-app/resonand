@@ -24,7 +24,7 @@
 
 import { create } from 'zustand';
 
-import { get, patch } from '@/api/client';
+import { DEPLOYMENT_BASE, get, patch } from '@/api/client';
 import { ApiProblem, problemFrom, unreachable } from '@/api/problem';
 import type { components } from '@/api/contract/schema';
 
@@ -341,7 +341,7 @@ function send(
     if (transcribe) body.append('transcribe', 'true');
 
     const request = new XMLHttpRequest();
-    request.open('POST', `/api/libraries/${encodeURIComponent(library)}/audio`);
+    request.open('POST', `${DEPLOYMENT_BASE}/api/libraries/${encodeURIComponent(library)}/audio`);
     request.responseType = 'text';
     // Nothing else to attach: the session cookie is the authorisation and the interface is served
     // from the same origin as the API, so it goes with the request like every other call.

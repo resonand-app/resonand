@@ -150,7 +150,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # prefixes anywhere that could go stale. Since ``API-16`` the two namespaces are disjoint by
     # construction as well as by ordering. When the image carries no bundle -- a developer, a
     # test -- nothing is installed and the root keeps answering below.
-    app.state.spa = install_spa(app, resolved.static_dir)
+    app.state.spa = install_spa(app, resolved.static_dir, resolved.base_path)
 
     if app.state.spa is None:
 

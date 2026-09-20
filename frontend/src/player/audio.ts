@@ -19,7 +19,7 @@
  * that carries it is one the API answers.
  */
 
-import { post } from '@/api/client';
+import { DEPLOYMENT_BASE, post } from '@/api/client';
 
 import { usePlayback } from './store';
 import type { PlaybackState, Playing } from './store';
@@ -39,7 +39,7 @@ export function audio(): HTMLAudioElement {
 
 /** Where a recording's audio is. Relative, same-origin, cookie-authorised. */
 export function streamUrl(uuid: string, token?: string): string {
-  const path = `/api/audio/${encodeURIComponent(uuid)}/stream`;
+  const path = `${DEPLOYMENT_BASE}/api/audio/${encodeURIComponent(uuid)}/stream`;
   return token === undefined ? path : `${path}?token=${encodeURIComponent(token)}`;
 }
 

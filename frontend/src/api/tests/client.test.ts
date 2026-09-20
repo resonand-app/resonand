@@ -242,3 +242,47 @@ describe('what the compiler checks', () => {
     expect(refused).toHaveLength(4);
   });
 });
+
+describe('the deployment prefix', () => {
+  /**
+   * Re-import the module against a document that carries the given base element.
+   *
+   * The prefix is read once, at module load, because it cannot change while a page is open --
+   * so exercising it means loading the module again rather than calling a function.
+   */
+  async function baseUnder(href: string | null): Promise<string> {
+    document.head.querySelector('base')?.remove();
+    if (href !== null) {
+      const element = document.createElement('base');
+      element.setAttribute('href', href);
+      document.head.append(element);
+    }
+    vi.resetModules();
+    const { DEPLOYMENT_BASE } = await import('../client');
+    document.head.querySelector('base')?.remove();
+    return DEPLOYMENT_BASE;
+  }
+
+  it('is empty at the root, so the ordinary case concatenates nothing', async () => {
+    expect(await baseUnder('/')).toBe('');
+    expect(await baseUnder(null)).toBe('');
+  });
+
+  it('is the prefix the shell was served under, without its trailing slash', async () => {
+    // The href always ends in a slash -- a base URL without one names a file -- and every path
+    // in `schema.ts` begins with one, so the prefix is kept in the form that concatenates.
+    expect(await baseUnder('/sonarium/')).toBe('/sonarium');
+    expect(await baseUnder('/deep/er/')).toBe('/deep/er');
+  });
+
+  it('reads the element rather than the document, which is not the same on a deep link', async () => {
+    // `document.baseURI` falls back to the current URL when no base element exists, so reading
+    // it from `/library/<uuid>` would prefix every later call with that recording.
+    history.pushState({}, '', '/library/8e29d6b4-0000-0000-0000-000000000000');
+    try {
+      expect(await baseUnder(null)).toBe('');
+    } finally {
+      history.pushState({}, '', '/');
+    }
+  });
+});

@@ -1053,12 +1053,24 @@ for, the third because it is the surface a phone offers to install.
       the version beside it comes from `GET /instance`, and the offer renders without it, because
       section 13 is owed whether or not the API is answering.*
 
-- [ ] **UI-39** · The web-app manifest, which nobody has read since it was generated. Both colours
+- [x] **UI-39** · The web-app manifest, which nobody has read since it was generated. Both colours
       are `#FFFFFF` in a product whose default is dark, so an installed instance flashes white
       before it goes dark; there is no `start_url`, no `scope` and no `id`; and all three icon
       paths are root-absolute, so they break under the arrangement `OPS-4` documents.
       `display: standalone` means a phone offers to install this, which is the path exit
       criterion 2 names. ⇢ UI-24a, OPS-4
+      *Both colours are `--surface`, and the shell's own `theme-color` went with them — as a pair
+      qualified by `prefers-color-scheme`, which is the same answer `semantic.css` gives a
+      document carrying no `data-theme`. Somebody who chose a theme against their system keeps
+      the chrome their system asked for: the alternative writes the value from the bundle and
+      repaints the chrome after first paint, which is more noticeable than the mismatch it fixes.*
+      *`start_url` and `scope` are `.`, and the icons `./`, so every one of them resolves against
+      the manifest's own URL and the manifest stops naming the domain root. **`id` is
+      deliberately still absent.** It is the one member resolved against the origin rather than
+      against the manifest, so a relative `id` would collapse every instance on a host to one —
+      where the default, the start URL, already carries the subpath and is unique per deployment.
+      Writing it would mean knowing the prefix at build time, which is exactly what `OPS-4`
+      removed.*
 
 - [x] **UI-40** · **The chromatic family becomes orange.** `DEC-8` chose amber; the brand settled
       on `#E98A5F` and never moved, so the stylesheet, the decision and the mark have disagreed

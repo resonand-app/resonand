@@ -11,7 +11,9 @@ test that needed ``npm run build`` first would be a test nobody runs.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 import pytest
 from fastapi import FastAPI, status
@@ -19,11 +21,33 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sonarium.api.app import create_app
 from sonarium.api.errors import PROBLEM_CONTENT_TYPE
-from sonarium.api.spa import IMMUTABLE, SinglePageApp
+from sonarium.api.spa import (
+    IMMUTABLE,
+    SinglePageApp,
+    inline_script_hashes,
+    rebase,
+    script_hashes_of,
+)
 from sonarium.core.config import Settings
 from sonarium.db.engine import Database
 
-SHELL = "<!doctype html><title>Sonarium</title><div id=root></div>"
+BOOTSTRAP = "<script>document.documentElement.dataset.theme='dark'</script>"
+"""Standing in for the theme bootstrap, which the content policy names by hash (``SEC-4``)."""
+
+SHELL = (
+    '<!doctype html><html><head><base href="/" />'
+    f"<title>Sonarium</title>{BOOTSTRAP}"
+    '<link rel="manifest" href="./site.webmanifest" />'
+    '<script type="module" src="./assets/index-abc123.js"></script>'
+    "</head><body><div id=root></div></body></html>"
+)
+"""The shape Vite writes with a relative base: one `<base href>` and everything else beneath it.
+
+Written by hand rather than built, as the module docstring says -- but the four things this file
+now depends on are all present, because a fixture that dropped the base element would make the
+rewrite untestable in exactly the place it matters.
+"""
+
 BUNDLE = "console.log('the interface')"
 
 BROWSER = {"accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}
@@ -41,8 +65,7 @@ def bundle(tmp_path: Path) -> Path:
     return static
 
 
-@pytest.fixture
-def serving(bundle: Path, tmp_path: Path, database: Database) -> FastAPI:
+def _serving(bundle: Path, tmp_path: Path, database: Database, base_path: str = "") -> FastAPI:
     """An instance that carries a built interface, as the image does."""
     app = create_app(
         Settings(
@@ -50,10 +73,22 @@ def serving(bundle: Path, tmp_path: Path, database: Database) -> FastAPI:
             secret_key=SecretStr("0" * 64),
             transcription_base_url="http://whisper:8000/v1",
             static_dir=bundle,
+            base_path=base_path,
         )
     )
     app.state.database = database
     return app
+
+
+@pytest.fixture
+def serving(bundle: Path, tmp_path: Path, database: Database) -> FastAPI:
+    return _serving(bundle, tmp_path, database)
+
+
+@pytest.fixture
+def serving_on_a_subpath(bundle: Path, tmp_path: Path, database: Database) -> FastAPI:
+    """The same image, behind a proxy that puts it at ``example.org/sonarium`` (``OPS-4``)."""
+    return _serving(bundle, tmp_path, database, base_path="/sonarium")
 
 
 def test_an_instance_without_a_bundle_installs_nothing(app: FastAPI) -> None:
@@ -177,3 +212,82 @@ def test_a_file_the_bundle_holds_at_its_root_is_served(serving: FastAPI, bundle:
         response = client.get("/robots.txt", headers=BROWSER)
     assert response.status_code == status.HTTP_200_OK
     assert "Disallow" in response.text
+
+
+def test_the_served_shell_says_which_prefix_it_is_under(serving_on_a_subpath: FastAPI) -> None:
+    """The one thing that makes a relative bundle work on a subpath (``OPS-4``).
+
+    The browser is at ``/sonarium/library/<uuid>`` and the shell asks for ``./assets/index.js``.
+    Without a base element naming the deployment root, that resolves against the route and the
+    page fetches nothing it needs -- which is the failure this whole task exists to close.
+    """
+    with TestClient(serving_on_a_subpath, root_path="/sonarium") as client:
+        response = client.get("/library/8e29d6b4-0000-0000-0000-000000000000", headers=BROWSER)
+    assert response.status_code == status.HTTP_200_OK
+    assert '<base href="/sonarium/" />' in response.text
+
+
+def test_the_shell_is_served_unchanged_on_a_subdomain(serving: FastAPI) -> None:
+    """An unnecessary rewrite is its own kind of broken, and `/` is what the bundle already has."""
+    with TestClient(serving) as client:
+        response = client.get("/", headers=BROWSER)
+    assert response.text == SHELL
+
+
+@pytest.mark.parametrize("written", ["/sonarium", "sonarium", "/sonarium/", "sonarium/"])
+def test_a_base_href_always_ends_in_a_slash(written: str) -> None:
+    """``<base href="/sonarium">`` names a file, so the last segment is dropped and every asset
+    resolves one level too high. It is one character and it is half the breakages."""
+    rewritten = rebase(SHELL.encode(), Settings(base_path=written).base_path)
+    assert b'<base href="/sonarium/" />' in rewritten
+
+
+def test_the_rewrite_leaves_every_inline_script_byte_for_byte(bundle: Path) -> None:
+    """The content policy names the theme bootstrap by hash, read off the file on disk.
+
+    A rewrite that reached the script would change its hash, and the policy would then refuse the
+    page it describes -- which fails as a blank screen with a console error and nothing at all in
+    the server log. So the rewrite is asserted against the hash the policy is built from rather
+    than against the text it produced.
+    """
+    from_disk = inline_script_hashes(bundle)
+    served = SinglePageApp.discover(bundle, "/sonarium")
+    assert served is not None
+    assert script_hashes_of(served.shell) == from_disk
+    assert len(from_disk) == 1
+
+
+@pytest.mark.parametrize("proxy_strips", [False, True], ids=["passes-through", "strips"])
+def test_a_browser_on_a_subpath_can_fetch_what_the_shell_asks_it_for(
+    serving_on_a_subpath: FastAPI, proxy_strips: bool
+) -> None:
+    """The whole arrangement, resolved the way a browser resolves it (``OPS-4``).
+
+    Read the base href out of the served page, resolve the bundle's relative ``src`` against it
+    exactly as the browser would, and ask for the result. ``deploy/README.md`` documented this
+    as tested while the answer was a 404, which is why it is asserted end to end rather than by
+    reading the markup and believing it.
+
+    Both proxy configurations, because the README offers both and they disagree about what the
+    application sees: the prefix left on, or taken off with ``root_path`` carrying it. The
+    second is the one that used to fail, and it failed only for the bundle -- every route
+    answered, so nothing but a blank page said so.
+    """
+    deep = "/library/8e29d6b4-0000-0000-0000-000000000000"
+    prefix = "" if proxy_strips else "/sonarium"
+    with TestClient(serving_on_a_subpath, root_path="/sonarium") as client:
+        shell = client.get(f"{prefix}{deep}", headers=BROWSER)
+        base = re.search(r'<base href="([^"]+)"', shell.text)
+        src = re.search(r'<script type="module" src="([^"]+)"', shell.text)
+        assert base is not None and src is not None
+
+        # What the browser puts in the address bar is the same either way: it is on the far side
+        # of the proxy and has never heard of the arrangement.
+        asked_for = urljoin(f"http://testserver/sonarium{deep}", urljoin(base[1], src[1]))
+        assert asked_for == "http://testserver/sonarium/assets/index-abc123.js"
+
+        forwarded = urlparse(asked_for).path
+        served = client.get(forwarded.removeprefix("/sonarium") if proxy_strips else forwarded)
+    assert served.status_code == status.HTTP_200_OK
+    assert served.text == BUNDLE
+    assert served.headers["cache-control"] == IMMUTABLE

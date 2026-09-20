@@ -48,6 +48,12 @@ const { repository } = JSON.parse(
 export default defineConfig({
   plugins: [react()],
 
+  // Relative, so nothing in the bundle names the prefix it will be served under. The served
+  // shell carries a `<base href>` the API writes from `SONARIUM_BASE_PATH` (`OPS-4`), which is
+  // what stops a relative URL resolving against `/library/<uuid>` instead of the deployment
+  // root. One image serves both arrangements; neither is a build input.
+  base: './',
+
   define: { __SOURCE_URL__: JSON.stringify(repository.url) },
 
   resolve: {
