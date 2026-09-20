@@ -62,14 +62,34 @@ Public identifiers are `uuid`s; integer ids are internal. Anything you may not r
 _logger = structlog.get_logger(__name__)
 
 
+def _refuse_an_instance_that_cannot_run(settings: Settings) -> None:
+    """Say what is missing and stop, rather than starting and failing later on a real request.
+
+    ``SystemExit`` rather than an exception: uvicorn imports this factory, so anything raised here
+    reaches an operator as a traceback whose last line is the message -- and
+    ``ConfigurationError`` exists to be reported as text and never as that. One event per problem
+    because the default renderer is JSON, where a multi-line message is a wall of ``\n``.
+    """
+    report = settings.configuration_problems()
+    for problem in report.fatal:
+        _logger.error("configuration.refused", problem=problem)
+    for advisory in report.advisory:
+        _logger.warning("configuration.incomplete", detail=advisory)
+    if report.fatal:
+        raise SystemExit(1)
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     """Build the application.
 
     Tests pass settings in; the container's entry point does not, and reads them from the
-    environment instead (``OPS-3``).
+    environment instead (``OPS-3``) -- which is the branch that is checked, because it is the
+    only one where a person wrote the configuration and can still be told what is wrong with it.
     """
     resolved = settings or get_settings()
     configure_logging(resolved)
+    if settings is None:
+        _refuse_an_instance_that_cannot_run(resolved)
 
     app = FastAPI(
         title="Sonarium",

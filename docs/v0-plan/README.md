@@ -164,14 +164,13 @@ graph TD
 ## What is left
 
 Every track has now been read against the code, so an unticked box is one somebody checked rather
-than one nobody reached. Twenty-five are open and none of them blocks another — the ordering this
+than one nobody reached. Twenty-four are open and none of them blocks another — the ordering this
 section used to carry is spent along with the tasks in it.
 
-Eleven are what the plan always held:
+Ten are what the plan always held:
 
 | Task | What is outstanding |
 |---|---|
-| `OPS-3` | The validator exists and nothing calls it, so an instance configured from the shipped example starts with an empty signing key |
 | `OPS-4` | The backend half is done and tested; the bundle has no base path, so the subpath arrangement serves a shell that cannot fetch itself |
 | `OPS-6` | Both halves of its marker: a restore into a container, and an upgrade that crosses a revision rather than proving a no-op is a no-op |
 | `ING-11` | The round trip — exit criterion 4 — and the four defects that would each break it before anybody got to run it |

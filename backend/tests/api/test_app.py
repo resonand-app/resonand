@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from pathlib import Path
 from typing import Annotated
 
 import pytest
@@ -12,7 +14,7 @@ from sonarium.api.app import create_app
 from sonarium.api.errors import PROBLEM_CONTENT_TYPE
 from sonarium.api.logging import REQUEST_ID_HEADER
 from sonarium.api.pagination import MAX_LIMIT, PageRequest, page_of, page_request
-from sonarium.core.config import Settings
+from sonarium.core.config import Settings, reset_settings_cache
 from sonarium.core.errors import (
     ConflictError,
     InvalidRequestError,
@@ -197,6 +199,9 @@ class _RecordedLog:
     def warning(self, event: str, **fields: object) -> None:
         self.entries.append(("warning", event, fields))
 
+    def error(self, event: str, **fields: object) -> None:
+        self.entries.append(("error", event, fields))
+
     def of(self, event: str) -> list[tuple[str, str, dict[str, object]]]:
         return [entry for entry in self.entries if entry[1] == event]
 
@@ -257,3 +262,59 @@ def test_an_ordinary_instance_does_not_warn_about_a_topology_it_is_not_in(
     started = _start(settings, monkeypatch)
     assert started.of("instance.worker_disabled") == []
     assert started.of("instance.starting") != []
+
+
+@pytest.fixture
+def _forget_cached_settings() -> Iterator[None]:
+    """``get_settings`` is cached for the process, and these tests write the environment."""
+    reset_settings_cache()
+    yield
+    reset_settings_cache()
+
+
+@pytest.mark.usefixtures("_forget_cached_settings")
+def test_an_instance_read_from_the_environment_says_what_is_missing_and_stops(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``OPS-3``. ``deploy/.env.example`` ships ``SONARIUM_SECRET_KEY=`` empty, which pydantic
+    reads as a zero-length secret rather than as absent -- so the instance used to start and sign
+    every playback token with nothing."""
+    monkeypatch.setenv("SONARIUM_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SONARIUM_SECRET_KEY", "")
+    recorded = _RecordedLog()
+    monkeypatch.setattr("sonarium.api.app._logger", recorded)
+
+    with pytest.raises(SystemExit):
+        create_app()
+
+    refused = recorded.of("configuration.refused")
+    assert [str(fields["problem"]) for _level, _event, fields in refused], "it says what to fix"
+    assert any("SONARIUM_SECRET_KEY" in str(fields["problem"]) for *_, fields in refused)
+
+
+@pytest.mark.usefixtures("_forget_cached_settings")
+def test_an_instance_with_nowhere_to_transcribe_still_starts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The archive is the product; transcription is a feature of it. Refusing to boot here would
+    turn one missing endpoint into an archive nobody can reach."""
+    monkeypatch.setenv("SONARIUM_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SONARIUM_SECRET_KEY", "0" * 64)
+    monkeypatch.delenv("SONARIUM_TRANSCRIPTION_BASE_URL", raising=False)
+    recorded = _RecordedLog()
+    monkeypatch.setattr("sonarium.api.app._logger", recorded)
+
+    app = create_app()
+
+    assert app.title == "Sonarium"
+    said = recorded.of("configuration.incomplete")
+    assert any("SONARIUM_TRANSCRIPTION_BASE_URL" in str(fields["detail"]) for *_, fields in said)
+
+
+def test_settings_handed_in_are_never_asked_for_a_signing_key(
+    tmp_path_factory: pytest.TempPathFactory,
+) -> None:
+    """Only the branch that reads the environment is checked. Checking both would have made this
+    a change to every test in the suite that builds an app without a secret."""
+    app = create_app(Settings(data_dir=tmp_path_factory.mktemp("handed-in")))
+    assert app.title == "Sonarium"

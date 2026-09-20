@@ -4,21 +4,22 @@ Every setting is read from the environment with the ``SONARIUM_`` prefix. Nothin
 configuration file inside the image, so an instance is fully described by its compose file.
 
 Validation is split in two on purpose. Constructing :class:`Settings` only checks types, which
-keeps tests free of ceremony; :meth:`Settings.validate_runtime` is what the entry points call, and
-it reports *every* problem at once as text a person can act on rather than a traceback.
+keeps tests free of ceremony; :meth:`Settings.configuration_problems` is what the entry point
+reads, and it reports *every* problem at once as text a person can act on rather than a
+traceback. Only the branch that reads the environment asks, so a test that hands settings in is
+never asked for a signing key it has no use for.
 """
 
 from __future__ import annotations
 
 import tempfile
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
 from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from sonarium.core.errors import ConfigurationError
 
 MEGABYTE = 1024 * 1024
 GIGABYTE = 1024 * MEGABYTE
@@ -29,6 +30,17 @@ MINIMUM_SECRET_LENGTH = 32
 CookieSecurity = Literal["auto", "true", "false"]
 """How :attr:`Settings.session_cookie_secure` is answered. Spelled as the strings an environment
 variable carries, because that is where every value of it comes from."""
+
+
+@dataclass(frozen=True, slots=True)
+class ConfigurationReport:
+    """What is wrong with an instance's configuration, sorted by whether it may still start."""
+
+    fatal: tuple[str, ...]
+    """Problems that stop the instance. Each is phrased as the thing to go and fix."""
+
+    advisory: tuple[str, ...]
+    """Problems it can run with. A feature will be missing and nobody should be surprised."""
 
 
 class Settings(BaseSettings):
@@ -240,6 +252,21 @@ class Settings(BaseSettings):
             return spelling
         return value
 
+    @field_validator("secret_key", mode="before")
+    @classmethod
+    def _an_empty_secret_is_no_secret(cls, value: object) -> object:
+        """``SONARIUM_SECRET_KEY=`` means the operator has not set one.
+
+        Pydantic reads an empty variable as a zero-length ``SecretStr``, which is not ``None`` and
+        so walks past every ``is None`` guard in front of the signer -- and signs with the empty
+        key rather than refusing. ``deploy/.env.example`` ships the variable exactly that way.
+        """
+        if isinstance(value, SecretStr):
+            return None if not value.get_secret_value().strip() else value
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
+
     @field_validator("base_path")
     @classmethod
     def _normalise_base_path(cls, value: str) -> str:
@@ -261,13 +288,17 @@ class Settings(BaseSettings):
 
     # --- Runtime validation ------------------------------------------------
 
-    def validate_runtime(self, *, require_secret: bool = True) -> None:
-        """Check everything that can only be checked against the real machine.
+    def configuration_problems(self, *, require_secret: bool = True) -> ConfigurationReport:
+        """Everything that can only be checked against the real machine.
 
-        Raises a single :class:`ConfigurationError` listing every problem found, so an
-        administrator fixes their compose file once instead of restarting five times.
+        Split into what stops the instance and what is merely worth saying, because they are
+        different questions: a missing signing key means playback cannot work at all, and no
+        transcription endpoint means one feature is unavailable on an archive that otherwise
+        runs. Reporting both at once is what lets an administrator fix their compose file once
+        instead of restarting five times.
         """
         problems: list[str] = []
+        advisories: list[str] = []
 
         if require_secret and self.secret_key is None:
             problems.append(
@@ -293,15 +324,13 @@ class Settings(BaseSettings):
                 problems.extend(_directory_problems("SONARIUM_STORAGE_DIR", storage))
 
         if self.transcription_base_url is None:
-            problems.append(
+            advisories.append(
                 "SONARIUM_TRANSCRIPTION_BASE_URL is not set, so no recording can be "
                 "transcribed. Point it at a local faster-whisper server or an "
                 "OpenAI-compatible endpoint."
             )
 
-        if problems:
-            listed = "\n".join(f"  - {problem}" for problem in problems)
-            raise ConfigurationError(f"This instance is not configured to run:\n{listed}")
+        return ConfigurationReport(fatal=tuple(problems), advisory=tuple(advisories))
 
     def prepare_directories(self) -> None:
         """Create the directories the instance writes to, before anything tries to.

@@ -6,8 +6,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sonarium.core.config import Settings
-from sonarium.core.errors import ConfigurationError
+from sonarium.core.config import ConfigurationReport, Settings
 
 
 def _runnable(tmp_path: Path, **overrides: object) -> Settings:
@@ -36,31 +35,49 @@ def test_a_base_path_is_normalised_once_rather_than_at_every_use(
     assert _runnable(tmp_path, base_path=given).base_path == normalised
 
 
-def test_a_runnable_instance_validates(tmp_path: Path) -> None:
-    _runnable(tmp_path).validate_runtime()
+def test_a_runnable_instance_has_nothing_to_report(tmp_path: Path) -> None:
+    assert _runnable(tmp_path).configuration_problems() == ConfigurationReport((), ())
 
 
-def test_every_problem_is_reported_at_once(tmp_path: Path) -> None:
-    settings = Settings(data_dir=tmp_path)
-    with pytest.raises(ConfigurationError) as raised:
-        settings.validate_runtime()
-    message = str(raised.value)
-    assert "SONARIUM_SECRET_KEY" in message
-    assert "SONARIUM_TRANSCRIPTION_BASE_URL" in message
+def test_every_fatal_problem_is_reported_at_once(tmp_path: Path) -> None:
+    """One restart, not two: an administrator fixes the compose file once."""
+    occupied = tmp_path / "occupied"
+    occupied.write_text("not a directory")
+    fatal = Settings(data_dir=occupied).configuration_problems().fatal
+    assert any("SONARIUM_SECRET_KEY" in problem for problem in fatal)
+    assert any("SONARIUM_DATA_DIR" in problem for problem in fatal)
+
+
+def test_an_archive_with_no_transcriber_still_runs(tmp_path: Path) -> None:
+    """An instance that cannot transcribe can still hold, play and search what is already in it.
+
+    Refusing to start over it would turn one missing feature into a missing archive.
+    """
+    report = _runnable(tmp_path, transcription_base_url=None).configuration_problems()
+    assert report.fatal == ()
+    assert any("SONARIUM_TRANSCRIPTION_BASE_URL" in advisory for advisory in report.advisory)
+
+
+def test_a_secret_set_to_nothing_is_a_secret_that_is_not_set(tmp_path: Path) -> None:
+    """`deploy/.env.example` ships `SONARIUM_SECRET_KEY=`, which pydantic reads as a zero-length
+    SecretStr -- not None, and so past every `is None` guard in front of the signer."""
+    settings = _runnable(tmp_path, secret_key="")
+    assert settings.secret_key is None
+    assert any("is not set" in problem for problem in settings.configuration_problems().fatal)
 
 
 def test_a_short_secret_is_refused_with_the_command_that_makes_a_good_one(
     tmp_path: Path,
 ) -> None:
-    with pytest.raises(ConfigurationError, match="openssl rand -hex 32"):
-        _runnable(tmp_path, secret_key="tooshort").validate_runtime()
+    fatal = _runnable(tmp_path, secret_key="tooshort").configuration_problems().fatal
+    assert any("openssl rand -hex 32" in problem for problem in fatal)
 
 
 def test_a_data_directory_that_is_a_file_is_refused(tmp_path: Path) -> None:
     occupied = tmp_path / "occupied"
     occupied.write_text("not a directory")
-    with pytest.raises(ConfigurationError, match="not a directory"):
-        _runnable(tmp_path, data_dir=occupied).validate_runtime()
+    fatal = _runnable(tmp_path, data_dir=occupied).configuration_problems().fatal
+    assert any("not a directory" in problem for problem in fatal)
 
 
 def test_directories_are_created_before_anything_writes_to_them(tmp_path: Path) -> None:
