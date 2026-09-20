@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 
 import { isApiProblem } from '@/api/problem';
 import type { Filters } from '@/app/url-state';
+import { useOpenUpload } from '@/app/upload-dialog';
 import { Button, CardSkeleton, RowSkeleton, StateCard } from '@/design-system';
 
 export interface EmptyProps {
@@ -26,15 +27,30 @@ export interface EmptyProps {
   canEdit: boolean;
 }
 
-/** Nothing uploaded yet: an invitation, never a sad drawing. */
+/**
+ * Nothing uploaded yet: an invitation, never a sad drawing.
+ *
+ * The invitation carries the action that accepts it (`UI-18a1`). It said "upload a recording and
+ * it will be here" and then offered no way to, which leaves somebody looking for the control --
+ * and the control is in the nav, which is where they have just failed to look.
+ *
+ * Read-only gets no button, because there is nothing it could do: the sentence in that case is
+ * about somebody else's library, not an invitation to this person.
+ */
 export function NothingYet({ canEdit }: { canEdit: boolean }) {
   const { t } = useTranslation('library');
+  const openUpload = useOpenUpload();
   return (
     <StateCard
       icon="upload"
       dashed
       title={t('empty.nothing.title')}
       body={canEdit ? t('empty.nothing.body') : t('empty.nothing.readOnly')}
+      action={
+        canEdit && openUpload !== null ? (
+          <Button onClick={openUpload}>{t('empty.nothing.upload')}</Button>
+        ) : undefined
+      }
     />
   );
 }
@@ -45,10 +61,20 @@ export function NothingYet({ canEdit }: { canEdit: boolean }) {
  * It names what is on rather than saying "your filters", because somebody who set a tag three
  * screens ago has forgotten which one -- and naming it is what turns a dead end into one click.
  */
-export function NothingMatched({ total, filters, onClear }: Omit<EmptyProps, 'canEdit'>) {
+export function NothingMatched({
+  total,
+  filters,
+  onClear,
+  categoryName,
+}: Omit<EmptyProps, 'canEdit'> & { categoryName: string | undefined }) {
   const { t } = useTranslation('library');
   const named = [
-    filters.categoryId === undefined ? undefined : t('empty.matched.category'),
+    // The category is named the way a tag is (`UI-10a1`). The fallback is for the moment before
+    // the tree has arrived: the filter is on either way, and a sentence that silently omitted it
+    // would be naming the wrong set.
+    filters.categoryId === undefined
+      ? undefined
+      : (categoryName ?? t('empty.matched.categoryUnnamed')),
     ...filters.tags.map((tag) => `#${tag}`),
     ...filters.states.map((state) => t(`common:transcription.${state}`)),
   ].filter((one): one is string => one !== undefined);

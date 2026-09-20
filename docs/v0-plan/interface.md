@@ -662,11 +662,15 @@ The screens the product is used from, and the largest view in the plan.
       than a sad drawing; and the filter matched nothing, which **names the filter and offers to
       clear it** while saying how many recordings are there. ⇢ UI-35c, UI-8a
 
-- [ ] **UI-10a1** · Filtering a library by category with nothing matching renders
+- [x] **UI-10a1** · Filtering a library by category with nothing matching renders
       `empty.matched.category` — the key itself — because `library.json` has no such key. `UI-10a`
       asks that sentence to **name the filter**, which the tag branch does and this branch never
       could. Both halves land together: the missing key, and the category's own name inside it.
       ⇢ UI-10a 🧪
+      *`LibraryView` already resolves a category id to its name for the cards, so the empty state
+      reads the same `nameOf`. It falls back to naming the kind of filter rather than dropping it
+      while the tree is still arriving: a sentence that silently omitted an active filter would be
+      describing a different set from the one on screen.*
 - [x] **UI-10b** · Loading skeletons for both densities, the error state, and the unreachable state
       in which **what is already buffered keeps playing**. ⇢ UI-35c
 - [x] **UI-10c** · Read-only: no checkboxes, no bulk bar, no Settings button, one quiet line. The
@@ -807,10 +811,15 @@ The reason the product exists: two surfaces over one endpoint.
       the size limit read from the instance rather than hard-coded, and the line that video files
       are kept whole and played as audio. ⇢ UI-34a, ING-2
 
-- [ ] **UI-18a1** · **Neither empty state can start an upload.** `UI-10a`'s invitation is an
+- [x] **UI-18a1** · **Neither empty state can start an upload.** `UI-10a`'s invitation is an
       invitation with no way to accept it, because `uploadOpen` lives in `AppShell` and nothing
       below it can ask. Lifting that state is the task, and the destination should arrive already
       set to the library being looked at rather than empty. ⇢ UI-18a, UI-10a1
+      *The state did not move — what an upload starts has to outlive the screen it was started
+      from, so the dialog stays with the frame. Only the verb is published, through a context that
+      can open the dialog and cannot close, read or race it; where there is no shell it is `null`
+      and the button is not drawn rather than drawn and inert. The destination needed nothing: the
+      dialog already reads it off the path, which a browser confirmed.*
 - [x] **UI-18b** · The destination: library and category selects, defaulting to where you came from.
       Upload needs level 20 or above on the destination. ⇢ UI-18a, UI-34b
 - [x] **UI-18c** · The transcribe switch with its inline egress line — the disclosure at the moment

@@ -191,8 +191,6 @@ are numbered children of the task that produced them:
 | Task | What it is |
 |---|---|
 | `UI-4f1` | A phone has no way to reach the trash, so nothing deleted there can be restored |
-| `UI-10a1` | Filtering by category with no matches renders the translation key itself |
-| `UI-18a1` | Neither empty state can start an upload, so the invitation cannot be accepted |
 | `UI-22a1` | Three accessible names in the upload tray are English in the source |
 | `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
 | `UI-32b1` | The 44px exemption list has outgrown the account of it |

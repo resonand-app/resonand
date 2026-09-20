@@ -95,14 +95,16 @@
     "nothing": {
       "title": "Nothing in this library yet",
       "body": "Upload a recording and it will be here, with its transcript, for as long as you keep it.",
-      "readOnly": "Whoever owns this library has not put anything in it yet."
+      "readOnly": "Whoever owns this library has not put anything in it yet.",
+      "upload": "Upload a recording"
     },
     "matched": {
       "title": "Nothing matches that",
       "body": "Nothing here is narrowed by {{filters}}.",
       "clear": "Clear the filters",
       "total_one": "There is one recording in this library.",
-      "total_other": "There are {{count}} recordings in this library."
+      "total_other": "There are {{count}} recordings in this library.",
+      "categoryUnnamed": "a category"
     },
     "failed": {
       "title": "These recordings could not be listed"
