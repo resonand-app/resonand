@@ -17,7 +17,7 @@
  * something else there.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router';
@@ -38,6 +38,7 @@ import { PhoneShell } from './PhoneShell';
 import { Profile } from './Profile';
 import { Toasts } from './Toasts';
 import { destinationOf, destinationTo, initialsOf, libraryIn } from '@/app/destinations';
+import { OpenUploadContext } from '@/app/upload-dialog';
 import { isPlainClick } from '@/app/links';
 import { useLibraries, useTrashCount } from '@/app/library-data';
 import { queryIn, routes, toRecording, toSearch } from '@/app/routes';
@@ -75,8 +76,12 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
   const [uploading, setUploading] = useState(false);
   // The upload dialog belongs to the frame, like the player and the tray: it is opened from the
   // nav on any screen, and what it starts has to outlive the screen it was started from
-  // (`UI-18`, §3.3).
+  // (`UI-18`, §3.3). The verb is published to everything below through `OpenUploadContext`, so
+  // an empty state can accept its own invitation without the state leaving here (`UI-18a1`).
   const [uploadOpen, setUploadOpen] = useState(false);
+  const openUpload = useCallback(() => {
+    setUploadOpen(true);
+  }, []);
   const [profileOpen, setProfileOpen] = useState(false);
   // What is in the field, which is not what is in the URL (`UI-16a`, §3.2). Typing opens the
   // quick hits; only `Enter` and the see-all row navigate. It is seeded from the address so that
@@ -157,7 +162,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
             tray ?? (
               <UploadPanel
                 onAdd={() => {
-                  setUploadOpen(true);
+                  openUpload();
                 }}
               />
             )
@@ -165,7 +170,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
           uploading={uploading}
           onUploadTab={setUploading}
         >
-          {children}
+          <OpenUploadContext.Provider value={openUpload}>{children}</OpenUploadContext.Provider>
           <UploadDialog
             open={uploadOpen}
             onClose={() => {
@@ -282,7 +287,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
         tray={tray ?? <Uploads />}
         playerVisible={playerVisible}
       >
-        {children}
+        <OpenUploadContext.Provider value={openUpload}>{children}</OpenUploadContext.Provider>
         {/* Inside the frame rather than inside a view: closing it must not be able to stop what it
             started, and neither must navigating away from wherever it was opened. */}
         <UploadDialog

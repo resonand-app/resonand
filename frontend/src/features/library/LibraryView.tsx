@@ -155,6 +155,7 @@ export function LibraryView() {
           total={context.library?.audio_count ?? 0}
           filters={filters}
           onClear={clear}
+          categoryName={categories.nameOf(filters.categoryId ?? null)}
         />
       ) : (
         <NothingYet canEdit={context.canEdit} />
