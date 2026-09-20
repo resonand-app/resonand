@@ -179,7 +179,6 @@ Ten are what the plan always held:
 | `INT-6` | Playwright over the utility threshold; nothing exists yet |
 | `API-18` | The permission vocabulary on `GET /instance`, which nothing implements |
 | `JOB-3` | A run against a real engine, rather than against the mocked transport the tests use |
-| `DAT-7` | The rename half of a test whose other three halves are covered |
 | `REV-S6` | The comment voice, in [`review.md`](review.md) |
 
 `INF-8` is spent rather than open and carries no box at all: the folder it asks for was decided

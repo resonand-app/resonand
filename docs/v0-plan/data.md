@@ -45,11 +45,12 @@ query is the only source of truth for permissions and everything goes through it
       owns the display name** on a slug collision, and **ACL-filtered** autocomplete offering the
       canonical name — tag names must not leak information between accounts. ⇢ DAT-4 🧪
 
-- [ ] **DAT-7** · Category tree with `parent_id`: creation, rename, reorder and move, with cycle
+- [x] **DAT-7** · Category tree with `parent_id`: creation, rename, reorder and move, with cycle
       detection and per-level uniqueness. ⇢ DAT-4 🧪
-      *Outstanding: only the rename half of the test. Creation, move with cycle detection at both
-      the repository and the HTTP layer, reorder, and per-level uniqueness are covered;
-      `rename_category` is exercised by nothing at any layer, which is what the marker is for.*
+      *Rename is covered at both layers now, like move: that it renames, that it still refuses a
+      sibling's name, that a category may be saved under the name it already has — which is what
+      `excluding` is for, and what would otherwise make saving an unedited form a conflict — and
+      that uniqueness is per level, so the same name under two parents is two categories.*
 
 - [x] **DAT-8** · **No seed ships in the package.** A seeded archive writes `storage_path` rows
       naming files that were never written: right for a test, wrong for an instance somebody is

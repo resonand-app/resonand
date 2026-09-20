@@ -214,6 +214,47 @@ def test_two_siblings_cannot_share_a_name(database: Database) -> None:
             categories.create_category(session, owner.id, library.uuid, name="Unit 1")
 
 
+def test_renaming_a_category_keeps_it_unique_among_its_siblings(database: Database) -> None:
+    """The name is checked against the siblings it will have, not the ones it had."""
+    with database.write_session() as session:
+        owner = users.create_user(session, email="o@x.test", display_name="O")
+        library = libraries.create_library(session, owner.id, name="Course")
+        first = categories.create_category(session, owner.id, library.uuid, name="Unit 1")
+        second = categories.create_category(session, owner.id, library.uuid, name="Unit 2")
+
+        renamed = categories.rename_category(session, owner.id, first.id, name="Week 1")
+        assert renamed.name == "Week 1"
+
+        with pytest.raises(ConflictError, match="already a category"):
+            categories.rename_category(session, owner.id, second.id, name="Week 1")
+
+
+def test_a_category_may_be_renamed_to_the_name_it_already_has(database: Database) -> None:
+    """Otherwise saving a form nobody edited is a conflict, which is `excluding` in one line."""
+    with database.write_session() as session:
+        owner = users.create_user(session, email="o@x.test", display_name="O")
+        library = libraries.create_library(session, owner.id, name="Course")
+        unit = categories.create_category(session, owner.id, library.uuid, name="Unit 1")
+        assert (
+            categories.rename_category(session, owner.id, unit.id, name="Unit 1").name == "Unit 1"
+        )
+
+
+def test_renaming_only_collides_with_siblings_and_not_with_cousins(database: Database) -> None:
+    """Per-level uniqueness: the same name under two parents is two different categories."""
+    with database.write_session() as session:
+        owner = users.create_user(session, email="o@x.test", display_name="O")
+        library = libraries.create_library(session, owner.id, name="Course")
+        one = categories.create_category(session, owner.id, library.uuid, name="Unit 1")
+        two = categories.create_category(session, owner.id, library.uuid, name="Unit 2")
+        categories.create_category(session, owner.id, library.uuid, name="Notes", parent_id=one.id)
+        under_two = categories.create_category(
+            session, owner.id, library.uuid, name="Slides", parent_id=two.id
+        )
+        renamed = categories.rename_category(session, owner.id, under_two.id, name="Notes")
+        assert renamed.name == "Notes"
+
+
 def test_a_category_cannot_be_moved_inside_its_own_subtree(database: Database) -> None:
     """The whole branch would vanish from the tree while still being in the table."""
     with database.write_session() as session:
