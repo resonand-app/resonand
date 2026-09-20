@@ -50,21 +50,44 @@ structural here rather than aspirational.
       no visible effect in v0 and is implemented anyway, because retrofitting it is a data-loss bug.
       ⇢ API-9 🧪
 
-- [ ] **ING-11** · CLI `sonarium import` (bulk, recursive, with `--dry-run`) and `sonarium export`
+- [x] **ING-11** · CLI `sonarium import` (bulk, recursive, with `--dry-run`) and `sonarium export`
       (audio + a JSON sidecar carrying the `uuid`, all metadata and the full transcript, with
       `.vtt`/`.srt` derived). **Re-import is idempotent**: a recording already present is updated,
       not duplicated. ⇢ ING-3 🧪
       *This is principle 1. It ships in v0 even though nobody else will use it, because it is the
       promise the whole argument rests on and because adding it later always gets postponed.*
-      *Outstanding: the round trip, which is exit criterion 4 and has never been run. Both verbs
-      exist and the sidecar carries what it should, but the export writes the audio under its
-      original filename and the sidecar under a sanitised stem, so any punctuation separates the
-      pair; every recording lands in one flat directory, so two files sharing a name overwrite
-      each other where `store_original` would have refused; `library` and `category` are written
-      to the sidecar and read back by nothing; and re-import adds a further transcript each run,
-      so only the recording row is idempotent. No test exports anything and then imports it —
+      *Split once the four defects had been read against the code, because one sitting does not
+      hold both halves: `ING-11a` is the layout and the defects, `ING-11b` is the round trip
+      itself, which is exit criterion 4 and ends in an act against the real archive rather than
+      in a test.*
+
+- [x] **ING-11a** · **One directory per recording**, named for its `uuid`, holding the original,
+      the sidecar and the subtitles. ⇢ ING-11 🧪
+      *The layout was the decision, and it answers two of the four defects by shape rather than
+      by care. A flat export let two recordings sharing a filename overwrite each other — where
+      `store_original` would have refused — and paired a sidecar to its audio by a stem that any
+      punctuation in the filename broke. The audio and the subtitles now share one sanitised
+      stem, which is also what makes a media player find the `.srt` beside the recording. A flat
+      directory with the `uuid` appended to every filename was the alternative: less work, and it
+      puts the identifier into every name a person reads.*
+      *The other two defects were read back rather than reshaped. `category` is restored by name
+      into whichever library the recording lands in, created there if it is missing; `library` is
+      now what decides that library, so `--library` became the fallback and the override rather
+      than the only destination, and an export read back into the instance it came from lands
+      where it came from instead of collapsing into one library. A transcript the recording
+      already has is not added a second time — matched on provenance and segments but not on
+      `source`, because a transcript an engine produced goes out as `service` and comes back as
+      `imported`, and every round trip would otherwise look like new content.*
+      *`sonarium.json` is only believed when it is the one recording in its directory. A folder of
+      loose files with a single sidecar dropped into it would otherwise hand every one of them the
+      same `uuid`, and the second file would update what the first had just created.*
+
+- [ ] **ING-11b** · **The round trip**: export the whole archive, import it into an empty
+      instance, and get back what went in. ⇢ ING-11a 🧪
+      *Exit criterion 4, and it has never been run. No test exports anything and then imports it —
       `apply_sidecar` is called directly — and that one test is what would have caught three of
-      the four.*
+      the four defects `ING-11a` fixed. The test is the first half; the second is the act against
+      the real archive, which is not tickable here.*
 
 - [x] **ING-12** · **Deriving `recorded_at`.** Recording date ≠ upload date, and nothing else
       populates it: `ffprobe` only returns technical metadata. Extract from, in order, container

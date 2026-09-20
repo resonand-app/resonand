@@ -242,6 +242,9 @@ forms is `JOB-14`, which is measured rather than assumed.
   original `uuid`, which makes **re-import idempotent**: importing a recording that is already
   present updates it instead of creating a second copy. Without that, the export round-trip in the
   exit criteria doubles the archive rather than verifying it.
+- **Export layout:** one directory per recording, named for its `uuid`, holding the original, the
+  sidecar and the subtitles. Two recordings that arrived under the same filename cannot overwrite
+  each other, and no punctuation in a filename can separate a sidecar from its audio (`ING-11a`).
 
 ### Suggestion storage, deferred (DEC-1)
 

@@ -10,13 +10,16 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 from sonarium.archive import (
+    SIDECAR_NAME,
     SIDECAR_VERSION,
     apply_sidecar,
     export_recording,
     find_by_uuid,
+    library_named_by,
     read_sidecar,
     sidecar_for,
 )
@@ -24,39 +27,47 @@ from sonarium.core.config import Settings
 from sonarium.db import libraries, tags, transcripts, users
 from sonarium.db.audio import create_audio
 from sonarium.db.engine import Database
-from sonarium.db.models import Audio
+from sonarium.db.models import Audio, Category
 from sonarium.db.transcripts import Origin, SegmentDraft
 from sonarium.media import storage
 from sonarium.media.subtitles import Cue, to_srt, to_vtt
+from sqlalchemy.orm import Session
 
 
-@pytest.fixture
-def recording(database: Database, db_settings: Settings) -> str:
-    with database.write_session() as session:
-        owner = users.create_user(session, email="o@x.test", display_name="O")
+def store_recording(
+    session: Session,
+    db_settings: Settings,
+    *,
+    filename: str,
+    library_id: int | None = None,
+    owner_id: int | None = None,
+    transcript: bool = True,
+) -> Audio:
+    """One recording with its bytes on disk, for a test that needs a second one."""
+    if library_id is None or owner_id is None:
+        owner = users.create_user(session, email=f"{uuid4().hex}@x.test", display_name="O")
         library = libraries.create_library(session, owner.id, name="Family")
-        audio = create_audio(
-            session,
-            library_id=library.id,
-            uploaded_by=owner.id,
-            storage_path="",
-            original_filename="Recording 2024-03-11 18.22.m4a",
-        )
-        path, digest = storage.store_original(
-            db_settings.resolved_storage_dir,
-            audio.uuid,
-            [b"the original bytes"],
-            filename="Recording 2024-03-11 18.22.m4a",
-        )
-        audio.storage_path = storage.relative(db_settings.resolved_storage_dir, path)
-        audio.sha256 = digest.sha256
-        audio.size_bytes = digest.size_bytes
-        audio.recorded_at = "2024-03-11T18:22:00"
-        audio.recorded_at_offset = 60
-        audio.recorded_at_source = "container"
-        audio.recorded_at_precision = "second"
-        audio.duration_ms = 2_400_000
-        tags.set_audio_tags(session, audio.id, ["family", "oral history"])
+        library_id, owner_id = library.id, owner.id
+    audio = create_audio(
+        session,
+        library_id=library_id,
+        uploaded_by=owner_id,
+        storage_path="",
+        original_filename=filename,
+    )
+    path, digest = storage.store_original(
+        db_settings.resolved_storage_dir, audio.uuid, [b"the original bytes"], filename=filename
+    )
+    audio.storage_path = storage.relative(db_settings.resolved_storage_dir, path)
+    audio.sha256 = digest.sha256
+    audio.size_bytes = digest.size_bytes
+    audio.recorded_at = "2024-03-11T18:22:00"
+    audio.recorded_at_offset = 60
+    audio.recorded_at_source = "container"
+    audio.recorded_at_precision = "second"
+    audio.duration_ms = 2_400_000
+    tags.set_audio_tags(session, audio.id, ["family", "oral history"])
+    if transcript:
         transcripts.create_transcript(
             session,
             audio.id,
@@ -71,7 +82,14 @@ def recording(database: Database, db_settings: Settings) -> str:
                 stitched_from=3,
             ),
         )
-        session.flush()
+    session.flush()
+    return audio
+
+
+@pytest.fixture
+def recording(database: Database, db_settings: Settings) -> str:
+    with database.write_session() as session:
+        audio = store_recording(session, db_settings, filename="Recording 2024-03-11 18.22.m4a")
         return audio.uuid
 
 
@@ -264,6 +282,165 @@ def test_something_that_is_not_a_sidecar_is_refused(tmp_path: Path) -> None:
     path.write_text(json.dumps(["not", "a", "sidecar"]))
     with pytest.raises(ValueError, match="not a Sonarium sidecar"):
         read_sidecar(path)
+
+
+# --- The layout -----------------------------------------------------------
+
+
+def test_each_recording_gets_a_directory_of_its_own(
+    database: Database, db_settings: Settings, recording: str, tmp_path: Path
+) -> None:
+    destination = tmp_path / "export"
+    with database.read_session() as session:
+        audio = find_by_uuid(session, recording)
+        assert audio is not None
+        written = export_recording(session, audio, destination, db_settings.resolved_storage_dir)
+    assert written.directory == destination / recording
+    assert written.sidecar == written.directory / SIDECAR_NAME
+    assert {path.parent for path in (written.audio, *written.subtitles)} == {written.directory}
+
+
+def test_two_recordings_with_one_filename_do_not_overwrite_each_other(
+    database: Database, db_settings: Settings, tmp_path: Path
+) -> None:
+    """A phone hands out the same name to everybody, and a flat export lost one of the two."""
+    destination = tmp_path / "export"
+    with database.write_session() as session:
+        first = store_recording(session, db_settings, filename="voice-note.m4a")
+        second = store_recording(
+            session,
+            db_settings,
+            filename="voice-note.m4a",
+            library_id=first.library_id,
+            owner_id=first.uploaded_by,
+        )
+        written = [
+            export_recording(session, audio, destination, db_settings.resolved_storage_dir)
+            for audio in (first, second)
+        ]
+    assert written[0].audio != written[1].audio
+    assert all(path.audio.read_bytes() == b"the original bytes" for path in written)
+
+
+def test_punctuation_in_a_filename_cannot_separate_a_sidecar_from_its_audio(
+    database: Database, db_settings: Settings, tmp_path: Path
+) -> None:
+    """The sidecar used to take a sanitised stem while the audio kept the raw name."""
+    destination = tmp_path / "export"
+    with database.write_session() as session:
+        audio = store_recording(session, db_settings, filename="Grandma's talk: part 1.m4a")
+        written = export_recording(session, audio, destination, db_settings.resolved_storage_dir)
+    assert written.sidecar.is_file()
+    assert written.audio.is_file()
+    assert not any(character in written.audio.name for character in "':")
+    assert {path.stem for path in written.subtitles} == {written.audio.stem}
+
+
+def test_the_name_it_was_uploaded_under_survives_the_sanitised_export(
+    database: Database, db_settings: Settings
+) -> None:
+    """A download gives back the original filename, so the sidecar has to carry it home."""
+    with database.write_session() as session:
+        audio = store_recording(session, db_settings, filename="Grandma's talk: part 1.m4a")
+        payload = sidecar_for(session, audio)
+        audio.original_filename = "Grandma-s talk- part 1.m4a"
+        apply_sidecar(session, audio, payload)
+        assert audio.original_filename == "Grandma's talk: part 1.m4a"
+
+
+# --- What re-importing does -----------------------------------------------
+
+
+def test_re_importing_the_same_transcript_does_not_add_a_second(
+    database: Database, recording: str
+) -> None:
+    """Every transcript a recording has ever had is kept, so a duplicate reads as a second
+    attempt with a better model rather than as the same one twice."""
+    with database.read_session() as session:
+        audio = find_by_uuid(session, recording)
+        assert audio is not None
+        payload = sidecar_for(session, audio)
+
+    for _ in range(2):
+        with database.write_session() as session:
+            again = find_by_uuid(session, recording)
+            assert again is not None
+            apply_sidecar(session, again, payload)
+
+    with database.read_session() as session:
+        restored = find_by_uuid(session, recording)
+        assert restored is not None
+        assert len(transcripts.list_transcripts(session, restored.id)) == 1
+
+
+def test_a_transcript_that_says_something_else_is_still_added(
+    database: Database, recording: str
+) -> None:
+    with database.read_session() as session:
+        audio = find_by_uuid(session, recording)
+        assert audio is not None
+        payload = sidecar_for(session, audio)
+    payload["transcript"]["segments"][1]["text"] = "Then about the harbour."
+
+    with database.write_session() as session:
+        again = find_by_uuid(session, recording)
+        assert again is not None
+        apply_sidecar(session, again, payload)
+
+    with database.read_session() as session:
+        restored = find_by_uuid(session, recording)
+        assert restored is not None
+        assert len(transcripts.list_transcripts(session, restored.id)) == 2
+        active = transcripts.active_transcript(session, restored.id)
+        assert active is not None
+        assert transcripts.segments_of(session, active.id)[1].text == "Then about the harbour."
+
+
+def test_the_category_comes_back_and_is_not_made_twice(
+    database: Database, db_settings: Settings
+) -> None:
+    """Defect 3: the category went into the sidecar and was read back by nothing."""
+    with database.write_session() as session:
+        source = store_recording(session, db_settings, filename="note.m4a")
+        category = Category(library_id=source.library_id, name="Interviews", position=0)
+        session.add(category)
+        session.flush()
+        source.category_id = category.id
+        payload = sidecar_for(session, source)
+
+        elsewhere = store_recording(session, db_settings, filename="another.m4a")
+        apply_sidecar(session, elsewhere, payload)
+        landed = elsewhere.category_id
+        assert landed is not None and landed != category.id
+
+        apply_sidecar(session, elsewhere, payload)
+        assert elsewhere.category_id == landed
+        assert session.query(Category).count() == 2
+
+
+def test_a_sidecar_names_the_library_the_recording_came_out_of(
+    database: Database, db_settings: Settings
+) -> None:
+    with database.write_session() as session:
+        audio = store_recording(session, db_settings, filename="note.m4a")
+        payload = sidecar_for(session, audio)
+        found = library_named_by(session, payload)
+        assert found is not None
+        assert found.id == audio.library_id
+
+
+def test_a_library_in_the_trash_is_not_a_destination(
+    database: Database, db_settings: Settings
+) -> None:
+    """Importing into a trashed library puts the recording somewhere nobody is looking."""
+    with database.write_session() as session:
+        audio = store_recording(session, db_settings, filename="note.m4a")
+        payload = sidecar_for(session, audio)
+        library = library_named_by(session, payload)
+        assert library is not None
+        library.deleted_at = "2026-09-20T10:00:00Z"
+        session.flush()
+        assert library_named_by(session, payload) is None
 
 
 # --- Subtitles ------------------------------------------------------------
