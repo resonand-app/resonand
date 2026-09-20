@@ -142,3 +142,61 @@ describe('making an account', () => {
     });
   });
 });
+
+describe('setting a password for somebody who is locked out (UI-37)', () => {
+  it('shows a generated password and sends the value it showed', async () => {
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: /set a password for alex/i }));
+
+    const shown = await screen.findByLabelText(/the new password for alex/i);
+    const value = shown.textContent;
+    expect(value).toHaveLength(20);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Set this password' }));
+
+    await waitFor(() => {
+      expect(archive.passwordsSet.at(-1)?.password).toBe(value);
+    });
+  });
+
+  it('says every device will be signed out before the button is pressed', async () => {
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: /set a password for alex/i }));
+    expect(
+      screen.getByText(/every device alex morgan is signed in on will be signed out/i),
+    ).toBeInTheDocument();
+  });
+
+  it('says the value is shown once, because nothing can show it again', async () => {
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: /set a password for alex/i }));
+    expect(screen.getByText(/shown once/i)).toBeInTheDocument();
+  });
+
+  it('does not offer the value again once the dialog is closed', async () => {
+    show();
+    const open = await screen.findByRole('button', { name: /set a password for alex/i });
+    await userEvent.click(open);
+    const first = (await screen.findByLabelText(/the new password for alex/i)).textContent;
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    await userEvent.click(open);
+    const second = (await screen.findByLabelText(/the new password for alex/i)).textContent;
+    expect(second).not.toBe(first);
+  });
+
+  it('keeps the password out of the request when the API refuses it', async () => {
+    server.use(
+      http.post('/api/admin/users/:user_id/password', () =>
+        HttpResponse.json(
+          { title: 'Bad request', status: 400, detail: 'Nope.' },
+          { status: 400, headers: { 'content-type': 'application/problem+json' } },
+        ),
+      ),
+    );
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: /set a password for alex/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Set this password' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('Nope.');
+  });
+});

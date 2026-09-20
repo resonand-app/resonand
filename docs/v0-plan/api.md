@@ -243,7 +243,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       🧪 A grant on a recording does not make its library visible, purging one takes its
       grants with it, and a grantee at read cannot list who else has access.
 
-- [ ] **API-25** · **A way back into an account.** Nothing can set a password except the account
+- [x] **API-25** · **A way back into an account.** Nothing can set a password except the account
       itself, which has to supply the current one: there is no reset, no administrator action and
       no CLI verb. Somebody who forgets theirs is locked out permanently, and `INT-3b` also refuses
       to delete an account that holds content, so the instance cannot even be tidied up around
@@ -254,6 +254,11 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       ⇢ API-20, API-3, INT-3b 🧪
       🧪 The account signs in with what the administrator set and not with what it had; every
       session it held is gone; and no caller but an administrator can reach the route.
+      *All three covered, plus the ten-character floor: a reset is not an excuse for a weaker
+      password than the account could have chosen itself. Every session goes with no exception for
+      the caller — an administrator resetting their own is signed out too, because the reason to
+      reset is usually that somebody else may have had it, and the sessions are the part that
+      survives a password change.*
 
 ---
 

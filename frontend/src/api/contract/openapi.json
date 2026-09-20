@@ -1400,6 +1400,22 @@
         "title": "SessionSummary",
         "type": "object"
       },
+      "SetPassword": {
+        "additionalProperties": false,
+        "description": "What an administrator sends to let somebody back into their own account (``API-25``).\n\nNo current password, because the whole point is that nobody has it. The floor is the same ten\ncharacters `ChangePassword` asks for: a reset is not an excuse for a weaker one.",
+        "properties": {
+          "password": {
+            "minLength": 10,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "title": "SetPassword",
+        "type": "object"
+      },
       "ShareSummary": {
         "additionalProperties": false,
         "description": "Who has access, at what level, granted by whom and when (``UI-17``).",
@@ -2691,6 +2707,52 @@
           }
         },
         "summary": "Enable User",
+        "tags": [
+          "administration"
+        ]
+      }
+    },
+    "/api/admin/users/{user_id}/password": {
+      "post": {
+        "description": "Set an account's password, ending every session it holds (``API-25``).\n\nNothing else in the instance can do this. ``POST /auth/password`` needs the current password,\nwhich is precisely what somebody locked out does not have, and ``INT-3b`` refuses to delete an\naccount that holds anything -- so before this there was no way back in and no way to tidy up\naround it either. Exit criterion 2 is a second real person using the archive; this is what\nhappens to them on the day they forget it.\n\n**Every session goes, with no exception for the caller.** An administrator resetting their own\npassword is signed out along with everybody else, which is the same rule\n``POST /auth/password`` applies to the sessions it is not being used from: a password that has\nchanged should not leave a door open behind it. The reason to reset is usually that somebody\nelse may have had it, and the sessions are the part that survives the change.",
+        "operationId": "set_password_api_admin_users__user_id__password_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetPassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Password",
         "tags": [
           "administration"
         ]

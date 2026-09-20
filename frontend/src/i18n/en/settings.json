@@ -77,7 +77,19 @@
     "makeAdminHint": "Administrators see this section and everything in it.",
     "create": "Create account",
     "cancel": "Cancel",
-    "createFailed": "The account could not be created."
+    "createFailed": "The account could not be created.",
+    "setPassword": "Set a password",
+    "setPasswordNamed": "Set a password for {{name}}",
+    "resetTitle": "Set a password for {{name}}",
+    "resetBody": "This is the only way back into an account whose password has been forgotten. Give it to them yourself — Sonarium sends nothing anywhere.",
+    "resetSessions": "Every device {{name}} is signed in on will be signed out.",
+    "resetOnce": "Shown once. It is not stored anywhere you can read it again.",
+    "resetCopy": "Copy",
+    "resetCopied": "Copied",
+    "resetConfirm": "Set this password",
+    "resetDone": "Done. {{name}} can sign in with it now.",
+    "resetFailed": "The password could not be set.",
+    "resetValue": "The new password for {{name}}"
   },
   "provider": {
     "title": "Transcription",

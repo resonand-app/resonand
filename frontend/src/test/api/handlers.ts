@@ -729,6 +729,16 @@ export const handlers: HttpHandler[] = [
     archive.users = archive.users.filter((one) => one !== existing);
     return new HttpResponse(null, { status: 204 });
   }),
+  // The password an administrator sets is recorded rather than discarded, so a test can assert
+  // the dialog sent the value it showed -- which is the whole of `UI-37` (`API-25`).
+  http.post('/api/admin/users/:user_id/password', async ({ params, request }) => {
+    const existing = archive.users.find((one) => one.id === Number(params.user_id));
+    if (!existing) return NOT_FOUND();
+    const body = (await request.json()) as { password: string };
+    if (body.password.length < 10) return new HttpResponse(null, { status: 422 });
+    archive.passwordsSet.push({ id: existing.id, password: body.password });
+    return new HttpResponse(null, { status: 204 });
+  }),
 ];
 
 /**

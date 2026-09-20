@@ -15,9 +15,10 @@ from sqlalchemy import func, select
 
 from sonarium.api.deps import CurrentAdmin, ReadSession, WriteSession, current_admin
 from sonarium.api.presenters import admin_user
-from sonarium.api.schemas import AdminUser, CreateAccount
+from sonarium.api.schemas import AdminUser, CreateAccount, SetPassword
 from sonarium.api.security import hash_password
 from sonarium.core.errors import ConflictError, InvalidRequestError
+from sonarium.db import sessions as session_repo
 from sonarium.db import users as user_repo
 from sonarium.db.models import Audio, Library, User
 
@@ -60,6 +61,27 @@ def disable_user(user_id: int, admin: CurrentAdmin, session: WriteSession) -> Ad
 @router.post("/users/{user_id}/enable", response_model=AdminUser)
 def enable_user(user_id: int, session: WriteSession) -> AdminUser:
     return admin_user(user_repo.set_disabled(session, user_id, disabled=False))
+
+
+@router.post("/users/{user_id}/password", status_code=status.HTTP_204_NO_CONTENT)
+def set_password(user_id: int, body: SetPassword, session: WriteSession) -> None:
+    """Set an account's password, ending every session it holds (``API-25``).
+
+    Nothing else in the instance can do this. ``POST /auth/password`` needs the current password,
+    which is precisely what somebody locked out does not have, and ``INT-3b`` refuses to delete an
+    account that holds anything -- so before this there was no way back in and no way to tidy up
+    around it either. Exit criterion 2 is a second real person using the archive; this is what
+    happens to them on the day they forget it.
+
+    **Every session goes, with no exception for the caller.** An administrator resetting their own
+    password is signed out along with everybody else, which is the same rule
+    ``POST /auth/password`` applies to the sessions it is not being used from: a password that has
+    changed should not leave a door open behind it. The reason to reset is usually that somebody
+    else may have had it, and the sessions are the part that survives the change.
+    """
+    user = user_repo.get_user(session, user_id)
+    user.password_hash = hash_password(body.password)
+    session_repo.revoke_all(session, user_id)
 
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)

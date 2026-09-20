@@ -369,6 +369,55 @@ def test_an_administrator_creates_the_other_accounts_by_hand(
     assert made.status_code == status.HTTP_201_CREATED
 
 
+def test_an_administrator_can_let_somebody_back_into_their_account(
+    client: TestClient, accounts: dict[str, int], app_client_factory: ClientFactory
+) -> None:
+    """``API-25``. Nothing else in the instance could do this: `POST /auth/password` wants the
+    current one, which is exactly what somebody locked out does not have."""
+    theirs = app_client_factory()
+    sign_in(theirs, "friend")
+    assert theirs.get("/auth/me").status_code == status.HTTP_200_OK
+
+    sign_in(client, "admin")
+    reset = client.post(
+        f"/admin/users/{accounts['friend']}/password", json={"password": "a-brand-new-one"}
+    )
+    assert reset.status_code == status.HTTP_204_NO_CONTENT
+
+    # The session it held is gone: a password that changed with the old doors open would be
+    # decorative.
+    assert theirs.get("/auth/me").status_code == status.HTTP_401_UNAUTHORIZED
+
+    fresh = app_client_factory()
+    stale = fresh.post("/auth/session", json={"email": "friend@example.test", "password": PASSWORD})
+    assert stale.status_code == status.HTTP_400_BAD_REQUEST, "the password it had no longer works"
+    assert (
+        fresh.post(
+            "/auth/session", json={"email": "friend@example.test", "password": "a-brand-new-one"}
+        ).status_code
+        == status.HTTP_200_OK
+    )
+
+
+def test_only_an_administrator_can_set_somebody_else_s_password(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    sign_in(client, "friend")
+    refused = client.post(
+        f"/admin/users/{accounts['admin']}/password", json={"password": "not-mine-to-set"}
+    )
+    assert refused.status_code in {status.HTTP_403_FORBIDDEN, status.HTTP_404_NOT_FOUND}
+
+
+def test_a_reset_password_is_held_to_the_same_floor_as_a_chosen_one(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """A reset is not an excuse for a weaker password than the account could have set itself."""
+    sign_in(client, "admin")
+    refused = client.post(f"/admin/users/{accounts['friend']}/password", json={"password": "short"})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
 def test_deleting_a_user_with_content_is_refused_with_the_numbers(
     client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
 ) -> None:
