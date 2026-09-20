@@ -53,6 +53,8 @@ def recording(database: Database, db_settings: Settings) -> str:
         audio.size_bytes = digest.size_bytes
         audio.recorded_at = "2024-03-11T18:22:00"
         audio.recorded_at_offset = 60
+        audio.recorded_at_source = "container"
+        audio.recorded_at_precision = "second"
         audio.duration_ms = 2_400_000
         tags.set_audio_tags(session, audio.id, ["family", "oral history"])
         transcripts.create_transcript(
@@ -98,6 +100,28 @@ def test_a_recording_keeps_its_own_reading_of_the_clock_through_the_export(
     assert payload["recorded_at"] == "2024-03-11T18:22:00"
     assert payload["recorded_at_offset_minutes"] == 60
     assert "Z" not in str(payload["recorded_at"])
+
+
+def test_how_a_date_was_arrived_at_travels_with_it(database: Database, recording: str) -> None:
+    """Neither is recoverable on the far side: the file re-ingests under its stored name, and a
+    day with no hour is indistinguishable from a midnight once the two are apart."""
+    with database.read_session() as session:
+        audio = find_by_uuid(session, recording)
+        assert audio is not None
+        payload = sidecar_for(session, audio)
+    payload["recorded_at_source"] = "filename"
+    payload["recorded_at_precision"] = "date"
+
+    with database.write_session() as session:
+        again = find_by_uuid(session, recording)
+        assert again is not None
+        apply_sidecar(session, again, payload)
+
+    with database.read_session() as session:
+        landed = find_by_uuid(session, recording)
+        assert landed is not None
+        assert landed.recorded_at_source == "filename"
+        assert landed.recorded_at_precision == "date"
 
 
 def test_an_export_writes_the_audio_the_sidecar_and_the_subtitles(

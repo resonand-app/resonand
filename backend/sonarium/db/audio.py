@@ -24,7 +24,7 @@ from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundErr
 from sonarium.core.ids import new_uuid
 from sonarium.core.levels import GRANTABLE, Level
 from sonarium.core.text import clean_title
-from sonarium.core.time import is_wall_clock, now_instant
+from sonarium.core.time import PRECISION_SECOND, is_wall_clock, now_instant
 from sonarium.db import search_index
 from sonarium.db.models import Audio, Library, Share, User
 from sonarium.db.search import Filters, SortDirection, SortField, apply_filters
@@ -124,6 +124,9 @@ def update_metadata(
             )
         audio.recorded_at = patch.recorded_at
         audio.recorded_at_offset = patch.recorded_at_offset
+        # A wall clock is only accepted whole, so somebody who typed one stated every part of it.
+        # Leaving a derived ``date`` in place here would keep hiding the time they just supplied.
+        audio.recorded_at_precision = PRECISION_SECOND
     if patch.clear_category:
         audio.category_id = None
     elif patch.category_id is not None:

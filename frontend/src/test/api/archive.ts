@@ -92,6 +92,7 @@ function recording(
     recorded_at: '2026-03-12T18:22:00',
     recorded_at_offset: 60,
     recorded_at_source: 'container',
+    recorded_at_precision: 'second',
     tags: [],
     transcription_state: 'done',
     ...over,

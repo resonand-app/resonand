@@ -325,7 +325,13 @@ def create_admin(
             password_hash=hash_password(password),
             is_admin=True,
         )
-    typer.echo(f"Created administrator {user.email} (#{user.id}).")
+        session.flush()
+        library = users.personal_library(session, user.id)
+        address, identifier, library_uuid = user.email, user.id, library.uuid
+    typer.echo(f"Created administrator {address} (#{identifier}).")
+    # The personal library comes with the account, and its uuid is what `sonarium import` takes.
+    # Without this line the only way to learn it is to sign in and read it out of a URL.
+    typer.echo(f"Personal library: {library_uuid}")
 
 
 @app.command()

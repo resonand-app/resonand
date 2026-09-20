@@ -25,6 +25,17 @@ _WALL_CLOCK_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$")
 
 WALL_CLOCK_FORMAT = "%Y-%m-%dT%H:%M:%S"
 
+PRECISION_DATE = "date"
+PRECISION_MINUTE = "minute"
+PRECISION_SECOND = "second"
+"""How much of a wall clock was actually stated (``ING-12``).
+
+The stored form is fixed width, so a reading derived from a source that gave only a day still
+carries ``00:00:00``. These say which of those digits mean anything, and they live here rather
+than beside the deriver because the value travels further than that: the access layer sets it when
+somebody types a date in, and only ``core`` is below both.
+"""
+
 
 # --- Instants --------------------------------------------------------------
 

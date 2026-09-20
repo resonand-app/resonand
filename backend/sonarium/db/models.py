@@ -194,6 +194,13 @@ class Audio(Base):
     recorded_at_source: Mapped[str | None] = mapped_column(Text)
     """``container`` | ``filename`` | ``filesystem``, whichever won (``ING-12``)."""
 
+    recorded_at_precision: Mapped[str | None] = mapped_column(Text)
+    """``date`` | ``minute`` | ``second``: how much of the clock the source stated.
+
+    ``NULL`` is *unknown*, not *date-only* -- it is what rows written before the column existed
+    carry, and a reading of unknown precision is shown in full rather than trimmed.
+    """
+
     created_at: Mapped[str] = mapped_column(Text, nullable=False, default=now_instant)
     deleted_at: Mapped[str | None] = mapped_column(Text)
 

@@ -181,6 +181,17 @@
             ],
             "title": "Recorded At Offset"
           },
+          "recorded_at_precision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At Precision"
+          },
           "recorded_at_source": {
             "anyOf": [
               {
@@ -255,6 +266,7 @@
           "recorded_at",
           "recorded_at_offset",
           "recorded_at_source",
+          "recorded_at_precision",
           "created_at",
           "duration_ms",
           "library_uuid",
@@ -366,6 +378,17 @@
             ],
             "title": "Recorded At Offset"
           },
+          "recorded_at_precision": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recorded At Precision"
+          },
           "recorded_at_source": {
             "anyOf": [
               {
@@ -404,6 +427,7 @@
           "recorded_at",
           "recorded_at_offset",
           "recorded_at_source",
+          "recorded_at_precision",
           "created_at",
           "duration_ms",
           "library_uuid",

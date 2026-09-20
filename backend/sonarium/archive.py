@@ -12,7 +12,9 @@ than verifying it -- which is the opposite of what an integrity check is for.
 
 Timestamps follow ``DEC-11``. ``recorded_at`` goes out as the wall-clock reading it is, with its
 offset in a separate field, so a round trip through the export cannot quietly shift a recording
-into another timezone.
+into another timezone. Its source and its precision travel with it, because neither can be
+recovered on the way back in: the file is re-ingested under a stored name, and a reading that
+stated only a day is indistinguishable from a midnight once the two are apart.
 """
 
 from __future__ import annotations
@@ -65,6 +67,8 @@ def sidecar_for(session: Session, audio: Audio) -> dict[str, Any]:
         "notes": audio.notes,
         "recorded_at": audio.recorded_at,
         "recorded_at_offset_minutes": audio.recorded_at_offset,
+        "recorded_at_source": audio.recorded_at_source,
+        "recorded_at_precision": audio.recorded_at_precision,
         "created_at": audio.created_at,
         "library": {"uuid": library.uuid, "name": library.name} if library else None,
         "category": category.name if category else None,
@@ -169,6 +173,8 @@ def apply_sidecar(session: Session, audio: Audio, payload: dict[str, Any]) -> No
     audio.notes = payload.get("notes") or None
     audio.recorded_at = payload.get("recorded_at") or None
     audio.recorded_at_offset = payload.get("recorded_at_offset_minutes")
+    audio.recorded_at_source = payload.get("recorded_at_source") or None
+    audio.recorded_at_precision = payload.get("recorded_at_precision") or None
     if payload.get("tags"):
         tags.set_audio_tags(session, audio.id, [str(name) for name in payload["tags"]])
     transcript = payload.get("transcript")
