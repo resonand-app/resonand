@@ -3,6 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!--
+      What every relative URL in this document resolves against (`OPS-4`).
+
+      The bundle is built with a relative base, so the shell asks for `./assets/...` and
+      `./favicon.ico`. Those would otherwise resolve against whatever route the browser is on --
+      `/library/<uuid>` is a directory as far as a URL is concerned -- so the deployment root has
+      to be stated rather than inferred. The API rewrites this one attribute from
+      `SONARIUM_BASE_PATH` as it serves the shell, which is why an instance on a subpath needs no
+      second build. `/` is the value in development and on a subdomain, where nothing is rewritten.
+    -->
+    <base href="/" />
     <title>Sonarium</title>
     <meta name="description" content="A self-hosted archive for the recordings that matter." />
     <!--
@@ -44,7 +55,17 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#FFFFFF" />
+    <!--
+      The browser chrome around an installed instance, which is `--surface` and not white
+      (`UI-39`). Two of them, because a meta element can only select on the system preference:
+      this is the answer for somebody following it, which is the same thing `semantic.css` does
+      with a document carrying no `data-theme`. Somebody who chose the theme against their
+      system keeps the chrome their system asked for -- the alternative is writing the value from
+      the bundle, which repaints the chrome after first paint and is more noticeable than the
+      mismatch it fixes.
+    -->
+    <meta name="theme-color" content="#12151C" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
 
     <meta property="og:title" content="Sonarium" />
     <meta

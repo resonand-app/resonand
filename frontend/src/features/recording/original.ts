@@ -7,8 +7,12 @@
  *
  * Same origin, relative, and the session cookie is the authorisation, like every other request
  * (`UI-3b`). Not through `client.ts`: that wrapper's contract is a checked call resolving to a
- * typed body, and this is a link the browser follows to save a file.
+ * typed body, and this is a link the browser follows to save a file. It still takes that
+ * module's deployment prefix, which is a fact about where the API is and not about how it is
+ * called (`OPS-4`).
  */
+import { DEPLOYMENT_BASE } from '@/api/client';
+
 export function originalUrl(uuid: string): string {
-  return `/api/audio/${encodeURIComponent(uuid)}/original`;
+  return `${DEPLOYMENT_BASE}/api/audio/${encodeURIComponent(uuid)}/original`;
 }

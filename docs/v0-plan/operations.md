@@ -21,16 +21,28 @@ nobody can back up or upgrade is one nobody should trust an archive to.
       the signer. A missing transcription endpoint is said rather than refused: it costs one
       feature, and refusing would cost the archive.*
 
-- [ ] **OPS-4** · **Subdomain and subpath** support (`/sonarium`), both tested behind a reverse
+- [x] **OPS-4** · **Subdomain and subpath** support (`/sonarium`), both tested behind a reverse
       proxy. In v0 because retrofitting a base path into an SPA is genuinely painful, and the
       subpath is the one that always ends up broken. ⇢ OPS-2, UI-4 🧪
-      *Outstanding: the bundle half. The backend is done and covered — `root_path`, the cookie
-      scoped to the prefix, and eleven tests across both arrangements. The interface has no base
-      path at all: no `base` in the Vite config, no `basename` on the router, and an `index.html`
-      that asks the domain root for its assets. The subdomain arrangement works end to end; the
-      subpath one serves a shell that can fetch neither its bundle nor its API, which is the
-      arrangement `deploy/README.md` documents as tested. The prediction in this task's own second
-      sentence is the thing that happened.*
+      *The prefix stays a fact of the deployment: the bundle is built with a relative base and
+      names no prefix anywhere, and the API writes the one it is serving under into the shell's
+      `<base href>` as it hands it over. The router reads that back for its `basename` and the
+      client for its own, so the three URLs the client does not build — the player's stream, the
+      download link and the upload — take the same prefix as everything that goes through it. A
+      build-time `base` was the alternative and it makes the arrangement an input to the image,
+      which is the one thing this product does not have.*
+      *Two things were in the way and neither announced itself. The content policy said
+      `base-uri 'none'`, which makes a browser drop the base element in silence; it is `'self'`
+      now, which still leaves an injected base nowhere to point. And the hashed assets were a
+      **mount**, which accumulates its own prefix onto `root_path` — so behind a proxy that
+      strips the deployment prefix, `/assets/index-abc.js` was looked for inside
+      `static/assets/assets/` and the page loaded nothing. Everything the bundle holds is served
+      through the one fallback route now, with the immutable header decided by the path rather
+      than by the router.*
+      *Covered end to end rather than by reading the markup: the base href is taken out of the
+      served page, the bundle's relative `src` resolved against it exactly as a browser resolves
+      it, and the result asked for — under both proxy configurations, since `deploy/README.md`
+      offers both and only one of them used to work.*
 
 - [x] **OPS-5** · `/healthz` and `/readyz`, and structured logs with request correlation. ⇢ API-1
 

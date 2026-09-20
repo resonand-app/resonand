@@ -26,18 +26,30 @@ import { ApiProblem, problemFrom, unreachable } from './problem';
 import type { paths } from './contract/schema';
 
 /**
- * What every path is relative to.
+ * The prefix this instance is served under, read from the shell rather than built in (`OPS-4`).
  *
- * Empty, and that is the answer rather than an omission: the paths in `schema.ts` already carry
- * `/api` because that is where the API is mounted (`API-16`), so a call site names the exact
- * path the document publishes and nothing is assembled out of pieces.
+ * An instance on a subpath serves everything under `/sonarium`, and the prefix is a fact of the
+ * deployment rather than of the build -- one image has to serve both arrangements. So the API
+ * writes it into the `<base href>` of the shell it serves, and this reads it back out.
  *
- * It exists because an instance on a subpath (`OPS-4`) serves everything under a prefix the
- * bundle cannot be built with -- the prefix is a runtime fact of the instance, not of the
- * build. When that is closed this is the one place the client changes, and `UI-4a`'s router
- * basename is the other half of the same answer.
+ * The element's presence is the question and `baseURI` is the answer, in that order. `baseURI`
+ * alone falls back to the current document's URL wherever no base element exists, so reading it
+ * from `/library/<uuid>` would make every later call ask for `/library/<uuid>/api/...`. This is
+ * evaluated once, at module load, and has to be right on a deep link rather than only on
+ * whichever page somebody happened to open first.
+ *
+ * Empty for a subdomain and in development, which is what a `<base href="/">` normalises to --
+ * so the ordinary case concatenates nothing and the paths in `schema.ts` are used exactly as the
+ * committed document publishes them.
  */
-export const DEPLOYMENT_BASE = '';
+export const DEPLOYMENT_BASE = deploymentBase();
+
+function deploymentBase(): string {
+  if (typeof document === 'undefined') return '';
+  if (document.querySelector('base') === null) return '';
+  const path = new URL(document.baseURI).pathname;
+  return path === '/' ? '' : path.replace(/\/+$/, '');
+}
 
 export type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 

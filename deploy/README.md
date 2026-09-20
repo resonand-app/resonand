@@ -91,6 +91,12 @@ location /sonarium/ {
 The session cookie is scoped to the subpath either way, so Sonarium cannot send it to another
 application on the same domain.
 
+**`SONARIUM_BASE_PATH` is the prefix the browser sees, not the one the container receives.** It is
+what Sonarium writes into the served page as the root every asset resolves against, so it has to
+match the address bar even where the proxy has already stripped it. Nothing is rebuilt to move an
+instance between the two arrangements — the same image serves both, and changing the variable and
+restarting is the whole of it.
+
 **`client_max_body_size` is a convenience here, not a boundary.** Sonarium enforces its own
 ceilings before it reads a body (`SEC-1`): `SONARIUM_MAX_UPLOAD_BYTES` for a recording and
 `SONARIUM_MAX_REQUEST_BYTES` for everything else. Raise the proxy's limit so it does not refuse an

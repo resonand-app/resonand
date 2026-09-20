@@ -75,7 +75,9 @@ def test_nothing_may_be_loaded_from_anywhere_else(origin_client: TestClient) -> 
     assert "default-src 'self'" in policy
     assert "connect-src 'self'" in policy
     assert "object-src 'none'" in policy
-    assert "base-uri 'none'" in policy
+    # `'self'` is the tightest value the shell's own `<base href>` survives (`OPS-4`); `'none'`
+    # would drop it and take every relative asset with it.
+    assert "base-uri 'self'" in policy
 
 
 def test_the_shells_own_script_is_allowed_by_hash_and_inline_script_is_not(

@@ -171,7 +171,6 @@ These are what the plan always held:
 
 | Task | What is outstanding |
 |---|---|
-| `OPS-4` | The backend half is done and tested; the bundle has no base path, so the subpath arrangement serves a shell that cannot fetch itself |
 | `OPS-6` | Both halves of its marker: a restore into a container, and an upgrade that crosses a revision rather than proving a no-op is a no-op |
 | `ING-11` | The round trip — exit criterion 4 — and the four defects that would each break it before anybody got to run it |
 | `ING-12` | Whether a derived date carries a time of day, rather than being presented as midnight |
@@ -189,7 +188,6 @@ are numbered children of the task that produced them:
 |---|---|
 | `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
 | `UI-33a1` | Raw type values returned in components written after the reconciliation |
-| `UI-39` | The web-app manifest: white in a dark product, and root-absolute under `OPS-4` |
 | `INF-11` | A webfont is redistributed with no licence beside it, unlike the one next to it |
 
 Three of the five conditions below are acts rather than tasks — performed against the real

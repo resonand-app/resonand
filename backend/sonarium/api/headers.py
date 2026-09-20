@@ -53,7 +53,12 @@ BASE_HEADERS: tuple[tuple[bytes, bytes], ...] = (
 
 _SHARED_POLICY = (
     "default-src 'self'",
-    "base-uri 'none'",
+    # `'self'` and not `'none'`, because the shell carries a `<base href>` and `'none'` makes the
+    # browser drop it silently -- which serves a page whose every relative asset resolves against
+    # the current route (`OPS-4`). What the directive is for survives: an injected base can name
+    # this origin and nothing else, and this origin serves the bundle and audio under `nosniff`,
+    # so there is nowhere on it to point a relative script at.
+    "base-uri 'self'",
     "frame-ancestors 'none'",
     "form-action 'self'",
     "object-src 'none'",

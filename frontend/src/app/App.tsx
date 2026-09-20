@@ -16,6 +16,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { Suspense, lazy, useState } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
 
+import { DEPLOYMENT_BASE } from '@/api/client';
 import { createQueryClient } from '@/api/query-client';
 import { LibrariesView } from '@/features/libraries/LibrariesView';
 import { LibraryView } from '@/features/library/LibraryView';
@@ -46,7 +47,10 @@ export function App() {
     );
   }
   return (
-    <BrowserRouter>
+    // Every route in `routes.ts` is written from the deployment root, and on a subpath the
+    // browser is one prefix below it (`OPS-4`). The router strips it on the way in and puts it
+    // back on every `Link`, so nothing else in the interface knows the instance is not at `/`.
+    <BrowserRouter basename={DEPLOYMENT_BASE || '/'}>
       <Archive />
     </BrowserRouter>
   );
