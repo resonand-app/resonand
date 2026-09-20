@@ -17,7 +17,18 @@ from sonarium.db.engine import Database
 from tests.api.conftest import PASSWORD, ClientFactory, acl_resolutions, sign_in
 
 
-def _recording(database: Database, library_uuid: str, owner_id: int, title: str = "A note") -> str:
+def _recording(
+    database: Database,
+    library_uuid: str,
+    owner_id: int,
+    title: str = "A note",
+    uploaded_by: int | None = None,
+) -> str:
+    """``owner_id`` finds the library; ``uploaded_by`` is who put the recording in it.
+
+    They are the same person almost always, and separating them is what lets ``INT-3b1`` be tested
+    at all: the case is a recording somebody uploaded into a library they do not own.
+    """
     with database.write_session() as session:
         library = next(
             row[0]
@@ -27,7 +38,7 @@ def _recording(database: Database, library_uuid: str, owner_id: int, title: str 
         audio = create_audio(
             session,
             library_id=library.id,
-            uploaded_by=owner_id,
+            uploaded_by=owner_id if uploaded_by is None else uploaded_by,
             storage_path=f"storage/aa/{title}/original.m4a",
             original_filename=f"{title}.m4a",
         )
@@ -462,6 +473,57 @@ def test_deleting_a_user_with_content_is_refused_with_the_numbers(
     assert "1 library" in detail
     assert "1 recording" in detail
     assert "Disable the account instead" in detail
+
+
+def test_deleting_an_account_counts_what_it_uploaded_elsewhere(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``INT-3b1``: `audio.uploaded_by` is `NOT NULL` with no `ON DELETE`.
+
+    Counting only what an account *owns* left this row pointing at it, so the delete met a foreign
+    key and the administrator was shown "Unexpected error" -- the one outcome the refusal exists
+    to replace.
+    """
+    _recording(
+        database,
+        owner_library,
+        accounts["admin"],
+        title="Theirs in my library",
+        uploaded_by=accounts["friend"],
+    )
+    sign_in(client, "admin")
+    refused = client.delete(f"/admin/users/{accounts['friend']}")
+    assert refused.status_code == status.HTTP_400_BAD_REQUEST
+    detail = refused.json()["detail"]
+    assert "1 recording uploaded to somebody else's library" in detail
+    assert "Disable the account instead" in detail
+
+
+def test_deleting_an_account_counts_the_shares_it_granted(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """``INT-3b1``: `share.granted_by` is the other row that points at an account."""
+    sign_in(client, "admin")
+    granted = client.put(
+        f"/libraries/{owner_library}/shares",
+        json={"grantee_id": accounts["friend"], "level": 20},
+    )
+    assert granted.status_code == status.HTTP_200_OK, granted.text
+
+    refused = client.delete(f"/admin/users/{accounts['admin']}")
+    assert refused.status_code == status.HTTP_400_BAD_REQUEST
+    assert "1 share they granted" in refused.json()["detail"]
+
+
+def test_the_refusal_names_everything_it_found_in_one_sentence(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """Four counts, one sentence, and the ones that are zero are not in it."""
+    _recording(database, owner_library, accounts["admin"])
+    sign_in(client, "admin")
+    detail = client.delete(f"/admin/users/{accounts['admin']}").json()["detail"]
+    assert "1 library and 1 recording" in detail, detail
+    assert "0 " not in detail, "a count of nothing is not worth a clause"
 
 
 def test_an_empty_account_can_be_deleted(client: TestClient, accounts: dict[str, int]) -> None:
