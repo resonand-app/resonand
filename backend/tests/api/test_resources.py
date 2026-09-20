@@ -199,6 +199,27 @@ def test_a_category_cannot_be_moved_into_its_own_subtree_over_http(
     assert refused.status_code == status.HTTP_409_CONFLICT
 
 
+def test_renaming_a_category_over_http_keeps_siblings_unique(
+    client: TestClient, accounts: dict[str, int], owner_library: str
+) -> None:
+    """The same rule the repository enforces, through the verb the interface actually calls."""
+    sign_in(client, "admin")
+    first = client.post(f"/libraries/{owner_library}/categories", json={"name": "Unit 1"}).json()
+    second = client.post(f"/libraries/{owner_library}/categories", json={"name": "Unit 2"}).json()
+
+    renamed = client.patch(
+        f"/libraries/{owner_library}/categories/{first['id']}", json={"name": "Week 1"}
+    )
+    assert renamed.status_code == status.HTTP_200_OK
+    assert renamed.json()["name"] == "Week 1"
+
+    clash = client.patch(
+        f"/libraries/{owner_library}/categories/{second['id']}", json={"name": "Week 1"}
+    )
+    assert clash.status_code == status.HTTP_409_CONFLICT
+    assert "already a category" in clash.json()["detail"]
+
+
 # --- Recordings -----------------------------------------------------------
 
 
