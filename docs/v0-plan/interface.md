@@ -928,12 +928,24 @@ checked once everything exists because that is the only point at which they can 
 - [x] **UI-23a** · 🧪 An axe audit as a test **on every view**, in both themes.
       _Done when:_ a new view without one fails CI. ⇢ every view
 
-- [ ] **UI-23a1** · The harness says the upload and move dialogs are "audited where they are
+- [x] **UI-23a1** · The harness says the upload and move dialogs are "audited where they are
       raised", and no test raises either. `UI-23a`'s criterion — a new view without an audit fails
       CI — is met for the eight routed views and silently unmet for everything behind a trigger.
       The same pass owes the trash with rows in it, the permanent-delete confirmation, and the
       Sessions, Appearance and Administration panels, each of which is audited only in the state
       where it is empty. ⇢ UI-23a 🧪
+      _Settled:_ the harness gained a second list. A **state** is a view plus what the archive has
+      to hold first, what to click, and what is on the page once it worked — so fourteen of them
+      cover the ten overlays that exist, the three sections behind a query parameter, and a trash
+      with rows in it. `every-view-is-audited.node.test.ts` holds that list to the repository the
+      way it already held `VIEWS`: every module mounting a `Modal` or a `TypedConfirm` must be
+      named by a state, and every section but the one a bare URL gives must be reached by one. A
+      one-off test per dialog was the alternative and was rejected — it is quicker, and it would
+      be owed again the next time somebody adds a panel with two states, which is exactly how this
+      task came to exist. **The pass found nothing**: twenty-eight new audits, all green. That is
+      worth writing down, because the same sentence with no audit behind it is what the harness
+      was already saying. Only the axe pass walks the states; the focus walk, the phone pass, the
+      +30% locale and the 44px check still walk `VIEWS` alone.
 - [x] **UI-23b** · 🧪 Full keyboard operation of the player and the transcript verified end to end,
       including seeking and moving between segments. ⇢ UI-4g, UI-12c
 - [x] **UI-23c** · The focus treatment visible on every interactive element in every view, and AA

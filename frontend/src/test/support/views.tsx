@@ -23,7 +23,9 @@
 
 import { QueryClientProvider } from '@tanstack/react-query';
 import { expect } from 'vitest';
-import { render, screen, waitFor, type RenderResult } from '@testing-library/react';
+import { render, screen, waitFor, within, type RenderResult } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import type { UserEvent } from '@testing-library/user-event';
 import { I18nextProvider } from 'react-i18next';
 import { MemoryRouter } from 'react-router';
 
@@ -31,8 +33,9 @@ import { createQueryClient } from '@/api/query-client';
 import { AppRoutes } from '@/app/App';
 import { routes, toLibrary, toLibrarySettings, toRecording, toSearch } from '@/app/routes';
 import { THEME_STORAGE_KEY, ThemeProvider, type ResolvedTheme } from '@/design-system';
+import { SECTION_PARAM } from '@/features/settings/sections';
 import { createI18n } from '@/i18n';
-import { RECORDINGS, FIELD_TAKE } from '@/test/api/archive';
+import { archive, CASSETTE, MEETINGS, RECORDINGS, FIELD_TAKE } from '@/test/api/archive';
 
 /** A screen from the specification's §7, with what it takes to get one on the page. */
 export interface ViewUnderTest {
@@ -70,7 +73,8 @@ export interface ViewUnderTest {
  * The eight screens, in the specification's §7 order.
  *
  * V4 and V8 are absent because they are not routes: the upload dialog and the move sheet are
- * overlays raised from inside another view, and they are audited where they are raised.
+ * overlays raised from inside another view. They are in `STATES` below, which is what makes
+ * that sentence true: it was written here long before anything raised either of them.
  */
 export const VIEWS: readonly ViewUnderTest[] = [
   {
@@ -251,5 +255,231 @@ export async function mountView(
       ).not.toBeNull();
     });
   }
+  return result;
+}
+
+/**
+ * The view named, so a state can say which screen it is a state of.
+ *
+ * Resolved at module scope rather than inside the walk, so a name that no longer matches fails
+ * on import rather than as one entry of a `describe.each` that silently never ran.
+ */
+function view(name: string): ViewUnderTest {
+  const found = VIEWS.find((one) => one.name === name);
+  if (found === undefined) throw new Error(`${name} is missing from VIEWS.`);
+  return found;
+}
+
+/**
+ * A state of a view that a URL alone does not reach (`UI-23a1`).
+ *
+ * `VIEWS` is the eight screens as somebody first meets them, and for the cross-cutting pass that
+ * was taken to be the whole surface. It is not. An overlay is raised by a click and a panel is
+ * reached by a query parameter, so the audit walked eight first impressions -- a trash that was
+ * always empty, a settings screen that was always on Account, and two dialogs the harness
+ * claimed were "audited where they are raised" while nothing raised either.
+ *
+ * A state is therefore a view plus the three things that get it into the state worth auditing:
+ * what the archive has to hold first, what to click, and what is on the page once it worked.
+ * `every-view-is-audited.node.test.ts` holds this list to the overlays and sections that exist,
+ * the same way it holds `VIEWS` to the view modules on disk.
+ *
+ * **Only the axe pass walks this.** The focus walk, the 390px pass, the +30% locale and the 44px
+ * target check still walk `VIEWS` alone: each of those asks a question a dialog deserves too, and
+ * each would be a separate set of findings. The shape here does not stop them being added; it is
+ * the reason it is a list rather than a handful of tests written out longhand.
+ */
+export interface StateUnderTest {
+  /** What the state is, which is what a failure should say. */
+  name: string;
+  /** The view it is a state of. */
+  of: ViewUnderTest;
+  /**
+   * The overlay module this state puts on the page, relative to `src/`.
+   *
+   * Here for the shape test, and absent when the state is another state of the view itself
+   * rather than something drawn over it.
+   */
+  draws?: string;
+  /** Where to mount, when the state is a query parameter away. The view's own address otherwise. */
+  at?: string;
+  /**
+   * What says the view is drawn, when this state changes the answer.
+   *
+   * V9 settles on its empty state, which is precisely what a trash with rows in it is not -- so
+   * a state that alters the view's own content has to say what to wait for instead.
+   */
+  settled?: string | RegExp;
+  /** What the archive has to hold before anything is mounted. */
+  prepare?: () => void;
+  /** What to do once the view has settled, to raise the state. */
+  raise?: (user: UserEvent) => Promise<void>;
+  /** Something that is on the page only once the state itself is there. */
+  reached: string | RegExp;
+}
+
+/** Press the control with this accessible name, once it is on the page. */
+async function press(user: UserEvent, name: string | RegExp): Promise<void> {
+  await user.click(await screen.findByRole('button', { name }));
+}
+
+/**
+ * Press a control in the view rather than in the frame around it.
+ *
+ * The sidebar has a Trash destination and a recording has a Trash action, and they carry the same
+ * name because they are the same word for the same thing. The landmark is what tells them apart.
+ */
+async function pressInView(user: UserEvent, name: string | RegExp): Promise<void> {
+  await user.click(await within(screen.getByRole('main')).findByRole('button', { name }));
+}
+
+/** How long ago, as the API writes an instant. */
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString();
+}
+
+/** Put something in the trash, so V9 has rows rather than its good empty state. */
+function fillTheTrash(): void {
+  archive.recordings = archive.recordings.map((one) =>
+    one.uuid === CASSETTE ? { ...one, deleted_at: daysAgo(3) } : one,
+  );
+  archive.libraries = archive.libraries.map((one) =>
+    one.uuid === MEETINGS ? { ...one, deleted_at: daysAgo(28) } : one,
+  );
+}
+
+/** Every state behind a trigger or a parameter, in the order of the views they belong to. */
+export const STATES: readonly StateUnderTest[] = [
+  {
+    name: 'V4 - Upload audio',
+    of: view('V2 - Libraries'),
+    draws: 'features/upload/UploadDialog.tsx',
+    // From the top bar rather than from an empty state, because that is the one entry point
+    // every screen has -- the dialog belongs to the frame and not to whatever is under it.
+    raise: (user) => press(user, 'Upload recordings'),
+    reached: 'Drop files here, or choose them',
+  },
+  {
+    name: 'V2 - Create a library',
+    of: view('V2 - Libraries'),
+    draws: 'features/libraries/CreateLibraryDialog.tsx',
+    raise: (user) => press(user, /Create a library/),
+    reached: 'Nothing in a library is shared until you share it.',
+  },
+  {
+    name: 'V8 - Move a recording',
+    of: view('V5 - A recording'),
+    draws: 'components/MoveDialog.tsx',
+    // One recording, from the detail view. The library's bulk bar opens the same module with a
+    // selection in it, which is a different sentence in the title and the same markup around it.
+    raise: (user) => press(user, 'Move to another library'),
+    reached: 'Move this recording',
+  },
+  {
+    name: 'V5 - Send a recording to the trash',
+    of: view('V5 - A recording'),
+    draws: 'features/recording/RecordingActions.tsx',
+    raise: (user) => pressInView(user, 'Trash'),
+    reached: 'Send this recording to the trash?',
+  },
+  {
+    name: 'V7 - Remove somebody',
+    of: view('V7 - Library settings'),
+    draws: 'features/library-settings/SharePanel.tsx',
+    raise: (user) => press(user, 'Remove Sam Rivera'),
+    reached: 'Remove Sam Rivera?',
+  },
+  {
+    name: 'V7 - Delete a category',
+    of: view('V7 - Library settings'),
+    draws: 'features/library-settings/CategoryTree.tsx',
+    raise: (user) => press(user, 'Delete Interviews'),
+    reached: 'Delete Interviews?',
+  },
+  {
+    name: 'V7 - Move the library to the trash',
+    of: view('V7 - Library settings'),
+    draws: 'components/TrashLibraryDialog.tsx',
+    raise: (user) => press(user, 'Move this library to the trash'),
+    reached: 'Move Field recordings to the trash?',
+  },
+  {
+    name: 'V9 - Trash, with things in it',
+    of: view('V9 - Trash'),
+    prepare: fillTheTrash,
+    settled: 'Digitised cassette',
+    reached: 'Digitised cassette',
+  },
+  {
+    name: 'V9 - Delete permanently',
+    of: view('V9 - Trash'),
+    draws: 'features/trash/TrashRow.tsx',
+    prepare: fillTheTrash,
+    settled: 'Digitised cassette',
+    raise: (user) => press(user, 'Delete Digitised cassette permanently'),
+    reached: 'Delete Digitised cassette permanently',
+  },
+  {
+    name: 'V10 - Sessions',
+    of: view('V10 - Settings'),
+    at: `${routes.settings}?${SECTION_PARAM}=sessions`,
+    reached: 'Where you are signed in',
+  },
+  {
+    name: 'V10 - Sign out everywhere else',
+    of: view('V10 - Settings'),
+    draws: 'features/settings/SessionsPanel.tsx',
+    at: `${routes.settings}?${SECTION_PARAM}=sessions`,
+    raise: (user) => press(user, 'Sign out everywhere else'),
+    reached: 'Sign out of every device except this one?',
+  },
+  {
+    name: 'V10 - Appearance',
+    of: view('V10 - Settings'),
+    at: `${routes.settings}?${SECTION_PARAM}=appearance`,
+    reached: 'Saved on this device, because it is a property of the screen you are looking at.',
+  },
+  {
+    name: 'V10 - Administration',
+    of: view('V10 - Settings'),
+    at: `${routes.settings}?${SECTION_PARAM}=administration`,
+    reached: 'Accounts are made here, by hand, for people you know. There is no sign-up page.',
+  },
+  {
+    name: 'V10 - Set somebody a password',
+    of: view('V10 - Settings'),
+    draws: 'features/settings/administration/SetPasswordDialog.tsx',
+    at: `${routes.settings}?${SECTION_PARAM}=administration`,
+    raise: (user) => press(user, 'Set a password for Sam Rivera'),
+    reached: /This is the only way back into an account/,
+  },
+];
+
+/**
+ * Put a view on the page and get it into one of its states.
+ *
+ * The archive is prepared before the render rather than after it, because every fixture a view
+ * reads is read by a request the render starts: a trash filled afterwards is a trash the screen
+ * has already been told is empty.
+ */
+export async function mountState(
+  state: StateUnderTest,
+  options: MountOptions = {},
+): Promise<RenderResult> {
+  state.prepare?.();
+  const result = await mountView(
+    {
+      ...state.of,
+      ...(state.at === undefined ? {} : { at: state.at }),
+      ...(state.settled === undefined ? {} : { settled: state.settled }),
+    },
+    options,
+  );
+  if (state.raise !== undefined) await state.raise(userEvent.setup());
+  await screen.findByText(state.reached, undefined, { timeout: 5000 });
+  // A state that claims an overlay has to have one on the page. `reached` on its own would also
+  // be satisfied by text the view underneath already carried, and a trigger that quietly stopped
+  // working would then go on auditing the view -- which is the failure this whole task is about.
+  if (state.draws !== undefined) expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0);
   return result;
 }
