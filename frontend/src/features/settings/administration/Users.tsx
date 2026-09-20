@@ -24,6 +24,7 @@ import { MINIMUM_PASSWORD_LENGTH } from '@/features/sign-in/SignInView';
 import { instant } from '@/i18n/time';
 
 import { AdminSection } from './AdminSection';
+import { SetPasswordDialog } from './SetPasswordDialog';
 import { useUserActions, useUsers } from './data';
 import type { AdminUser } from './data';
 
@@ -88,6 +89,7 @@ function UserRow({
   // The instant rather than a boolean, because "disabled since March" is a fact the row has
   // and "disabled" is a fact it does not (`API-20`).
   const disabledAt = user.disabled_at;
+  const [resetting, setResetting] = useState(false);
 
   return (
     <div
@@ -140,6 +142,15 @@ function UserRow({
           {disabledAt === null ? t('users.disable') : t('users.enable')}
         </Button>
         <Button
+          variant="secondary"
+          aria-label={t('users.setPasswordNamed', { name: user.display_name })}
+          onClick={() => {
+            setResetting(true);
+          }}
+        >
+          {t('users.setPassword')}
+        </Button>
+        <Button
           variant="danger"
           aria-label={t('users.deleteNamed', { name: user.display_name })}
           onClick={() => {
@@ -149,6 +160,14 @@ function UserRow({
           {t('users.delete')}
         </Button>
       </div>
+      {resetting && (
+        <SetPasswordDialog
+          user={user}
+          onClose={() => {
+            setResetting(false);
+          }}
+        />
+      )}
     </div>
   );
 }

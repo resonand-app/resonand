@@ -999,11 +999,16 @@ which is why none of them has a parent here. Each is v0 work: the first because 
 with somebody who is not me using this, the second because it is the clause the licence was chosen
 for, the third because it is the surface a phone offers to install.
 
-- [ ] **UI-37** · The administrator's control for `API-25`, inside `INT-3b`'s users panel: set a
+- [x] **UI-37** · The administrator's control for `API-25`, inside `INT-3b`'s users panel: set a
       password, say plainly that every session the account holds is about to end, and show the
       value exactly once, the way an access token will have to be shown, rather than sending it
       anywhere.
       ⇢ API-25, INT-3b
+      *The value is generated rather than typed — an administrator inventing a password for
+      somebody else invents a weak one — from an alphabet with no `0`/`O` or `1`/`l`/`I`, because
+      it gets read off one screen and typed on another. Shown once because there is nowhere honest
+      to show it twice: the API stores a hash, and a copy kept so it could be shown again would be
+      the thing worth stealing. The sessions clause is above the button, not after it.*
 
 - [ ] **UI-38** · **The instance offers its source.** Section 13 is the clause `AGPL-3.0` was
       chosen over `GPL` for: somebody interacting with this over a network is owed the

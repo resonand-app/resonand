@@ -125,6 +125,16 @@ class ChangePassword(Api):
     new_password: str = Field(min_length=10)
 
 
+class SetPassword(Api):
+    """What an administrator sends to let somebody back into their own account (``API-25``).
+
+    No current password, because the whole point is that nobody has it. The floor is the same ten
+    characters `ChangePassword` asks for: a reset is not an excuse for a weaker one.
+    """
+
+    password: str = Field(min_length=10)
+
+
 class CreateAccount(Api):
     """Registration is administrator-only in v0."""
 

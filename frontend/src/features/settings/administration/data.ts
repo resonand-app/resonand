@@ -36,6 +36,7 @@ export interface UserActions {
   create: UseMutationResult<AdminUser, unknown, CreateAccount>;
   setDisabled: UseMutationResult<AdminUser, unknown, { id: number; disabled: boolean }>;
   destroy: UseMutationResult<unknown, unknown, number>;
+  setPassword: UseMutationResult<unknown, unknown, { id: number; password: string }>;
 }
 
 /**
@@ -67,6 +68,12 @@ export function useUserActions(): UserActions {
     destroy: useMutation({
       mutationFn: (id: number) => remove('/api/admin/users/{user_id}', { path: { user_id: id } }),
       onSuccess: settle,
+    }),
+    // No `settle`: nothing an account list shows changes when a password does, and refetching
+    // would only redraw the rows under a dialog that is still open (`API-25`).
+    setPassword: useMutation({
+      mutationFn: ({ id, password }: { id: number; password: string }) =>
+        post('/api/admin/users/{user_id}/password', { path: { user_id: id }, body: { password } }),
     }),
   };
 }

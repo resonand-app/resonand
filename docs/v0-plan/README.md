@@ -198,7 +198,6 @@ most of them are numbered children of the task that produced them:
 | `UI-32b1` | The 44px exemption list has outgrown the account of it |
 | `UI-33a1` | Raw type values returned in components written after the reconciliation |
 | `INT-3b1` | Deleting an account that uploaded elsewhere meets a foreign key, not the refusal |
-| `API-25`, `UI-37` | There is no way back into an account whose password was forgotten |
 | `UI-38` | The instance offers no source, which is the clause `AGPL-3.0` was chosen for |
 | `UI-39` | The web-app manifest: white in a dark product, and root-absolute under `OPS-4` |
 | `INF-11` | A webfont is redistributed with no licence beside it, unlike the one next to it |

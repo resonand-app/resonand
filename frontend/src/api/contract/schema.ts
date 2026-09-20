@@ -247,6 +247,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/users/{user_id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Password
+         * @description Set an account's password, ending every session it holds (``API-25``).
+         *
+         *     Nothing else in the instance can do this. ``POST /auth/password`` needs the current password,
+         *     which is precisely what somebody locked out does not have, and ``INT-3b`` refuses to delete an
+         *     account that holds anything -- so before this there was no way back in and no way to tidy up
+         *     around it either. Exit criterion 2 is a second real person using the archive; this is what
+         *     happens to them on the day they forget it.
+         *
+         *     **Every session goes, with no exception for the caller.** An administrator resetting their own
+         *     password is signed out along with everybody else, which is the same rule
+         *     ``POST /auth/password`` applies to the sessions it is not being used from: a password that has
+         *     changed should not leave a door open behind it. The reason to reset is usually that somebody
+         *     else may have had it, and the sessions are the part that survives the change.
+         */
+        post: operations["set_password_api_admin_users__user_id__password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audio": {
         parameters: {
             query?: never;
@@ -1718,6 +1750,17 @@ export interface components {
             user_agent: string | null;
         };
         /**
+         * SetPassword
+         * @description What an administrator sends to let somebody back into their own account (``API-25``).
+         *
+         *     No current password, because the whole point is that nobody has it. The floor is the same ten
+         *     characters `ChangePassword` asks for: a reset is not an excuse for a weaker one.
+         */
+        SetPassword: {
+            /** Password */
+            password: string;
+        };
+        /**
          * ShareSummary
          * @description Who has access, at what level, granted by whom and when (``UI-17``).
          */
@@ -2344,6 +2387,39 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminUser"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_password_api_admin_users__user_id__password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

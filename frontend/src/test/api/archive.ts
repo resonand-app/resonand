@@ -126,6 +126,14 @@ export interface Archive {
    * cannot work without: who runs the instance, and who is already disabled.
    */
   users: AdminUser[];
+  /**
+   * Every password an administrator has set through `POST /admin/users/{id}/password`.
+   *
+   * Recorded rather than dropped because `UI-37`'s whole claim is that the value on screen is the
+   * value that was sent -- the dialog generates it, shows it once and never gets it back from
+   * anywhere, so nothing else could check that.
+   */
+  passwordsSet: { id: number; password: string }[];
   jobs: Schemas['JobSummary'][];
   tags: Schemas['TagSuggestion'][];
   destination: Schemas['TranscriptionDestination'];
@@ -402,6 +410,7 @@ function fresh(): Archive {
       is_local: true,
       configured: true,
     },
+    passwordsSet: [],
     users: [
       { ...ALEX, is_admin: true, disabled_at: null, created_at: '2025-11-02T09:00:00Z' },
       {
