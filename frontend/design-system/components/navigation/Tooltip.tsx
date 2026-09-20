@@ -109,7 +109,7 @@ export function Tooltip({ content, children, placement = 'top', open: openProp }
             boxShadow: 'var(--elevation-overlay)',
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size-sm)',
-            lineHeight: 1.45,
+            lineHeight: 'var(--type-ui-leading)',
             /* It describes the thing under the pointer; it must never be the thing the pointer
                lands on, or moving towards it would dismiss it and moving onto it would keep it. */
             pointerEvents: 'none',

@@ -186,7 +186,7 @@ export function RecordingCard({
               fontFamily: 'var(--font-sans)',
               fontWeight: 'var(--weight-semibold)',
               fontSize: 'var(--type-body-size)',
-              letterSpacing: '-0.005em',
+              letterSpacing: 'var(--type-title-tracking)',
               color: 'var(--text)',
               // A title wraps rather than being cut: "Field recording, long take -- the house
               // on Field notes" is an ordinary title, and an ellipsis in the middle of it is a

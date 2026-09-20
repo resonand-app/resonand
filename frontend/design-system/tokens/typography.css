@@ -15,10 +15,12 @@
   --type-page-title-tracking: -0.02em;
   --type-page-title-leading: 1.1;
 
-  /* Wordmark — Chillax, and only the wordmark. The mark is the S, so the artwork fixes both of
-     these against the mark's height: the lockup has one set of proportions, not one per site. */
+  /* Wordmark — Chillax, and only the wordmark. The mark is the S, so the artwork fixes all three
+     of these against the mark's height: the lockup has one set of proportions, not one per site.
+     `lead` is the gap after the mark; `leading` is the line box, which the mark already sets. */
   --type-wordmark-scale: 0.9615;
   --type-wordmark-lead: 0.101em;
+  --type-wordmark-leading: 1;
 
   /* Section and card titles — Geist, not Chillax. */
   --type-title-size: 17px;
@@ -30,9 +32,12 @@
   --type-body-size: 16px;
   --type-body-leading: 1.6;
 
-  /* The working size of the app: rows, labels, menu items, buttons. */
+  /* The working size of the app: rows, labels, menu items, buttons. One leading for all of it —
+     a tooltip, a description under a switch and a paragraph in a dialog are the same job at the
+     same size, and the 1.45/1.5/1.55 they each used to carry differed by less than a pixel. */
   --type-ui-size: 14px;
   --type-ui-size-sm: 13px;
+  --type-ui-leading: 1.5;
 
   /* Anything comparable to another number is mono and tabular. */
   --type-numeric-family: var(--font-mono);
