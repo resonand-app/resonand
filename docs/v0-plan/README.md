@@ -187,7 +187,6 @@ are numbered children of the task that produced them:
 
 | Task | What it is |
 |---|---|
-| `UI-4f1` | A phone has no way to reach the trash, so nothing deleted there can be restored |
 | `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
 | `UI-32b1` | The 44px exemption list has outgrown the account of it |
 | `UI-33a1` | Raw type values returned in components written after the reconciliation |

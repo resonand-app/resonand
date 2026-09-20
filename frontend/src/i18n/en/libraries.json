@@ -30,5 +30,11 @@
   },
   "yours": {
     "title": "Your libraries"
+  },
+  "trash": {
+    "region": "Deleted recordings",
+    "empty": "Trash",
+    "withCount_one": "Trash · 1 recording",
+    "withCount_other": "Trash · {{count}} recordings"
   }
 }
