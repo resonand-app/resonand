@@ -60,10 +60,13 @@ Then:
 The uncounted metric for the whole project: whether instances that already hold somebody's archive
 survive being updated.
 
-- [ ] **OPS-9** · **Cross-version migration matrix**: upgrade a populated database across every
-      released revision, not just the previous one, in CI. ⇢ OPS-8 🧪
-      *`OPS-6` in the v0 plan owes the single-hop version of this test — populate, upgrade one
-      revision, assert nothing was lost — and writing it as a walk over the revision tree rather
-      than as a pair makes it the first instance of this one.*
+- [ ] **OPS-9** · **Cross-version migration matrix**: upgrade a database populated by every
+      released *image*, not one seeded at an old revision by the current code, in CI. ⇢ OPS-8 🧪
+      *`OPS-6` settled the half that can be tested from one checkout: a walk over the revision
+      tree, populating at each revision and asserting the archive survives the upgrade to head.
+      What is left here is the half a checkout cannot reach — a database written by a **published
+      image**, upgraded by a later one. The walk seeds each revision by hand from a schema the
+      current code describes; only a real old instance proves that what that version actually
+      wrote survives, which is the difference that matters once somebody else is running one.*
 
 - [ ] **OPS-11** · Packaging for one-click installation platforms. ⇢ DEC-6

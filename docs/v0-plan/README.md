@@ -172,7 +172,6 @@ These are what the plan always held:
 | Task | What is outstanding |
 |---|---|
 | `OPS-4` | The backend half is done and tested; the bundle has no base path, so the subpath arrangement serves a shell that cannot fetch itself |
-| `OPS-6` | Both halves of its marker: a restore into a container, and an upgrade that crosses a revision rather than proving a no-op is a no-op |
 | `ING-11` | The round trip — exit criterion 4 — and the four defects that would each break it before anybody got to run it |
 | `ING-12` | Whether a derived date carries a time of day, rather than being presented as midnight |
 | `INT-6` | Playwright over the utility threshold; nothing exists yet |
