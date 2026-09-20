@@ -14,6 +14,13 @@
  * would be given a `recorded_at` by somebody in a hurry, and the bug it produced -- an evening
  * that is a morning in Chile -- is invisible to whoever wrote it.
  *
+ * **A reading is shown to the precision it was stated at.** `recorded_at` is a fixed-width
+ * string, so a source that gave only a day -- `PTT-20240311-WA0007.opus`, a container tag holding
+ * `2024-03-11` -- arrives here as midnight. `recorded_at_precision` says which of those digits
+ * were stated, and `date` renders `11 Mar 2024` and no time, because 00:00 is an hour nobody gave.
+ * A null precision is *unknown* rather than *date-only*: it is what a recording ingested before
+ * the field existed carries, and it renders in full.
+ *
  * `recorded_at_source` says where the date came from: a tag inside the file, a name like
  * `Recording 2024-03-11 18.22.m4a`, or the file's own mtime. It is rendered quietly, as a mono
  * label, because it is provenance and not a warning. A null `recorded_at` falls back to
@@ -26,11 +33,15 @@ export interface RecordedTime {
   recorded_at: string | null;
   recorded_at_offset: number | null;
   recorded_at_source: string | null;
+  recorded_at_precision: string | null;
   created_at: string;
 }
 
 /** Where a date came from, weakest last. */
 export type Provenance = 'container' | 'filename' | 'filesystem';
+
+/** How much of the clock the source stated. Null is unknown, not date-only. */
+export type Precision = 'date' | 'minute' | 'second';
 
 export interface RecordedDate {
   /** The date and time to show. */
@@ -60,7 +71,7 @@ export function recordedAt(recording: RecordedTime, locale?: string): RecordedDa
     };
   }
   return {
-    text: wallClock(recording.recorded_at, locale),
+    text: wallClock(recording.recorded_at, locale, precisionOf(recording.recorded_at_precision)),
     isOwn: true,
     provenance: provenanceOf(recording.recorded_at_source),
     offset: offsetOf(recording.recorded_at_offset),
@@ -73,13 +84,13 @@ export function recordedAt(recording: RecordedTime, locale?: string): RecordedDa
  * `Intl.DateTimeFormat` with `timeZone: 'UTC'` over the parts as written: the language decides
  * the order and the month's name, and the numbers are the ones in the string.
  */
-export function wallClock(written: string, locale?: string): string {
+export function wallClock(written: string, locale?: string, precision?: Precision | null): string {
   const parts = parse(written);
   if (parts === null) return written;
   const asWritten = new Date(Date.UTC(...parts));
   return new Intl.DateTimeFormat(locale, {
     dateStyle: 'medium',
-    timeStyle: 'short',
+    ...(precision === 'date' ? {} : { timeStyle: 'short' as const }),
     timeZone: 'UTC',
   }).format(asWritten);
 }
@@ -130,6 +141,12 @@ function offsetOf(minutes: number | null): string | null {
 
 function provenanceOf(source: string | null): Provenance | null {
   return source === 'container' || source === 'filename' || source === 'filesystem' ? source : null;
+}
+
+function precisionOf(precision: string | null): Precision | null {
+  return precision === 'date' || precision === 'minute' || precision === 'second'
+    ? precision
+    : null;
 }
 
 /** The parts of a wall-clock string, or `null` when it is not one. */

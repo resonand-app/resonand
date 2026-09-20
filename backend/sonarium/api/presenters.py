@@ -236,6 +236,7 @@ def audio_summary(
         recorded_at=audio.recorded_at,
         recorded_at_offset=audio.recorded_at_offset,
         recorded_at_source=audio.recorded_at_source,
+        recorded_at_precision=audio.recorded_at_precision,
         created_at=audio.created_at,
         duration_ms=audio.duration_ms,
         library_uuid=resolved_library,

@@ -15,6 +15,11 @@ Three sources, in order of how much they know:
    between phones and cloud accounts -- which is why it is last, and why the source is recorded
    and the field stays editable.
 
+**The precision is never invented either.** A container tag that says ``2024-03-11`` and a
+filename like ``PTT-20240311-WA0007.opus`` state a day and no hour, and the reading is stored as
+``date`` precision so the interface can show ``11 Mar 2024`` rather than a midnight nobody stated
+-- which on an archive of old voice notes is most of it.
+
 **The offset is never invented.** A container tag in UTC has a *known* offset of zero. A filename
 gives a wall-clock reading and no offset at all, and the answer to "what timezone was that?" is
 that we do not know -- not the server's timezone, and not UTC. Guessing is precisely the mistake
@@ -30,7 +35,13 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sonarium.core.time import WALL_CLOCK_FORMAT, to_wall_clock
+from sonarium.core.time import (
+    PRECISION_DATE,
+    PRECISION_MINUTE,
+    PRECISION_SECOND,
+    WALL_CLOCK_FORMAT,
+    to_wall_clock,
+)
 
 SOURCE_CONTAINER = "container"
 SOURCE_FILENAME = "filename"
@@ -45,6 +56,8 @@ _CONTAINER_TAGS = (
 
 _EARLIEST_YEAR = 1900
 _LATEST_YEAR = 2100
+
+_ISO_TIME = re.compile(r"[T ]\d{2}:\d{2}(?P<seconds>:\d{2})?")
 
 _FILENAME_PATTERNS: tuple[re.Pattern[str], ...] = (
     # 2024-03-11 18.22.04 / 2024_03_11-18_22 / 2024.03.11 18-22
@@ -87,8 +100,13 @@ class RecordedAt:
     source: str
     """``container`` | ``filename`` | ``filesystem`` -- shown, so the reading can be judged."""
 
-    has_time_of_day: bool
-    """False when only a date was available, so the interface can show a date and not 00:00."""
+    precision: str
+    """``date`` | ``minute`` | ``second`` -- how much the source said, not how much is stored.
+
+    ``wall_clock`` always carries seconds because the stored form has a fixed width. This is what
+    says which of those digits were stated: at ``date`` the hour and everything after it are
+    padding, and rendering them is inventing a time.
+    """
 
 
 def derive(
@@ -114,15 +132,16 @@ def from_container(format_tags: dict[str, str]) -> RecordedAt | None:
         raw = format_tags.get(tag)
         if not raw:
             continue
-        moment = _parse_iso(raw.strip())
-        if moment is None:
+        parsed = _parse_iso(raw.strip())
+        if parsed is None:
             continue
+        moment, precision = parsed
         text, offset = to_wall_clock(moment)
         return RecordedAt(
             wall_clock=text,
             offset_minutes=offset,
             source=SOURCE_CONTAINER,
-            has_time_of_day=True,
+            precision=precision,
         )
     return None
 
@@ -143,7 +162,7 @@ def from_filename(filename: str) -> RecordedAt | None:
                 wall_clock=moment.strftime(WALL_CLOCK_FORMAT),
                 offset_minutes=None,
                 source=SOURCE_FILENAME,
-                has_time_of_day=parts.get("hour") is not None,
+                precision=_filename_precision(parts),
             )
     return None
 
@@ -163,24 +182,45 @@ def from_filesystem(path: Path) -> RecordedAt | None:
         wall_clock=text,
         offset_minutes=offset,
         source=SOURCE_FILESYSTEM,
-        has_time_of_day=True,
+        precision=PRECISION_SECOND,
     )
 
 
-def _parse_iso(raw: str) -> datetime | None:
+def _parse_iso(raw: str) -> tuple[datetime, str] | None:
     """Read the several shapes of ISO-8601 that container tags actually contain."""
     text = raw.replace("Z", "+00:00")
+    precision = _stated_precision(raw)
     for candidate in (text, text.replace(" ", "T"), text.split(".")[0]):
         try:
             parsed = datetime.fromisoformat(candidate)
         except ValueError:
             continue
         if parsed.tzinfo is None and raw.endswith("Z"):
-            return parsed.replace(tzinfo=UTC)
+            return parsed.replace(tzinfo=UTC), precision
         if not _plausible(parsed.year):
             return None
-        return parsed
+        return parsed, precision
     return None
+
+
+def _stated_precision(raw: str) -> str:
+    """How much of a clock the tag wrote.
+
+    ``date`` and ``date_recorded`` frequently hold a bare ``2024-03-11``, which
+    :func:`datetime.fromisoformat` reads as midnight -- so without this the one tag most likely to
+    say nothing about the hour is the one that sounds most confident.
+    """
+    stated = _ISO_TIME.search(raw)
+    if stated is None:
+        return PRECISION_DATE
+    return PRECISION_SECOND if stated.group("seconds") else PRECISION_MINUTE
+
+
+def _filename_precision(parts: dict[str, str | None]) -> str:
+    """How much of a clock the name wrote."""
+    if parts.get("hour") is None:
+        return PRECISION_DATE
+    return PRECISION_SECOND if parts.get("second") is not None else PRECISION_MINUTE
 
 
 def _build(parts: dict[str, str | None]) -> datetime | None:

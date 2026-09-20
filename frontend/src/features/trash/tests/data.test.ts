@@ -45,6 +45,7 @@ function recording(uuid: string, libraryUuid: string, deletedAt: string): Schema
     recorded_at: null,
     recorded_at_offset: null,
     recorded_at_source: null,
+    recorded_at_precision: null,
     created_at: '2026-01-01T00:00:00Z',
     deleted_at: deletedAt,
   };

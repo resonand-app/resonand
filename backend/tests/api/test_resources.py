@@ -13,6 +13,8 @@ from sonarium.core.levels import Level
 from sonarium.db import libraries as library_repo
 from sonarium.db.audio import create_audio
 from sonarium.db.engine import Database
+from sonarium.db.models import Audio
+from sqlalchemy import select
 
 from tests.api.conftest import PASSWORD, ClientFactory, acl_resolutions, sign_in
 
@@ -267,6 +269,19 @@ def test_a_recording_keeps_its_own_reading_of_the_clock(
     ).json()
     assert updated["recorded_at"] == "2024-03-11T18:22:00"
     assert updated["recorded_at_offset"] == 60
+
+
+def test_a_date_somebody_typed_states_every_part_of_itself(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    """A wall clock is only accepted whole, so a derived ``date`` must not survive the edit."""
+    uuid = _recording(database, owner_library, accounts["admin"])
+    with database.write_session() as session:
+        audio = session.execute(select(Audio).where(Audio.uuid == uuid)).scalar_one()
+        audio.recorded_at_precision = "date"
+    sign_in(client, "admin")
+    updated = client.patch(f"/audio/{uuid}", json={"recorded_at": "2024-03-11T18:22:00"}).json()
+    assert updated["recorded_at_precision"] == "second"
 
 
 def test_an_instant_is_refused_as_a_recording_date(

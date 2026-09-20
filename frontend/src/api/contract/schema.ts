@@ -1339,6 +1339,8 @@ export interface components {
             recorded_at: string | null;
             /** Recorded At Offset */
             recorded_at_offset: number | null;
+            /** Recorded At Precision */
+            recorded_at_precision: string | null;
             /** Recorded At Source */
             recorded_at_source: string | null;
             /** Sample Rate */
@@ -1383,6 +1385,8 @@ export interface components {
             recorded_at: string | null;
             /** Recorded At Offset */
             recorded_at_offset: number | null;
+            /** Recorded At Precision */
+            recorded_at_precision: string | null;
             /** Recorded At Source */
             recorded_at_source: string | null;
             /** Tags */
