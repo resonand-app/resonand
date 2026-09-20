@@ -20,7 +20,7 @@ from sonarium.api.security import hash_password
 from sonarium.core.errors import ConflictError, InvalidRequestError
 from sonarium.db import sessions as session_repo
 from sonarium.db import users as user_repo
-from sonarium.db.models import Audio, Library, User
+from sonarium.db.models import Audio, Library, Share, User
 
 router = APIRouter(
     prefix="/admin",
@@ -84,29 +84,77 @@ def set_password(user_id: int, body: SetPassword, session: WriteSession) -> None
     session_repo.revoke_all(session, user_id)
 
 
+def _plural(count: int, one: str, many: str) -> str:
+    """A count with the right noun on it, because the refusal is read rather than parsed."""
+    return f"{count} {one if count == 1 else many}"
+
+
+def _holds(session: WriteSession, user_id: int) -> list[str]:
+    """Everything an account is attached to that deleting it would take down with it.
+
+    Ownership is the obvious half and was the only half. The other two are rows that merely
+    *point* at the account -- a recording somebody uploaded into a library they do not own, and a
+    share they granted on one -- and both columns are ``NOT NULL`` with no ``ON DELETE``, so the
+    delete aborts against a foreign key and the administrator is shown "Unexpected error". That
+    is the outcome ``INT-3b``'s refusal exists to replace, so the refusal has to count them
+    (``INT-3b1``).
+    """
+    counted: list[tuple[int, str, str]] = [
+        (
+            int(
+                session.execute(
+                    select(func.count(Library.id)).where(
+                        Library.owner_id == user_id, Library.is_personal == 0
+                    )
+                ).scalar_one()
+            ),
+            "library",
+            "libraries",
+        ),
+        (
+            int(
+                session.execute(
+                    select(func.count(Audio.id))
+                    .join(Library, Library.id == Audio.library_id)
+                    .where(Library.owner_id == user_id)
+                ).scalar_one()
+            ),
+            "recording",
+            "recordings",
+        ),
+        (
+            int(
+                session.execute(
+                    select(func.count(Audio.id))
+                    .join(Library, Library.id == Audio.library_id)
+                    .where(Audio.uploaded_by == user_id, Library.owner_id != user_id)
+                ).scalar_one()
+            ),
+            "recording uploaded to somebody else's library",
+            "recordings uploaded to other people's libraries",
+        ),
+        (
+            int(
+                session.execute(
+                    select(func.count(Share.id)).where(Share.granted_by == user_id)
+                ).scalar_one()
+            ),
+            "share they granted",
+            "shares they granted",
+        ),
+    ]
+    return [_plural(count, one, many) for count, one, many in counted if count]
+
+
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(user_id: int, session: WriteSession) -> None:
     """Delete an account that has nothing in it. Anything else is refused, with the numbers."""
     user = user_repo.get_user(session, user_id)
-    libraries = int(
-        session.execute(
-            select(func.count(Library.id)).where(
-                Library.owner_id == user_id, Library.is_personal == 0
-            )
-        ).scalar_one()
-    )
-    recordings = int(
-        session.execute(
-            select(func.count(Audio.id))
-            .join(Library, Library.id == Audio.library_id)
-            .where(Library.owner_id == user_id)
-        ).scalar_one()
-    )
-    if libraries or recordings:
+    holds = _holds(session, user_id)
+    if holds:
+        listed = holds[0] if len(holds) == 1 else f"{', '.join(holds[:-1])} and {holds[-1]}"
         raise InvalidRequestError(
-            f"{user.display_name} owns {libraries} librar"
-            f"{'y' if libraries == 1 else 'ies'} and {recordings} recording"
-            f"{'' if recordings == 1 else 's'}. Deleting the account would take them with it, and "
+            f"{user.display_name} has {listed}. Deleting the account would take them with it, and "
             "transferring ownership is not built yet. Disable the account instead: it keeps the "
             "recordings and stops the person signing in."
         )
