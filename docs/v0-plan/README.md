@@ -167,11 +167,10 @@ Every track has now been read against the code, so an unticked box is one somebo
 than one nobody reached. None of them blocks another — the ordering this section used to carry is
 spent along with the tasks in it. They fall into two groups, and the tables below are the count.
 
-These are what the plan always held:
-
-| Task | What is outstanding |
-|---|---|
-| `ING-11b` | The round trip — exit criterion 4 — which has still never been run, now that `ING-11a` has fixed the four defects that would each have broken it |
+**Nothing that the plan always held.** `ING-11b` was the last of them: the round trip now runs
+both commands against an empty instance and gets the archive back, structure included. What is
+left of exit criterion 4 is performing it against the real archive, which is an act and is listed
+below rather than here.
 
 `INF-8` is spent rather than open and carries no box at all: the folder it asks for was decided
 against when `REV-10` built [`review.md`](review.md), [`security.md`](security.md) and

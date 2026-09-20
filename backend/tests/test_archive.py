@@ -9,6 +9,7 @@ what an export without stable identifiers does.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
 from pathlib import Path
 from uuid import uuid4
 
@@ -16,21 +17,26 @@ import pytest
 from sonarium.archive import (
     SIDECAR_NAME,
     SIDECAR_VERSION,
+    apply_manifest,
     apply_sidecar,
     export_recording,
     find_by_uuid,
     library_named_by,
+    manifest_for,
     read_sidecar,
     sidecar_for,
 )
 from sonarium.core.config import Settings
+from sonarium.core.levels import Level
 from sonarium.db import libraries, tags, transcripts, users
 from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Category
+from sonarium.db.engine import Database, build_engine
+from sonarium.db.migrate import upgrade_to_head
+from sonarium.db.models import Audio, Category, Library, Share, User
 from sonarium.db.transcripts import Origin, SegmentDraft
 from sonarium.media import storage
 from sonarium.media.subtitles import Cue, to_srt, to_vtt
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 
@@ -441,6 +447,208 @@ def test_a_library_in_the_trash_is_not_a_destination(
         library.deleted_at = "2026-09-20T10:00:00Z"
         session.flush()
         assert library_named_by(session, payload) is None
+
+
+# --- The instance the recordings lived in -----------------------------------
+
+
+@pytest.fixture
+def elsewhere(tmp_path: Path) -> Iterator[Database]:
+    """A second, empty instance, which is the only honest place to read an export back into."""
+    settings = Settings(
+        data_dir=tmp_path / "elsewhere", database_path=tmp_path / "elsewhere" / "sonarium.db"
+    )
+    settings.prepare_directories()
+    engine = build_engine(settings)
+    upgrade_to_head(engine)
+    try:
+        yield Database(engine)
+    finally:
+        engine.dispose()
+
+
+def two_accounts(session: Session) -> tuple[User, User]:
+    first = users.create_user(session, email="a@x.test", display_name="A", is_admin=True)
+    second = users.create_user(session, email="b@x.test", display_name="B")
+    session.flush()
+    return first, second
+
+
+def shares_on(session: Session, library_id: int) -> list[tuple[str, int]]:
+    return [
+        (grantee.email, int(share.level))
+        for share, grantee in session.execute(
+            select(Share, User)
+            .join(User, Share.grantee_id == User.id)
+            .where(Share.library_id == library_id)
+            .order_by(User.email)
+        ).all()
+    ]
+
+
+def test_the_manifest_describes_the_accounts_and_their_libraries(database: Database) -> None:
+    with database.write_session() as session:
+        first, second = two_accounts(session)
+        shared = libraries.create_library(session, first.id, name="Interviews", colour="amber")
+        libraries.share_library(
+            session, first.id, shared.uuid, grantee_id=second.id, level=Level.EDIT
+        )
+        manifest = manifest_for(
+            session,
+            [users.personal_library(session, first.id), shared],
+            recordings=4,
+            skipped_in_trash=1,
+        )
+    assert [one["email"] for one in manifest["users"]] == ["a@x.test", "b@x.test"]
+    assert (manifest["recordings"], manifest["skipped_in_trash"]) == (4, 1)
+    described = {one["name"]: one for one in manifest["libraries"]}
+    assert described["Interviews"]["owner"] == "a@x.test"
+    assert described["Interviews"]["colour"] == "amber"
+    assert described["Interviews"]["shares"] == [{"grantee": "b@x.test", "level": 20}]
+    assert described["Interviews"]["is_personal"] is False
+
+
+def test_the_manifest_carries_no_way_to_sign_in(database: Database) -> None:
+    """An export gets copied onto a stick and handed around. It describes an instance; it is
+    not a way into one."""
+    with database.write_session() as session:
+        first, _ = two_accounts(session)
+        manifest = manifest_for(
+            session,
+            [users.personal_library(session, first.id)],
+            recordings=0,
+            skipped_in_trash=0,
+        )
+    rendered = json.dumps(manifest).lower()
+    assert "password" not in rendered
+    assert "hash" not in rendered
+    assert set(manifest["users"][0]) == {"email", "display_name", "is_admin"}
+
+
+def test_a_shared_library_comes_back_with_its_identifier_and_its_sharing(
+    database: Database, elsewhere: Database
+) -> None:
+    with database.write_session() as session:
+        first, second = two_accounts(session)
+        shared = libraries.create_library(session, first.id, name="Interviews")
+        libraries.share_library(
+            session, first.id, shared.uuid, grantee_id=second.id, level=Level.MANAGE
+        )
+        manifest = manifest_for(session, [shared], recordings=0, skipped_in_trash=0)
+        wanted = shared.uuid
+
+    with elsewhere.write_session() as session:
+        two_accounts(session)
+        applied = apply_manifest(session, manifest)
+        assert (applied.missing_accounts, applied.refused_libraries) == ((), ())
+        landed = session.get(Library, applied.libraries[wanted])
+        assert landed is not None
+        assert landed.uuid == wanted, "the identifier is what the sidecars point at"
+        assert shares_on(session, landed.id) == [("b@x.test", 30)]
+
+
+def test_a_personal_library_keeps_the_one_this_instance_made(
+    database: Database, elsewhere: Database
+) -> None:
+    """A personal library arrives with the account, so the export's identifier cannot be adopted
+    without renaming a library that may already hold this person's recordings."""
+    with database.write_session() as session:
+        first, _ = two_accounts(session)
+        personal = users.personal_library(session, first.id)
+        manifest = manifest_for(session, [personal], recordings=0, skipped_in_trash=0)
+        there = personal.uuid
+
+    with elsewhere.write_session() as session:
+        first, _ = two_accounts(session)
+        here = users.personal_library(session, first.id)
+        applied = apply_manifest(session, manifest)
+        assert here.uuid != there
+        assert applied.libraries[there] == here.id
+
+
+def test_a_library_whose_owner_has_no_account_is_refused_by_name(
+    database: Database, elsewhere: Database
+) -> None:
+    """Handing it to whoever ran the import would give one person's recordings to another and
+    look like it had worked."""
+    with database.write_session() as session:
+        _, second = two_accounts(session)
+        theirs = libraries.create_library(session, second.id, name="Their interviews")
+        manifest = manifest_for(session, [theirs], recordings=0, skipped_in_trash=0)
+
+    with elsewhere.write_session() as session:
+        users.create_user(session, email="a@x.test", display_name="A", is_admin=True)
+        applied = apply_manifest(session, manifest)
+    assert applied.libraries == {}
+    assert applied.missing_accounts == ("b@x.test",)
+    assert applied.refused_libraries == ("Their interviews (b@x.test)",)
+
+
+def test_a_grant_to_somebody_who_is_not_here_is_reported_and_skipped(
+    database: Database, elsewhere: Database
+) -> None:
+    with database.write_session() as session:
+        first, second = two_accounts(session)
+        shared = libraries.create_library(session, first.id, name="Interviews")
+        libraries.share_library(
+            session, first.id, shared.uuid, grantee_id=second.id, level=Level.READ
+        )
+        manifest = manifest_for(session, [shared], recordings=0, skipped_in_trash=0)
+        wanted = shared.uuid
+
+    with elsewhere.write_session() as session:
+        users.create_user(session, email="a@x.test", display_name="A", is_admin=True)
+        applied = apply_manifest(session, manifest)
+        assert applied.missing_accounts == ("b@x.test",)
+        assert shares_on(session, applied.libraries[wanted]) == []
+
+
+def test_reading_a_manifest_twice_changes_nothing(database: Database, elsewhere: Database) -> None:
+    with database.write_session() as session:
+        first, second = two_accounts(session)
+        shared = libraries.create_library(session, first.id, name="Interviews")
+        libraries.share_library(
+            session, first.id, shared.uuid, grantee_id=second.id, level=Level.EDIT
+        )
+        manifest = manifest_for(session, [shared], recordings=0, skipped_in_trash=0)
+        wanted = shared.uuid
+
+    with elsewhere.write_session() as session:
+        two_accounts(session)
+        apply_manifest(session, manifest)
+        applied = apply_manifest(session, manifest)
+        assert session.query(Library).count() == 3, "two personal libraries and the shared one"
+        assert shares_on(session, applied.libraries[wanted]) == [("b@x.test", 20)]
+
+
+def test_an_individual_share_travels_in_the_sidecar(
+    database: Database, db_settings: Settings
+) -> None:
+    """``ING-10`` keeps these rows on purpose, so an export that dropped them would lose
+    something the interface cannot yet show and the model already resolves."""
+    with database.write_session() as session:
+        first, second = two_accounts(session)
+        library = libraries.create_library(session, first.id, name="Interviews")
+        audio = store_recording(
+            session,
+            db_settings,
+            filename="note.m4a",
+            library_id=library.id,
+            owner_id=first.id,
+            transcript=False,
+        )
+        session.add(
+            Share(
+                library_id=None,
+                audio_id=audio.id,
+                grantee_id=second.id,
+                level=int(Level.READ),
+                granted_by=first.id,
+            )
+        )
+        session.flush()
+        payload = sidecar_for(session, audio)
+    assert payload["shares"] == [{"grantee": "b@x.test", "level": 10}]
 
 
 # --- Subtitles ------------------------------------------------------------

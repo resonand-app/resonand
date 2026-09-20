@@ -82,12 +82,38 @@ structural here rather than aspirational.
       loose files with a single sidecar dropped into it would otherwise hand every one of them the
       same `uuid`, and the second file would update what the first had just created.*
 
-- [ ] **ING-11b** · **The round trip**: export the whole archive, import it into an empty
-      instance, and get back what went in. ⇢ ING-11a 🧪
-      *Exit criterion 4, and it has never been run. No test exports anything and then imports it —
-      `apply_sidecar` is called directly — and that one test is what would have caught three of
-      the four defects `ING-11a` fixed. The test is the first half; the second is the act against
-      the real archive, which is not tickable here.*
+- [x] **ING-11c** · **The archive manifest**: `sonarium-archive.json` at the root of an export,
+      carrying the accounts, the libraries and who each was shared with, and an import that
+      recreates the libraries and the sharing against accounts that are already here.
+      ⇢ ING-11a 🧪
+      *Without it the round trip has nothing to land in. An empty instance has one library — the
+      admin's personal one — and `import` cannot create another, so a two-person archive with
+      four libraries came back as one library with no sharing at all: exactly the structure
+      condition 2 of* when v0 is done *exists to validate.*
+      *It carries identities and never credentials. An export is copied onto a stick and handed
+      around, and one holding password hashes would be a way into an instance rather than a
+      description of one — so accounts are created by hand first, and a library whose owner has
+      no account here is refused by name rather than quietly reassigned to whoever ran the
+      import, which would hand one person's recordings to another and look like it had worked.
+      Restoring an instance whole, credentials included, is what a backup is for (`OPS-6`).*
+      *A personal library is the one exception to keeping identifiers: it arrives with the
+      account, so the one here already has a uuid of its own and the manifest's is mapped to it
+      by owner rather than adopted.*
+
+- [x] **ING-11b** · **The round trip**: export the whole archive, import it into an empty
+      instance, and get back what went in. ⇢ ING-11a, ING-11c 🧪
+      *Exit criterion 4. The test runs both commands over the shape a real instance has — two
+      people, a personal library each and two more shared in opposite directions — and ends on
+      `fsck`, which re-hashes every original and so makes the claim byte-level rather than a row
+      count. Three of the four defects `ING-11a` fixed would have been caught here, and were not,
+      because nothing exported anything and then imported it.*
+      *Stated losses, each deliberate: the trash is not exported (the manifest counts what it
+      skipped, so a count that does not match has a reason); `created_at` is the row's, not the
+      export's; a nested category returns as a root, because the sidecar carries a name and the
+      interface has one level; only the active transcript travels, and it arrives as `imported`;
+      and no credential travels at all.*
+      *The second half is the act against the real archive, which is condition 4 under* when v0
+      is done *and is not tickable here.*
 
 - [x] **ING-12** · **Deriving `recorded_at`.** Recording date ≠ upload date, and nothing else
       populates it: `ffprobe` only returns technical metadata. Extract from, in order, container

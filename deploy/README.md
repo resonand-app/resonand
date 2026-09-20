@@ -253,7 +253,15 @@ finds the subtitles on its own. No part of it needs Sonarium to read.
 A directory each rather than one flat folder, because two recordings made on the same phone very
 often arrive under the same filename and one of them would overwrite the other on the way out.
 
-Reading it back:
+Beside them, `sonarium-archive.json` describes the instance: the accounts, the libraries, and who
+each library was shared with. It carries **no credentials of any kind** — no passwords, no hashes,
+no session keys. An export is something you copy onto a disk and carry; it says who the recordings
+belonged to, and it is not a way into an instance.
+
+Recordings in the trash are not exported. The manifest records how many were skipped, so a count
+that does not match the archive has a reason written down.
+
+### Reading it back
 
 ```bash
 docker compose exec sonarium sonarium import /data/export
@@ -263,9 +271,29 @@ The sidecar carries the recording's identifier, so an import **updates rather th
 the transcript included, which is not added a second time. That is what makes exporting an archive
 and importing it into an empty instance a way to verify the archive rather than a way to double it.
 
-Each recording goes back into the library its sidecar names, when this instance still has that
-library. `--library <uuid>` takes everything else, and importing loose files that carry no sidecar
-needs it. `--dry-run` says what would happen, and where, without importing anything.
+**Create the accounts first.** Because no credentials travel, an import cannot create people. Into
+an empty instance the order is:
+
+1. `sonarium create-admin --email … --display-name …`, which also prints the personal library's
+   identifier.
+2. Sign in, and create everybody else in **Settings → Administration**.
+3. `sonarium import /data/export`.
+
+The manifest then recreates the libraries — with the identifiers they had — and the sharing, and
+each recording goes back into the library it came out of. A library whose owner has no account
+here is refused by name rather than handed to whoever ran the import, and the addresses it is
+waiting for are printed. Create them and run the import again; it is safe to repeat.
+
+A personal library is the one thing that does not keep its identifier: it arrives with the
+account, so the one here already has its own and the export's is mapped onto it.
+
+`--library <uuid>` takes anything the manifest does not place, and importing loose files that
+carry no sidecar needs it. `--dry-run` says what would happen, and where, without importing
+anything.
+
+**This is not a way to restore an instance.** It restores the archive and its shape; it does not
+restore passwords, sessions, or anything else an account has. Restoring an instance whole is what
+the backup above is for.
 
 ## One process writes
 
