@@ -90,3 +90,13 @@ lives here, because none of it may happen inside the request that uploaded the f
       🧪 Two threads claiming at once get one transcription between them; a pending probe is still
       claimed while a transcription runs; and the limit is a number, so 2 hands out 2.
       *The limit belongs to the engine, not to Sonarium -- hence a setting rather than a lock.*
+
+---
+
+## Deferred
+
+`JOB-4` (the webhook provider, publishing the file behind a signed URL) and `JOB-5`
+(upload-and-wait, polling against `external_id`) keep their identifiers in
+[`docs/next-plan/transcription.md`](../next-plan/transcription.md), beside the `TRX` findings that
+govern both. The first version consumes one provider shape — the synchronous one — and the other
+two describe what an engine is allowed to be rather than what this version had to accept.

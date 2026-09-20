@@ -195,14 +195,19 @@ administration panel, where it is a configuration listing and nobody is about to
 
 ## Deferred
 
-These keep their identifiers in [`ROADMAP.md`](../../ROADMAP.md): `TRX-2` (the poll loop and the
-queue state a submitted job waits in), `TRX-4` (normalising words and utterances up to segments,
-which is what widens the market beyond the Whisper family), `TRX-5` (wiring the metering sink,
-which exists and records into nothing), `TRX-6` (five trust classes where there are now two),
-`TRX-9` (saying plainly why an untimed engine is declined), `TRX-11` (seams duplicating speech
-when segments are coarse), `TRX-14` (several engines routed by declared language), `TRX-15`
-(configuration in the interface) and `TRX-16` (translations as their own class).
+These keep their identifiers in
+[`docs/next-plan/transcription.md`](../next-plan/transcription.md), where each is written out with
+a criterion of its own: `TRX-2` (the poll loop and the queue state a submitted job waits in),
+`TRX-4` (normalising words and utterances up to segments, which is what widens the market beyond
+the Whisper family), `TRX-5` (wiring the metering sink, which exists and records into nothing),
+`TRX-6` (five trust classes where there are now two), `TRX-9` (saying plainly why an untimed
+engine is declined), `TRX-11` (seams duplicating speech when segments are coarse), `TRX-14`
+(several engines routed by declared language), `TRX-15` (configuration in the interface) and
+`TRX-16` (translations as their own class). `JOB-4` and `JOB-5` are there too, beside the findings
+that govern them.
 
 `TRX-D1` (whether `JOB-4`'s signed-URL path is worth building at all) and `TRX-D3` (one provider
-per instance or per library) are roadmap decisions and are not settled here. `TRX-D2` is subsumed
-by `DEC-6`.
+per instance or per library) are open and are not settled here. `TRX-D1` travels with `JOB-4`;
+`TRX-D3` is recorded only in the compatibility analysis, which is a working document kept out of
+this repository. `TRX-D2` is subsumed by `DEC-6`, in
+[`docs/next-plan/decisions.md`](../next-plan/decisions.md).
