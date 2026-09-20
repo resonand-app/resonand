@@ -164,10 +164,10 @@ graph TD
 ## What is left
 
 Every track has now been read against the code, so an unticked box is one somebody checked rather
-than one nobody reached. Twenty-four are open and none of them blocks another — the ordering this
-section used to carry is spent along with the tasks in it.
+than one nobody reached. None of them blocks another — the ordering this section used to carry is
+spent along with the tasks in it. They fall into two groups, and the tables below are the count.
 
-Ten are what the plan always held:
+These are what the plan always held:
 
 | Task | What is outstanding |
 |---|---|
@@ -185,8 +185,8 @@ Ten are what the plan always held:
 against when `REV-10` built [`review.md`](review.md), [`security.md`](security.md) and
 [`defects.md`](defects.md) instead.
 
-The other fourteen came from reading the finished product rather than this plan, which is why
-most of them are numbered children of the task that produced them:
+The rest came from reading the finished product rather than this plan, which is why most of them
+are numbered children of the task that produced them:
 
 | Task | What it is |
 |---|---|
@@ -198,7 +198,6 @@ most of them are numbered children of the task that produced them:
 | `UI-32b1` | The 44px exemption list has outgrown the account of it |
 | `UI-33a1` | Raw type values returned in components written after the reconciliation |
 | `INT-3b1` | Deleting an account that uploaded elsewhere meets a foreign key, not the refusal |
-| `UI-38` | The instance offers no source, which is the clause `AGPL-3.0` was chosen for |
 | `UI-39` | The web-app manifest: white in a dark product, and root-absolute under `OPS-4` |
 | `INF-11` | A webfont is redistributed with no licence beside it, unlike the one next to it |
 

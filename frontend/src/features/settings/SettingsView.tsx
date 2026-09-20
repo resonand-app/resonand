@@ -13,6 +13,10 @@
  * reader that administration is there and that they are not it.
  *
  * **The section is in the URL**, and `sections.ts` says which one a given URL means.
+ *
+ * **The source offer sits under the tabs and not in a section** (`UI-38`). `AGPL-3.0` section 13
+ * asks for a prominent offer of the Corresponding Source, and a line reachable only by guessing
+ * which tab hides it is not one.
  */
 
 import { useTranslation } from 'react-i18next';
@@ -22,6 +26,7 @@ import { useSession } from '@/app/session';
 import { PageHeader, Tabs } from '@/design-system';
 import type { Tab } from '@/design-system';
 
+import { About } from './About';
 import { AccountPanel } from './AccountPanel';
 import { AppearancePanel } from './AppearancePanel';
 import { Administration } from './administration/Administration';
@@ -73,6 +78,7 @@ export function SettingsView() {
         >
           <Panel section={section} />
         </div>
+        <About />
       </div>
     </section>
   );
