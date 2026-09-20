@@ -186,7 +186,6 @@ are numbered children of the task that produced them:
 
 | Task | What it is |
 |---|---|
-| `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
 | `UI-33a1` | Raw type values returned in components written after the reconciliation |
 | `INF-11` | A webfont is redistributed that its own licence forbids redistributing — from the tree, and from the history |
 

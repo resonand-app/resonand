@@ -13,16 +13,23 @@
  * conveyed by an attribute in one theme and not the other. Cheap to check, and the failure it
  * catches is one nobody would look for.
  *
- * The companion check is `every-view-is-audited.node.test.ts`: this file walks `VIEWS`, and that
- * one holds `VIEWS` to the views that exist on disk. Together they are `UI-23a`'s criterion --
- * *a new view without one fails CI* -- which neither half gives on its own.
+ * **And the states behind a trigger** (`UI-23a1`). A view has more surfaces than the one a URL
+ * lands on: an overlay is raised by a click, a panel is reached by a query parameter, and a trash
+ * with rows in it is a different screen from the good empty one. Walking `VIEWS` alone audited
+ * eight first impressions and nothing else, while the harness said in its own comment that the
+ * dialogs were "audited where they are raised". `STATES` is the rest of the surface.
+ *
+ * The companion check is `every-view-is-audited.node.test.ts`: this file walks both lists, and
+ * that one holds `VIEWS` to the views on disk and `STATES` to the overlays and sections on disk.
+ * Together they are `UI-23a`'s criterion -- *a new view without one fails CI* -- which neither
+ * half gives on its own.
  */
 
 import { describe, expect, it } from 'vitest';
 
 import { mockApi } from '@/test/api/server';
 import { describeViolations, violationsIn } from '@/test/support/axe';
-import { VIEWS, mountView } from '@/test/support/views';
+import { STATES, VIEWS, mountState, mountView } from '@/test/support/views';
 
 import { WHOLE_SYSTEM } from './support/timeouts';
 
@@ -58,12 +65,24 @@ describe('the audit itself', () => {
 describe.each(VIEWS)('$name', WHOLE_SYSTEM, (view) => {
   it.each(THEMES)('has nothing for axe to report in the %s theme', async (theme) => {
     await mountView(view, { theme });
-    const violations = await violationsIn();
-    expect(
-      violations,
-      violations.length === 0
-        ? ''
-        : `${view.name} fails axe in the ${theme} theme:\n${describeViolations(violations)}`,
-    ).toEqual([]);
+    await nothingToReport(view.name, theme);
   });
 });
+
+describe.each(STATES)('$name', WHOLE_SYSTEM, (state) => {
+  it.each(THEMES)('has nothing for axe to report in the %s theme', async (theme) => {
+    await mountState(state, { theme });
+    await nothingToReport(state.name, theme);
+  });
+});
+
+/** Audit whatever is on the page, and say which surface and which theme if it fails. */
+async function nothingToReport(name: string, theme: string): Promise<void> {
+  const violations = await violationsIn();
+  expect(
+    violations,
+    violations.length === 0
+      ? ''
+      : `${name} fails axe in the ${theme} theme:\n${describeViolations(violations)}`,
+  ).toEqual([]);
+}
