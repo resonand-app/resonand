@@ -176,7 +176,6 @@ These are what the plan always held:
 | `ING-11` | The round trip — exit criterion 4 — and the four defects that would each break it before anybody got to run it |
 | `ING-12` | Whether a derived date carries a time of day, rather than being presented as midnight |
 | `INT-6` | Playwright over the utility threshold; nothing exists yet |
-| `REV-S6` | The comment voice, in [`review.md`](review.md) |
 
 `INF-8` is spent rather than open and carries no box at all: the folder it asks for was decided
 against when `REV-10` built [`review.md`](review.md), [`security.md`](security.md) and
