@@ -15,6 +15,16 @@ const FIELD_TAKE = {
   recorded_at: '2026-03-12T18:22:00',
   recorded_at_offset: 60,
   recorded_at_source: 'container',
+  recorded_at_precision: 'second',
+  created_at: '2026-03-12T09:14:00Z',
+};
+
+/** A voice note from `PTT-20260312-WA0007.opus`: the name gave a day and no hour. */
+const VOICE_NOTE = {
+  recorded_at: '2026-03-12T00:00:00',
+  recorded_at_offset: null,
+  recorded_at_source: 'filename',
+  recorded_at_precision: 'date',
   created_at: '2026-03-12T09:14:00Z',
 };
 
@@ -23,6 +33,7 @@ const CASSETTE = {
   recorded_at: null,
   recorded_at_offset: null,
   recorded_at_source: null,
+  recorded_at_precision: null,
   created_at: '2026-03-12T09:14:00Z',
 };
 
@@ -60,6 +71,22 @@ describe("a recording's own time", () => {
     expect(recordedAt(FIELD_TAKE).offset).toBe('+01:00');
     expect(recordedAt({ ...FIELD_TAKE, recorded_at_offset: -330 }).offset).toBe('-05:30');
     expect(recordedAt({ ...FIELD_TAKE, recorded_at_offset: null }).offset).toBeNull();
+  });
+
+  it('shows a day and no hour when a day is all the source stated', () => {
+    // The whole point of the field: 00:00:00 is padding in a fixed-width column, and rendering
+    // it states a midnight that the filename this recording came from never claimed.
+    const shown = recordedAt(VOICE_NOTE, 'en-GB');
+    expect(shown.text).toContain('12 Mar 2026');
+    expect(shown.text).not.toContain('00:00');
+    expect(shown.isOwn).toBe(true);
+  });
+
+  it('shows an unknown precision in full, because unknown is not date-only', () => {
+    // What every recording ingested before the column existed carries. Hiding the time here
+    // would withdraw a real one from every row a container tag populated.
+    const shown = recordedAt({ ...FIELD_TAKE, recorded_at_precision: null }, 'en-GB');
+    expect(shown.text).toContain('18:22');
   });
 
   it('falls back to the upload and says so, rather than inventing one', () => {

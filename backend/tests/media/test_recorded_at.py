@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 
 import pytest
+from sonarium.core.time import PRECISION_DATE, PRECISION_MINUTE, PRECISION_SECOND
 from sonarium.media import recorded_at
 from sonarium.media.recorded_at import (
     SOURCE_CONTAINER,
@@ -48,7 +49,48 @@ def test_a_date_with_no_time_is_still_worth_having(filename: str) -> None:
     found = recorded_at.from_filename(filename)
     assert found is not None
     assert found.wall_clock.startswith("2024-03-11")
-    assert found.has_time_of_day is False, "so the interface shows a date, not 00:00"
+    assert found.precision == PRECISION_DATE, "so the interface shows a date, not 00:00"
+
+
+@pytest.mark.parametrize(
+    ("filename", "expected"),
+    [
+        ("Recording 2024-03-11 18.22.m4a", PRECISION_MINUTE),
+        ("Recording 2024-03-11 18.22.04.m4a", PRECISION_SECOND),
+        ("20240311_182200.m4a", PRECISION_SECOND),
+        ("PTT-20240311-WA0007.opus", PRECISION_DATE),
+    ],
+)
+def test_a_name_states_as_much_of_the_clock_as_it_wrote(filename: str, expected: str) -> None:
+    """The stored reading is fixed width, so only this says which digits were stated."""
+    found = recorded_at.from_filename(filename)
+    assert found is not None
+    assert found.precision == expected
+
+
+@pytest.mark.parametrize(
+    ("tag", "expected"),
+    [
+        ("2024-03-11T18:22:04.000000Z", PRECISION_SECOND),
+        ("2024-03-11T18:22+02:00", PRECISION_MINUTE),
+        ("2024-03-11", PRECISION_DATE),
+    ],
+)
+def test_a_container_tag_that_gave_only_a_day_is_not_read_as_midnight(
+    tag: str, expected: str
+) -> None:
+    """``date`` and ``date_recorded`` routinely hold a bare day, and parse as 00:00:00."""
+    found = recorded_at.from_container({"date": tag})
+    assert found is not None
+    assert found.precision == expected
+
+
+def test_an_mtime_states_a_second_because_that_is_what_it_is(tmp_path: Path) -> None:
+    path = tmp_path / "note.m4a"
+    path.write_bytes(b"x")
+    found = recorded_at.from_filesystem(path)
+    assert found is not None
+    assert found.precision == PRECISION_SECOND
 
 
 def test_a_filename_never_gets_an_offset() -> None:

@@ -315,6 +315,7 @@ class AudioSummary(Api):
     recorded_at: str | None
     recorded_at_offset: int | None
     recorded_at_source: str | None
+    recorded_at_precision: str | None
     created_at: str
     duration_ms: int | None
     library_uuid: str

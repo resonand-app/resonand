@@ -66,7 +66,7 @@ structural here rather than aspirational.
       `apply_sidecar` is called directly — and that one test is what would have caught three of
       the four.*
 
-- [ ] **ING-12** · **Deriving `recorded_at`.** Recording date ≠ upload date, and nothing else
+- [x] **ING-12** · **Deriving `recorded_at`.** Recording date ≠ upload date, and nothing else
       populates it: `ffprobe` only returns technical metadata. Extract from, in order, container
       creation tags, the filename (`Recording 2024-03-11 18.22.m4a`, `PTT-20240311-WA0007.opus`,
       `AUD-20240311-…`), and filesystem mtime — recording which source was used, and leaving the
@@ -74,11 +74,15 @@ structural here rather than aspirational.
       silently shifted into another timezone. ⇢ ING-4 🧪
       *Without this, every `recorded_at` in an imported archive of old voice notes is `NULL`, and
       the field, the sort order and the card decoration are all useless on day one.*
-      *Outstanding: whether the reading carries a time of day. All three sources work and the one
-      used is recorded, but `has_time_of_day` is computed and then dropped — it reaches no column
-      and no response — so a date the filename gave without an hour is presented as midnight.
-      That is a stated time nobody stated, on exactly the archive this task exists to rescue: the
-      `PTT-20240311-WA0007.opus` named two lines above carries no hour.*
+      *A reading is now shown to the precision it was stated at. The stored form is fixed width,
+      so a source that gave only a day arrives in the column as midnight — which was presented as
+      a recording made at 00:00, on exactly the archive this task exists to rescue.
+      `recorded_at_precision` (migration `0004`) keeps what the source said: `date`, `minute` or
+      `second`. It also reaches the container tags, where `date` and `date_recorded` routinely
+      hold a bare `2024-03-11` and parse as midnight while sounding more confident than a
+      filename. `NULL` is unknown rather than date-only — what rows written before the column
+      carry — and renders in full, because reading an absence as date-only would withdraw a real
+      time from every row a container tag populated.*
 
 - [x] **ING-13** · **`sonarium fsck`**: re-hash the stored originals against `audio.sha256`, report
       rows whose file is missing and files no row points at, and exit non-zero on any finding.
