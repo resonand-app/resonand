@@ -171,7 +171,7 @@ These are what the plan always held:
 
 | Task | What is outstanding |
 |---|---|
-| `ING-11` | The round trip — exit criterion 4 — and the four defects that would each break it before anybody got to run it |
+| `ING-11b` | The round trip — exit criterion 4 — which has still never been run, now that `ING-11a` has fixed the four defects that would each have broken it |
 
 `INF-8` is spent rather than open and carries no box at all: the folder it asks for was decided
 against when `REV-10` built [`review.md`](review.md), [`security.md`](security.md) and
@@ -186,7 +186,6 @@ are numbered children of the task that produced them:
 
 | Task | What it is |
 |---|---|
-| `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
 | `INF-11` | A webfont is redistributed that its own licence forbids redistributing — from the tree, and from the history |
 
 Three of the five conditions below are acts rather than tasks — performed against the real
@@ -206,7 +205,7 @@ Not when the checkboxes are ticked. When all of these hold:
    model is validated only by its own tests.
 3. **`ING-13` has run clean** against the real archive after at least one upgrade, and
    **`OPS-6`'s restore has been performed for real**, not just tested in CI.
-4. **`ING-11`'s export round-trips**: export the whole archive, import it into an empty instance,
+4. **`ING-11b`'s export round-trips**: export the whole archive, import it into an empty instance,
    and get the same thing back.
 5. **Several weeks have passed** with all of the above true and nothing going wrong in them.
 

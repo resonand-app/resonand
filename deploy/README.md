@@ -245,13 +245,27 @@ unchanged. Worth knowing if you run it nightly and conclude your hashes are bein
 docker compose exec sonarium sonarium export /data/export
 ```
 
-One JSON sidecar per recording carrying all its metadata and its full transcript, `.vtt` and
-`.srt` derived from the same segments, and the original file beside them. No part of it needs
-Sonarium to read.
+One directory per recording, named for the recording's identifier, holding four things: the
+original file, a JSON sidecar carrying all its metadata and its full transcript, and `.vtt` and
+`.srt` derived from the same segments. The audio and the subtitles share a name, so a media player
+finds the subtitles on its own. No part of it needs Sonarium to read.
 
-The sidecar carries the recording's identifier, so `sonarium import` reads it back and **updates
-rather than duplicates**. That is what makes exporting an archive and importing it into an empty
-instance a way to verify the archive rather than a way to double it.
+A directory each rather than one flat folder, because two recordings made on the same phone very
+often arrive under the same filename and one of them would overwrite the other on the way out.
+
+Reading it back:
+
+```bash
+docker compose exec sonarium sonarium import /data/export
+```
+
+The sidecar carries the recording's identifier, so an import **updates rather than duplicates** —
+the transcript included, which is not added a second time. That is what makes exporting an archive
+and importing it into an empty instance a way to verify the archive rather than a way to double it.
+
+Each recording goes back into the library its sidecar names, when this instance still has that
+library. `--library <uuid>` takes everything else, and importing loose files that carry no sidecar
+needs it. `--dry-run` says what would happen, and where, without importing anything.
 
 ## One process writes
 
