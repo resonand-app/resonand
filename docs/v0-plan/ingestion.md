@@ -80,16 +80,20 @@ structural here rather than aspirational.
       That is a stated time nobody stated, on exactly the archive this task exists to rescue: the
       `PTT-20240311-WA0007.opus` named two lines above carries no hour.*
 
-- [ ] **ING-13** · **`sonarium fsck`**: re-hash the stored originals against `audio.sha256`, report
+- [x] **ING-13** · **`sonarium fsck`**: re-hash the stored originals against `audio.sha256`, report
       rows whose file is missing and files no row points at, and exit non-zero on any finding.
       Read-only; repairs are a separate explicit command. ⇢ ING-3, ING-11 🧪
       *This is principle 5 made checkable. The stated worst outcome for the project is shipping
       something that loses files; nothing else in the plan would notice if it did.*
-      *Outstanding: two small things. `integrity.check` is built and covered ten ways, but the
-      `fsck` command itself is invoked by no test, so the non-zero exit an operator's cron job
-      depends on is the one part unverified; and the orphan scan does not recognise a killed
-      upload's `.partial` or a killed worker's `.part-NNNN.opus`, which are the files most likely
-      to be lying around, though it does catch a half-finished delete.*
+      *The command has its own tests now — seven, through the Typer runner, because the part an
+      operator depends on is the exit code and that was the one part nobody had run. They cover a
+      clean archive exiting 0, a changed and a missing file exiting 1, `--json` staying
+      machine-readable while still exiting 1, and `--fast` not noticing a changed file, which is
+      stated rather than left for somebody to discover after cronning it.*
+      *The two fragment kinds are visible: both are written under a leading dot, which is what
+      kept them out of `stored_files`' `original.*` glob. They report as `leftover` rather than as
+      `orphan` — an orphan is a whole recording the database has forgotten, and losing one is the
+      failure this check exists for, so the word is not spent on a fragment.*
 
 
 - **ING-14** · `GET /audio/{uuid}/waveform?peaks=N`, N capped server-side. **This is a format
