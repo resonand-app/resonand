@@ -16,6 +16,14 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
   /** Glyph rendered before the label. */
   icon?: IconName;
+  /**
+   * Whether the work this button started is still running.
+   *
+   * It turns the glyph and marks the control `aria-busy`, so a press that reaches a third party
+   * says so while it waits. It does not disable anything: whether pressing again is safe is a
+   * question about the endpoint, and the caller answers it with `disabled`.
+   */
+  busy?: boolean;
   /** Renders an `<a>` with the button's shape, for a navigation the browser performs itself. */
   href?: string;
   /** Saves the target rather than opening it. Only meaningful beside `href`. */
@@ -29,6 +37,11 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * One primary per view: it is the same amber as a playing waveform and an active nav item, and
  * two of them on a screen means neither is the main action.
  *
+ * **`busy` is the one exception to the system's refusal to animate.** It borrows `StateCard`'s
+ * turning glyph and borrows its justification with it: a skeleton animates the absence of an
+ * answer, for ever, while this turns only while a request somebody pressed is genuinely in flight
+ * and stops when it lands. It claims no fraction, because a bar would still be a lie.
+ *
  * **It draws none of its own colour (`UI-32a`).** The four variants are four blocks in
  * `components.css`, selected by `data-variant`, which is what makes hover and press expressible
  * at all -- an inline `background` beats every rule a stylesheet can write, so the resting fill
@@ -38,6 +51,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({
   variant = 'primary',
   icon,
+  busy,
   href,
   download,
   children,
@@ -45,12 +59,16 @@ export function Button({
   style,
   ...rest
 }: ButtonProps) {
+  // The spinner stands where the icon would, rather than beside it: two glyphs on one pill is a
+  // wider button the moment it is pressed.
+  const glyph = busy === true ? 'loader' : icon;
   const shape = {
     'data-variant': variant,
     'data-hit-target': '',
+    'data-busy': busy === true ? 'true' : undefined,
     style: {
       height: 'var(--control-height)',
-      padding: icon ? '0 15px 0 13px' : '0 15px',
+      padding: glyph ? '0 15px 0 13px' : '0 15px',
       border: 'none',
       borderRadius: 'var(--radius-pill)',
       display: 'inline-flex',
@@ -69,7 +87,7 @@ export function Button({
 
   const content = (
     <>
-      {icon !== undefined && <Icon name={icon} size={17} />}
+      {glyph !== undefined && <Icon name={glyph} size={17} />}
       {children}
     </>
   );
@@ -85,7 +103,14 @@ export function Button({
   }
 
   return (
-    <button data-ds="button" type="button" disabled={disabled} {...shape} {...rest}>
+    <button
+      data-ds="button"
+      type="button"
+      disabled={disabled}
+      aria-busy={busy === true ? true : undefined}
+      {...shape}
+      {...rest}
+    >
       {content}
     </button>
   );

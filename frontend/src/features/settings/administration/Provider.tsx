@@ -18,23 +18,36 @@
  *
  * **No provider configured is not an error.** Nothing on the instance can be transcribed, which
  * is a fact to state plainly, not a failure to offer a retry for.
+ *
+ * **What a check found outlives the view it was run from, and says when it was run.** It is held
+ * beside the configuration rather than inside it (`useProviderCheck`), because it is an
+ * observation about a third party at a moment rather than something the instance knows -- and a
+ * verdict that survives a navigation is a claim about the past, so the moment is on screen with
+ * it.
  */
 
 import { useTranslation } from 'react-i18next';
 
 import { isApiProblem } from '@/api/problem';
+import { useNow } from '@/app/hooks/use-now';
 import { Button, EgressNotice, KeyValueList, StateCard } from '@/design-system';
 import type { KeyValueRow } from '@/design-system';
+import { relative } from '@/i18n/time';
 import { useEgressLabels } from '@/i18n/egress-labels';
 
 import { AdminSection } from './AdminSection';
-import { useProvider, useTestProvider } from './data';
+import { useProvider, useProviderCheck, useTestProvider } from './data';
+import type { ProviderCheck } from './data';
+
+/** Below this, "just now" is the honest reading -- `Intl` has no phrase for "not yet a minute". */
+const MINUTE_MS = 60_000;
 
 export function Provider() {
   const { t } = useTranslation('settings');
   const { t: common } = useTranslation();
   const egressLabels = useEgressLabels();
   const provider = useProvider();
+  const check = useProviderCheck();
   const test = useTestProvider();
 
   if (provider.isPending) {
@@ -93,9 +106,7 @@ export function Provider() {
         <>
           <KeyValueList rows={rows} layout="inline" />
           <Reachability
-            reachable={status.reachable}
-            usable={status.usable}
-            detail={status.detail}
+            check={check}
             isPending={test.isPending}
             onTest={() => {
               test.mutate();
@@ -131,34 +142,43 @@ export function Provider() {
  * is named: it answered, and it still cannot do this.
  *
  * Unknown is the state the page opens in, and it says so -- an unknown that rendered as a failure
- * would train an operator to ignore a real one.
+ * would train an operator to ignore a real one. It is also the state a check leaves behind when it
+ * could not be run at all, which is why its sentence is shown beside it.
  */
 function Reachability({
-  reachable,
-  usable,
-  detail,
+  check,
   isPending,
   onTest,
 }: {
-  reachable: boolean | null;
-  usable: boolean | null;
-  detail: string;
+  check: ProviderCheck | undefined;
   isPending: boolean;
   onTest: () => void;
 }) {
-  const { t } = useTranslation('settings');
+  const { t, i18n } = useTranslation('settings');
+  // The verdict has an age the moment it is written, and nothing else on this panel re-renders
+  // it: the configuration behind it is settled, so the label would sit at "just now" all evening.
+  const now = useNow();
+  // No check, and a check that contacted nobody, are the same state: the one the page opens in.
+  const reachable = check?.reachable ?? null;
   const verdict =
     reachable === null
       ? { label: t('provider.untested'), colour: 'var(--text-3)' }
-      : usable === true
+      : check?.usable === true
         ? { label: t('provider.usable'), colour: 'var(--state-done)' }
         : reachable
           ? { label: t('provider.unusable'), colour: 'var(--state-failed)' }
           : { label: t('provider.unreachable'), colour: 'var(--state-failed)' };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-        <Button variant="secondary" disabled={isPending} onClick={onTest}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 'var(--space-3)',
+        }}
+      >
+        <Button variant="secondary" busy={isPending} disabled={isPending} onClick={onTest}>
           {isPending ? t('provider.testing') : t('provider.test')}
         </Button>
         <span
@@ -170,8 +190,25 @@ function Reachability({
         >
           {verdict.label}
         </span>
+        {check !== undefined && (
+          <span
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--type-ui-size-sm)',
+              color: 'var(--text-3)',
+            }}
+          >
+            {now - Date.parse(check.checkedAt) < MINUTE_MS
+              ? t('provider.checkedJustNow')
+              : t('provider.checkedAt', {
+                  when: relative(check.checkedAt, i18n.language, new Date(now)),
+                })}
+          </span>
+        )}
       </div>
-      {reachable !== null && detail !== '' && (
+      {/* Shown whenever a check has run, rather than only when something answered: the case in
+          which nothing was contacted at all is the one whose sentence explains why. */}
+      {check !== undefined && check.detail !== '' && (
         <span
           style={{
             maxWidth: 520,
@@ -181,7 +218,7 @@ function Reachability({
             overflowWrap: 'anywhere',
           }}
         >
-          {detail}
+          {check.detail}
         </span>
       )}
       <span

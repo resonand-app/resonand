@@ -65,6 +65,14 @@ export const keys = {
   jobCounts: () => ['admin', 'jobs', 'counts'] as const,
   systemStatus: () => ['admin', 'status'] as const,
   provider: () => ['admin', 'transcription'] as const,
+  /**
+   * What the last check found, which the instance does not hold and cannot be asked for.
+   *
+   * Under `provider`'s prefix because it is about the same thing, and separate from it because
+   * the two have different lifetimes: one is refetched, the other is an observation somebody made
+   * at a moment. Nothing fetches it -- `useTestProvider` is its only writer.
+   */
+  providerCheck: () => ['admin', 'transcription', 'check'] as const,
   users: () => ['admin', 'users'] as const,
 } as const;
 

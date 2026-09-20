@@ -54,3 +54,35 @@ something about the gate. Anything smaller is a commit and nothing more.
       every screen is the whole cost. 🧪 *`src/app/shell/tests/AppShell.test.tsx`, which covered
       the trash entry when the trash was empty and nowhere else — the one case in which a
       missing half cannot show.*
+
+---
+
+- [x] **BUG-3** · **The transcription check said nothing while it ran, and forgot what it found.**
+      Pressing *Check it can transcribe* left a control that looked pressed and idle for as long
+      as the engine took to answer — several seconds on a cold model, and longer on one that was
+      not there. Then the verdict it produced lasted until the next time the panel was read:
+      leaving Administration and coming back showed *Not checked yet* again, over a provider
+      somebody had just confirmed works.
+
+      The second half is the interesting one, because nothing was refetching too eagerly. The
+      check's answer was written over the cached `GET /api/admin/transcription`, and that endpoint
+      answers `reachable: null` **by design** — the instance holds no record of a check, because
+      running one on a read is precisely what principle 2 forbids. So the verdict was stored in
+      the one place guaranteed to be overwritten with its own absence, and any of the three
+      ordinary reasons to read again — thirty seconds elapsing, the window regaining focus,
+      anything administrative being invalidated — was enough to do it.
+
+      It now has a cached thing of its own, `['admin', 'transcription', 'check']`, which nothing
+      fetches: `skipToken` is what makes an `['admin']` invalidation walk past it rather than try
+      to refresh it from an endpoint that cannot answer the question, and signing out is the only
+      thing that clears it. It carries the moment it was asked, and the panel shows it — a verdict
+      that survives a navigation is a claim about the past, and one with no time on it reads as a
+      claim about now.
+
+      The first half is a `busy` state on `Button`, which is `FBK-6`'s exception to the system's
+      refusal to animate applied to a control rather than a card, and on the same grounds: it
+      turns only while a request somebody pressed is genuinely in flight, and it claims no
+      fraction. 🧪 *`src/features/settings/administration/tests/Provider.test.tsx`, whose
+      persistence case mounts the panel a second time on the first one's cache, after the
+      configuration read has landed — a second mount alone passes on the old code, because the
+      stale verdict is on screen until the refetch resolves.*

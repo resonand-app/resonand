@@ -12,7 +12,7 @@
  * the queue and the counts. Naming them individually would be a second list to forget to update.
  */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { skipToken, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
 import { get, post, remove } from '@/api/client';
@@ -93,6 +93,38 @@ export function useProvider(): UseQueryResult<Schemas['ProviderStatus']> {
   });
 }
 
+/** What a check found, and the moment somebody asked for it (`INT-3c`). */
+export interface ProviderCheck {
+  reachable: boolean | null;
+  usable: boolean | null;
+  detail: string;
+  /** When it was asked. An instant, so it is UTC (`DEC-11`). */
+  checkedAt: string;
+}
+
+/**
+ * What the last check said, for as long as this session lasts (`INT-3c`).
+ *
+ * **Its own cached thing rather than a field of `useProvider`, and that is the fix rather than a
+ * tidying.** `GET /api/admin/transcription` answers `reachable: null` by design -- the instance
+ * holds no record of a check, because running one on a read is exactly what principle 2 forbids.
+ * So a verdict written over that query lasted until the next refetch of it, and leaving
+ * administration and coming back was enough: the answer somebody had just asked for was replaced
+ * by the endpoint's honest "nobody has asked".
+ *
+ * Nothing fetches this. `skipToken` is what says so in a way that survives an `['admin']`
+ * invalidation walking past it, and `gcTime: Infinity` is what keeps it while the view is closed.
+ * Signing out clears the whole cache, which is the right lifetime for an observation about a
+ * machine somebody else may have reconfigured since.
+ */
+export function useProviderCheck(): ProviderCheck | undefined {
+  return useQuery<ProviderCheck>({
+    queryKey: keys.providerCheck(),
+    queryFn: skipToken,
+    gcTime: Infinity,
+  }).data;
+}
+
 /**
  * Contact the provider, because somebody asked (`INT-3c`).
  *
@@ -100,15 +132,21 @@ export function useProvider(): UseQueryResult<Schemas['ProviderStatus']> {
  * on a refocus, or on a retry after a network blip, and every one of those would be the instance
  * reaching out to a third party without anybody having asked it to. A mutation only fires when
  * something is pressed.
+ *
+ * It writes only the three fields the configuration read cannot know, and the time it learnt
+ * them. The rest of the answer restates what `useProvider` already holds.
  */
 export function useTestProvider(): UseMutationResult<Schemas['ProviderStatus'], unknown, void> {
   const client = useQueryClient();
   return useMutation({
     mutationFn: () => post('/api/admin/transcription/test'),
     onSuccess: (answer) => {
-      // The answer is the newest truth about the provider, so it replaces the cached one rather
-      // than invalidating it -- refetching would ask again and get `reachable: null` back.
-      client.setQueryData(keys.provider(), answer);
+      client.setQueryData<ProviderCheck>(keys.providerCheck(), {
+        reachable: answer.reachable,
+        usable: answer.usable,
+        detail: answer.detail,
+        checkedAt: new Date().toISOString(),
+      });
     },
   });
 }
