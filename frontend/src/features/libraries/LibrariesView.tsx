@@ -10,6 +10,12 @@
  * a brand-new account whose one library is still in flight is looking at something it can act on
  * rather than at three grey rectangles.
  *
+ * **On a phone this screen is also the way to the trash** (`UI-4f1`). `UI-4f` says the sidebar's
+ * contents become the Libraries tab, and the trash is a sidebar entry; the four tabs are
+ * Libraries, Search, Upload and Settings, so without this a recording deleted on a phone could be
+ * restored only by typing the URL -- the one gesture the whole retention promise exists to make
+ * safe. On a desktop the sidebar already carries it and this draws nothing.
+ *
  * **The grid is `auto-fill` from `--card-width`.** Three columns at 1440 is what the drawing
  * shows, but three columns is the consequence of the card being 320px wide and not the rule -- a
  * hard `repeat(3, 1fr)` gives 480px cards on a wide screen and a horizontal scrollbar on a narrow
@@ -22,7 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
 import { isApiProblem } from '@/api/problem';
-import { toLibrary, toLibrarySettings } from '@/app/routes';
+import { routes, toLibrary, toLibrarySettings } from '@/app/routes';
 import { TrashLibraryDialog } from '@/components/TrashLibraryDialog';
 import {
   Button,
@@ -35,7 +41,8 @@ import {
 } from '@/design-system';
 import * as format from '@/i18n/format';
 
-import { colourOf, useCanTrashLibrary } from '@/app/library-data';
+import { colourOf, useCanTrashLibrary, useTrashCount } from '@/app/library-data';
+import { useIsPhone } from '@/app/hooks/use-is-phone';
 import { LEVEL } from '@/features/library/data';
 
 import { useLibraryList } from './data';
@@ -116,6 +123,7 @@ export function LibrariesView() {
           </Grid>
         </section>
       )}
+      <PhoneTrash />
     </section>
   );
 }
@@ -298,5 +306,36 @@ export function Grid({ children }: { children: ReactNode }) {
     >
       {children}
     </div>
+  );
+}
+
+/**
+ * The way to the trash, on the shell that has no sidebar (`UI-4f1`).
+ *
+ * Below the libraries rather than above them: it is a way back to something removed, not a
+ * destination somebody came here for, and `UI-4d` puts it at the bottom of the sidebar for the
+ * same reason. The count is the one the sidebar shows, from the same hook, and is absent rather
+ * than zero -- "Trash 0" is a row that asks to be read and then says nothing.
+ */
+function PhoneTrash() {
+  const { t } = useTranslation('libraries');
+  const isPhone = useIsPhone();
+  const count = useTrashCount();
+  const navigate = useNavigate();
+
+  if (!isPhone) return null;
+
+  return (
+    <nav style={{ marginTop: 'var(--space-8)' }} aria-label={t('trash.region')}>
+      <Button
+        variant="ghost"
+        icon="trash-2"
+        onClick={() => {
+          void navigate(routes.trash);
+        }}
+      >
+        {count > 0 ? t('trash.withCount', { count }) : t('trash.empty')}
+      </Button>
+    </nav>
   );
 }

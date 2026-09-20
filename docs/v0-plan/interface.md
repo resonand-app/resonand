@@ -560,12 +560,17 @@ mistake here that cannot be undone cheaply.
       tab; Upload is a tab rather than a modal. Below 720 it replaces the desktop shell entirely.
       ⇢ UI-4c, UI-34g, DEC-23
 
-- [ ] **UI-4f1** · **The phone cannot reach the trash.** `UI-4f` says the sidebar's contents
+- [x] **UI-4f1** · **The phone cannot reach the trash.** `UI-4f` says the sidebar's contents
       become the Libraries tab, and `UI-4d` makes the trash a sidebar entry carrying its count; the
       four tabs are Libraries, Search, Upload and Settings, and nothing under them links to it. A
       recording deleted on a phone can be restored only by typing the URL — the one gesture the
       whole retention promise exists to make safe. `useTrashCount` already has the number.
       ⇢ UI-4f, INT-1a 🧪
+      *On the Libraries screen rather than as a fifth tab: `UI-4f` fixes the four and says the
+      sidebar's contents become the Libraries tab, so this is where the sidebar's trash entry
+      goes. Below the libraries, because it is a way back to something removed rather than a
+      destination somebody came for — which is why `UI-4d` puts it at the bottom of the sidebar
+      too. The count is the sidebar's, from the same `useTrashCount`, and absent rather than zero.*
 - [x] **UI-4g** · §1.8's keyboard model as **one** global handler, not per view: `⌘K`/`Ctrl+K` and
       `/` focus search, `Space` plays and pauses when no field has focus, `←`/`→` seek ∓5s,
       `⇧←`/`⇧→` ∓15s, `↑`/`↓` move transcript segments, `Enter` opens, `Space` toggles a

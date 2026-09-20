@@ -8,7 +8,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http } from 'msw';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, useLocation } from 'react-router';
@@ -353,5 +353,88 @@ describe('opening a library', () => {
     await user.click(within(card).getByRole('button', { name: 'Options for Personal' }));
     expect(screen.getByTestId('where')).toHaveTextContent('/');
     expect(screen.getByTestId('where')).not.toHaveTextContent(toLibrary(PERSONAL));
+  });
+});
+
+describe('the way to the trash on a phone (UI-4f1)', () => {
+  /** jsdom reports 1024 and never changes it, so the branch has to be told which shell it is in. */
+  function atWidth(width: number) {
+    Object.defineProperty(window, 'innerWidth', {
+      value: width,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: (query: string) => {
+        const max = /max-width:\s*(\d+)px/.exec(query)?.[1];
+        return {
+          matches: max !== undefined && width <= Number(max),
+          media: query,
+          addEventListener: () => undefined,
+          removeEventListener: () => undefined,
+          addListener: () => undefined,
+          removeListener: () => undefined,
+          onchange: null,
+          dispatchEvent: () => false,
+        };
+      },
+    });
+  }
+
+  function showWithLocation() {
+    const client = createQueryClient();
+    client.setDefaultOptions({ queries: { retry: false } });
+    return render(
+      <QueryClientProvider client={client}>
+        <ThemeProvider>
+          <MemoryRouter>
+            <Where />
+            <LibrariesView />
+          </MemoryRouter>
+        </ThemeProvider>
+      </QueryClientProvider>,
+    );
+  }
+
+  it('offers the trash where there is no sidebar', async () => {
+    atWidth(430);
+    renderView();
+    expect(await screen.findByRole('button', { name: /trash/i })).toBeInTheDocument();
+  });
+
+  it('carries the count, and says nothing when there is none', async () => {
+    atWidth(430);
+    renderView();
+    // Absent rather than zero: "Trash 0" is a row that asks to be read and then says nothing.
+    expect(await screen.findByRole('button', { name: 'Trash' })).toBeInTheDocument();
+
+    server.use(
+      http.get('/api/trash/audio', () =>
+        HttpResponse.json({ items: [], total: 3, limit: 1, offset: 0 }),
+      ),
+    );
+    cleanup();
+    renderView();
+    expect(
+      await screen.findByRole('button', { name: /trash · 3 recordings/i }),
+    ).toBeInTheDocument();
+  });
+
+  it('goes to the trash when it is pressed', async () => {
+    atWidth(430);
+    showWithLocation();
+    await userEvent.click(await screen.findByRole('button', { name: /trash/i }));
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent('/trash');
+    });
+  });
+
+  it('draws nothing on a shell that already has a sidebar', async () => {
+    atWidth(1440);
+    renderView();
+    await screen.findByText(/recordings/i);
+    expect(screen.queryByRole('button', { name: /trash/i })).not.toBeInTheDocument();
   });
 });
