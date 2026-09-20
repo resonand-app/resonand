@@ -299,6 +299,12 @@ Docstrings are the exception and stay as they are: a module or an exported compo
 paragraph saying what it is for and what it deliberately is not. Keep it about the thing, not
 about its history.
 
+**What is already there is trimmed on the way past, never in a pass of its own.** Much of the
+interface was commented before this rule tightened, and those comments run long. A sweep to bring
+them into line would be a large diff written by somebody reading quickly, which is how the one
+comment that was load-bearing gets deleted along with the four that were not. Shorten what is
+overlong in a file already open for another reason, and leave the rest.
+
 Sentence case, no emoji outside the plans' notation, no marketing register. ASCII only, as in
 commit messages.
 
