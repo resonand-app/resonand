@@ -98,11 +98,17 @@ export function UploadTray({ summary, collapsed, onToggle, onClose, children }: 
           icon={collapsed ? 'chevron-up' : 'chevron-down'}
           variant="ghost"
           size={26}
-          label={collapsed ? 'Show the uploads' : 'Hide the uploads'}
+          label={collapsed ? t('upload.show') : t('upload.hide')}
           onClick={onToggle}
         />
         {onClose !== undefined && (
-          <IconButton icon="x" variant="ghost" size={26} label="Close the tray" onClick={onClose} />
+          <IconButton
+            icon="x"
+            variant="ghost"
+            size={26}
+            label={t('upload.close')}
+            onClick={onClose}
+          />
         )}
       </header>
       {!collapsed && (

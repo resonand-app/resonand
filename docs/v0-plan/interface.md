@@ -510,10 +510,16 @@ mistake here that cannot be undone cheaply.
 - [x] **UI-22a** · i18next with `en` as the base, one namespace per view, and an ESLint rule that
       fails on a bare string literal in JSX. ⇢ INF-3b
 
-- [ ] **UI-22a1** · Three accessible names in the upload tray are English in the source. They are
+- [x] **UI-22a1** · Three accessible names in the upload tray are English in the source. They are
       `aria-label` values assembled by expression, which is exactly where `UI-22a`'s ESLint rule
       cannot reach: it sees literals, and these are not literals. The copy moves to
       `src/i18n/en/`, and what stops the next one is a test rather than a reviewer. ⇢ UI-22a 🧪
+      *They were `IconButton`'s `label`, which is a prop the rule has no way to know becomes an
+      `aria-label`, and two of the three were the arms of a ternary. The guard is
+      `accessible-names-are-translated.node.test.ts`: it reads the attribute's whole value rather
+      than its first token, and takes `t(...)` calls out before looking, so a key chosen inside
+      the call reads the same as one written outside it. `src/dev/` is the only exemption — a
+      specimen board naming components is not addressed to anybody.*
 - [x] **UI-22b** · The formatters, once: `48:12` under an hour and `1:12:40` over, `149 h 44 min`
       for totals, counts with thin spaces and never rounded, `284 MB` from `size_bytes`,
       `0.75x`–`2.0x`. All mono, all `tabular-nums`. 🧪 each format ⇢ UI-22a
