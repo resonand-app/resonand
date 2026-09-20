@@ -110,6 +110,8 @@
     "usable": "It can transcribe",
     "unusable": "It answered, but it cannot transcribe",
     "unreachable": "It did not answer",
+    "checkedJustNow": "Checked just now",
+    "checkedAt": "Checked {{when}}",
     "neverAutomatic": "Nothing is contacted until you press this. Opening this page reaches out to nobody, and the check sends three seconds of generated tone, never one of your recordings.",
     "unconfigured": "No provider is set up, so nothing on this instance can be transcribed. Set SONARIUM_TRANSCRIPTION_* in the environment and restart."
   },
