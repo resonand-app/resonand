@@ -344,17 +344,27 @@ faked them with a prototyping harness that does not ship.
       and give nothing back.
       _Done when:_ nothing focusable is invisible when focused, and nothing tappable is under 44px.
       🧪 a test that walks every component's focusables ⇢ UI-32a
-      **Eight controls carry a documented exemption from the 44px floor, and all eight are stacked
-      rows.** The pseudo-element cannot be applied to one: a 34px menu row grown to 44 overlaps its
-      neighbours by 5px at each edge, so the top of every row belongs to two targets and which one
-      a click lands on is settled by DOM order. A full-bleed row is short in one axis and the width
-      of a panel in the other. The list is in `focus-and-targets.ts` and is checked in both
-      directions, like the colour guard's.
+      **The controls that carry a documented exemption from the 44px floor are all full-bleed
+      rows**, in two lists: the design system's own, and the one for markup the application
+      composes. The pseudo-element cannot be applied to a stacked row -- a 34px menu row grown to
+      44 overlaps its neighbours by 5px at each edge, so the top of every row belongs to two
+      targets and which one a click lands on is settled by DOM order. A full-bleed row is short in
+      one axis and the width of a panel in the other, which is the large-target case rather than
+      the small one. Both lists are in `focus-and-targets.ts`, both are checked in both directions
+      like the colour guard's, and neither carries a count here -- the lists are the count.
 
-- [ ] **UI-32b1** · The 44px exemption list has outgrown the account of it written here, and one
+- [x] **UI-32b1** · The 44px exemption list has outgrown the account of it written here, and one
       entry defers to a task that has since finished. Either an exemption earns a sentence saying
       why it is one, or it stops being exempt; a list nobody reconciles is how a floor quietly
       becomes a suggestion. ⇢ UI-32b
+      *Three things, and the third was the one worth finding. `sidebar-item` deferred to `UI-4c`,
+      which has shipped — and the answer it produced is that there is no sidebar on a phone at
+      all, so the entry now says that instead of pointing at a task. The account above no longer
+      carries a number, because it was wrong and would be wrong again. And **the application list
+      was only ever checked in one direction**: an entry that stopped being small could sit there
+      for ever, which is exactly the asymmetry this task describes. It now has the reconciliation
+      the design system's list already had, and the check was confirmed to fail on a stale entry
+      before being trusted.*
 
 - [x] **UI-32c** · `prefers-reduced-motion` verified end to end: the two duration tokens already
       zero themselves, but the transcript's follow-scroll is a script and has to opt in by itself.
