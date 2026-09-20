@@ -550,6 +550,15 @@ class ProviderStatus(Api):
     that decides whether transcription works. An endpoint can answer everything asked of it and
     still run a model that cannot return timed segments (``TRX-10``). ``None`` until checked."""
 
+    checked_at: str | None
+    """When the last check was run, as an instant. ``None`` means nobody has ever run one, which
+    is what ``reachable: null`` was carrying alone and could not distinguish from a check that
+    could not be run (``BUG-3a``)."""
+
+    checked_by: str | None
+    """Who ran it. An instance has more than one administrator, and the second one arriving at a
+    green verdict deserves to know whose it is."""
+
     detail: str
 
 

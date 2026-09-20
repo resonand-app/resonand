@@ -6,9 +6,10 @@ schema the one this image expects*. The last one is what turns a bad upgrade fro
 a decision.
 
 **Nothing here reaches out to a third party on its own.** The transcription provider's status is
-reported from configuration, and its reachability is ``null`` until somebody explicitly asks for a
-connection test. Principle 2 is that audio does not leave unless asked; a page that quietly
-contacted a provider to draw a green dot would be a smaller version of the same violation.
+reported from configuration, plus whatever the last explicit check found. Principle 2 is that
+audio does not leave unless asked; a page that quietly contacted a provider to draw a green dot
+would be a smaller version of the same violation. Remembering that somebody asked is not that
+violation, and reporting it is how a second administrator learns anything at all (``BUG-3a``).
 """
 
 from __future__ import annotations
@@ -22,7 +23,14 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 
 from sonarium import __version__
-from sonarium.api.deps import InstanceSettings, ReadSession, WriteSession, current_admin
+from sonarium.api.deps import (
+    CurrentAdmin,
+    InstanceSettings,
+    ProviderChecks,
+    ReadSession,
+    WriteSession,
+    current_admin,
+)
 from sonarium.api.pagination import Page, PageRequest, page_of, page_request
 from sonarium.api.presenters import job_summary
 from sonarium.api.schemas import (
@@ -38,6 +46,7 @@ from sonarium.db.migrate import revisions
 from sonarium.db.models import Audio, Job, Library
 from sonarium.jobs import queue
 from sonarium.transcription import preflight
+from sonarium.transcription.last_check import CheckOutcome, LastCheck
 from sonarium.transcription.registry import build_provider
 
 router = APIRouter(prefix="/admin", tags=["administration"], dependencies=[Depends(current_admin)])
@@ -110,15 +119,17 @@ def cancel_job(job_id: int, session: WriteSession) -> dict[str, str]:
 
 
 @router.get("/transcription", response_model=ProviderStatus, summary="Transcription settings")
-def transcription_status(settings: InstanceSettings) -> ProviderStatus:
-    """Reported from configuration alone. Nothing is contacted."""
-    return _provider_status(settings)
+def transcription_status(settings: InstanceSettings, checks: ProviderChecks) -> ProviderStatus:
+    """Configuration, plus what the last check found. Nothing is contacted."""
+    return _provider_status(settings, checks)
 
 
 @router.post(
     "/transcription/test", response_model=ProviderStatus, summary="Check it can transcribe"
 )
-def test_transcription(settings: InstanceSettings) -> ProviderStatus:
+def test_transcription(
+    settings: InstanceSettings, checks: ProviderChecks, caller: CurrentAdmin
+) -> ProviderStatus:
     """Ask the configured engine whether it can produce what the archive stores (``TRX-10``).
 
     **An explicit action, on a button**, because contacting a third party is not something a page
@@ -131,7 +142,7 @@ def test_transcription(settings: InstanceSettings) -> ProviderStatus:
     misconfiguration here is a model that answers perfectly and cannot return segments. A check
     that passed it would be worse than no check at all, because an administrator would believe it.
     """
-    status = _provider_status(settings)
+    status = _provider_status(settings, checks)
     if not status.configured:
         return status
     provider = build_provider(settings)
@@ -142,21 +153,36 @@ def test_transcription(settings: InstanceSettings) -> ProviderStatus:
                 provider, audio=sample, duration_ms=int(preflight.SAMPLE_SECONDS * 1000)
             )
     except ToolError:
-        return status.model_copy(
-            update={
-                "detail": "ffmpeg could not produce the sample this check submits, so the engine "
-                "was not contacted and nothing was sent."
-            }
+        # Recorded like any other outcome, with a null verdict: a check that could not be run is
+        # a fact about this instance, and the sentence explaining it is worth more than the
+        # silence it used to leave behind.
+        return _reported(
+            status,
+            checks.record(
+                reachable=None,
+                usable=None,
+                detail="ffmpeg could not produce the sample this check submits, so the engine "
+                "was not contacted and nothing was sent.",
+                by=caller.user.display_name,
+            ),
         )
     finally:
         provider.close()
-    return status.model_copy(
-        update={"reachable": report.reached, "usable": report.usable, "detail": report.detail}
+    return _reported(
+        status,
+        checks.record(
+            reachable=report.reached,
+            usable=report.usable,
+            detail=report.detail,
+            by=caller.user.display_name,
+        ),
     )
 
 
 @router.get("/status", response_model=SystemStatus, summary="The state of this instance")
-def system_status(session: ReadSession, settings: InstanceSettings) -> SystemStatus:
+def system_status(
+    session: ReadSession, settings: InstanceSettings, checks: ProviderChecks
+) -> SystemStatus:
     """Space, counts, queue, schema revision.
 
     The pair of revisions is the load-bearing part: it says whether to roll the image back or the
@@ -173,14 +199,15 @@ def system_status(session: ReadSession, settings: InstanceSettings) -> SystemSta
         expected_revision=head,
         storage=_storage_status(session, settings),
         jobs=queue.counts(session),
-        transcription=_provider_status(settings),
+        transcription=_provider_status(settings, checks),
         trash_retention_days=settings.trash_retention_days,
     )
 
 
-def _provider_status(settings: Settings) -> ProviderStatus:
+def _provider_status(settings: Settings, checks: LastCheck) -> ProviderStatus:
+    """Configuration, and the last check over it. Neither half contacts anything."""
     configured = bool(settings.transcription_base_url)
-    return ProviderStatus(
+    status = ProviderStatus(
         provider=settings.transcription_provider,
         model=settings.transcription_model,
         base_url=settings.transcription_base_url,
@@ -189,12 +216,29 @@ def _provider_status(settings: Settings) -> ProviderStatus:
         configured=configured,
         reachable=None,
         usable=None,
+        checked_at=None,
+        checked_by=None,
         detail=(
             "Configured. Run a connection test to check it answers."
             if configured
             else "No transcription service is configured, so nothing can be transcribed. Set "
             "SONARIUM_TRANSCRIPTION_BASE_URL."
         ),
+    )
+    outcome = checks.outcome
+    return status if outcome is None else _reported(status, outcome)
+
+
+def _reported(status: ProviderStatus, outcome: CheckOutcome) -> ProviderStatus:
+    """The configuration, answered over by what a check found."""
+    return status.model_copy(
+        update={
+            "reachable": outcome.reachable,
+            "usable": outcome.usable,
+            "detail": outcome.detail,
+            "checked_at": outcome.checked_at,
+            "checked_by": outcome.checked_by,
+        }
     )
 
 

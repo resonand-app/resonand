@@ -46,6 +46,7 @@ from sonarium.db.engine import Database, build_engine
 from sonarium.db.migrate import migrate_at_startup
 from sonarium.jobs.handlers import Context
 from sonarium.jobs.worker import Worker
+from sonarium.transcription.last_check import LastCheck
 from sonarium.transcription.registry import build_provider
 
 if TYPE_CHECKING:
@@ -110,6 +111,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # One per application rather than per module, so that two instances in one process -- which
     # is what a test suite is -- cannot reach each other's subscribers.
     app.state.changes = Changes()
+    app.state.last_check = LastCheck()
     app.state.login_limiter = AttemptLimiter(resolved.login_attempts_per_minute)
     app.state.login_client_limiter = AttemptLimiter(resolved.login_attempts_per_client_per_minute)
 

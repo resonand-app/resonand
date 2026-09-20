@@ -86,3 +86,34 @@ something about the gate. Anything smaller is a commit and nothing more.
       persistence case mounts the panel a second time on the first one's cache, after the
       configuration read has landed — a second mount alone passes on the old code, because the
       stale verdict is on screen until the refetch resolves.*
+
+---
+
+- [x] **BUG-3a** · **The check was remembered in the browser, so it was not really remembered.**
+      Out of `BUG-3`, which moved the verdict off the cached configuration read and into a cache
+      entry of its own. That fixed moving between views and left two things it could not fix: a
+      reload started again at *Not checked yet*, and a second administrator — the person most
+      likely to want the answer — never saw it at all, because it was in somebody else's tab.
+
+      The mistake was reading principle 2 one clause too far. **It forbids the instance reaching
+      out on a read. It does not forbid it remembering that somebody reached out.** So the check
+      records its own outcome, `GET /admin/transcription` reports it with the moment it was taken
+      and whose it was, and that read still contacts nobody. `reachable: null` finally means what
+      it always claimed to mean — nobody has ever checked — which is what made a fifth state
+      expressible: *It could not be checked*, for the case where ffmpeg could not produce the
+      sample and nothing was contacted at all. Reporting that as unchecked lost the sentence
+      explaining it; reporting it as unreachable blamed a provider nobody had spoken to.
+
+      **In memory, not in the archive.** One process is the whole supported topology, so there is
+      nowhere for a second copy to disagree from, and a restart forgetting is the honest answer —
+      an instance that has just come up has not checked anything. A row would have bought
+      surviving a restart at the price of a migration and a green verdict outliving the container
+      that earned it.
+
+      Most of `BUG-3`'s frontend went with it: the separate cache key, the `skipToken`, the
+      `gcTime: Infinity` and the client-side timestamp are all gone, and the mutation writes the
+      answer over the cached read again — which is now correct, because it is what a refetch
+      would return. 🧪 *`tests/api/test_operations.py`, which asserts a read after a check does
+      not build a provider, and that a second administrator sees the first one's verdict with the
+      first one's name on it; and `Provider.test.tsx`, whose persistence case mounts on a **fresh**
+      cache, because nothing in the browser should be carrying this.*

@@ -1196,6 +1196,28 @@
             ],
             "title": "Base Url"
           },
+          "checked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked At"
+          },
+          "checked_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checked By"
+          },
           "configured": {
             "title": "Configured",
             "type": "boolean"
@@ -1259,6 +1281,8 @@
           "configured",
           "reachable",
           "usable",
+          "checked_at",
+          "checked_by",
           "detail"
         ],
         "title": "ProviderStatus",
@@ -2536,7 +2560,7 @@
     },
     "/api/admin/transcription": {
       "get": {
-        "description": "Reported from configuration alone. Nothing is contacted.",
+        "description": "Configuration, plus what the last check found. Nothing is contacted.",
         "operationId": "transcription_status_api_admin_transcription_get",
         "responses": {
           "200": {

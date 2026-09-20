@@ -128,7 +128,7 @@ export interface paths {
         };
         /**
          * Transcription settings
-         * @description Reported from configuration alone. Nothing is contacted.
+         * @description Configuration, plus what the last check found. Nothing is contacted.
          */
         get: operations["transcription_status_api_admin_transcription_get"];
         put?: never;
@@ -1688,6 +1688,10 @@ export interface components {
         ProviderStatus: {
             /** Base Url */
             base_url: string | null;
+            /** Checked At */
+            checked_at: string | null;
+            /** Checked By */
+            checked_by: string | null;
             /** Configured */
             configured: boolean;
             /** Default Language */
