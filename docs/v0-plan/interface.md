@@ -378,12 +378,20 @@ the rest consume it.
       placement, focus trap, `Esc`, outside click, and inert background. Not itself exported as a
       component in the index. ⇢ UI-32a 🔒
 
-- [ ] **UI-34a1** · `Dialog` announces nothing. `UI-34a` promised a focus trap, `Esc`, an outside
+- [x] **UI-34a1** · `Dialog` announces nothing. `UI-34a` promised a focus trap, `Esc`, an outside
       click and an **inert background**; the trap holds and the background does not, and `Dialog`
       carries no `aria-modal` — so every create, rename, share, move and upload panel is a div a
       screen reader walks straight out of, into a page that is still operable behind it. `Sheet`
       and `TypedConfirm` both have the attribute, which is what makes this an omission rather than
       a position. ⇢ UI-34a 🧪
+      *`aria-modal` is on `Dialog`, and `Dialog` and `Modal` have tests at all now — they had
+      none. **The `inert` attribute is deliberately not added**, and the reasoning is written where
+      the decision lives: nothing portals, so the only element that could carry it is an ancestor
+      of the dialog as well as of the page; portalling to reach around that puts the toast region
+      inside the inert subtree, and `inert` takes an `aria-live` region out of the accessibility
+      tree, so an upload finishing behind a dialog would stop being announced. The three vectors
+      are closed without it — `aria-modal` for the virtual cursor, the trap for the keyboard (a
+      test rounds the panel twice and never reaches the page), the scrim for the pointer.*
 - [x] **UI-34b** · `Select` — picks one value from a list: the filter bar, sort, the level
       selector, the category picker, playback speed. Not for two or three short options; those are
       chips. States: resting, labelled, disabled, open, focused. ⇢ UI-34a

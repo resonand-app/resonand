@@ -199,7 +199,6 @@ most of them are numbered children of the task that produced them:
 | `UI-23a1` | The dialogs are audited by nothing, though the harness says otherwise |
 | `UI-32b1` | The 44px exemption list has outgrown the account of it |
 | `UI-33a1` | Raw type values returned in components written after the reconciliation |
-| `UI-34a1` | `Dialog` carries no `aria-modal` and nothing makes the background inert |
 | `INT-3b1` | Deleting an account that uploaded elsewhere meets a foreign key, not the refusal |
 | `API-25`, `UI-37` | There is no way back into an account whose password was forgotten |
 | `UI-38` | The instance offers no source, which is the clause `AGPL-3.0` was chosen for |
