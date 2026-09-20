@@ -16,15 +16,18 @@ from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from sonarium.api.app import create_app
 from sonarium.api.routes import operations
+from sonarium.api.security import hash_password
 from sonarium.core.config import Settings
+from sonarium.core.errors import ToolError
 from sonarium.db import libraries as library_repo
+from sonarium.db import users as user_repo
 from sonarium.db.audio import create_audio, trash_audio
 from sonarium.db.engine import Database
 from sonarium.jobs import queue
 from sonarium.transcription import preflight
 from sonarium.transcription.openai_compatible import OpenAiCompatibleProvider
 
-from tests.api.conftest import API_BASE, sign_in
+from tests.api.conftest import API_BASE, PASSWORD, sign_in
 
 
 def _a_job(database: Database, accounts: dict[str, int], owner_library: str) -> int:
@@ -275,6 +278,78 @@ def test_a_connection_test_reports_success(
     tested = client.post("/admin/transcription/test").json()
     assert tested["reachable"] is True
     assert tested["usable"] is True
+
+
+def test_a_check_is_remembered_and_reported_without_contacting_anything_again(
+    client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """``BUG-3a``: principle 2 forbids reaching out on a read, not remembering that somebody did.
+
+    The verdict used to exist only in the answer to the request that produced it, so the next read
+    of the page reported that nothing was known -- which is a different sentence from nothing
+    having been asked, and only the second one was ever true.
+    """
+    _answering(monkeypatch, SPEECH)
+    sign_in(client, "admin")
+    checked = client.post("/admin/transcription/test").json()
+    assert checked["checked_at"] is not None
+    assert checked["checked_by"] == "Admin"
+
+    def refuse(*args: object, **kwargs: object) -> object:
+        raise AssertionError("a read contacted the provider")
+
+    monkeypatch.setattr(operations, "build_provider", refuse)
+    reported = client.get("/admin/transcription").json()
+    assert reported["reachable"] is True
+    assert reported["usable"] is True
+    assert reported["checked_at"] == checked["checked_at"]
+    assert reported["detail"] == checked["detail"]
+
+
+def test_a_check_belongs_to_the_instance_rather_than_to_whoever_ran_it(
+    client: TestClient,
+    database: Database,
+    accounts: dict[str, int],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An instance has more than one administrator, and this is the half a browser cannot hold."""
+    _answering(monkeypatch, SPEECH)
+    sign_in(client, "admin")
+    client.post("/admin/transcription/test")
+    with database.write_session() as session:
+        user_repo.create_user(
+            session,
+            email="second@example.test",
+            display_name="Second",
+            password_hash=hash_password(PASSWORD),
+            is_admin=True,
+        )
+    sign_in(client, "second")
+    reported = client.get("/admin/transcription").json()
+    assert reported["usable"] is True
+    assert reported["checked_by"] == "Admin", "whose check it was, not who is looking at it"
+
+
+def test_a_check_that_could_not_be_run_is_recorded_rather_than_left_looking_unchecked(
+    client: TestClient, accounts: dict[str, int], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Neither a pass nor a failure of the engine: this instance could not produce the sample.
+
+    Reporting it as unchecked would lose the one sentence that explains why, and reporting it as
+    unreachable would blame a provider that was never contacted.
+    """
+    _answering(monkeypatch, SPEECH)
+
+    def no_sample(destination: Path, *, seconds: float = 3.0) -> Path:
+        raise ToolError("ffmpeg is not installed")
+
+    monkeypatch.setattr(preflight, "sample_audio", no_sample)
+    sign_in(client, "admin")
+    tested = client.post("/admin/transcription/test").json()
+    assert tested["reachable"] is None, "nothing was contacted"
+    assert tested["checked_at"] is not None, "but somebody did ask"
+    assert "nothing was sent" in tested["detail"]
+    assert client.get("/admin/transcription").json()["detail"] == tested["detail"]
 
 
 def test_a_model_that_cannot_return_segments_is_reported_unusable_rather_than_reachable(

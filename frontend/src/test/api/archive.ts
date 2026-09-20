@@ -138,6 +138,14 @@ export interface Archive {
   jobs: Schemas['JobSummary'][];
   tags: Schemas['TagSuggestion'][];
   destination: Schemas['TranscriptionDestination'];
+  /**
+   * What the last connection test found, as the instance records it (`BUG-3a`).
+   *
+   * On the archive rather than in the handler so it resets with everything else: it is state the
+   * instance keeps, and a test that ran the check would otherwise hand a green verdict to the
+   * next one.
+   */
+  lastCheck: { reachable: boolean | null; usable: boolean | null; detail: string } | null;
   /** `GET /search/about`'s one sentence, in the words `recall_note()` writes it. */
   recall: string;
   /**
@@ -425,6 +433,7 @@ function fresh(): Archive {
       is_local: true,
       configured: true,
     },
+    lastCheck: null,
     passwordsSet: [],
     users: [
       { ...ALEX, is_admin: true, disabled_at: null, created_at: '2025-11-02T09:00:00Z' },

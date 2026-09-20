@@ -19,11 +19,11 @@
  * **No provider configured is not an error.** Nothing on the instance can be transcribed, which
  * is a fact to state plainly, not a failure to offer a retry for.
  *
- * **What a check found outlives the view it was run from, and says when it was run.** It is held
- * beside the configuration rather than inside it (`useProviderCheck`), because it is an
- * observation about a third party at a moment rather than something the instance knows -- and a
- * verdict that survives a navigation is a claim about the past, so the moment is on screen with
- * it.
+ * **A check is the instance's, not the browser's** (`BUG-3a`). What one found is recorded on the
+ * instance and comes back with every read of this panel, so it survives a reload and a second
+ * administrator sees it -- with the moment it was taken and whose it was, because a verdict that
+ * outlives the press is a claim about the past and one with no time on it reads as a claim about
+ * now.
  */
 
 import { useTranslation } from 'react-i18next';
@@ -32,12 +32,14 @@ import { isApiProblem } from '@/api/problem';
 import { useNow } from '@/app/hooks/use-now';
 import { Button, EgressNotice, KeyValueList, StateCard } from '@/design-system';
 import type { KeyValueRow } from '@/design-system';
+import type { components } from '@/api/contract/schema';
 import { relative } from '@/i18n/time';
 import { useEgressLabels } from '@/i18n/egress-labels';
 
 import { AdminSection } from './AdminSection';
-import { useProvider, useProviderCheck, useTestProvider } from './data';
-import type { ProviderCheck } from './data';
+import { useProvider, useTestProvider } from './data';
+
+type ProviderStatus = components['schemas']['ProviderStatus'];
 
 /** Below this, "just now" is the honest reading -- `Intl` has no phrase for "not yet a minute". */
 const MINUTE_MS = 60_000;
@@ -47,7 +49,6 @@ export function Provider() {
   const { t: common } = useTranslation();
   const egressLabels = useEgressLabels();
   const provider = useProvider();
-  const check = useProviderCheck();
   const test = useTestProvider();
 
   if (provider.isPending) {
@@ -106,7 +107,7 @@ export function Provider() {
         <>
           <KeyValueList rows={rows} layout="inline" />
           <Reachability
-            check={check}
+            status={status}
             isPending={test.isPending}
             onTest={() => {
               test.mutate();
@@ -142,32 +143,36 @@ export function Provider() {
  * is named: it answered, and it still cannot do this.
  *
  * Unknown is the state the page opens in, and it says so -- an unknown that rendered as a failure
- * would train an operator to ignore a real one. It is also the state a check leaves behind when it
- * could not be run at all, which is why its sentence is shown beside it.
+ * would train an operator to ignore a real one. A check that could not be run is a fifth state and
+ * not that one: somebody asked, and this instance could not produce the sample to ask with.
  */
 function Reachability({
-  check,
+  status,
   isPending,
   onTest,
 }: {
-  check: ProviderCheck | undefined;
+  status: ProviderStatus;
   isPending: boolean;
   onTest: () => void;
 }) {
   const { t, i18n } = useTranslation('settings');
-  // The verdict has an age the moment it is written, and nothing else on this panel re-renders
+  // The verdict has an age the moment it is recorded, and nothing else on this panel re-renders
   // it: the configuration behind it is settled, so the label would sit at "just now" all evening.
   const now = useNow();
-  // No check, and a check that contacted nobody, are the same state: the one the page opens in.
-  const reachable = check?.reachable ?? null;
+  const { reachable, usable, detail, checked_at: checkedAt, checked_by: checkedBy } = status;
   const verdict =
-    reachable === null
+    checkedAt === null
       ? { label: t('provider.untested'), colour: 'var(--text-3)' }
-      : check?.usable === true
-        ? { label: t('provider.usable'), colour: 'var(--state-done)' }
-        : reachable
-          ? { label: t('provider.unusable'), colour: 'var(--state-failed)' }
-          : { label: t('provider.unreachable'), colour: 'var(--state-failed)' };
+      : reachable === null
+        ? // Somebody asked and the check could not be run at all -- ffmpeg could not produce the
+          // sample. Neither a pass nor a failure of the engine, and saying "not checked yet"
+          // beside the time it was checked was a contradiction on screen.
+          { label: t('provider.uncheckable'), colour: 'var(--state-failed)' }
+        : usable === true
+          ? { label: t('provider.usable'), colour: 'var(--state-done)' }
+          : reachable
+            ? { label: t('provider.unusable'), colour: 'var(--state-failed)' }
+            : { label: t('provider.unreachable'), colour: 'var(--state-failed)' };
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
       <div
@@ -190,7 +195,7 @@ function Reachability({
         >
           {verdict.label}
         </span>
-        {check !== undefined && (
+        {checkedAt !== null && checkedBy !== null && (
           <span
             style={{
               fontFamily: 'var(--font-sans)',
@@ -198,17 +203,18 @@ function Reachability({
               color: 'var(--text-3)',
             }}
           >
-            {now - Date.parse(check.checkedAt) < MINUTE_MS
-              ? t('provider.checkedJustNow')
+            {now - Date.parse(checkedAt) < MINUTE_MS
+              ? t('provider.checkedJustNow', { who: checkedBy })
               : t('provider.checkedAt', {
-                  when: relative(check.checkedAt, i18n.language, new Date(now)),
+                  who: checkedBy,
+                  when: relative(checkedAt, i18n.language, new Date(now)),
                 })}
           </span>
         )}
       </div>
       {/* Shown whenever a check has run, rather than only when something answered: the case in
           which nothing was contacted at all is the one whose sentence explains why. */}
-      {check !== undefined && check.detail !== '' && (
+      {checkedAt !== null && detail !== '' && (
         <span
           style={{
             maxWidth: 520,
@@ -218,7 +224,7 @@ function Reachability({
             overflowWrap: 'anywhere',
           }}
         >
-          {check.detail}
+          {detail}
         </span>
       )}
       <span

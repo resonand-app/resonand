@@ -6,19 +6,18 @@
  * left on mount would fail this file rather than be discovered on somebody's instance.
  *
  * The check's two halves are watched here too, and both were faults somebody met (`BUG-3`): what
- * the control says while a third party is deciding, and whether the answer is still there after
- * the view has been left. The second is asserted through a second mount on the same cache, which
- * is the thing that used to lose it.
+ * the control says while a third party is deciding, and whether the answer is still there
+ * afterwards. The second is asserted through a mount on a **fresh** cache, which is what a reload
+ * is -- the verdict is the instance's now (`BUG-3a`), so nothing in the browser should be
+ * carrying it.
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import type { QueryClient } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, delay, http } from 'msw';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { keys } from '@/api/keys';
 import { createQueryClient } from '@/api/query-client';
 import { ThemeProvider } from '@/design-system';
 import { archive } from '@/test/api/archive';
@@ -42,17 +41,16 @@ afterEach(() => {
   api.events.removeAllListeners();
 });
 
-/** The cache is a parameter so a second mount can be given the first one's, as a route change is. */
-function show(client: QueryClient = createQueryClient()) {
+function show() {
+  const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
-  const view = render(
+  return render(
     <QueryClientProvider client={client}>
       <ThemeProvider>
         <Provider />
       </ThemeProvider>
     </QueryClientProvider>,
   );
-  return { ...view, client };
 }
 
 describe('opening the page', () => {
@@ -82,7 +80,12 @@ describe('opening the page', () => {
   });
 });
 
-/** A check result the endpoint could really return. */
+/**
+ * A check result the endpoint could really return.
+ *
+ * `checked_at` and `checked_by` are always set: the endpoint records every check it runs, so
+ * there is no answer it can give in which somebody did not just ask (`BUG-3a`).
+ */
 function answered(over: Record<string, unknown>) {
   return HttpResponse.json({
     provider: 'faster-whisper',
@@ -93,6 +96,8 @@ function answered(over: Record<string, unknown>) {
     has_credential: false,
     reachable: true,
     usable: true,
+    checked_at: new Date().toISOString(),
+    checked_by: 'Alex Morgan',
     detail: '',
     ...over,
   });
@@ -142,24 +147,41 @@ describe('checking that it can transcribe', () => {
     );
   });
 
-  it('is still there after the view has been left, and says when it was asked', async () => {
-    const first = show();
+  it('is still there on a fresh cache, because the instance is what remembers', async () => {
+    show();
     await userEvent.click(await screen.findByRole('button', { name: 'Check it can transcribe' }));
     expect(await screen.findByText('It can transcribe')).toBeVisible();
-    first.unmount();
+    cleanup();
 
+    // A brand new cache is what a reload gives, and it used to be where the verdict was lost --
+    // first because it was written over a read that answers `reachable: null` by design, then
+    // because it was held in the browser at all.
     sent = [];
-    // What coming back really does, and what used to erase the answer: the configuration is read
-    // again -- because thirty seconds passed, because the window was refocused, because something
-    // administrative changed -- and it answers `reachable: null`, since the instance keeps no
-    // record of a check.
-    await first.client.refetchQueries({ queryKey: [...keys.provider()], type: 'all' });
-    show(first.client);
+    show();
     expect(await screen.findByText('It can transcribe')).toBeVisible();
-    expect(screen.getByText('Checked just now')).toBeVisible();
+    expect(screen.getByText('Checked just now by Alex Morgan')).toBeVisible();
     // Remembering must not mean asking again: the whole point of the button is that nothing
     // leaves the instance unless somebody pressed it.
     expect(sent).not.toContain('POST /api/admin/transcription/test');
+  });
+
+  it('says a check could not be run rather than calling it unchecked', async () => {
+    // The instance could not produce the sample to ask with, so nothing was contacted -- neither
+    // a pass nor a failure of the engine, and the sentence explaining it is the whole value.
+    server.use(
+      http.post('/api/admin/transcription/test', () =>
+        answered({
+          reachable: null,
+          usable: null,
+          detail: 'ffmpeg could not produce the sample this check submits.',
+        }),
+      ),
+    );
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Check it can transcribe' }));
+    expect(await screen.findByText('It could not be checked')).toBeVisible();
+    expect(screen.getByText(/ffmpeg could not produce the sample/)).toBeVisible();
+    expect(screen.queryByText('Not checked yet')).toBeNull();
   });
 
   it('distinguishes an engine that answers from one that can transcribe', async () => {

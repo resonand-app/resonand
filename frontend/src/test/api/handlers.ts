@@ -713,8 +713,13 @@ export const handlers: HttpHandler[] = [
     }),
   ),
   http.get('/api/admin/transcription', () => HttpResponse.json(providerStatus())),
-  // The one call in administration that contacts anything, and only because it was asked to.
-  http.post('/api/admin/transcription/test', () => HttpResponse.json(providerStatus(true))),
+  // The one call in administration that contacts anything, and only because it was asked to. It
+  // records what it found, as the endpoint does -- a handler that answered without remembering
+  // would make the read that follows it untestable (`BUG-3a`).
+  http.post('/api/admin/transcription/test', () => {
+    archive.lastCheck = { reachable: true, usable: true, detail: 'Answering on whisper:8000.' };
+    return HttpResponse.json(providerStatus());
+  }),
   http.get('/api/admin/users', () => HttpResponse.json(archive.users)),
   http.post('/api/admin/users', async ({ request }) => {
     const body = (await request.json()) as Schemas['CreateAccount'];
@@ -758,20 +763,18 @@ export const handlers: HttpHandler[] = [
 /**
  * The provider as the instance holds it (`INT-3c`).
  *
- * **`reachable` is `null` unless somebody ran the check**, which is the endpoint's own contract and
- * not a detail: nothing contacts a third party because a page was opened, so a plain read cannot
- * know whether the provider answers. A mock that returned `true` here would make the one state
- * `INT-3c` exists to draw -- unchecked -- unreachable in a test, and the page would look right
- * while proving nothing.
+ * **`reachable` is `null` until somebody has run the check**, which is the endpoint's own contract
+ * and not a detail: nothing contacts a third party because a page was opened. What a check found
+ * is recorded by the instance and reported by every read afterwards (`BUG-3a`), so this reads
+ * `archive.lastCheck` rather than taking an argument -- a handler whose answer depended on which
+ * endpoint was asked could not tell the two states apart.
  *
  * **`usable` is a second answer and not a synonym** (`TRX-10`). An engine can answer everything
  * asked of it and still run a model that returns no timed segments, so a handler that tied the
  * two together would make the state the check exists to catch untestable.
  */
-function providerStatus(
-  reachable: boolean | null = null,
-  usable: boolean | null = reachable,
-): Schemas['ProviderStatus'] {
+function providerStatus(): Schemas['ProviderStatus'] {
+  const check = archive.lastCheck;
   return {
     provider: archive.destination.provider,
     base_url: 'http://whisper:8000/v1',
@@ -779,9 +782,11 @@ function providerStatus(
     default_language: null,
     configured: archive.destination.configured,
     has_credential: false,
-    reachable,
-    usable,
-    detail: reachable === null ? '' : 'Answering on whisper:8000.',
+    reachable: check?.reachable ?? null,
+    usable: check?.usable ?? null,
+    checked_at: check === null ? null : new Date().toISOString(),
+    checked_by: check === null ? null : 'Alex Morgan',
+    detail: check?.detail ?? '',
   };
 }
 

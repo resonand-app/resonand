@@ -23,6 +23,7 @@ from sonarium.core.errors import PermissionDeniedError, UnauthenticatedError
 from sonarium.db import sessions
 from sonarium.db.engine import Database, get_database
 from sonarium.db.models import Session, User
+from sonarium.transcription.last_check import LastCheck
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -49,6 +50,15 @@ def settings_of(request: Request) -> Settings:
     """This instance's settings, taken off the application rather than re-read per request."""
     stored = getattr(request.app.state, "settings", None)
     return stored if isinstance(stored, Settings) else get_settings()
+
+
+def last_check_of(request: Request) -> LastCheck:
+    """What the last transcription check found. One per application, as ``Changes`` is."""
+    stored = getattr(request.app.state, "last_check", None)
+    if not isinstance(stored, LastCheck):
+        stored = LastCheck()
+        request.app.state.last_check = stored
+    return stored
 
 
 def database_of(request: Request) -> Database:
@@ -80,6 +90,7 @@ def writing(database: Annotated[Database, Depends(database_of)]) -> Iterator[DbS
 ReadSession = Annotated[DbSession, Depends(reading)]
 WriteSession = Annotated[DbSession, Depends(writing)]
 InstanceSettings = Annotated[Settings, Depends(settings_of)]
+ProviderChecks = Annotated[LastCheck, Depends(last_check_of)]
 
 ArchiveDatabase = Annotated[Database, Depends(database_of)]
 """The archive itself, for the few endpoints that must own their transactions.
