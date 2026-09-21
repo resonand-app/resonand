@@ -151,6 +151,7 @@ def import_files(
         return
 
     manifest = _manifest_from(source)
+    _say_if_no_manifest(source, manifest, library_uuid=library)
     resolved = {} if dry_run else _restore_instance(database, manifest)
     planned = _libraries_named_by(manifest)
 
@@ -506,6 +507,52 @@ def _manifest_from(source: Path) -> dict[str, object] | None:
     except (ValueError, OSError) as error:
         typer.echo(f"ignoring {path.name}: {error}", err=True)
         return None
+
+
+def _say_if_no_manifest(
+    source: Path, manifest: dict[str, object] | None, *, library_uuid: str | None
+) -> None:
+    """Name the missing manifest, before the wall of identical skip lines that follows it.
+
+    Being pointed one directory above an export is the ordinary way to get here, and every
+    recording then reports the same thing -- that it has no library -- which describes the
+    symptom and never the cause.
+    """
+    if manifest is not None:
+        return
+    nearby = _manifests_below(source)
+    if nearby:
+        where = ", ".join(str(one) for one in nearby)
+        typer.echo(
+            f"{source} carries no {MANIFEST_NAME}, and {where} does. Point at that to restore "
+            "the libraries and the sharing it describes.",
+            err=True,
+        )
+        return
+    if library_uuid is None:
+        typer.echo(
+            f"{source} carries no {MANIFEST_NAME}, so no libraries or sharing can be restored "
+            "from it and every recording below needs somewhere to go. Pass --library <uuid>, "
+            "or point at the directory an export wrote.",
+            err=True,
+        )
+
+
+def _manifests_below(source: Path, limit: int = 3) -> list[Path]:
+    """Immediate subdirectories that do carry a manifest.
+
+    One level, and it stops early: this runs to explain a mistake somebody has already made,
+    not to go looking for the export on their behalf.
+    """
+    if not source.is_dir():
+        return []
+    found: list[Path] = []
+    for entry in sorted(source.iterdir()):
+        if entry.is_dir() and (entry / MANIFEST_NAME).is_file():
+            found.append(entry)
+            if len(found) == limit:
+                break
+    return found
 
 
 def _restore_instance(database: Database, manifest: dict[str, object] | None) -> dict[str, int]:

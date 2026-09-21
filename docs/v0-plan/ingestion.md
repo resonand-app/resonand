@@ -100,6 +100,17 @@ structural here rather than aspirational.
       account, so the one here already has a uuid of its own and the manifest's is mapped to it
       by owner rather than adopted.*
 
+- [x] **ING-11c1** · **An import says when it found no manifest**, and names the subdirectory
+      that has one. ⇢ ING-11c 🧪
+      *Found using it. Pointed one directory above an export, the import reports the same thing
+      once per recording — that it has no library to go into — which is the symptom and never
+      the cause; the manifest it could not find is not mentioned at all. Cost an hour of a real
+      round trip, and a wrong diagnosis before that. The look one level down is deliberately not
+      a search: it explains a mistake somebody has already made rather than going to find the
+      export for them. Nothing is said when `--library` was given and no manifest exists
+      anywhere, because importing a folder of recordings into a library you named is an ordinary
+      thing to do and not a mistake to explain.*
+
 - [x] **ING-11b** · **The round trip**: export the whole archive, import it into an empty
       instance, and get back what went in. ⇢ ING-11a, ING-11c 🧪
       *Exit criterion 4. The test runs both commands over the shape a real instance has — two

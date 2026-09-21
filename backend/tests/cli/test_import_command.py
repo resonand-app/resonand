@@ -159,6 +159,53 @@ def test_a_dry_run_says_when_it_would_skip(instance: Instance, tmp_path: Path) -
     assert "would skip" in result.output
 
 
+# --- When there is no manifest to read --------------------------------------
+
+
+def test_an_import_pointed_above_an_export_says_where_the_manifest_is(
+    instance: Instance, tmp_path: Path
+) -> None:
+    """``ING-11c1``. One directory too high is the ordinary mistake, and every recording then
+    reports the same thing -- that it has no library -- which is the symptom and not the cause."""
+    outer = tmp_path / "outer"
+    assert runner.invoke(app, ["export", str(outer / "export")]).exit_code == 0
+
+    result = runner.invoke(app, ["import", str(outer), "--dry-run"])
+
+    assert result.exit_code == 0, result.output
+    assert f"{outer} carries no sonarium-archive.json" in result.output
+    assert str(outer / "export") in result.output
+
+
+def test_an_import_with_nothing_to_place_recordings_in_says_so_once(
+    instance: Instance, tmp_path: Path
+) -> None:
+    loose = tmp_path / "loose"
+    loose.mkdir()
+    (loose / "somebody-elses.m4a").write_bytes(b"bytes from elsewhere")
+
+    result = runner.invoke(app, ["import", str(loose), "--dry-run"])
+
+    assert result.exit_code == 0, result.output
+    assert result.output.count("carries no sonarium-archive.json") == 1
+    assert "Pass --library <uuid>" in result.output
+
+
+def test_loose_files_going_somewhere_named_are_not_told_about_manifests(
+    instance: Instance, tmp_path: Path
+) -> None:
+    """Importing a folder of recordings into a library you named is an ordinary thing to do, not
+    a mistake to explain."""
+    loose = tmp_path / "loose"
+    loose.mkdir()
+    (loose / "somebody-elses.m4a").write_bytes(b"bytes from elsewhere")
+
+    result = runner.invoke(app, ["import", str(loose), "--library", instance.library_uuid])
+
+    assert result.exit_code == 0, result.output
+    assert "sonarium-archive.json" not in result.output
+
+
 def libraries_of(session: object, audio: Audio) -> str:
     from sonarium.db.models import Library  # noqa: PLC0415 -- one assertion needs the name
 
