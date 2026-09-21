@@ -165,8 +165,12 @@ graph TD
 
 ## What is left
 
-**Nothing.** Every task in this plan is closed, including the three tracks that were not planned
-in advance and the one minted at the end of it.
+**One thing, and it is an operation rather than a task.** Every entry in this plan is closed,
+including the three tracks that were not planned in advance and the one minted at the end of it —
+but `INF-11` is ticked for the tree and not for the history. The webfont it removed is still in
+every commit that ever carried it, and taking it out means rewriting all of them. That is held for
+a session of its own and **has to happen before the repository opens**, because publishing the
+history is the breach, not keeping the checkout.
 
 The last of them was the rename. `NAM` was opened on the day the name changed and closed five
 tasks later: the track written, the repository moved to `resonand-app/resonand` with all 140 of

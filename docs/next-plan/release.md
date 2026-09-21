@@ -38,14 +38,24 @@ be true the moment somebody outside can see any of it.
       true, so it names the whole toolbox a repository owner actually has -- edit, delete, lock,
       block -- rather than implying more.
 
-- [ ] **REL-6** · **The README stops describing a project being built and starts describing the
+- [x] **REL-6** · **The README stops describing a project being built and starts describing the
       first version**, and [`ROADMAP.md`](../../ROADMAP.md) is brought level with it: anything still
       open in [`docs/v0-plan/`](../v0-plan/) on that day either ships or moves, so that a reader
       arriving the day it opens finds one account of what exists rather than three. The status
       block is what has drifted furthest — it still says the interface is being built, which
       stopped being true before the cross-cutting pass. ⇢ REL-1
 
-- [ ] **REL-1** · **The README's screenshots**, two of them, light and dark. Interface quality is
+      **Done.** The status block now says the first version is complete and in private use, and
+      that nothing is installable — one account of what exists, where there were three. `VISION.md`
+      and `deploy/` moved with it, and `ROADMAP.md` needed nothing: it already described everything
+      in it as coming after a first version that exists.
+
+      `INF-10` landed the same day, so the README's *Contributing* section points at
+      [`CONTRIBUTING.md`](../../CONTRIBUTING.md) instead of restating it. That is this entry's own
+      rule applied in the small: two accounts of what is welcome is exactly the fault it exists to
+      remove.
+
+- [x] **REL-1** · **The README's screenshots**, two of them, light and dark. Interface quality is
       the one claim that cannot be verified from a list, which is exactly why it gets shown rather
       than asserted. It lands in `REL-6`'s pass: a README describing a finished interface and
       showing none of it is the same fault in the other direction.
@@ -53,6 +63,18 @@ be true the moment somebody outside can see any of it.
       removes, so they stopped being usable the day the name changed; `#114` was closed rather than
       merged for that reason, and its branch is kept locally because the prose is a better starting
       point than a blank page even though none of it survives unedited.*
+
+      **Done, four of them.** The recording view with its transcript following playback, a search
+      across the archive, and the `Family` grid in both themes — the light-and-dark pair is the
+      grid, because a second recording view in light says nothing the first one did not. The phone
+      shot that was there is gone: `ROADMAP.md` still has PWA quality open, and photographing a
+      phone while promising to do better on one reads as a claim rather than a screenshot.
+
+      They come from `demo-base-full` through the dev layer's `demo/shots.sh` — a running instance
+      holding the whole demo world, with real files, real stored peaks and real transcripts, so the
+      waveforms are drawn rather than invented. The transcription endpoint is renamed for the run,
+      because the panel prints its host and a published screenshot should not carry somebody's own
+      network address.
 
 ## Gate 2 · The release
 

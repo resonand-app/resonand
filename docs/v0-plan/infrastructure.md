@@ -116,11 +116,15 @@ Short and mechanical, but it conditions everything that comes after. No product 
       wordmark is unaffected. ⇢ INF-11 🧪
       🧪 *The face is declared and its licence is in the tree.*
 
-      **Done, in four parts and over three tasks.** `INF-11a` gave page titles Gabarito, so
+      **Three parts done, one outstanding.** `INF-11a` gave page titles Gabarito, so
       `--font-display` resolves to something redistributable. `NAM-5` made the lockup artwork, so
-      it renders with no font loaded at all. This entry takes the file out of the tree, and the
-      history rewrite ran immediately after it merged -- `git filter-repo` over the one blob, then
-      a force push, with nothing else open.
+      it renders with no font loaded at all. This entry took the file out of the tree.
+
+      **The history still holds it.** `git filter-repo` over the one blob and a force push is
+      deliberately held for a session of its own, because it rewrites every commit and wants
+      nothing else open while it runs. The box above is ticked for the tree; **this task is not
+      finished until that pass has run**, and the repository must not open before it has --
+      publishing the history is the breach the licence names, not keeping the checkout.
 
       The check that is left behind is the useful part: **every shipped face must name its
       licence**, and adding one without is what fails. Chillax sat here for months, declared and
