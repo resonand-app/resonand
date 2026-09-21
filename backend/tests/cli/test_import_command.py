@@ -10,6 +10,7 @@ The whole-archive round trip, which is exit criterion 4, is ``ING-11b`` and is n
 
 from __future__ import annotations
 
+import json
 import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -204,6 +205,77 @@ def test_loose_files_going_somewhere_named_are_not_told_about_manifests(
 
     assert result.exit_code == 0, result.output
     assert "resonand-archive.json" not in result.output
+
+
+# --- An export written before the rename (NAM-4) -----------------------------
+
+
+def age(export: Path) -> None:
+    """Rewrite an export into the format this project wrote before it was renamed."""
+    for path in sorted(export.rglob("*.json")):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["sonarium"] = payload.pop("resonand")
+        path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        path.rename(path.with_name(path.name.replace("resonand", "sonarium")))
+
+
+def test_an_export_written_before_the_rename_still_imports(
+    instance: Instance, database: Database, db_settings: Settings, tmp_path: Path
+) -> None:
+    """``NAM-4``. An export is the one artefact built to outlive the instance that wrote it, so a
+    reader that refused last month's spelling would undercut the claim it rests on."""
+    export = tmp_path / "old"
+    assert runner.invoke(app, ["export", str(export)]).exit_code == 0
+    age(export)
+    assert (export / "sonarium-archive.json").is_file()
+    forget(database, db_settings, instance.uuid)
+
+    result = runner.invoke(app, ["import", str(export)])
+
+    assert result.exit_code == 0, result.output
+    # The file it read, not the one this build writes: naming the wrong one sends somebody
+    # looking for a file that is not there.
+    assert "from sonarium-archive.json" in result.output
+    with database.read_session() as session:
+        restored = find_by_uuid(session, instance.uuid)
+        assert restored is not None
+        assert libraries_of(session, restored) == "Family"
+
+
+def test_an_export_written_now_carries_only_the_new_names(
+    instance: Instance, tmp_path: Path
+) -> None:
+    """The fallback is a reader, never a writer: nothing this build emits carries the old name."""
+    export = tmp_path / "current"
+    assert runner.invoke(app, ["export", str(export)]).exit_code == 0
+
+    written = sorted(export.rglob("*.json"))
+    assert written
+    for path in written:
+        assert "sonarium" not in path.name
+        assert "sonarium" not in path.read_text(encoding="utf-8")
+
+
+def test_a_sidecar_suffixed_with_the_old_name_is_still_found(
+    instance: Instance, database: Database, db_settings: Settings, tmp_path: Path
+) -> None:
+    """The hand-written shape rather than the exported one: one recording, one sidecar named
+    after it, sitting in a directory this command was simply pointed at."""
+    loose = tmp_path / "loose"
+    loose.mkdir()
+    directory = instance.export / instance.uuid
+    audio = next(one for one in directory.iterdir() if one.suffix == ".m4a")
+    shutil.copy(audio, loose / audio.name)
+    payload = json.loads((directory / "resonand.json").read_text(encoding="utf-8"))
+    payload["sonarium"] = payload.pop("resonand")
+    (loose / f"{audio.stem}.sonarium.json").write_text(json.dumps(payload), encoding="utf-8")
+    forget(database, db_settings, instance.uuid)
+
+    result = runner.invoke(app, ["import", str(loose)])
+
+    assert result.exit_code == 0, result.output
+    with database.read_session() as session:
+        assert find_by_uuid(session, instance.uuid) is not None
 
 
 def libraries_of(session: object, audio: Audio) -> str:
