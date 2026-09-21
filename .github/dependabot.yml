@@ -101,6 +101,11 @@ updates:
       - dependency-name: "eslint"
         update-types: ["version-update:semver-major"]
       - dependency-name: "@eslint/js"
+      # jsdom 30.1.0 throws `TypeError: ... reading '_buffer'` out of `XMLHttpRequest.send()` when
+      # the body is a `FormData` carrying a `File` -- which is every upload. Held at 30.0.1 until a
+      # later release fixes it; this ignores that one version rather than the package.
+      - dependency-name: "jsdom"
+        versions: ["30.1.0"]
         update-types: ["version-update:semver-major"]
       # TypeScript 7 is held back by `typescript-eslint`, whose peer range stops below it. Ends
       # when that range opens.
