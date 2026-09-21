@@ -29,6 +29,10 @@ be true the moment somebody outside can see any of it.
       the one claim that cannot be verified from a list, which is exactly why it gets shown rather
       than asserted. It lands in `REL-6`'s pass: a README describing a finished interface and
       showing none of it is the same fault in the other direction.
+      *Shot after `NAM-5` and not before. The three taken for `#114` show a lockup the rename
+      removes, so they stopped being usable the day the name changed; `#114` was closed rather than
+      merged for that reason, and its branch is kept locally because the prose is a better starting
+      point than a blank page even though none of it survives unedited.*
 
 ## Gate 2 · The release
 

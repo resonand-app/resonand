@@ -42,6 +42,9 @@ that a one-line table row cannot.
 
 ### The name, claimed once (DEC-7)
 
+**Superseded by `DEC-26`**, which changes the name to `resonand` before the repository opens. This
+entry stays as the record of the claim as it was made, and of the cost it accepted knowingly.
+
 `sonarium`, under the `sonarium-app` organisation: repository, container image, documentation
 namespace and domain all carry the same string. The repository exists and is private.
 
@@ -379,3 +382,32 @@ afterwards means regenerating the snapshot and reviewing a diff that touches eve
 What does not move: `/healthz` and `/readyz`, which are probes rather than API surface and are
 already outside the document; and `/`, which is the interface when a bundle is present and the
 instance's own answer when it is not.
+
+### DEC-26 · The name changes to `resonand`
+
+`DEC-7` claimed `sonarium` and named the cost it was accepting: prior use of the term in the same
+semantic field — a sound designer and recording engineer working under it — accepted knowingly as
+a discovery cost rather than a trademark exposure. This reverses that, and `DEC-7` keeps its text
+because it was right about the day it was written.
+
+Two things settled it. The cost `DEC-7` accepted is paid every time somebody looks the project up,
+for as long as the project exists, and it was accepted before there was anything to look up. And
+the prior-use check that produced `DEC-7`'s finding was run again for `resonand` and came back
+clean — nothing in the field to compete with, and the name unclaimed on PyPI and on npm.
+
+**The timing is the other half of the decision, and it is the part with a deadline.** Everything a
+rename is expensive to change is a thing somebody else depends on: an installed distribution, a
+pulled image, a URL in somebody's notes, an environment file on a machine that is not mine. None of
+those exists yet. The repository is private with no forks and no stars, nothing is published to any
+registry, there is no release and no tag, and the one running instance is mine. On the day the
+repository opens every one of those turns into a compatibility obligation, and the same work stops
+being a rename and becomes a deprecation.
+
+**What was rejected.** Keeping `sonarium` and living with the discovery cost, which is what `DEC-7`
+chose and is still a defensible answer — it is rejected because the cost compounds and the moment
+to avoid it does not come back. And renaming after publication, which is the same work plus every
+redirect, alias and fallback needed to avoid breaking somebody, for an audience that does not exist
+yet.
+
+What this does not change: the data model, the API shape, the permission rules, or any decision
+above. The strings, where they go and what they cost are [`naming.md`](naming.md).

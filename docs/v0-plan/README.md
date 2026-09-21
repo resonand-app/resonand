@@ -85,6 +85,7 @@ it.
 | `SEC` | Pre-publication hardening | What was fixed before anybody could read the source | [`security.md`](security.md) |
 | `BUG` | Defects found in use | Faults found by using the archive rather than by reading it | [`defects.md`](defects.md) |
 | `REV` | Backend review | What a read of the finished backend found, and what settled each finding | [`review.md`](review.md) |
+| `NAM` | The name | The rename to `resonand`, and everywhere the old string had reached | [`naming.md`](naming.md) |
 
 Notation:
 
@@ -96,10 +97,11 @@ Notation:
 
 A task is done when it meets the criterion written next to it, not when it "works".
 
-The last four tracks were not planned in advance. `TRX`, `SEC`, `BUG` and `REV` are what came
-back from building the thing, hardening it and reading it, and they are here for the same reason
-the rest is: an identifier in a commit message or a comment has to resolve to something a reader
-of this repository can open.
+The last five tracks were not planned in advance. `TRX`, `SEC`, `BUG` and `REV` are what came
+back from building the thing, hardening it and reading it; `NAM` is what came back from asking, on
+the last day it was free to ask, whether the name was right. They are here for the same reason the
+rest is: an identifier in a commit message or a comment has to resolve to something a reader of
+this repository can open.
 
 ### Identifiers you will meet in the code that are not here
 
@@ -165,7 +167,7 @@ graph TD
 
 Every track has now been read against the code, so an unticked box is one somebody checked rather
 than one nobody reached. None of them blocks another — the ordering this section used to carry is
-spent along with the tasks in it. They fall into two groups, and the tables below are the count.
+spent along with the tasks in it. They fall into three groups, and the tables below are the count.
 
 **Nothing that the plan always held.** `ING-11b` was the last of them: the round trip now runs
 both commands against an empty instance and gets the archive back, structure included. What is
@@ -186,6 +188,22 @@ are numbered children of the task that produced them:
 | Task | What it is |
 |---|---|
 | `INF-11` | A webfont is redistributed that its own licence forbids redistributing — from the tree, and from the history |
+
+**And one group that came from neither.** The name changes to `resonand` before the repository
+opens, because that is the last moment it is free: nothing is published to any registry, there is
+no release and no tag, and the repository is private with no forks. [`DEC-26`](decisions.md) takes
+the decision and [`naming.md`](naming.md) holds the work.
+
+| Task | What it is |
+|---|---|
+| `NAM-1` | The name and what it touches, written down before a line changes |
+| `NAM-2` | The name claimed, and the repository moved to `resonand-app` with its pull requests |
+| `NAM-3` | The rename, everywhere the string appears |
+| `NAM-4` | An export written under the old name still reads |
+| `NAM-5` | The mark, the lockup and the icons |
+
+`INF-11` waits on `NAM-5` rather than running first: the wordmark it was going to outline is the
+one the rename deletes, and outlining it twice is paying for the work twice.
 
 Three of the five conditions below are acts rather than tasks — performed against the real
 archive, and not tickable anywhere.

@@ -259,6 +259,7 @@ what the work is, and the folder says which version did it.
 | `SEC` | What was hardened before the source was readable by anybody | `security.md` |
 | `BUG` | Defects found by using the archive rather than by reading it | `defects.md` |
 | `REV` | Backend review findings, and what settled each one | `review.md` |
+| `NAM` | The rename to `resonand`, and everywhere the old string had reached | `naming.md` |
 
 One more is cited from the code and planned in a working document that is **not in this
 repository**, so an identifier carrying it resolves to the code that applied it and nowhere else:
