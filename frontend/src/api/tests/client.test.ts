@@ -45,7 +45,7 @@ describe('where it sends', () => {
   it('calls the exact path the document publishes, relative to this origin', async () => {
     // Not assembled out of a base and a suffix: the paths in `schema.ts` carry `/api` because
     // that is where the API is (`API-16`), so what a call site writes is what goes on the wire.
-    fetchMock.mockResolvedValue(answer(200, { name: 'sonarium' }));
+    fetchMock.mockResolvedValue(answer(200, { name: 'resonand' }));
     await get('/api/instance');
     expect(madeRequest().url).toBe('/api/instance');
   });
@@ -103,8 +103,8 @@ describe('where it sends', () => {
 
 describe('what it gives back', () => {
   it('resolves to the body a call answered with', async () => {
-    fetchMock.mockResolvedValue(answer(200, { name: 'sonarium', version: '0.1.0' }));
-    await expect(get('/api/instance')).resolves.toMatchObject({ name: 'sonarium' });
+    fetchMock.mockResolvedValue(answer(200, { name: 'resonand', version: '0.1.0' }));
+    await expect(get('/api/instance')).resolves.toMatchObject({ name: 'resonand' });
   });
 
   it('resolves to nothing for a 204, rather than failing to parse one', async () => {
@@ -271,7 +271,7 @@ describe('the deployment prefix', () => {
   it('is the prefix the shell was served under, without its trailing slash', async () => {
     // The href always ends in a slash -- a base URL without one names a file -- and every path
     // in `schema.ts` begins with one, so the prefix is kept in the form that concatenates.
-    expect(await baseUnder('/sonarium/')).toBe('/sonarium');
+    expect(await baseUnder('/resonand/')).toBe('/resonand');
     expect(await baseUnder('/deep/er/')).toBe('/deep/er');
   });
 

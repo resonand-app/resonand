@@ -16,11 +16,11 @@ from typing import Any
 import httpx
 import pytest
 from pydantic import SecretStr
-from sonarium.core.errors import ProviderError
-from sonarium.transcription.capabilities import Capabilities, TimeUnit
-from sonarium.transcription.contract import AUTO_DETECT, TranscriptionRequest
-from sonarium.transcription.metering import InMemoryUsage
-from sonarium.transcription.openai_compatible import OpenAiCompatibleProvider
+from resonand.core.errors import ProviderError
+from resonand.transcription.capabilities import Capabilities, TimeUnit
+from resonand.transcription.contract import AUTO_DETECT, TranscriptionRequest
+from resonand.transcription.metering import InMemoryUsage
+from resonand.transcription.openai_compatible import OpenAiCompatibleProvider
 
 API_KEY = "sk-a-secret-nobody-should-see"
 
@@ -192,7 +192,7 @@ def test_a_backwards_segment_is_straightened_rather_than_stored(audio: Path) -> 
 
 def test_a_rejected_key_names_the_setting_to_fix(audio: Path) -> None:
     provider = provider_returning(status=401, text="invalid api key")
-    with pytest.raises(ProviderError, match="SONARIUM_TRANSCRIPTION_API_KEY"):
+    with pytest.raises(ProviderError, match="RESONAND_TRANSCRIPTION_API_KEY"):
         provider.submit(a_request(audio))
 
 

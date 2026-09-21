@@ -13,7 +13,7 @@ import { useEffect } from 'react';
 
 import { usePlayback } from './store';
 
-/** The mark, as a data URI: the tile treatment, at the same geometry as `sonarium-mark-tile.svg`. */
+/** The mark, as a data URI: the tile treatment, at the same geometry as `resonand-mark-tile.svg`. */
 const ARTWORK =
   'data:image/svg+xml;base64,' +
   btoa(

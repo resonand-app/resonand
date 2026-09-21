@@ -18,11 +18,11 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.api.headers import DOCS_PATH
-from sonarium.api.spa import inline_script_hashes
-from sonarium.core.config import Settings
-from sonarium.db.engine import Database
+from resonand.api.app import create_app
+from resonand.api.headers import DOCS_PATH
+from resonand.api.spa import inline_script_hashes
+from resonand.core.config import Settings
+from resonand.db.engine import Database
 
 SHELL = """<!doctype html>
 <html><head>

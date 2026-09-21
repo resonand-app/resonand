@@ -8,7 +8,7 @@ and putting a mapper between the assertion and the constraint would test the map
 from __future__ import annotations
 
 import pytest
-from sonarium.core import colours
+from resonand.core import colours
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import IntegrityError
 

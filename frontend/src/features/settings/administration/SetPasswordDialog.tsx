@@ -13,7 +13,7 @@
  * once because there is nowhere honest to show it twice: the API stores a hash, and a copy kept
  * anywhere so it could be shown again would be the thing worth stealing.
  *
- * **Sonarium sends it nowhere.** There is no mail in this product and adding one to deliver a
+ * **Resonand sends it nowhere.** There is no mail in this product and adding one to deliver a
  * password would be adding an outbound channel for the least appropriate payload there is. The
  * administrator hands it over themselves, by whatever means they and the other person already
  * trust.

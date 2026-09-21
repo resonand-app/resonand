@@ -12,12 +12,12 @@ every title score the same -- and every ordering here would hold by accident.
 from __future__ import annotations
 
 import pytest
-from sonarium.db import libraries, search_index, tags, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio
-from sonarium.db.search import search
-from sonarium.db.transcripts import SegmentDraft
+from resonand.db import libraries, search_index, tags, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.models import Audio
+from resonand.db.search import search
+from resonand.db.transcripts import SegmentDraft
 from sqlalchemy.orm import Session
 
 FILLER_RECORDINGS = 80

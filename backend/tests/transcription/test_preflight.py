@@ -13,9 +13,9 @@ from typing import Any
 import httpx
 import pytest
 from pydantic import SecretStr
-from sonarium.transcription import preflight
-from sonarium.transcription.capabilities import Support
-from sonarium.transcription.openai_compatible import OpenAiCompatibleProvider
+from resonand.transcription import preflight
+from resonand.transcription.capabilities import Support
+from resonand.transcription.openai_compatible import OpenAiCompatibleProvider
 
 from tests.media.conftest import needs_ffmpeg
 

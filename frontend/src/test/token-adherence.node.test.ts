@@ -51,7 +51,7 @@ function sources(): { path: string; source: string }[] {
 /**
  * The system and the application both, which is how far the type rule reaches (`UI-33a1`).
  *
- * The generated contract is excluded because nobody writes it: `sonarium openapi` produces one
+ * The generated contract is excluded because nobody writes it: `resonand openapi` produces one
  * half and `npm run api:types` the other, and the only available fix for a finding in either
  * would be to stop generating it.
  */

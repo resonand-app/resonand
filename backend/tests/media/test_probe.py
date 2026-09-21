@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from sonarium.core.errors import InvalidRequestError
-from sonarium.media.probe import parse_probe, probe
+from resonand.core.errors import InvalidRequestError
+from resonand.media.probe import parse_probe, probe
 
 from tests.media.conftest import make_audio, make_video, needs_ffmpeg
 

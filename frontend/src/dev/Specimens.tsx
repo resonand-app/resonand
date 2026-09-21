@@ -128,7 +128,7 @@ const RECORDING_ACTIONS = [
 ];
 
 /** `level_description` exactly as `GET /libraries/{uuid}/shares` returns it -- the wording lives
- *  in `sonarium/core/levels.py` and the interface has no copy of it. Owner is here to prove it is
+ *  in `resonand/core/levels.py` and the interface has no copy of it. Owner is here to prove it is
  *  dropped rather than drawn. */
 const LEVELS = [
   { level: 10, description: 'Can read: listen and read the transcript, and change nothing.' },

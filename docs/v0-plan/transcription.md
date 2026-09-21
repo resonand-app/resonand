@@ -1,10 +1,10 @@
 # Transcription compatibility
 
-`TRX-*` — what an engine has to look like for Sonarium to consume it, and what the provider
+`TRX-*` — what an engine has to look like for Resonand to consume it, and what the provider
 boundary has to become to reach more than one of them.
 
 Engine independence is principle 3: changing engine must cost nothing and lose nothing. The
-boundary in [`backend/sonarium/transcription/`](../../backend/sonarium/transcription/) was designed
+boundary in [`backend/resonand/transcription/`](../../backend/resonand/transcription/) was designed
 against a protocol rather than against a vendor, which is why it holds up — but it is still a
 claim supported by one implementation, which is the condition under which such claims are usually
 false. This track is what makes it a tested property.
@@ -24,7 +24,7 @@ of thing that is normally added after an incident rather than before one.
 **The provider is not asked anything.** It is built from configuration, handed a file and asked
 for segments. It does not say how large a request it will take, what granularity it returns,
 whether it diarises, or what unit its timestamps are in. Every one of those facts currently lives
-in the operator's head and is expressed, if at all, as a `SONARIUM_*` variable they are expected to
+in the operator's head and is expressed, if at all, as a `RESONAND_*` variable they are expected to
 know the right value for.
 
 That single gap is most of this track. It is purely additive against one implementation and
@@ -62,7 +62,7 @@ only the endpoint is configured today.
       whether its speaker labels can be trusted at all. ⇢ JOB-6, DAT-1 🧪
       *Reading capability from live configuration instead would be wrong two ways: the configured
       provider changes while old transcripts persist and the selector shows both, and the archive
-      outlives the provider — `sonarium export` carries transcripts onto instances configured
+      outlives the provider — `resonand export` carries transcripts onto instances configured
       differently.*
       *An engine reference and a diarisation flag belong here by the same argument and are
       deliberately not added yet: with one engine configured and nothing asking for diarisation,
@@ -168,10 +168,10 @@ Governs `TRX-16`.
 
 Configuration moves into the database and sensitive values are encrypted there (`TRX-15`). The
 **key cannot** — a key stored beside what it encrypts is not encryption — so it stays in the
-environment, derived from `SONARIUM_SECRET_KEY` with a distinct info string so the signing key and
+environment, derived from `RESONAND_SECRET_KEY` with a distinct info string so the signing key and
 the encryption key are never the same bytes.
 
-Two consequences, named here rather than discovered: rotating `SONARIUM_SECRET_KEY` makes every
+Two consequences, named here rather than discovered: rotating `RESONAND_SECRET_KEY` makes every
 stored credential unreadable and they have to be re-entered; and a backup restored without the key
 has unreadable credentials, which is the property worth having — a leaked database is not a leaked
 API key — but it belongs in the restore documentation.

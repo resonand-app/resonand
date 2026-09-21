@@ -11,12 +11,12 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.api.security import hash_password
-from sonarium.core.config import Settings
-from sonarium.db import libraries as library_repo
-from sonarium.db import users as user_repo
-from sonarium.db.engine import Database
+from resonand.api.app import create_app
+from resonand.api.security import hash_password
+from resonand.core.config import Settings
+from resonand.db import libraries as library_repo
+from resonand.db import users as user_repo
+from resonand.db.engine import Database
 from sqlalchemy import event
 
 PASSWORD = "a-long-enough-password"
@@ -24,7 +24,7 @@ PASSWORD = "a-long-enough-password"
 ACL_CTES = ("WITH acl AS", "WITH library_acl AS")
 """How a permission resolution looks on the wire.
 
-Both entry points in :mod:`sonarium.acl.query` name their ``MAX()`` as a CTE, so a statement
+Both entry points in :mod:`resonand.acl.query` name their ``MAX()`` as a CTE, so a statement
 carrying one is the archive asking who this caller is -- which is what lets a test tell a write
 that asks once from a write that asks twice.
 """

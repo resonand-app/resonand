@@ -15,13 +15,13 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from sonarium.cli.backup import backup_database, storage_note, verify_backup
-from sonarium.core.config import Settings
-from sonarium.core.errors import ConflictError, InvalidRequestError
-from sonarium.db import libraries, transcripts, users
-from sonarium.db.audio import create_audio, trash_audio
-from sonarium.db.engine import Database, build_engine
-from sonarium.db.transcripts import SegmentDraft
+from resonand.cli.backup import backup_database, storage_note, verify_backup
+from resonand.core.config import Settings
+from resonand.core.errors import ConflictError, InvalidRequestError
+from resonand.db import libraries, transcripts, users
+from resonand.db.audio import create_audio, trash_audio
+from resonand.db.engine import Database, build_engine
+from resonand.db.transcripts import SegmentDraft
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -132,7 +132,7 @@ def test_restoring_into_a_clean_instance_gives_back_the_whole_archive(
 
     restored_dir = tmp_path / "restored"
     restored_dir.mkdir()
-    restored_db = restored_dir / "sonarium.db"
+    restored_db = restored_dir / "resonand.db"
     restored_db.write_bytes(backup.read_bytes())
 
     restored_settings = Settings(data_dir=restored_dir, database_path=restored_db)
@@ -157,7 +157,7 @@ def test_the_search_index_survives_a_restore(populated: Settings, tmp_path: Path
     backup = backup_database(populated, tmp_path / "backup.sqlite").path
     restored_dir = tmp_path / "restored"
     restored_dir.mkdir()
-    restored_db = restored_dir / "sonarium.db"
+    restored_db = restored_dir / "resonand.db"
     restored_db.write_bytes(backup.read_bytes())
     engine = build_engine(Settings(data_dir=restored_dir, database_path=restored_db))
     try:

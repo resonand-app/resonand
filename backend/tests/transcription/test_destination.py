@@ -8,7 +8,7 @@ place must come back as *not* local.
 from __future__ import annotations
 
 import pytest
-from sonarium.transcription.destination import destination_host, is_local
+from resonand.transcription.destination import destination_host, is_local
 
 
 @pytest.mark.parametrize(

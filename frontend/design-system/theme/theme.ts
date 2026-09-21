@@ -27,7 +27,7 @@ import { createContext, use } from 'react';
  * does not get a dark page for the length of a network round trip. That copy cannot import this
  * one, so `theme.node.test.ts` asserts the two agree.
  */
-export const THEME_STORAGE_KEY = 'sonarium-theme';
+export const THEME_STORAGE_KEY = 'resonand-theme';
 
 export const THEME_CHOICES = ['light', 'dark', 'system'] as const;
 

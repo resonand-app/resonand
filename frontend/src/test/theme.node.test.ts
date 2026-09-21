@@ -51,7 +51,7 @@ function declarationsIn(css: string): string[] {
 describe('the theme', () => {
   it('uses one storage key, in the module and in the pre-paint script', () => {
     const key = storageKeyInModule();
-    expect(key).toBe('sonarium-theme');
+    expect(key).toBe('resonand-theme');
     expect(read('index.html')).toContain(`localStorage.getItem('${key}')`);
   });
 

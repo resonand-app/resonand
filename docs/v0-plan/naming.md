@@ -108,7 +108,7 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       a checkout orphans this project's agent memory, so that is the last step of the whole rename
       rather than part of this one.
 
-- [ ] **NAM-3** · **The rename, everywhere the string appears.** `backend/sonarium` becomes
+- [x] **NAM-3** · **The rename, everywhere the string appears.** `backend/sonarium` becomes
       `backend/resonand` under `git mv`, and with it the distribution name, the console script, the
       `env_prefix`, the cookie, the database filename, the archive constants, the instance payload,
       the OpenAPI title, the compose project and volume, the image tag, the OCI labels, the CI job
@@ -122,6 +122,21 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       database opened under either name. What the operator gets instead is the `mv` written down.
       _Done when:_ `git grep -i sonarium` returns only the entries this plan keeps as a record, the
       gate is green, and a container built from the tree starts, migrates and serves. ⇢ NAM-1
+
+      **Done.** 243 files, 1,218 lines replaced and 1,218 added -- symmetric, as a rename should
+      be. 96 of them moved rather than changed, so blame survived. What is left of the old string
+      is six lines, all records: `DEC-7`'s claim, the two places `DEC-26` describes what `DEC-7`
+      chose and rejected, `INF-6`'s first push, and one lineage note in the decisions index.
+
+      The links into the package were the part that would have rotted silently: `security.md`
+      alone carries four into `backend/sonarium/api/`, and the package move broke every one. The
+      sweep caught them because it read documents as well as code.
+
+      The container was built and run rather than assumed: healthy, `/api/instance` answering
+      `{"name": "resonand"}`, `resonand.db` in the volume owned by a `resonand` account that kept
+      uid 10001, the shell served with `<title>Resonand</title>` and the hashed bundle it names
+      returning 673 KB. `/` answers a problem document to a client that does not accept HTML,
+      which is by design and not a fault -- worth knowing before somebody curls it and reports it.
 
 - [ ] **NAM-4** · **An export written under the old name still reads.** The one identifier that
       gets a fallback, and deliberately the only one. An export is the single artefact this product
@@ -140,9 +155,9 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       longest of these in calendar time. The mark stops standing in for a letter it no longer has:
       either it is redrawn, or it becomes a mark set beside the whole word. Downstream of whichever
       it is: `favicon.svg` and `favicon.ico`, six raster icons, `og-image.png`, `site.webmanifest`,
-      the three `sonarium-mark*.svg` assets, `Logo.tsx` with its prompt and its test, the two
+      the three `resonand-mark*.svg` assets, `Logo.tsx` with its prompt and its test, the two
       guideline cards that draw the mark, `design-system/README.md`, which explains the `S`
-      relationship in prose, and `.claude/skills/sonarium-design/`, which explains it again.
+      relationship in prose, and `.claude/skills/resonand-design/`, which explains it again.
       _Done when:_ nothing in the interface or the brand kit draws the old mark, and the specimen
       board renders in both themes. ⇢ NAM-1
 

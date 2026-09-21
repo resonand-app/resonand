@@ -19,24 +19,24 @@ import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.api.errors import PROBLEM_CONTENT_TYPE
-from sonarium.api.spa import (
+from resonand.api.app import create_app
+from resonand.api.errors import PROBLEM_CONTENT_TYPE
+from resonand.api.spa import (
     IMMUTABLE,
     SinglePageApp,
     inline_script_hashes,
     rebase,
     script_hashes_of,
 )
-from sonarium.core.config import Settings
-from sonarium.db.engine import Database
+from resonand.core.config import Settings
+from resonand.db.engine import Database
 
 BOOTSTRAP = "<script>document.documentElement.dataset.theme='dark'</script>"
 """Standing in for the theme bootstrap, which the content policy names by hash (``SEC-4``)."""
 
 SHELL = (
     '<!doctype html><html><head><base href="/" />'
-    f"<title>Sonarium</title>{BOOTSTRAP}"
+    f"<title>Resonand</title>{BOOTSTRAP}"
     '<link rel="manifest" href="./site.webmanifest" />'
     '<script type="module" src="./assets/index-abc123.js"></script>'
     "</head><body><div id=root></div></body></html>"
@@ -87,8 +87,8 @@ def serving(bundle: Path, tmp_path: Path, database: Database) -> FastAPI:
 
 @pytest.fixture
 def serving_on_a_subpath(bundle: Path, tmp_path: Path, database: Database) -> FastAPI:
-    """The same image, behind a proxy that puts it at ``example.org/sonarium`` (``OPS-4``)."""
-    return _serving(bundle, tmp_path, database, base_path="/sonarium")
+    """The same image, behind a proxy that puts it at ``example.org/resonand`` (``OPS-4``)."""
+    return _serving(bundle, tmp_path, database, base_path="/resonand")
 
 
 def test_an_instance_without_a_bundle_installs_nothing(app: FastAPI) -> None:
@@ -182,7 +182,7 @@ def test_the_api_keeps_every_path_it_had(serving: FastAPI) -> None:
         document = client.get("/api/openapi.json", headers=BROWSER)
         ready = client.get("/readyz", headers=BROWSER)
     assert instance.json()["version"]
-    assert document.json()["info"]["title"] == "Sonarium"
+    assert document.json()["info"]["title"] == "Resonand"
     assert ready.status_code == status.HTTP_200_OK
     assert ready.json()["status"] == "ready"
 
@@ -199,9 +199,9 @@ def test_the_shell_cannot_be_asked_for_a_file_outside_itself(
     serving: FastAPI, bundle: Path
 ) -> None:
     """A path is not a file name. INT-5 is the pass that checks this; here is where it holds."""
-    (bundle.parent / "sonarium.db").write_text("the archive", encoding="utf-8")
+    (bundle.parent / "resonand.db").write_text("the archive", encoding="utf-8")
     with TestClient(serving, raise_server_exceptions=False) as client:
-        response = client.get("/../sonarium.db", headers=BROWSER)
+        response = client.get("/../resonand.db", headers=BROWSER)
     assert "the archive" not in response.text
 
 
@@ -217,14 +217,14 @@ def test_a_file_the_bundle_holds_at_its_root_is_served(serving: FastAPI, bundle:
 def test_the_served_shell_says_which_prefix_it_is_under(serving_on_a_subpath: FastAPI) -> None:
     """The one thing that makes a relative bundle work on a subpath (``OPS-4``).
 
-    The browser is at ``/sonarium/library/<uuid>`` and the shell asks for ``./assets/index.js``.
+    The browser is at ``/resonand/library/<uuid>`` and the shell asks for ``./assets/index.js``.
     Without a base element naming the deployment root, that resolves against the route and the
     page fetches nothing it needs -- which is the failure this whole task exists to close.
     """
-    with TestClient(serving_on_a_subpath, root_path="/sonarium") as client:
+    with TestClient(serving_on_a_subpath, root_path="/resonand") as client:
         response = client.get("/library/8e29d6b4-0000-0000-0000-000000000000", headers=BROWSER)
     assert response.status_code == status.HTTP_200_OK
-    assert '<base href="/sonarium/" />' in response.text
+    assert '<base href="/resonand/" />' in response.text
 
 
 def test_the_shell_is_served_unchanged_on_a_subdomain(serving: FastAPI) -> None:
@@ -234,12 +234,12 @@ def test_the_shell_is_served_unchanged_on_a_subdomain(serving: FastAPI) -> None:
     assert response.text == SHELL
 
 
-@pytest.mark.parametrize("written", ["/sonarium", "sonarium", "/sonarium/", "sonarium/"])
+@pytest.mark.parametrize("written", ["/resonand", "resonand", "/resonand/", "resonand/"])
 def test_a_base_href_always_ends_in_a_slash(written: str) -> None:
-    """``<base href="/sonarium">`` names a file, so the last segment is dropped and every asset
+    """``<base href="/resonand">`` names a file, so the last segment is dropped and every asset
     resolves one level too high. It is one character and it is half the breakages."""
     rewritten = rebase(SHELL.encode(), Settings(base_path=written).base_path)
-    assert b'<base href="/sonarium/" />' in rewritten
+    assert b'<base href="/resonand/" />' in rewritten
 
 
 def test_the_rewrite_leaves_every_inline_script_byte_for_byte(bundle: Path) -> None:
@@ -251,7 +251,7 @@ def test_the_rewrite_leaves_every_inline_script_byte_for_byte(bundle: Path) -> N
     than against the text it produced.
     """
     from_disk = inline_script_hashes(bundle)
-    served = SinglePageApp.discover(bundle, "/sonarium")
+    served = SinglePageApp.discover(bundle, "/resonand")
     assert served is not None
     assert script_hashes_of(served.shell) == from_disk
     assert len(from_disk) == 1
@@ -274,8 +274,8 @@ def test_a_browser_on_a_subpath_can_fetch_what_the_shell_asks_it_for(
     answered, so nothing but a blank page said so.
     """
     deep = "/library/8e29d6b4-0000-0000-0000-000000000000"
-    prefix = "" if proxy_strips else "/sonarium"
-    with TestClient(serving_on_a_subpath, root_path="/sonarium") as client:
+    prefix = "" if proxy_strips else "/resonand"
+    with TestClient(serving_on_a_subpath, root_path="/resonand") as client:
         shell = client.get(f"{prefix}{deep}", headers=BROWSER)
         base = re.search(r'<base href="([^"]+)"', shell.text)
         src = re.search(r'<script type="module" src="([^"]+)"', shell.text)
@@ -283,11 +283,11 @@ def test_a_browser_on_a_subpath_can_fetch_what_the_shell_asks_it_for(
 
         # What the browser puts in the address bar is the same either way: it is on the far side
         # of the proxy and has never heard of the arrangement.
-        asked_for = urljoin(f"http://testserver/sonarium{deep}", urljoin(base[1], src[1]))
-        assert asked_for == "http://testserver/sonarium/assets/index-abc123.js"
+        asked_for = urljoin(f"http://testserver/resonand{deep}", urljoin(base[1], src[1]))
+        assert asked_for == "http://testserver/resonand/assets/index-abc123.js"
 
         forwarded = urlparse(asked_for).path
-        served = client.get(forwarded.removeprefix("/sonarium") if proxy_strips else forwarded)
+        served = client.get(forwarded.removeprefix("/resonand") if proxy_strips else forwarded)
     assert served.status_code == status.HTTP_200_OK
     assert served.text == BUNDLE
     assert served.headers["cache-control"] == IMMUTABLE

@@ -23,9 +23,9 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.core.config import CookieSecurity, Settings
-from sonarium.db.models import Session as SessionRow
+from resonand.api.app import create_app
+from resonand.core.config import CookieSecurity, Settings
+from resonand.db.models import Session as SessionRow
 from sqlalchemy import func, select
 
 from tests.api.conftest import PASSWORD, sign_in
@@ -34,7 +34,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from pathlib import Path
 
-    from sonarium.db.engine import Database
+    from resonand.db.engine import Database
 
 HTTPS = "https://testserver"
 HTTP = "http://testserver"

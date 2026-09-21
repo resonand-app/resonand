@@ -17,11 +17,11 @@ and a slower write on every segment. That is a measurement away, not a rewrite.
 from __future__ import annotations
 
 import pytest
-from sonarium.db import libraries, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.search import recall_note, search
-from sonarium.db.transcripts import SegmentDraft
+from resonand.db import libraries, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.search import recall_note, search
+from resonand.db.transcripts import SegmentDraft
 
 TRANSCRIPT = [
     "Treballava a la fàbrica des dels catorze anys",

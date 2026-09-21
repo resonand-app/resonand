@@ -71,7 +71,7 @@ describe('getting in', () => {
 
   it('says which instance this is, because handing a password to one matters', async () => {
     show();
-    expect(await screen.findByText(/sonarium/)).toBeVisible();
+    expect(await screen.findByText(/resonand/)).toBeVisible();
     expect(await screen.findByText(/0\.1\.0/)).toBeVisible();
   });
 

@@ -60,7 +60,7 @@
   "add": {
     "title": "Give somebody access",
     "email": "Their email address",
-    "notADirectory": "The whole address, exactly. Sonarium does not search for people, and will not tell you who else has an account here.",
+    "notADirectory": "The whole address, exactly. Resonand does not search for people, and will not tell you who else has an account here.",
     "nobody": "No account here has that address.",
     "already": "{{name}} already has access. Change their level above.",
     "whatTheyCanDo": "What they will be able to do",

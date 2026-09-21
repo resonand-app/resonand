@@ -16,9 +16,9 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from sonarium.core.config import Settings
-from sonarium.db.engine import Database, build_engine
-from sonarium.db.migrate import upgrade_to_head
+from resonand.core.config import Settings
+from resonand.db.engine import Database, build_engine
+from resonand.db.migrate import upgrade_to_head
 from sqlalchemy import Engine
 
 
@@ -26,10 +26,10 @@ from sqlalchemy import Engine
 def db_settings(tmp_path: Path) -> Settings:
     """Settings pointing at a database of this test's own.
 
-    ``database_path`` is given explicitly rather than derived, so a ``SONARIUM_DATABASE_PATH``
+    ``database_path`` is given explicitly rather than derived, so a ``RESONAND_DATABASE_PATH``
     left in the developer's environment cannot redirect a test at a real archive.
     """
-    return Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    return Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
 
 
 @pytest.fixture

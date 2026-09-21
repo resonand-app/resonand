@@ -12,9 +12,9 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.core.config import Settings
-from sonarium.db.engine import Database
+from resonand.api.app import create_app
+from resonand.core.config import Settings
+from resonand.db.engine import Database
 
 from tests.api.conftest import API_BASE, sign_in
 

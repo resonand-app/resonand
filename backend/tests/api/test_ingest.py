@@ -10,12 +10,12 @@ from urllib.parse import unquote
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from sonarium.api.app import create_app
-from sonarium.core.config import Settings
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Job, Library
-from sonarium.media import storage, waveform
+from resonand.api.app import create_app
+from resonand.core.config import Settings
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.models import Audio, Job, Library
+from resonand.media import storage, waveform
 from sqlalchemy import select
 
 from tests.api.conftest import API_BASE, ClientFactory, sign_in

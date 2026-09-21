@@ -1,11 +1,11 @@
 {
-  "name": "sonarium-frontend",
+  "name": "resonand-frontend",
   "version": "0.0.0",
-  "description": "The Sonarium web interface -- one client of the API among others.",
+  "description": "The Resonand web interface -- one client of the API among others.",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sonarium-app/sonarium"
+    "url": "https://github.com/resonand-app/resonand"
   },
   "private": true,
   "type": "module",

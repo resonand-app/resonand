@@ -19,10 +19,10 @@ import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.api.rate_limit import SWEEP_AT_KEYS, AttemptLimiter
-from sonarium.core.config import Settings
-from sonarium.db.engine import Database
+from resonand.api.app import create_app
+from resonand.api.rate_limit import SWEEP_AT_KEYS, AttemptLimiter
+from resonand.core.config import Settings
+from resonand.db.engine import Database
 
 from tests.api.conftest import API_BASE, PASSWORD
 

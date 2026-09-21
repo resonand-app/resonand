@@ -16,12 +16,12 @@ nobody can back up or upgrade is one nobody should trust an archive to.
       *A misconfigured instance now says what to fix, one line per problem, and exits 1 without a
       traceback — checked only on the branch that reads the environment, which is the container's
       entry point and the only place a person wrote the configuration. An empty
-      `SONARIUM_SECRET_KEY` reads as absent rather than as a zero-length secret, which is what
+      `RESONAND_SECRET_KEY` reads as absent rather than as a zero-length secret, which is what
       `deploy/.env.example` ships and what used to walk past every `is None` guard in front of
       the signer. A missing transcription endpoint is said rather than refused: it costs one
       feature, and refusing would cost the archive.*
 
-- [x] **OPS-4** · **Subdomain and subpath** support (`/sonarium`), both tested behind a reverse
+- [x] **OPS-4** · **Subdomain and subpath** support (`/resonand`), both tested behind a reverse
       proxy. In v0 because retrofitting a base path into an SPA is genuinely painful, and the
       subpath is the one that always ends up broken. ⇢ OPS-2, UI-4 🧪
       *The prefix stays a fact of the deployment: the bundle is built with a relative base and

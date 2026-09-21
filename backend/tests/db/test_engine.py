@@ -7,9 +7,9 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
-from sonarium.core.config import Settings
-from sonarium.db.engine import Database, build_engine
-from sonarium.db.migrate import upgrade_to_head
+from resonand.core.config import Settings
+from resonand.db.engine import Database, build_engine
+from resonand.db.migrate import upgrade_to_head
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import OperationalError
 

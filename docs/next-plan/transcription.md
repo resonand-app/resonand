@@ -47,7 +47,7 @@ the identifiers they were found under because the code cites several of them by 
 - [ ] **TRX-9** · **Say plainly why an untimed engine is declined.** Wyoming — the Home Assistant
       voice ecosystem, which is precisely the homelab audience [`VISION.md`](../../VISION.md) names
       — returns text with no timestamps and cannot satisfy this archive. Somebody already running
-      `wyoming-faster-whisper` will reasonably expect to point Sonarium at it, and what they get
+      `wyoming-faster-whisper` will reasonably expect to point Resonand at it, and what they get
       today is a connection error against a port that does not speak HTTP.
 
 - [ ] **TRX-11** · **Seams duplicate speech when segments are coarse.** `restitch` keeps a segment

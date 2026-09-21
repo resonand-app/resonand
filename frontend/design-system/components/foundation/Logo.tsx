@@ -15,9 +15,9 @@ export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 /**
- * The Sonarium lockup: the mark standing in for the S, with `onarium` set beside it.
+ * The Resonand lockup: the mark standing in for the S, with `onarium` set beside it.
  *
- * The mark itself lives in `design-system/assets/sonarium-mark*.svg` as fixed-color SVGs for
+ * The mark itself lives in `design-system/assets/resonand-mark*.svg` as fixed-color SVGs for
  * contexts without CSS (the favicon, the guideline swatches); this is the same geometry, colored
  * through the `color` prop instead, for the one context that has CSS. Use it in the top nav, on
  * the sign-in screen, and nowhere else. Chillax appears here and in the single page title per
@@ -35,7 +35,7 @@ export function Logo({
   size = 18,
   showWordmark = true,
   color = 'var(--accent)',
-  label = 'Sonarium',
+  label = 'Resonand',
   style,
   ...rest
 }: LogoProps) {

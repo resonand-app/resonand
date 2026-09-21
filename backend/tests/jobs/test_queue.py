@@ -6,12 +6,12 @@ import threading
 from datetime import timedelta
 
 import pytest
-from sonarium.core.time import instant_after, now_instant
-from sonarium.db import libraries, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Job
-from sonarium.jobs import queue
+from resonand.core.time import instant_after, now_instant
+from resonand.db import libraries, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.models import Job
+from resonand.jobs import queue
 from sqlalchemy import select, update
 
 

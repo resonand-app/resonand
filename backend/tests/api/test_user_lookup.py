@@ -10,8 +10,8 @@ from __future__ import annotations
 
 from fastapi import status
 from fastapi.testclient import TestClient
-from sonarium.db import users
-from sonarium.db.engine import Database
+from resonand.db import users
+from resonand.db.engine import Database
 
 from tests.api.conftest import sign_in
 

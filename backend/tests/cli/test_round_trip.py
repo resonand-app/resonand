@@ -23,16 +23,16 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from sonarium.cli.main import app
-from sonarium.core.config import Settings, reset_settings_cache
-from sonarium.core.levels import Level
-from sonarium.db import libraries, tags, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database, build_engine
-from sonarium.db.migrate import upgrade_to_head
-from sonarium.db.models import Audio, Library, Share, Transcript, User
-from sonarium.db.transcripts import Origin, SegmentDraft
-from sonarium.media import storage
+from resonand.cli.main import app
+from resonand.core.config import Settings, reset_settings_cache
+from resonand.core.levels import Level
+from resonand.db import libraries, tags, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database, build_engine
+from resonand.db.migrate import upgrade_to_head
+from resonand.db.models import Audio, Library, Share, Transcript, User
+from resonand.db.transcripts import Origin, SegmentDraft
+from resonand.media import storage
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from typer.testing import CliRunner
@@ -65,13 +65,13 @@ def run(monkeypatch: pytest.MonkeyPatch) -> Iterator[Command]:
     """Run one command against one instance, and leave the environment as it was found.
 
     Two instances in one test means the environment is what decides which, and it is undone at
-    the end: a ``SONARIUM_*`` left behind here points the next test at this test's archive.
+    the end: a ``RESONAND_*`` left behind here points the next test at this test's archive.
     """
 
     def invoke(arguments: list[str], settings: Settings) -> Result:
-        monkeypatch.setenv("SONARIUM_DATA_DIR", str(settings.data_dir))
-        monkeypatch.setenv("SONARIUM_DATABASE_PATH", str(settings.resolved_database_path))
-        monkeypatch.setenv("SONARIUM_SECRET_KEY", "0" * 64)
+        monkeypatch.setenv("RESONAND_DATA_DIR", str(settings.data_dir))
+        monkeypatch.setenv("RESONAND_DATABASE_PATH", str(settings.resolved_database_path))
+        monkeypatch.setenv("RESONAND_SECRET_KEY", "0" * 64)
         reset_settings_cache()
         return runner.invoke(app, arguments)
 
@@ -153,7 +153,7 @@ def here(database: Database, db_settings: Settings) -> Archive:
 def empty(tmp_path: Path) -> Iterator[Settings]:
     """An instance with the schema and nothing else, which is what criterion 4 names."""
     settings = Settings(
-        data_dir=tmp_path / "empty", database_path=tmp_path / "empty" / "sonarium.db"
+        data_dir=tmp_path / "empty", database_path=tmp_path / "empty" / "resonand.db"
     )
     settings.prepare_directories()
     engine = build_engine(settings)

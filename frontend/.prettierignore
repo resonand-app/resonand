@@ -26,7 +26,7 @@ design-system/
 design-system/**/*.d.ts
 
 # The API's shape, and the types generated from it (`UI-3a`). Both are written by a generator --
-# `sonarium openapi` on one side of the repository and `npm run api:types` on the other -- and
+# `resonand openapi` on one side of the repository and `npm run api:types` on the other -- and
 # both are checked by comparing the committed file to what the generator produces today. A
 # formatter in between would make that comparison a comparison of two formatters.
 src/api/contract/

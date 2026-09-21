@@ -47,7 +47,7 @@ describe('the instance offers its source', () => {
     show();
     await waitFor(() => {
       expect(
-        screen.getByText(/^Sonarium \S+, free software under the AGPL-3\.0\.$/),
+        screen.getByText(/^Resonand \S+, free software under the AGPL-3\.0\.$/),
       ).toBeInTheDocument();
     });
   });

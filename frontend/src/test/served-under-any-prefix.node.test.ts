@@ -1,7 +1,7 @@
 /**
  * The bundle names no prefix, and the shell names it once (`OPS-4`, `UI-39`).
  *
- * One image serves `sonarium.example.org` and `example.org/sonarium`, so the prefix is a fact of
+ * One image serves `resonand.example.org` and `example.org/resonand`, so the prefix is a fact of
  * the deployment and cannot be a build input. The arrangement that makes that true has four
  * parts, in three files, and none of them fails visibly on its own: a relative Vite base, a
  * `<base href>` the API rewrites as it serves the shell, a manifest whose URLs are relative to
@@ -119,7 +119,7 @@ describe('the web-app manifest', () => {
   };
 
   it('starts and scopes itself where it is served, not at the domain root', () => {
-    // Resolved against the manifest's own URL, so `.` is `/sonarium/` on a subpath and `/` on a
+    // Resolved against the manifest's own URL, so `.` is `/resonand/` on a subpath and `/` on a
     // subdomain. Absent, `start_url` is whatever page somebody happened to install from -- which
     // for this interface is usually one recording.
     expect(manifest.start_url).toBe('.');

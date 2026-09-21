@@ -29,7 +29,7 @@ export interface Page<Item> {
 export const PAGE_SIZE = 50;
 
 /**
- * The largest page the API will answer, from `sonarium.api.pagination.MAX_LIMIT`.
+ * The largest page the API will answer, from `resonand.api.pagination.MAX_LIMIT`.
  *
  * For the one caller that wants a whole collection rather than a window of it -- selecting every
  * recording a filter matches (`UI-9a`) -- where the choice is between four requests and sixteen.

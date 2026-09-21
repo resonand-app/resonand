@@ -23,7 +23,7 @@ import Specimens from '@/dev/Specimens';
 const FAMILIES = ['Foundation', 'Forms', 'Media', 'Data', 'Navigation', 'TopNav', 'Guidelines'];
 
 function renderIn(theme: 'light' | 'dark') {
-  window.localStorage.setItem('sonarium-theme', theme);
+  window.localStorage.setItem('resonand-theme', theme);
   return render(
     <ThemeProvider>
       <Specimens />

@@ -116,7 +116,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       another person may do, the two options they are not on have nothing to show.
       Add the grantable levels and their descriptions to `GET /instance`, beside the other facts
       about the instance that every view reads rather than hard-codes, from
-      `sonarium.core.levels.GRANTABLE` and `DESCRIPTIONS`:
+      `resonand.core.levels.GRANTABLE` and `DESCRIPTIONS`:
 
       ```
       levels  [ {"level": 10, "description": "Can read: ..."}, ... ]   READ, EDIT, MANAGE
@@ -212,7 +212,7 @@ being a client uncovered — and because `UI-*` tasks depend on them individuall
       was the one state in it with nothing to press.*
 
 - [x] **API-24** · 🔒 🧪 **The connection decides whether the session survives it.**
-      `SONARIUM_SESSION_COOKIE_SECURE` was a static `true`, so every cookie was marked `Secure`
+      `RESONAND_SESSION_COOKIE_SECURE` was a static `true`, so every cookie was marked `Secure`
       and a browser on plain HTTP discarded it without a word — the instance logged a successful
       sign-in, the next request was answered `401`, and `UI-4a`'s guard returned somebody to the
       sign-in screen as though their password were wrong. `Secure` describes the connection and

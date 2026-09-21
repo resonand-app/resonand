@@ -7,9 +7,9 @@ parts for an engine that would have taken it whole.
 
 from __future__ import annotations
 
-from sonarium.transcription.capabilities import Capabilities, Support, TimeUnit
-from sonarium.transcription.chunking import submission_ceiling
-from sonarium.transcription.openai_compatible import UNPROBED
+from resonand.transcription.capabilities import Capabilities, Support, TimeUnit
+from resonand.transcription.chunking import submission_ceiling
+from resonand.transcription.openai_compatible import UNPROBED
 
 MINUTE_MS = 60_000
 

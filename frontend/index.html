@@ -10,11 +10,11 @@
       `./favicon.ico`. Those would otherwise resolve against whatever route the browser is on --
       `/library/<uuid>` is a directory as far as a URL is concerned -- so the deployment root has
       to be stated rather than inferred. The API rewrites this one attribute from
-      `SONARIUM_BASE_PATH` as it serves the shell, which is why an instance on a subpath needs no
+      `RESONAND_BASE_PATH` as it serves the shell, which is why an instance on a subpath needs no
       second build. `/` is the value in development and on a subdomain, where nothing is rewritten.
     -->
     <base href="/" />
-    <title>Sonarium</title>
+    <title>Resonand</title>
     <meta name="description" content="A self-hosted archive for the recordings that matter." />
     <!--
       Dark is the default and light is a peer, so the browser is told before the bundle loads.
@@ -30,13 +30,13 @@
       the document before the first paint; `ThemeProvider` reads the same key and finds the
       document already agreeing with it.
 
-      The key is `sonarium-theme`, spelled here and in design-system/theme/theme.ts. This copy
+      The key is `resonand-theme`, spelled here and in design-system/theme/theme.ts. This copy
       cannot import that one -- it has to run before any module does -- so a test asserts the two
       agree rather than trusting them to.
     -->
     <script>
       try {
-        var choice = localStorage.getItem('sonarium-theme');
+        var choice = localStorage.getItem('resonand-theme');
         if (choice === 'light' || choice === 'dark') {
           document.documentElement.setAttribute('data-theme', choice);
           document.documentElement.style.setProperty('color-scheme', choice);
@@ -67,12 +67,12 @@
     <meta name="theme-color" content="#12151C" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
 
-    <meta property="og:title" content="Sonarium" />
+    <meta property="og:title" content="Resonand" />
     <meta
       property="og:description"
       content="A self-hosted archive for the recordings that matter."
     />
-    <meta property="og:image" content="https://sonarium.app/og-image.png" />
+    <meta property="og:image" content="https://resonand.app/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />

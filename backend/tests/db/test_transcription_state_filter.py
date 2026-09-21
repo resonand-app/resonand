@@ -1,8 +1,8 @@
 """Filtering by the four transcription states (``JOB-11b``).
 
 The states are derived, not stored, and they are derived twice: once per recording for the badge
-(:func:`sonarium.api.presenters.transcription_state`) and once in SQL for a whole query
-(:func:`sonarium.db.search.apply_filters`). The load-bearing test here is that those two agree,
+(:func:`resonand.api.presenters.transcription_state`) and once in SQL for a whole query
+(:func:`resonand.db.search.apply_filters`). The load-bearing test here is that those two agree,
 because if they do not, a card carries one badge and the toggle meant to select it does not find
 it -- which is exactly the vocabulary split ``UI-8c`` exists to prevent.
 """
@@ -10,15 +10,15 @@ it -- which is exactly the vocabulary split ``UI-8c`` exists to prevent.
 from __future__ import annotations
 
 import pytest
-from sonarium.acl.query import audio_select
-from sonarium.api.presenters import transcription_state
-from sonarium.core.states import TranscriptionState
-from sonarium.db import libraries, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.search import Filters, apply_filters
-from sonarium.db.transcripts import SegmentDraft
-from sonarium.jobs import queue
+from resonand.acl.query import audio_select
+from resonand.api.presenters import transcription_state
+from resonand.core.states import TranscriptionState
+from resonand.db import libraries, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.search import Filters, apply_filters
+from resonand.db.transcripts import SegmentDraft
+from resonand.jobs import queue
 
 
 @pytest.fixture

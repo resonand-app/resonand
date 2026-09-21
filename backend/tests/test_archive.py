@@ -14,7 +14,7 @@ from pathlib import Path
 from uuid import uuid4
 
 import pytest
-from sonarium.archive import (
+from resonand.archive import (
     SIDECAR_NAME,
     SIDECAR_VERSION,
     apply_manifest,
@@ -26,16 +26,16 @@ from sonarium.archive import (
     read_sidecar,
     sidecar_for,
 )
-from sonarium.core.config import Settings
-from sonarium.core.levels import Level
-from sonarium.db import libraries, tags, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database, build_engine
-from sonarium.db.migrate import upgrade_to_head
-from sonarium.db.models import Audio, Category, Library, Share, User
-from sonarium.db.transcripts import Origin, SegmentDraft
-from sonarium.media import storage
-from sonarium.media.subtitles import Cue, to_srt, to_vtt
+from resonand.core.config import Settings
+from resonand.core.levels import Level
+from resonand.db import libraries, tags, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database, build_engine
+from resonand.db.migrate import upgrade_to_head
+from resonand.db.models import Audio, Category, Library, Share, User
+from resonand.db.transcripts import Origin, SegmentDraft
+from resonand.media import storage
+from resonand.media.subtitles import Cue, to_srt, to_vtt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -110,7 +110,7 @@ def test_a_sidecar_carries_everything_needed_to_rebuild_the_recording(
     assert payload["title"] == "Recording 2024-03-11 18.22"
     assert sorted(payload["tags"]) == ["family", "oral history"]
     assert payload["transcript"]["segments"][1]["text"] == "Then about the factory."
-    assert payload["sonarium"]["sidecar_version"] == SIDECAR_VERSION
+    assert payload["resonand"]["sidecar_version"] == SIDECAR_VERSION
 
 
 def test_a_recording_keeps_its_own_reading_of_the_clock_through_the_export(
@@ -191,7 +191,7 @@ def test_the_original_is_copied_rather_than_read_into_memory(
 def test_the_export_is_readable_without_this_software(
     database: Database, db_settings: Settings, recording: str, tmp_path: Path
 ) -> None:
-    """Principle 1: the format does not need Sonarium to read it."""
+    """Principle 1: the format does not need Resonand to read it."""
     destination = tmp_path / "export"
     with database.read_session() as session:
         audio = find_by_uuid(session, recording)
@@ -277,8 +277,8 @@ def test_a_sidecar_written_before_a_transcript_knew_what_it_was_still_imports(
 
 
 def test_a_sidecar_from_a_future_version_is_refused(tmp_path: Path) -> None:
-    path = tmp_path / "future.sonarium.json"
-    path.write_text(json.dumps({"sonarium": {"sidecar_version": 99}, "uuid": "x"}))
+    path = tmp_path / "future.resonand.json"
+    path.write_text(json.dumps({"resonand": {"sidecar_version": 99}, "uuid": "x"}))
     with pytest.raises(ValueError, match="sidecar version 99"):
         read_sidecar(path)
 
@@ -286,7 +286,7 @@ def test_a_sidecar_from_a_future_version_is_refused(tmp_path: Path) -> None:
 def test_something_that_is_not_a_sidecar_is_refused(tmp_path: Path) -> None:
     path = tmp_path / "notes.json"
     path.write_text(json.dumps(["not", "a", "sidecar"]))
-    with pytest.raises(ValueError, match="not a Sonarium sidecar"):
+    with pytest.raises(ValueError, match="not a Resonand sidecar"):
         read_sidecar(path)
 
 
@@ -456,7 +456,7 @@ def test_a_library_in_the_trash_is_not_a_destination(
 def elsewhere(tmp_path: Path) -> Iterator[Database]:
     """A second, empty instance, which is the only honest place to read an export back into."""
     settings = Settings(
-        data_dir=tmp_path / "elsewhere", database_path=tmp_path / "elsewhere" / "sonarium.db"
+        data_dir=tmp_path / "elsewhere", database_path=tmp_path / "elsewhere" / "resonand.db"
     )
     settings.prepare_directories()
     engine = build_engine(settings)

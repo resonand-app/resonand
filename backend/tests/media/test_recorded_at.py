@@ -12,9 +12,9 @@ import time
 from pathlib import Path
 
 import pytest
-from sonarium.core.time import PRECISION_DATE, PRECISION_MINUTE, PRECISION_SECOND
-from sonarium.media import recorded_at
-from sonarium.media.recorded_at import (
+from resonand.core.time import PRECISION_DATE, PRECISION_MINUTE, PRECISION_SECOND
+from resonand.media import recorded_at
+from resonand.media.recorded_at import (
     SOURCE_CONTAINER,
     SOURCE_FILENAME,
     SOURCE_FILESYSTEM,

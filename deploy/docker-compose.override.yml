@@ -7,8 +7,8 @@
 #   docker compose up -d --build
 
 services:
-  sonarium:
-    image: sonarium:local
+  resonand:
+    image: resonand:local
     build:
       context: ..
       dockerfile: Dockerfile

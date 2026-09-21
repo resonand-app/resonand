@@ -8,7 +8,7 @@ Short and mechanical, but it conditions everything that comes after. No product 
 
 - [x] **INF-1** · Monorepo structure.
       ```
-      backend/sonarium/{api,core,db,acl,media,jobs,transcription,migrations,cli}/
+      backend/resonand/{api,core,db,acl,media,jobs,transcription,migrations,cli}/
       backend/tests/
       frontend/src/{api,app,components,features,i18n,player,test}/
       deploy/            docs/

@@ -1,7 +1,7 @@
 /**
  * The interface and the backend cannot drift about what a permission means (`UI-34k`).
  *
- * That is the whole of this component. The wording lives in `sonarium/core/levels.py` and arrives
+ * That is the whole of this component. The wording lives in `resonand/core/levels.py` and arrives
  * as `level_description` on every share; nothing here has a string of its own to go stale. A copy
  * in the interface is a copy somebody eventually edits, and then the product describes a
  * permission it does not grant -- on the screen where the product's first promise is kept.

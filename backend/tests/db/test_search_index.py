@@ -7,8 +7,8 @@ defending is that a write actually happens -- and that a trashed recording leave
 
 from __future__ import annotations
 
-from sonarium.db.engine import Database
-from sonarium.db.search_index import index_audio, rebuild_all, remove_audio
+from resonand.db.engine import Database
+from resonand.db.search_index import index_audio, rebuild_all, remove_audio
 from sqlalchemy import text
 
 from tests.db.rows import insert_audio, insert_library, insert_tag, insert_user
@@ -109,7 +109,7 @@ def test_removing_a_recording_takes_it_out_of_the_index(database: Database) -> N
 
 
 def test_a_rebuild_covers_everything_that_was_never_indexed(database: Database) -> None:
-    """What sonarium reindex is for: an archive whose index was lost or was never written."""
+    """What resonand reindex is for: an archive whose index was lost or was never written."""
     with database.write_session() as session:
         connection = session.connection()
         owner = insert_user(connection)

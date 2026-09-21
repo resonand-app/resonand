@@ -44,7 +44,7 @@ function split(description: string): { name: string; rest: string | undefined } 
  * Can read / Can edit / Can manage, as radio rows with the plain wording visible (`UI-34k`).
  *
  * **It renders the API's `level_description` rather than a copy of it.** The wording lives in
- * `sonarium/core/levels.py`, beside the levels themselves, and is sent down with every share --
+ * `resonand/core/levels.py`, beside the levels themselves, and is sent down with every share --
  * so this component has no strings of its own to go stale. A second copy in the interface would
  * be a second copy that somebody eventually edits, and then the product describes a permission it
  * does not grant.

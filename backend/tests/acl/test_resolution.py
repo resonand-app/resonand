@@ -12,7 +12,7 @@ is not something anybody gets to do carefully.
 from __future__ import annotations
 
 import pytest
-from sonarium.acl.query import (
+from resonand.acl.query import (
     audio_level,
     audio_select,
     library_select,
@@ -20,10 +20,10 @@ from sonarium.acl.query import (
     require_audio,
     require_library,
 )
-from sonarium.core.errors import NotFoundError, PermissionDeniedError
-from sonarium.core.levels import Level
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Library
+from resonand.core.errors import NotFoundError, PermissionDeniedError
+from resonand.core.levels import Level
+from resonand.db.engine import Database
+from resonand.db.models import Audio, Library
 from sqlalchemy import select, text
 
 from tests.acl.conftest import Archive, Grant

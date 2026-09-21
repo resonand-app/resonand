@@ -57,21 +57,21 @@ const PSEUDO = 'pseudo';
  *
  * They are listed because each happens to collide with a string the bundle also holds, which is
  * what makes them look like the failure this file hunts. **When a second language ships, these
- * are backend work** -- `sonarium.core.levels.DESCRIPTIONS` and `about_search`'s recall sentence
+ * are backend work** -- `resonand.core.levels.DESCRIPTIONS` and `about_search`'s recall sentence
  * -- and this list is where that is written down.
  */
 const AUTHORED_BY_THE_SERVER: { text: string; why: string }[] = [
   {
     text: 'Can read',
-    why: 'The head of a sentence in `sonarium.core.levels.DESCRIPTIONS`, which `GET /instance` now sends for all three grantable levels (`API-18`) and `LevelSelector` splits on its colon. It used to be only the levels a library had granted; the selector explains the ones it has not, which is the whole point of the endpoint carrying the vocabulary.',
+    why: 'The head of a sentence in `resonand.core.levels.DESCRIPTIONS`, which `GET /instance` now sends for all three grantable levels (`API-18`) and `LevelSelector` splits on its colon. It used to be only the levels a library had granted; the selector explains the ones it has not, which is the whole point of the endpoint carrying the vocabulary.',
   },
   {
     text: 'Can edit',
-    why: 'The head of another sentence in `sonarium.core.levels.DESCRIPTIONS`, sent by `GET /instance`. The client holds the same short name in common.json for the library byline, and deliberately does not choose it here: the selector renders the API`s wording so the two cannot drift.',
+    why: 'The head of another sentence in `resonand.core.levels.DESCRIPTIONS`, sent by `GET /instance`. The client holds the same short name in common.json for the library byline, and deliberately does not choose it here: the selector renders the API`s wording so the two cannot drift.',
   },
   {
     text: 'Can manage',
-    why: 'The third sentence in `sonarium.core.levels.DESCRIPTIONS`, sent by `GET /instance`. It appears now where it did not before, because the selector explains every grantable level rather than only the ones a library has already granted (`API-18`).',
+    why: 'The third sentence in `resonand.core.levels.DESCRIPTIONS`, sent by `GET /instance`. It appears now where it did not before, because the selector explains every grantable level rather than only the ones a library has already granted (`API-18`).',
   },
 ];
 

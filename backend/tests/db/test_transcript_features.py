@@ -7,11 +7,11 @@ current settings would describe the wrong artefact as soon as a recording has tw
 
 from __future__ import annotations
 
-from sonarium.db import libraries, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Transcript
-from sonarium.db.transcripts import Origin, SegmentDraft
+from resonand.db import libraries, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.models import Transcript
+from resonand.db.transcripts import Origin, SegmentDraft
 from sqlalchemy.orm import Session
 
 

@@ -6,9 +6,9 @@ import pytest
 from argon2 import PasswordHasher
 from fastapi import status
 from fastapi.testclient import TestClient
-from sonarium.core.config import Settings
-from sonarium.db import users
-from sonarium.db.engine import Database
+from resonand.core.config import Settings
+from resonand.db import users
+from resonand.db.engine import Database
 
 from tests.api.conftest import PASSWORD, ClientFactory, sign_in
 
@@ -159,7 +159,7 @@ def test_without_a_cookie_everything_private_is_refused(client: TestClient) -> N
 
 
 def test_a_made_up_cookie_is_refused_exactly_like_a_missing_one(client: TestClient) -> None:
-    client.cookies.set("sonarium_session", "invented")
+    client.cookies.set("resonand_session", "invented")
     refused = client.get("/auth/me")
     assert refused.status_code == status.HTTP_401_UNAUTHORIZED
 

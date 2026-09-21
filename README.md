@@ -1,4 +1,4 @@
-<h1 align="center">Sonarium</h1>
+<h1 align="center">Resonand</h1>
 
 <p align="center">
   <strong>A self-hosted archive for the recordings that matter.</strong><br>
@@ -33,7 +33,7 @@ You recorded your grandmother explaining what the village used to be like, acros
 afternoons. You have not opened it in two years, because you cannot remember which afternoon has
 the part about the factory, and listening to two hours to find out is a job you never quite start.
 
-## What Sonarium is for
+## What Resonand is for
 
 **Re-finding, not storing.** Storing audio is what a folder does, and it is free. Everything here
 exists to find one specific moment again inside hundreds of hours:
@@ -53,7 +53,7 @@ exists to find one specific moment again inside hundreds of hours:
 
 ## It is a destination, not a replacement
 
-**Sonarium is not a recorder.** It does not compete with the voice-memo app on your phone — it is
+**Resonand is not a recorder.** It does not compete with the voice-memo app on your phone — it is
 where those files end up. Your phone's recorder is the input, not the rival. Nobody has to change
 how they record.
 
@@ -65,7 +65,7 @@ how they record.
 
 ## What it guarantees
 
-Most self-hosted tools in this space are transcribers that happen to store files. Sonarium is an
+Most self-hosted tools in this space are transcribers that happen to store files. Resonand is an
 archive that happens to transcribe — which is a difference about the next ten years, not about the
 feature list:
 
@@ -96,7 +96,7 @@ configured through environment variables.
 | [`ROADMAP.md`](ROADMAP.md) | What comes after the first version, and what is explicitly out of scope |
 | [`docs/v0-plan/`](docs/v0-plan/) | The build plan for the first version, one file per work track |
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
-| [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what Sonarium assumes, and the limitations it knows about |
+| [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what Resonand assumes, and the limitations it knows about |
 
 ## Contributing
 

@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from sonarium.core.errors import ToolError
-from sonarium.media.probe import probe
-from sonarium.media.transcode import extract_part, to_opus
+from resonand.core.errors import ToolError
+from resonand.media.probe import probe
+from resonand.media.transcode import extract_part, to_opus
 
 from tests.media.conftest import make_audio, make_video, needs_ffmpeg
 

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import pytest
-from sonarium.core.errors import ToolError
-from sonarium.core.processes import run_tool, tool_path
+from resonand.core.errors import ToolError
+from resonand.core.processes import run_tool, tool_path
 
 
 def test_a_tool_that_is_not_installed_says_so() -> None:
     with pytest.raises(ToolError, match="not on PATH"):
-        tool_path("sonarium-no-such-tool")
+        tool_path("resonand-no-such-tool")
 
 
 def test_output_comes_back_as_bytes_and_as_text() -> None:

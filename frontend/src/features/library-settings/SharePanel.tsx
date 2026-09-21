@@ -7,7 +7,7 @@
  *
  * **The level wording is the API's, and is visible rather than behind a tooltip.** `LevelSelector`
  * renders `level_description` verbatim (`UI-34k`): the sentences live beside the levels in
- * `sonarium.core.levels` and are sent down with every share, so the interface has no copy of them
+ * `resonand.core.levels` and are sent down with every share, so the interface has no copy of them
  * to go stale. Somebody choosing what another person may do has to be able to read what it means
  * at the moment they choose it.
  *
