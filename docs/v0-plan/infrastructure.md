@@ -75,7 +75,7 @@ Short and mechanical, but it conditions everything that comes after. No product 
       Measured at under 10 KB of SVG at weight 600.
 
       **`NAM-5` draws that lockup, so this waits for it.** The wordmark this entry was written
-      against — the mark standing in for the `S`, with `onarium` set after it — is the one
+      against — the mark standing in for the `S`, with the name split around it — is the one
       [`naming.md`](naming.md) deletes. Outlining it first would be paying for the work twice and
       throwing the first payment away, so what gets outlined is whatever `NAM-5` settles on.
 

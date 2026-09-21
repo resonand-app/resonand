@@ -166,6 +166,31 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       this build writes rather than the file it had opened, which is `ING-11c1`'s lesson arriving
       from the other direction, and it now names what it read.
 
+- [x] **NAM-3a** · **The lockup said the old name for a day.** A defect `NAM-3` shipped, found by
+      looking at the sign-in screen rather than by reading anything. The wordmark is the mark
+      standing in for the S with the letters set beside it, and those letters were `onarium` --
+      which does not contain `sonarium`, so a sweep over the old string could not see them. The
+      interface went on reading **Sonarium** while every other surface said Resonand.
+
+      **The suite was green because the test asserted the defect.** `Logo.test.tsx` checked for
+      the literal `onarium`, so the one check that covered the lockup was pinning it in place.
+      That is the interesting half: a rename that reaches every string in a repository still
+      cannot reach a word that was split into pieces, and a literal in a test makes the gap
+      invisible instead of loud.
+
+      The letters are now derived from the product's name -- `'resonand'.split('s')` -- so the
+      halves cannot disagree with it again, and the component draws `re` before the mark and
+      `onand` after. Verified the other way round as well: putting the defect back turns the test
+      red with `expected 'onarium' to be 'reonand'`.
+
+      Seven sites, none of them found by grepping for the old name: the rendered text, two
+      docstrings, the prompt, four test assertions, the design system README, and both brand
+      specimen cards. `--type-wordmark-lead` is now the gap either side of the mark rather than
+      after it.
+      _Done when:_ nothing on screen or in the kit spells the old name, and the test fails if the
+      letters stop spelling the product. ⇢ NAM-3 🧪
+      🧪 *The lockup's letters are asserted against the name, not as a literal.*
+
 - [ ] **NAM-5** · **The mark, the lockup and the icons.** Design rather than renaming, and the
       longest of these in calendar time. The mark stops standing in for a letter it no longer has:
       either it is redrawn, or it becomes a mark set beside the whole word. Downstream of whichever
