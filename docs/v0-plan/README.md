@@ -165,49 +165,31 @@ graph TD
 
 ## What is left
 
-Every track has now been read against the code, so an unticked box is one somebody checked rather
-than one nobody reached. None of them blocks another — the ordering this section used to carry is
-spent along with the tasks in it. They fall into three groups, and the tables below are the count.
+**Nothing.** Every task in this plan is closed, including the three tracks that were not planned
+in advance and the one minted at the end of it.
 
-**Nothing that the plan always held.** `ING-11b` was the last of them: the round trip now runs
-both commands against an empty instance and gets the archive back, structure included. What is
-left of exit criterion 4 is performing it against the real archive, which is an act and is listed
-below rather than here.
+The last of them was the rename. `NAM` was opened on the day the name changed and closed five
+tasks later: the track written, the repository moved to `resonand-app/resonand` with all 140 of
+its pull requests and its redirects, the tree saying `resonand` everywhere except where it records
+what was decided on a day, an export written under the old name still readable, and the lockup
+redrawn as artwork. `NAM-3a` is the one to read if only one is: a rename that swept 1,218 lines
+could not see the word on the sign-in screen, because it was split around the mark and neither
+half contained the old name.
 
-`INF-8` is spent rather than open and carries no box at all: the folder it asks for was decided
+`INF-11` closed with it, and needed the rename to finish first — the webfont it had to remove was
+also the one the wordmark was set in, so the lockup had to stop being type before the file could
+stop being shipped.
+
+Two entries carry no box and never will. `INF-8` is spent: the folder it asks for was decided
 against when `REV-10` built [`review.md`](review.md), [`security.md`](security.md) and
-[`defects.md`](defects.md) instead.
+[`defects.md`](defects.md) instead. `INT-6` was decided against rather than deferred, because the
+half of it that matters is the half a pipeline cannot run; the reasoning is in
+[`integration.md`](integration.md).
 
-`INT-6` is now the same: the browser pass over the utility threshold was decided against rather
-than deferred, because the half of it that matters is the half a pipeline cannot run. The
-reasoning is in [`integration.md`](integration.md).
-
-The rest came from reading the finished product rather than this plan, which is why most of them
-are numbered children of the task that produced them:
-
-| Task | What it is |
-|---|---|
-| `INF-11` | A webfont is redistributed that its own licence forbids redistributing — from the tree, and from the history |
-
-**And one group that came from neither.** The name changes to `resonand` before the repository
-opens, because that is the last moment it is free: nothing is published to any registry, there is
-no release and no tag, and the repository is private with no forks. [`DEC-26`](decisions.md) takes
-the decision and [`naming.md`](naming.md) holds the work.
-
-| Task | What it is |
-|---|---|
-
-The whole of `NAM` is closed: the track was written, the repository is
-`resonand-app/resonand` with all 140 of its pull requests and redirects behind it, and the tree
-says `resonand` everywhere except where it records what was decided on a day, and an export
-written under the old name still reads. What is left is the artwork, which still draws a lockup
-built out of letters the name no longer has.
-
-`INF-11` waits on `NAM-5` rather than running first: the wordmark it was going to outline is the
-one the rename deletes, and outlining it twice is paying for the work twice.
-
-Three of the five conditions below are acts rather than tasks — performed against the real
-archive, and not tickable anywhere.
+**What stands between this plan and the day the repository opens is three tasks in
+[`docs/next-plan/`](../next-plan/)** — `INF-10`, `REL-6` and `REL-1` — and none of them is here.
+Three of the five conditions below are acts rather than tasks, performed against the real archive
+and not tickable anywhere.
 
 ---
 

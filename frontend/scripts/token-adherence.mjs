@@ -45,7 +45,7 @@ export const COLOUR_PATTERN =
  * `tokens/typography.css` where all three are declared together.
  */
 export const FONT_PATTERN =
-  '\\b(?:Geist|Gabarito|Chillax|ui-sans-serif|ui-monospace|system-ui|SFMono-Regular|sans-serif|serif|monospace)\\b';
+  '\\b(?:Geist|Gabarito|ui-sans-serif|ui-monospace|system-ui|SFMono-Regular|sans-serif|serif|monospace)\\b';
 
 export const COLOUR_MESSAGE =
   "No colour inside a component. Use a token: token('--accent') or var(--accent).";

@@ -284,7 +284,7 @@ export default defineConfig(
   //
   // The colour and font halves stop here rather than reaching `src/` as the type half does. Two
   // values there would need excusing -- the mark drawn into a data URI for the lock screen, which
-  // cannot hold a `var()`, and a specimen label that names Chillax in prose -- and the exemption
+  // cannot hold a `var()`, and a specimen label naming the display face in prose -- and the exemption
   // list `UI-33a` emptied is not somewhere to put two things on the way past.
   {
     files: ['design-system/**/*.{ts,tsx}'],

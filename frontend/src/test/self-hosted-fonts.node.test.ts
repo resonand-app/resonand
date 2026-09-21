@@ -12,7 +12,7 @@
  * in the way -- and because a `url()` that Vite would rewrite is not the thing under test.
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -56,6 +56,29 @@ describe('the design system asks nothing of the network', () => {
   it('ships both Geist faces, which were loaded from Google Fonts until UI-1a', () => {
     for (const family of ['Geist', 'Geist Mono']) {
       expect(css).toMatch(new RegExp(`font-family:\\s*"${family}"`));
+    }
+  });
+
+  it('ships no face whose licence is not beside it', () => {
+    // `INF-11` is what this is for. Chillax sat here for months, declared and working, and was
+    // the one face nobody was allowed to redistribute -- a fact no check could see, because the
+    // thing that was wrong was the absence of a file rather than the presence of one. Adding a
+    // face now means naming its licence here, and the naming is the review.
+    const licences: Record<string, string> = {
+      Geist: 'Geist-OFL.txt',
+      GeistMono: 'Geist-OFL.txt',
+      Gabarito: 'Gabarito-OFL.txt',
+    };
+    const dir = resolve(TOKENS, '../assets/fonts');
+    const faces = readdirSync(dir).filter((name) => name.endsWith('.woff2'));
+    expect(faces.length).toBeGreaterThan(0);
+    for (const face of faces) {
+      const family = face.split('-')[0] ?? '';
+      const licence = licences[family];
+      expect(licence, `${face} ships with no licence named for it`).toBeDefined();
+      if (licence !== undefined) {
+        expect(existsSync(resolve(dir, licence)), `${licence} is named but not here`).toBe(true);
+      }
     }
   });
 
