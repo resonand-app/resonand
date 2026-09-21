@@ -20,8 +20,8 @@ export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
  * The mark itself lives in `design-system/assets/resonand-mark*.svg` as fixed-color SVGs for
  * contexts without CSS (the favicon, the guideline swatches); this is the same geometry, colored
  * through the `color` prop instead, for the one context that has CSS. Use it in the top nav, on
- * the sign-in screen, and nowhere else. Chillax appears here and in the single page title per
- * screen; there is no third case.
+ * the sign-in screen, and nowhere else. Chillax is the wordmark and appears here alone; the
+ * single page title per screen is Gabarito.
  *
  * The brand kit draws the lockup as one object, so `size` sets both halves of it and neither is a
  * prop: the wordmark is `--type-wordmark-scale` of the mark's height, sits `--type-wordmark-lead`
@@ -43,7 +43,7 @@ export function Logo({
   // One style for both halves: they are the same word, and a lockup whose letters differed on
   // either side of the mark is one the brand kit does not contain.
   const word = {
-    fontFamily: 'var(--font-display)',
+    fontFamily: 'var(--type-wordmark-family)',
     fontWeight: 'var(--weight-semibold)',
     fontSize: `calc(var(--type-wordmark-scale) * ${String(size)}px)`,
     // The mark sets the lockup's height; leading below the baseline would only pad it.

@@ -8,4 +8,4 @@ The modal panel: create a library, rename, share, confirm a delete.
 </Dialog>
 ```
 
-Titles are Geist 600, never Chillax — Chillax is the wordmark and page titles only. Destructive dialogs say what will be lost in the description, and the confirm button is danger.
+Titles are Geist 600, never the display face — Gabarito is the page title only. Destructive dialogs say what will be lost in the description, and the confirm button is danger.

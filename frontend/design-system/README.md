@@ -31,7 +31,7 @@ The direction was chosen by the user from four built candidates in `Resonand - s
 
 **Library colour** is user-chosen from seven muted hues (`--library-amber` … `--library-teal`), each with a light-mode pair. It identifies a library and never carries meaning. It is never derived from the name or the audio. `clay` shares the accent's hue and is held apart from it on saturation instead — 34 against 76 — because the swatch carries its name as its accessible label, and a clay that is not clay-coloured misdescribes itself to somebody who cannot see it.
 
-**Type.** Three families, three jobs, no fourth case. **Chillax** (600) is the wordmark and the single page title per screen — nothing else, ever; it is a soft geometric sans, lovely at 33px and wrong in a 36px row. **Geist** is the interface: 17px/600 for section and card titles, 16px/1.6 for body and transcript, 14px for the working size and 13px below it. **Geist Mono**, tabular, for anything comparable to another number: durations, timestamps, counts, playback speed, and 11px/.12em uppercase group labels.
+**Type.** Three families, three jobs, no fourth case. **Gabarito** (600) is the single page title per screen — nothing else, ever; it is a soft geometric sans, lovely at 33px and wrong in a 36px row. The wordmark is **Chillax**, and only the wordmark. **Geist** is the interface: 17px/600 for section and card titles, 16px/1.6 for body and transcript, 14px for the working size and 13px below it. **Geist Mono**, tabular, for anything comparable to another number: durations, timestamps, counts, playback speed, and 11px/.12em uppercase group labels.
 
 **Leading is part of the scale, and there are four of it.** 1.1 for the page title, 1.25 for section and card titles, 1.6 for body and transcript, and **1.5 for everything at the working size** — a tooltip, the description under a switch, a paragraph of explanation in a dialog. Those three were written as 1.45, 1.5 and 1.55 in the components that needed them, which is a spread of one and a third pixels and the evidence that nobody chose any of them (`UI-33a1`). The fifth number, the wordmark's 1, is not a step: the mark sets the lockup's height and leading below the baseline would only pad it.
 
@@ -111,7 +111,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Breadcrumb` `Dialog` `Menu` `Tabs` `Sheet` `Toast` `ToastRegion` `Tooltip` |
 | `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |
-| `assets/` | The mark in three treatments, and the Chillax webfont |
+| `assets/` | The mark in three treatments, and the Gabarito and Chillax webfonts |
 | [`.claude/skills/resonand-design/`](../../.claude/skills/resonand-design/SKILL.md) | Agent-Skills entry point, outside this folder |
 
 **Every component is `.tsx`, and the application's own source** (`DEC-21`, `UI-1d`–`UI-1h`). Each ships two files: the component and its `.prompt.md`, which is the only record of when *not* to use it. The hand-written `.d.ts` files are gone — they folded into the components they documented.

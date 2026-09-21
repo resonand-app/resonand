@@ -58,4 +58,12 @@ describe('the design system asks nothing of the network', () => {
       expect(css).toMatch(new RegExp(`font-family:\\s*"${family}"`));
     }
   });
+
+  it('ships the display face, and the licence that lets it be shipped', () => {
+    // `INF-11` is the whole reason this assertion exists: a face can be in the tree, declared and
+    // working, and still be one nobody is allowed to redistribute. The licence beside it is the
+    // part that is checkable, so it is checked.
+    expect(css).toMatch(/font-family:\s*"Gabarito"/);
+    expect(existsSync(resolve(TOKENS, '../assets/fonts/Gabarito-OFL.txt'))).toBe(true);
+  });
 });

@@ -5,7 +5,7 @@ import { Icon } from '../foundation/Icon';
 
 export interface PageHeaderProps {
   /**
-   * The page title. **The only Chillax on the screen**, and there is one of these per view.
+   * The page title. **The only Gabarito on the screen**, and there is one of these per view.
    *
    * A string and not a node, on purpose: a node here is how somebody eventually puts a second
    * typeface, an icon or a badge inside the one piece of display type the product has. That
@@ -43,7 +43,7 @@ export interface PageHeaderProps {
 /**
  * The one page title per screen, and the enforcement point for that rule (`UI-35b`).
  *
- * Chillax appears in exactly two places in this product: the wordmark, and the title of the view
+ * The display face appears in exactly one place in this product: the title of the view
  * you are looking at. It is a soft geometric sans that is lovely at 33px and wrong in a 36px row,
  * and a system with one display face survives only if there is one component that draws it.
  *
@@ -54,8 +54,8 @@ export interface PageHeaderProps {
  *
  * **A title can be corrected in place, and that is a prop rather than a node** (`UI-11i`). The
  * recording's title is the subject's own name and the specification has it inline-editable as
- * the one Chillax element, so the affordance is built in here where the type is drawn: the
- * pencil is the design system's, at the interface's size and never in Chillax, and the string
+ * the one display-face element, so the affordance is built in here where the type is drawn: the
+ * pencil is the design system's, at the interface's size and never in Gabarito, and the string
  * stays a string. Handing the caller a node to put beside the title would have given away the
  * very thing the rule above protects.
  *

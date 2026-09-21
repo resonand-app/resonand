@@ -480,8 +480,8 @@ presentational and join the system; four hold data and stay in the application, 
 - [x] **UI-35a** · `Shell` — the desktop frame: nav 52, sidebar 224 (52 collapsed), content,
       player 64, everything floating in a 12px gap, and the player **absent rather than empty**
       when nothing is playing. Design system. ⇢ UI-33b
-- [x] **UI-35b** · `PageHeader` — the Chillax page title, the mono meta line, and right-aligned
-      actions. It is also the enforcement point for **one Chillax title per screen and nothing
+- [x] **UI-35b** · `PageHeader` — the display-face page title, the mono meta line, and right-aligned
+      actions. It is also the enforcement point for **one display-face title per screen and nothing
       else, ever**. Design system.
 - [x] **UI-35c** · `StateSlot` — §3.5's state family as three exports: the centred message card
       (icon, title, body, action, footnote), the card skeleton, and the row skeleton. Seven states
@@ -721,7 +721,7 @@ The screens the product is used from, and the largest view in the plan.
 
 The most important single screen, and the one whose phone layout is a genuinely different screen.
 
-- [x] **UI-11a** · The breadcrumb, the Chillax title, and the essentials line — date and time,
+- [x] **UI-11a** · The breadcrumb, the display-face title, and the essentials line — date and time,
       duration, uploader, transcript version. ⇢ UI-35b, API-9
 - [x] **UI-11b** · The large player panel: the 130px waveform with a playhead and click-to-seek,
       the transport with ±15s, the position and duration, and the speed pill from 0.75× to 2×.
@@ -747,11 +747,11 @@ The most important single screen, and the one whose phone layout is a genuinely 
       thresholds rather than one, so a trackpad's own jitter cannot flip the shape back and forth.
       🧪 the handover, and that it holds inside the dead band ⇢ UI-11g, UI-5c
 - [x] **UI-11i** · The title corrected where it is largest, as §V5 has always had it —
-      inline-editable as the one Chillax element. A recording's title is the subject's own name
+      inline-editable as the one display-face element. A recording's title is the subject's own name
       rather than a label the product chose, and it is most often wrong right where it is biggest:
       a filename nobody looked at, over the waveform of the thing it names. `PageHeader` grows an
       `onTitleSave` and keeps `title` a `string`, so the pencil is the design system's own, at the
-      interface's size and never in Chillax — `UI-35b` is about foreign nodes in the display type
+      interface's size and never in the display face — `UI-35b` is about foreign nodes in the display type
       and holds exactly as it did. Two controls over one field, deliberately: the panel is where a
       title is corrected among the other seven, the header where it is corrected because you are
       looking at it. **Absent rather than inert below level 20**, which is `UI-34l`'s rule for the

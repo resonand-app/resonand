@@ -193,6 +193,7 @@ export const TOKENS = [
   '--type-page-title-weight',
   '--type-page-title-tracking',
   '--type-page-title-leading',
+  '--type-wordmark-family',
   '--type-wordmark-scale',
   '--type-wordmark-lead',
   '--type-wordmark-leading',
