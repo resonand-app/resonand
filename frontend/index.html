@@ -52,7 +52,13 @@
       The in-app mark stays a single source in `design-system/assets/`, used by `Logo`.
     -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!--
+      The simplified mark, not the full one. The three arcs merge into a smudge below about 40px
+      and a favicon is never drawn above 32, so the SVG slot -- which a modern browser prefers
+      over the .ico -- gets the S on its own. The .ico carries both: simplified at 16 and 32, the
+      full mark at 48. `favicon.svg` is still shipped for anywhere it is drawn large.
+    -->
+    <link rel="icon" href="/favicon-small.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <!--

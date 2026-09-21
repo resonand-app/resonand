@@ -178,7 +178,7 @@ describe('the type scale guard', () => {
 
   it('accepts a token, a token inside a calc, and the keywords that state no opinion', () => {
     expect(kinds("const a = { lineHeight: 'var(--type-ui-leading)' };")).toEqual([]);
-    expect(kinds('const a = { fontSize: `calc(var(--type-wordmark-scale) * ${s}px)` };')).toEqual(
+    expect(kinds('const a = { fontSize: `calc(var(--type-page-title-size) * ${s})` };')).toEqual(
       [],
     );
     expect(

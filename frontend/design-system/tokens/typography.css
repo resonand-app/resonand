@@ -15,19 +15,9 @@
   --type-page-title-tracking: -0.02em;
   --type-page-title-leading: 1.1;
 
-  /* Wordmark — Chillax, and only the wordmark. The mark is the S, so the artwork fixes all three
-     of these against the mark's height: the lockup has one set of proportions, not one per site.
-     `lead` is the gap either side of the mark, which the word is split around; `leading` is the
-     line box, which the mark already sets.
-
-     The family is its own token rather than `--font-display`, because the wordmark and the page
-     title stopped being the same job when the display face became Gabarito: the lockup is the
-     brand and is drawn in Chillax, the title is interface text. `NAM-5` replaces the lockup with
-     artwork and takes this token with it. */
-  --type-wordmark-family: "Chillax", var(--font-display);
-  --type-wordmark-scale: 0.9615;
-  --type-wordmark-lead: 0.101em;
-  --type-wordmark-leading: 1;
+  /* The wordmark has no tokens. It was type until `NAM-5` and is artwork now, so its family, its
+     scale and the gap either side of the mark are fixed in the drawing rather than here -- which
+     is what a lockup is. `Logo` takes a size and a colour and nothing else. */
 
   /* Section and card titles — Geist, not the display face. */
   --type-title-size: 17px;
