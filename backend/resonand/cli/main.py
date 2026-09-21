@@ -23,6 +23,9 @@ from sqlalchemy.orm import Session
 from resonand import __version__
 from resonand.api.app import create_app
 from resonand.archive import (
+    LEGACY_MANIFEST_NAME,
+    LEGACY_SIDECAR_NAME,
+    LEGACY_SIDECAR_SUFFIX,
     MANIFEST_NAME,
     SIDECAR_NAME,
     SIDECAR_SUFFIX,
@@ -150,9 +153,10 @@ def import_files(
         typer.echo(f"Nothing to import from {source}.")
         return
 
-    manifest = _manifest_from(source)
+    manifest_path = _manifest_at(source)
+    manifest = _read_manifest_quietly(manifest_path)
     _say_if_no_manifest(source, manifest, library_uuid=library)
-    resolved = {} if dry_run else _restore_instance(database, manifest)
+    resolved = {} if dry_run else _restore_instance(database, manifest, manifest_path)
     planned = _libraries_named_by(manifest)
 
     added = updated = 0
@@ -464,15 +468,17 @@ def _sidecar_beside(path: Path) -> Path | None:
     would otherwise hand every one of them the same uuid, and the second file would update what
     the first had just created.
     """
-    shared = path.parent / SIDECAR_NAME
-    if shared.is_file() and _holds_one_recording(path.parent):
-        return shared
-    for candidate in (
-        path.with_suffix(SIDECAR_SUFFIX),
-        path.parent / f"{path.stem}{SIDECAR_SUFFIX}",
-    ):
-        if candidate.exists():
-            return candidate
+    for name in (SIDECAR_NAME, LEGACY_SIDECAR_NAME):
+        shared = path.parent / name
+        if shared.is_file() and _holds_one_recording(path.parent):
+            return shared
+    for suffix in (SIDECAR_SUFFIX, LEGACY_SIDECAR_SUFFIX):
+        for candidate in (
+            path.with_suffix(suffix),
+            path.parent / f"{path.stem}{suffix}",
+        ):
+            if candidate.exists():
+                return candidate
     return None
 
 
@@ -496,11 +502,19 @@ def _read_sidecar_quietly(sidecar: Path | None) -> dict[str, object] | None:
         return None
 
 
-def _manifest_from(source: Path) -> dict[str, object] | None:
-    """The archive manifest an export wrote at its root, if this is one."""
+def _manifest_at(source: Path) -> Path | None:
+    """Where the archive manifest is, under either spelling of its name."""
     root = source if source.is_dir() else source.parent
-    path = root / MANIFEST_NAME
-    if not path.is_file():
+    for name in (MANIFEST_NAME, LEGACY_MANIFEST_NAME):
+        path = root / name
+        if path.is_file():
+            return path
+    return None
+
+
+def _read_manifest_quietly(path: Path | None) -> dict[str, object] | None:
+    """The manifest's contents, or nothing at all if it cannot be read as one."""
+    if path is None:
         return None
     try:
         return read_manifest(path)
@@ -548,14 +562,18 @@ def _manifests_below(source: Path, limit: int = 3) -> list[Path]:
         return []
     found: list[Path] = []
     for entry in sorted(source.iterdir()):
-        if entry.is_dir() and (entry / MANIFEST_NAME).is_file():
+        if entry.is_dir() and any(
+            (entry / name).is_file() for name in (MANIFEST_NAME, LEGACY_MANIFEST_NAME)
+        ):
             found.append(entry)
             if len(found) == limit:
                 break
     return found
 
 
-def _restore_instance(database: Database, manifest: dict[str, object] | None) -> dict[str, int]:
+def _restore_instance(
+    database: Database, manifest: dict[str, object] | None, path: Path | None = None
+) -> dict[str, int]:
     """Recreate the libraries and the sharing the export described, and say what it could not."""
     if manifest is None:
         return {}
@@ -570,7 +588,10 @@ def _restore_instance(database: Database, manifest: dict[str, object] | None) ->
     for name in applied.refused_libraries:
         typer.echo(f"skipped library {name}: its owner has no account here.", err=True)
     if applied.libraries:
-        typer.echo(f"Restored {len(applied.libraries)} libraries from {MANIFEST_NAME}.")
+        # The file that was read, not the name this build writes -- an export made before the
+        # rename carries the old one, and naming the wrong file is how an hour goes missing.
+        read = path.name if path else MANIFEST_NAME
+        typer.echo(f"Restored {len(applied.libraries)} libraries from {read}.")
     return applied.libraries
 
 

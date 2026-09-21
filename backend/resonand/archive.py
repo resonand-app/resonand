@@ -68,6 +68,20 @@ Still read on import, because a sidecar somebody wrote by hand next to a single 
 reasonable thing to hand this command, and refusing it would buy nothing.
 """
 
+HEADER_KEY = "resonand"
+
+LEGACY_MANIFEST_NAME = "sonarium-archive.json"
+LEGACY_SIDECAR_NAME = "sonarium.json"
+LEGACY_SIDECAR_SUFFIX = ".sonarium.json"
+LEGACY_HEADER_KEY = "sonarium"
+"""What the format was called before the project was renamed (``NAM-4``).
+
+Read and never written, which is the whole of it: an export is the one artefact built to outlive
+the instance that wrote it, so a reader that refused the format it was writing last month would
+undercut the single feature whose claim is longevity. An export written under the old name is
+still somebody's archive sitting on a disk, and it is the only copy they may have.
+"""
+
 
 @dataclass(frozen=True, slots=True)
 class ExportedRecording:
@@ -201,12 +215,18 @@ def export_recording(
     )
 
 
+def _header(payload: dict[str, Any]) -> dict[str, Any]:
+    """The envelope, under either spelling of the key."""
+    header = payload.get(HEADER_KEY) or payload.get(LEGACY_HEADER_KEY) or {}
+    return header if isinstance(header, dict) else {}
+
+
 def read_sidecar(path: Path) -> dict[str, Any]:
     """Read a sidecar, refusing a version this build does not understand."""
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError(f"{path.name} is not a Resonand sidecar.")
-    header = payload.get("resonand") or {}
+    header = _header(payload)
     version = header.get("sidecar_version")
     if version != SIDECAR_VERSION:
         raise ValueError(
@@ -331,7 +351,7 @@ def read_manifest(path: Path) -> dict[str, Any]:
     payload = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(payload, dict):
         raise ValueError(f"{path.name} is not a Resonand archive manifest.")
-    header = payload.get("resonand") or {}
+    header = _header(payload)
     version = header.get("manifest_version")
     if version != MANIFEST_VERSION:
         raise ValueError(

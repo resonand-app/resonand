@@ -138,7 +138,7 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       returning 673 KB. `/` answers a problem document to a client that does not accept HTML,
       which is by design and not a fault -- worth knowing before somebody curls it and reports it.
 
-- [ ] **NAM-4** · **An export written under the old name still reads.** The one identifier that
+- [x] **NAM-4** · **An export written under the old name still reads.** The one identifier that
       gets a fallback, and deliberately the only one. An export is the single artefact this product
       builds to outlive the instance that wrote it — [`VISION.md`](../../VISION.md) promises
       exactly that, and [`REL-2`](../next-plan/release.md) will document it as a supported way to
@@ -150,6 +150,21 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       _Done when:_ an export produced before `NAM-3` imports into an empty instance and comes back
       whole. ⇢ NAM-3 🧪
       🧪 *A fixture in the old format reads; the round trip writes only the new one.*
+
+      **Done.** Three names and a header key, read and never written: `sonarium-archive.json`,
+      `sonarium.json`, `.sonarium.json`, and a `"sonarium"` envelope. One `_header` helper, so a
+      sidecar and a manifest cannot come to disagree about which spellings are accepted.
+
+      **Verified against an export the old build actually wrote**, not a fixture in the shape the
+      old format was believed to have: the tree at `0563e7a` extracted, its environment built, the
+      demo archive exported through it, and that export read into an empty instance by this one --
+      4 libraries, 7 recordings, `fsck` clean. Worth the half hour, because a hand-written fixture
+      proves the reader matches its author's memory and nothing else.
+
+      That run found the one defect: the import announced `Restored 4 libraries from
+      resonand-archive.json` while reading `sonarium-archive.json`. The message named the constant
+      this build writes rather than the file it had opened, which is `ING-11c1`'s lesson arriving
+      from the other direction, and it now names what it read.
 
 - [ ] **NAM-5** · **The mark, the lockup and the icons.** Design rather than renaming, and the
       longest of these in calendar time. The mark stops standing in for a letter it no longer has:
