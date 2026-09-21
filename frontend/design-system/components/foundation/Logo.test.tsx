@@ -2,7 +2,7 @@
  * The lockup's two decisions (`UI-1d`, `UI-36`).
  *
  * Whether the wordmark is there: `showWordmark={false}` is what the collapsed sidebar and the
- * avatar tile use, and Chillax appearing where it should not is the system's most visible rule
+ * avatar tile use, and the wordmark appearing where it should not is the system's most visible rule
  * broken -- it is the wordmark and the single page title per screen, and there is no third case.
  *
  * And what it announces. The mark is the S, so the letters on screen are the name without it:

@@ -3,7 +3,7 @@
  * Nothing here reaches the network. The interface has to render inside an air-gapped
  * deployment, and a self-hosted archive that phones out to Google to draw its own chrome reads
  * badly everywhere else — so the Google Fonts `@import` that stood at the top of this file is
- * gone and both Geist faces sit in `../assets/fonts/` beside Chillax.
+ * gone and both Geist faces sit in `../assets/fonts/` beside Gabarito and Chillax.
  *
  * They are vendored rather than pulled from a package at build time, because this file is read
  * two ways: Vite processes it as part of the app, and the seventeen cards in `guidelines/` and
@@ -12,9 +12,10 @@
  * not what these are.** That package ships TTF and no woff2 — 169 KB and 171 KB for the two
  * variable faces against 84 KB for all four files here — and peer-depends on Next.js, which
  * this project does not have and will not get. The binaries come from `@fontsource-variable/
- * geist@5.3.0` and `@fontsource-variable/geist-mono@5.3.0`, which are the same upstream fonts
- * subset and compressed by the Fontsource project. Bumping them is a manual copy, exactly as it
- * is for Chillax; the version is written here because that is the only place it exists.
+ * geist@5.3.0`, `@fontsource-variable/geist-mono@5.3.0` and `@fontsource-variable/
+ * gabarito@5.3.0`, which are the same upstream fonts subset and compressed by the Fontsource
+ * project. Bumping them is a manual copy, exactly as it is for Chillax; the version is written
+ * here because that is the only place it exists.
  *
  * Latin and Latin Extended only. Cyrillic and Vietnamese are dropped, and so is Geist Mono's
  * box-drawing subset: the product's own copy is English and its content is whatever somebody
@@ -71,7 +72,29 @@
     U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* Chillax — variable, supplied by the user. Display only: the wordmark and page titles. */
+/* Gabarito -- the display face: the single page title per screen, and nothing else. */
+@font-face {
+  font-family: "Gabarito";
+  src: url("../assets/fonts/Gabarito-Variable-latin.woff2") format("woff2-variations");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+    U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Gabarito";
+  src: url("../assets/fonts/Gabarito-Variable-latin-ext.woff2") format("woff2-variations");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+    U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+    U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* Chillax — variable, supplied by the user. The wordmark alone; `INF-11` takes it out. */
 @font-face {
   font-family: "Chillax";
   src: url("../assets/fonts/Chillax-Variable.woff2") format("woff2-variations");

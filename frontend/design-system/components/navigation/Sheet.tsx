@@ -10,7 +10,7 @@ const DISMISS_AT = 64;
 export interface SheetProps {
   open: boolean;
   onClose: () => void;
-  /** Shown at the top, 17px Geist. Never Chillax -- that is the page title and there is one. */
+  /** Shown at the top, 17px Geist. Never Gabarito -- that is the page title and there is one. */
   title?: string;
   /** Names it when there is no visible title. */
   ariaLabel?: string;

@@ -17,7 +17,7 @@
  * that fold exists.
  *
  * **One piece of display type, and it is correctable in place** (`UI-11i`). The title is the
- * view's `PageHeader` title and nothing else on the screen is Chillax. §V5 has it inline-editable
+ * view's `PageHeader` title and nothing else on the screen is the display face. §V5 has it inline-editable
  * as that one element: a recording's title is the subject's own name rather than a label the
  * product chose, and it is most often wrong exactly where it is largest -- a filename nobody
  * looked at, sitting over the waveform of the thing it names. So it is corrected here as well as

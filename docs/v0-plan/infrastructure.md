@@ -86,14 +86,36 @@ Short and mechanical, but it conditions everything that comes after. No product 
 
       **An instance may still serve the real font.** §02 closes by exempting “the self-hosting
       … for the Licensee's own websites”, so an operator holding their own copy — free, from
-      Fontshare — can mount it and keep Chillax page titles. What the repository ships in its
-      absence is the part still open: Geist already ships and needs no new file, and of the nine
-      OFL faces held against Chillax none is close to it, so adding a third family buys a
-      resemblance rather than the thing.
+      Fontshare — can mount it. **What ships in its absence is settled: Gabarito**, in `INF-11a`.
+      The display face is now the page title alone, because the wordmark became artwork.
 
       One cost is already visible: `self-hosted-fonts.node.test.ts` asserts that every declared
       face points at a file that is here, so a face that is deliberately optional is a case it
       does not have yet.
+- [x] **INF-11a** · **The display face is Gabarito.** `INF-11` left one question open — what the
+      repository ships once Chillax cannot — and it is answered here so that `INF-11` is left with
+      one thing to do and it is the irreversible one.
+
+      Fifteen open faces were measured against Chillax at the page title's own 33px/600/-0.02em,
+      not at a size nobody uses. Two came within 3% on width: Quicksand at -2.1% and Geist at
+      -2.4%. That measurement is also the argument against Quicksand, which matches Chillax's
+      geometry and not its colour: at 700, its heaviest, it still reads lighter than Chillax at
+      600, and a page title that looks under-set is worse than one in a different face. Gabarito
+      is the choice — SIL OFL 1.1, from `@fontsource-variable/gabarito@5.3.0`, both subsets,
+      46 KB, with its licence beside it.
+
+      **The wordmark and the page title stopped being one job**, so `--type-wordmark-family` is
+      its own token rather than `--font-display`. Without that split the lockup's letters would
+      have turned Gabarito the moment the display face changed, which is a defect nothing would
+      have failed on. `NAM-5` deletes the token when the lockup becomes artwork.
+
+      One trap found on the way: `--font-display` named no fallback but the system stack, so
+      removing Chillax without this would have given page titles **the OS font** rather than
+      anything shipped -- measurably different, and exactly what `UI-1a` exists to prevent.
+      _Done when:_ page titles draw in a redistributable face with its licence shipped, and the
+      wordmark is unaffected. ⇢ INF-11 🧪
+      🧪 *The face is declared and its licence is in the tree.*
+
       _Done when:_ no Chillax in the tree or in the history, the lockup renders with no font
       loaded, and `--font-display` resolves to something redistributable. ⇢ INF-1, NAM-5 🧪
       🧪 *The shipped faces are all redistributable, and the lockup draws without one.*

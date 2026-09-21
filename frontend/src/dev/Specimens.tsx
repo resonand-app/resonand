@@ -654,7 +654,7 @@ export default function Specimens() {
       </Section>
 
       <Section title="Composites">
-        <Panel label="PageHeader · the one Chillax title per screen" width="100%">
+        <Panel label="PageHeader · the one Gabarito title per screen" width="100%">
           <PageHeader
             title="Field recordings"
             meta="37 recordings · 24 h 12 min"
