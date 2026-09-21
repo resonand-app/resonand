@@ -34,6 +34,8 @@ Short and mechanical, but it conditions everything that comes after. No product 
       attached to it through the `github.com-personal` SSH alias (key `id_rsa_personal`), never
       plain `github.com`. It was empty and private when this was written; it has carried the
       history since, and whether it is still private is `REL-5`'s question rather than this one's.
+      *The remote moved to `resonand-app/resonand` in `NAM-2`; this records where it was first
+      attached.*
       ```fish
       git push -u origin main
       ```
@@ -69,8 +71,18 @@ Short and mechanical, but it conditions everything that comes after. No product 
       of the font to create “logos, wordmarks, graphic elements, images, vector files, scalable
       drawings”, and the Definitions place those outside Derivative Work — ownership “remains
       with its respective creator”. So the lockup stops being text set in Chillax and becomes
-      artwork: `Logo.tsx` already draws the mark as a path, and `onarium` joins it as a second
-      one, under 10 KB of SVG at weight 600 and identical to what is on screen now.
+      artwork: `Logo.tsx` already draws the mark as a path, and the word joins it as a second one.
+      Measured at under 10 KB of SVG at weight 600.
+
+      **`NAM-5` draws that lockup, so this waits for it.** The wordmark this entry was written
+      against — the mark standing in for the `S`, with `onarium` set after it — is the one
+      [`naming.md`](naming.md) deletes. Outlining it first would be paying for the work twice and
+      throwing the first payment away, so what gets outlined is whatever `NAM-5` settles on.
+
+      **The history rewrite runs last, and on one remote.** After `NAM-3`, so the tree it rewrites
+      is the renamed one, and after `NAM-2`, so the force-push lands on the repository this project
+      is keeping rather than on the one it is leaving. `#114` was closed rather than merged for the
+      same reason: nothing open then has to be rebased onto a rewritten base.
 
       **An instance may still serve the real font.** §02 closes by exempting “the self-hosting
       … for the Licensee's own websites”, so an operator holding their own copy — free, from
@@ -83,7 +95,7 @@ Short and mechanical, but it conditions everything that comes after. No product 
       face points at a file that is here, so a face that is deliberately optional is a case it
       does not have yet.
       _Done when:_ no Chillax in the tree or in the history, the lockup renders with no font
-      loaded, and `--font-display` resolves to something redistributable. ⇢ INF-1 🧪
+      loaded, and `--font-display` resolves to something redistributable. ⇢ INF-1, NAM-5 🧪
       🧪 *The shipped faces are all redistributable, and the lockup draws without one.*
 
 ---
