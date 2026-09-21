@@ -58,7 +58,7 @@ class, but it is a real discovery cost: competition for the term inside the same
 
 **Settled, and the artefact is in the repository.** The system is vendored at
 [`frontend/design-system/`](../../frontend/design-system/README.md): tokens, components, the mark,
-the Chillax webfont, seventeen specimen cards and a click-through app kit. Its `README.md` is the
+the display webfont, seventeen specimen cards and a click-through app kit. Its `README.md` is the
 system in prose and is the authority — what follows is only enough to know what was decided,
 because a plan should not restate a stylesheet.
 
@@ -80,7 +80,8 @@ What it decides:
   through semantic names that flip on `[data-theme="light"]`. **Dark is the default and light is a
   full peer** — a token redefinition, never a second stylesheet.
 - **Three type families, three jobs.** *Chillax* 600 for the wordmark and the one page title per
-  screen and nothing else, ever. *Geist* for the interface. *Geist Mono*, tabular, for anything
+  screen and nothing else, ever. *Superseded*: the page title is *Gabarito* since `INF-11a`, and
+  the wordmark is artwork rather than type since `NAM-5`, because Chillax may not be shipped. *Geist* for the interface. *Geist Mono*, tabular, for anything
   comparable to another number — durations, timestamps, counts, speed.
 - **Elevation, not borders.** Panels float in a 12px gap on three steps of shadow. No gradients,
   no textures, no glass, no imagery. The waveform is the only graphic the product owns and it is

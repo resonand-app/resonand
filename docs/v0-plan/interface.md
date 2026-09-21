@@ -210,7 +210,8 @@ its props. This is transcription with a type checker watching, not redesign. **N
 allowed in these tasks** — if a component looks different afterwards, something was ported wrong.
 
 - [x] **UI-1a** · Self-host Geist and Geist Mono from the `geist` package and delete the Google
-      Fonts `@import` from `tokens/fonts.css`. Chillax is already shipped as a variable woff2.
+      Fonts `@import` from `tokens/fonts.css`. The display face shipped as a variable woff2 too, and
+      `INF-11` later changed which one.
       _Done when:_ the interface renders with the network blocked. An archive that phones out to
       Google to draw itself breaks in an air-gapped deployment and reads badly everywhere else.
 

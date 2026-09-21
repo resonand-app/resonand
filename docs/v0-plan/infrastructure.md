@@ -54,7 +54,7 @@ Short and mechanical, but it conditions everything that comes after. No product 
       `dda44b6`, which is what settles the number: `ROADMAP.md` used it for the community
       scaffolding too, and that one is now **`INF-10`**.
 
-- [ ] **INF-11** · **Chillax cannot ship, and the licence is explicit rather than silent.**
+- [x] **INF-11** · **Chillax cannot ship, and the licence is explicit rather than silent.**
       `design-system/assets/fonts/` ships two families and one licence file: `Geist-OFL.txt`
       covers Geist, and nothing covers `Chillax-Variable.woff2`. This entry read that as an
       omission, and offered two ways out — ship the foundry's licence text beside the font, or
@@ -116,6 +116,17 @@ Short and mechanical, but it conditions everything that comes after. No product 
       wordmark is unaffected. ⇢ INF-11 🧪
       🧪 *The face is declared and its licence is in the tree.*
 
+      **Done, in four parts and over three tasks.** `INF-11a` gave page titles Gabarito, so
+      `--font-display` resolves to something redistributable. `NAM-5` made the lockup artwork, so
+      it renders with no font loaded at all. This entry takes the file out of the tree, and the
+      history rewrite ran immediately after it merged -- `git filter-repo` over the one blob, then
+      a force push, with nothing else open.
+
+      The check that is left behind is the useful part: **every shipped face must name its
+      licence**, and adding one without is what fails. Chillax sat here for months, declared and
+      working, and no check could see it -- because what was wrong was the absence of a file
+      rather than the presence of one. Verified by putting the font back, which turns the suite
+      red with the face named.
       _Done when:_ no Chillax in the tree or in the history, the lockup renders with no font
       loaded, and `--font-display` resolves to something redistributable. ⇢ INF-1, NAM-5 🧪
       🧪 *The shipped faces are all redistributable, and the lockup draws without one.*
