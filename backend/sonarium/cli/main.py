@@ -23,12 +23,16 @@ from sqlalchemy.orm import Session
 from sonarium import __version__
 from sonarium.api.app import create_app
 from sonarium.archive import (
+    MANIFEST_NAME,
     SIDECAR_NAME,
     SIDECAR_SUFFIX,
+    apply_manifest,
     apply_sidecar,
     export_recording,
     find_by_uuid,
     library_named_by,
+    manifest_for,
+    read_manifest,
     read_sidecar,
 )
 from sonarium.cli import integrity
@@ -133,9 +137,11 @@ def import_files(
     already here updates that recording rather than creating a second copy -- which is what makes
     the export round trip verify the archive instead of doubling it.
 
-    Each recording goes into the library its sidecar names, when this instance has that library,
-    so an export read back lands where it came from. ``--library`` takes everything else, and an
-    import of loose files with no sidecars needs it.
+    An export carries an archive manifest, and reading it back recreates the libraries and the
+    sharing they had -- against accounts that are already here. Accounts are never created from
+    an export: create them first, and a library whose owner is missing is refused by name rather
+    than handed to whoever ran the import. Everything else goes where ``--library`` says, which
+    is also what an import of loose files with no sidecars needs.
     """
     settings = _settings()
     database = _database(settings)
@@ -144,14 +150,20 @@ def import_files(
         typer.echo(f"Nothing to import from {source}.")
         return
 
+    manifest = _manifest_from(source)
+    resolved = {} if dry_run else _restore_instance(database, manifest)
+    planned = _libraries_named_by(manifest)
+
     added = updated = 0
     for path in candidates:
         sidecar = _sidecar_beside(path)
         if dry_run:
-            typer.echo(f"{_dry_run_verdict(database, sidecar, library)}: {path.name}")
+            typer.echo(f"{_dry_run_verdict(database, sidecar, library, planned)}: {path.name}")
             continue
         try:
-            if _import_one(database, settings, path, library, sidecar, transcribe=transcribe):
+            if _import_one(
+                database, settings, path, library, sidecar, resolved, transcribe=transcribe
+            ):
                 updated += 1
             else:
                 added += 1
@@ -175,6 +187,10 @@ def export(
     One directory per recording, named for its identifier, holding all four. Two recordings that
     were uploaded under the same filename therefore cannot overwrite each other in the export.
 
+    An archive manifest at the root describes the instance itself -- the accounts, the libraries
+    and who each was shared with -- so a round trip gives back the shape of the archive and not
+    only its contents. It carries no credentials of any kind.
+
     The sidecar carries the recording's ``uuid``, so what this writes can be read back into an
     empty instance and produce the same archive rather than a second copy of it.
     """
@@ -183,12 +199,16 @@ def export(
     written = 0
     with database.read_session() as session:
         query = session.query(Audio).filter(Audio.deleted_at.is_(None))
+        trashed = session.query(Audio).filter(Audio.deleted_at.is_not(None))
+        described = session.query(Library).filter(Library.deleted_at.is_(None))
         if library:
             found = session.query(Library).filter(Library.uuid == library).one_or_none()
             if found is None:
                 typer.echo(f"There is no library with uuid {library}.", err=True)
                 raise typer.Exit(code=2)
             query = query.filter(Audio.library_id == found.id)
+            trashed = trashed.filter(Audio.library_id == found.id)
+            described = described.filter(Library.id == found.id)
         for audio in query.order_by(Audio.id):
             export_recording(
                 session,
@@ -198,6 +218,16 @@ def export(
                 copy_audio=not metadata_only,
             )
             written += 1
+        manifest = manifest_for(
+            session,
+            list(described.order_by(Library.id)),
+            recordings=written,
+            skipped_in_trash=trashed.count(),
+        )
+    destination.mkdir(parents=True, exist_ok=True)
+    (destination / MANIFEST_NAME).write_text(
+        json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
     typer.echo(f"Exported {written} recordings to {destination}.")
 
 
@@ -465,28 +495,98 @@ def _read_sidecar_quietly(sidecar: Path | None) -> dict[str, object] | None:
         return None
 
 
-def _dry_run_verdict(database: Database, sidecar: Path | None, library_uuid: str | None) -> str:
+def _manifest_from(source: Path) -> dict[str, object] | None:
+    """The archive manifest an export wrote at its root, if this is one."""
+    root = source if source.is_dir() else source.parent
+    path = root / MANIFEST_NAME
+    if not path.is_file():
+        return None
+    try:
+        return read_manifest(path)
+    except (ValueError, OSError) as error:
+        typer.echo(f"ignoring {path.name}: {error}", err=True)
+        return None
+
+
+def _restore_instance(database: Database, manifest: dict[str, object] | None) -> dict[str, int]:
+    """Recreate the libraries and the sharing the export described, and say what it could not."""
+    if manifest is None:
+        return {}
+    with database.write_session() as session:
+        applied = apply_manifest(session, manifest)
+    for address in applied.missing_accounts:
+        typer.echo(
+            f"no account here for {address}: create it and run this again to place its "
+            "recordings and restore its sharing.",
+            err=True,
+        )
+    for name in applied.refused_libraries:
+        typer.echo(f"skipped library {name}: its owner has no account here.", err=True)
+    if applied.libraries:
+        typer.echo(f"Restored {len(applied.libraries)} libraries from {MANIFEST_NAME}.")
+    return applied.libraries
+
+
+def _libraries_named_by(manifest: dict[str, object] | None) -> dict[str, str]:
+    """Library uuid to name, as the manifest has them, for a dry run that writes nothing."""
+    described = (manifest or {}).get("libraries")
+    if not isinstance(described, list):
+        return {}
+    return {
+        str(one.get("uuid")): str(one.get("name"))
+        for one in described
+        if isinstance(one, dict) and one.get("uuid")
+    }
+
+
+def _dry_run_verdict(
+    database: Database,
+    sidecar: Path | None,
+    library_uuid: str | None,
+    planned: dict[str, str],
+) -> str:
     """What ``--dry-run`` says about one file.
 
     It resolves the destination library rather than assuming one, because a dry run that reports
-    "would add" for a file the real run will refuse is worse than no dry run.
+    "would add" for a file the real run will refuse is worse than no dry run. A library the
+    manifest would create counts, even though a dry run has not created it.
     """
     payload = _read_sidecar_quietly(sidecar)
     with database.read_session() as session:
         if payload is not None and find_by_uuid(session, str(payload.get("uuid", ""))) is not None:
             return "would update"
+        coming = planned.get(_library_uuid_in(payload))
+        if coming is not None:
+            return f"would add to {coming}"
         try:
-            destination = _destination_library(session, payload, library_uuid)
+            destination = _destination_library(session, payload, library_uuid, {})
         except SonariumError as error:
             return f"would skip ({error.detail})"
         return f"would add to {destination.name}"
 
 
+def _library_uuid_in(payload: dict[str, object] | None) -> str:
+    named = (payload or {}).get("library")
+    return str(named["uuid"]) if isinstance(named, dict) and named.get("uuid") else ""
+
+
 def _destination_library(
-    session: Session, payload: dict[str, object] | None, library_uuid: str | None
+    session: Session,
+    payload: dict[str, object] | None,
+    library_uuid: str | None,
+    resolved: dict[str, int],
 ) -> Library:
-    """Which library a recording that is not here yet goes into."""
+    """Which library a recording that is not here yet goes into.
+
+    The manifest first, because a personal library keeps the uuid it was created with here and
+    not the one the export remembers -- so the sidecar's uuid finds nothing and the recording
+    would fall through to ``--library``.
+    """
     if payload is not None:
+        found = resolved.get(_library_uuid_in(payload))
+        mapped = session.get(Library, found) if found is not None else None
+        if mapped is not None:
+            return mapped
         named = library_named_by(session, payload)
         if named is not None:
             return named
@@ -504,6 +604,7 @@ def _import_one(
     path: Path,
     library_uuid: str | None,
     sidecar: Path | None,
+    resolved: dict[str, int],
     *,
     transcribe: bool,
 ) -> bool:
@@ -522,7 +623,7 @@ def _import_one(
                 apply_sidecar(session, existing, payload)
                 return True
 
-        library = _destination_library(session, payload, library_uuid)
+        library = _destination_library(session, payload, library_uuid, resolved)
         audio = create_audio(
             session,
             library_id=library.id,

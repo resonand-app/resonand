@@ -245,6 +245,11 @@ forms is `JOB-14`, which is measured rather than assumed.
 - **Export layout:** one directory per recording, named for its `uuid`, holding the original, the
   sidecar and the subtitles. Two recordings that arrived under the same filename cannot overwrite
   each other, and no punctuation in a filename can separate a sidecar from its audio (`ING-11a`).
+- **Archive manifest:** `sonarium-archive.json` at the root, describing the accounts, the
+  libraries and the sharing, so a round trip gives back the shape of the archive and not only its
+  contents. **Identities, never credentials** — an export is something you hand to somebody, and
+  an import therefore creates no accounts and refuses a library whose owner is not already here.
+  Restoring an instance whole is a backup's job, not an export's (`ING-11c`, `OPS-6`).
 
 ### Suggestion storage, deferred (DEC-1)
 
