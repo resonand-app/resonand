@@ -196,9 +196,8 @@ the decision and [`naming.md`](naming.md) holds the work.
 
 | Task | What it is |
 |---|---|
-| `NAM-5` | The mark, the lockup and the icons |
 
-`NAM-1` to `NAM-4` are closed: the track was written, the repository is
+The whole of `NAM` is closed: the track was written, the repository is
 `resonand-app/resonand` with all 140 of its pull requests and redirects behind it, and the tree
 says `resonand` everywhere except where it records what was decided on a day, and an export
 written under the old name still reads. What is left is the artwork, which still draws a lockup

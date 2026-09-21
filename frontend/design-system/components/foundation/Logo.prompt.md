@@ -1,4 +1,4 @@
-The Resonand lockup: the mark standing in for the S, with `re` before it and `onand` after. Use it in the top nav, on the sign-in screen, and nowhere else.
+The Resonand lockup: the mark standing in for the S, which is the third letter of the name. Use it in the top nav, on the sign-in screen, and nowhere else.
 
 ```jsx
 <Logo size={18} />
@@ -7,4 +7,4 @@ The Resonand lockup: the mark standing in for the S, with `re` before it and `on
 
 `size` is the height of the mark. The wordmark's size and its lead follow from it, because the brand kit draws the lockup as one object -- there is no call site that sets them apart.
 
-Chillax appears here and nowhere else; page titles are Gabarito. On an amber fill, pass `color="var(--accent-on)"`. The S is the third letter, so the word is split around the mark and what is on screen is `re` + `onand`; the lockup carries its own accessible name, and `label` is for where something else should be announced.
+Both halves are artwork -- no font is loaded, and none is needed. On an amber fill, pass `color="var(--accent-on)"`. The lockup carries its own accessible name, which since `NAM-5` is the only thing on screen that says what it is; pass `label` only where something else should be announced.

@@ -191,13 +191,37 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       letters stop spelling the product. ⇢ NAM-3 🧪
       🧪 *The lockup's letters are asserted against the name, not as a literal.*
 
-- [ ] **NAM-5** · **The mark, the lockup and the icons.** Design rather than renaming, and the
+- [x] **NAM-5** · **The mark, the lockup and the icons.** Design rather than renaming, and the
       longest of these in calendar time. The mark stops standing in for a letter it no longer has:
       either it is redrawn, or it becomes a mark set beside the whole word. Downstream of whichever
       it is: `favicon.svg` and `favicon.ico`, six raster icons, `og-image.png`, `site.webmanifest`,
       the three `resonand-mark*.svg` assets, `Logo.tsx` with its prompt and its test, the two
       guideline cards that draw the mark, `design-system/README.md`, which explains the `S`
       relationship in prose, and `.claude/skills/resonand-design/`, which explains it again.
+      _Done when:_ nothing in the interface or the brand kit draws the old mark, and the specimen
+      board renders in both themes. ⇢ NAM-1
+
+      **Done.** The mark did not change -- it was re-vectorised from the original at 0.998 IoU and
+      is the same three arcs curling into the S. What changed is that **both halves are artwork**:
+      the letters were text set in Chillax and are now a path, drawn from Chillax under the clause
+      that permits a wordmark and forbids the file. Nothing loads a font to draw the logo, which is
+      what `INF-11` needed from this.
+
+      Two paths rather than one, so the theme still reaches it: the mark takes the `color` prop and
+      the word takes `--text`, and the light theme needs no second asset. Checked in both. Four
+      tokens went with the change -- `--type-wordmark-family`, `-scale`, `-lead` and `-leading` --
+      because the proportions of a lockup belong in the drawing.
+
+      **Two things in the pack were deliberately not taken.** Its `site.webmanifest` uses absolute
+      `/` paths and drops `start_url` and `scope`, which is exactly what `UI-39` made relative so
+      that an instance on a subpath works; `served-under-any-prefix.node.test.ts` would have caught
+      it, and did not have to. And its `theme_color` is white, where this interface is dark by
+      default.
+
+      **One thing in it we did not have and should have:** `favicon-small.svg`, the S without the
+      arcs. The three arcs merge into a smudge below about 40px and a favicon is never drawn above
+      32, so the SVG slot -- which a browser prefers over the `.ico` -- now gets the simplified
+      mark, and the `.ico` carries both, at 16, 32 and 48.
       _Done when:_ nothing in the interface or the brand kit draws the old mark, and the specimen
       board renders in both themes. ⇢ NAM-1
 
