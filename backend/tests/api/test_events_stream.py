@@ -19,11 +19,11 @@ from collections.abc import AsyncIterator
 import anyio
 import pytest
 from fastapi.testclient import TestClient
-from sonarium.api.routes import events
-from sonarium.core.changes import AUDIO, LIBRARY, QUEUE_DEPTH, RESYNC, Change, Changes
-from sonarium.db import libraries as library_repo
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
+from resonand.api.routes import events
+from resonand.core.changes import AUDIO, LIBRARY, QUEUE_DEPTH, RESYNC, Change, Changes
+from resonand.db import libraries as library_repo
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
 from starlette.requests import Request
 
 READY = ": ready\n\n"

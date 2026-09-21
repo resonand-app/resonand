@@ -210,11 +210,11 @@ function fresh(): Archive {
   }));
   return {
     instance: {
-      name: 'sonarium',
+      name: 'resonand',
       version: '0.1.0',
       needs_bootstrap: false,
       // The vocabulary, in the API's own words and its own order (`API-18`). The sentences are
-      // `sonarium.core.levels.DESCRIPTIONS` verbatim, because a mock that paraphrased them would
+      // `resonand.core.levels.DESCRIPTIONS` verbatim, because a mock that paraphrased them would
       // let the panel pass a test while rendering something the real instance never sends.
       levels: [
         { level: 10, description: 'Can read: listen and read the transcript, and change nothing.' },
@@ -355,7 +355,7 @@ function fresh(): Archive {
         {
           grantee: SAM,
           level: 20,
-          // The wording `sonarium.core.levels.DESCRIPTIONS` sends, colon and all: `LevelSelector`
+          // The wording `resonand.core.levels.DESCRIPTIONS` sends, colon and all: `LevelSelector`
           // splits on it to draw the name and the sentence, and a fixture worded differently
           // would test a split that never happens.
           level_description: 'Can edit: change titles, categories and tags, but not share.',

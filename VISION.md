@@ -1,4 +1,4 @@
-# Sonarium — vision
+# Resonand — vision
 
 Why this project exists, who it is for, and where it is going. It carries no technical detail —
 the data model, permission resolution and interface brief live in a working specification that is
@@ -27,7 +27,7 @@ audio file nobody ever opens again. It ends up existing without being available.
 ### The verb the project rests on
 
 **Re-find**, not store. Storing audio is what a folder does, and it is free. Everything that
-makes Sonarium worth existing — transcription, search inside the audio, a navigable waveform,
+makes Resonand worth existing — transcription, search inside the audio, a navigable waveform,
 organisation that persists — is in the service of finding one specific moment again inside
 hundreds of hours.
 
@@ -37,7 +37,7 @@ community it very much is.
 
 ### A destination, not a replacement
 
-**Sonarium is not a recorder.** It does not compete with the voice memos app on your phone; it is
+**Resonand is not a recorder.** It does not compete with the voice memos app on your phone; it is
 where those files end up. The operating system's recorder is not the rival, it is the input.
 
 That has two intended consequences. Nobody has to change how they record. And it avoids the one
@@ -115,7 +115,7 @@ Lectures and notes from a whole course, minutes and meetings of local organisati
 and musical ideas, association and village-history archives, language and dialect fieldwork,
 soundscapes and birdsong, a spoken personal diary.
 
-That list is visibly heterogeneous on purpose: it is what shows Sonarium is a platform and not a
+That list is visibly heterogeneous on purpose: it is what shows Resonand is a platform and not a
 single-purpose tool.
 
 > Soundscapes and birdsong are the one case where transcription contributes nothing and the
@@ -129,7 +129,7 @@ single-purpose tool.
 Non-negotiable. If a future decision contradicts one of these, it is the decision that falls.
 
 1. **No captivity.** The original is kept intact, and there is always one command that dumps
-   everything — audio, metadata and transcripts — in a format readable without Sonarium.
+   everything — audio, metadata and transcripts — in a format readable without Resonand.
 2. **Your voice does not leave unless you ask.** Audio only leaves the instance when the user
    requests an external transcription, and the interface says so in plain words. Where a standing
    configuration does the asking on your behalf — a watched folder set to transcribe on arrival —

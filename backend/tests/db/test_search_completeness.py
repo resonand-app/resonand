@@ -13,11 +13,11 @@ and about which recordings come back rather than about any one result.
 from __future__ import annotations
 
 import pytest
-from sonarium.db import libraries, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.search import Filters, search
-from sonarium.db.transcripts import SegmentDraft
+from resonand.db import libraries, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.search import Filters, search
+from resonand.db.transcripts import SegmentDraft
 
 RECORDINGS = 160
 SEGMENTS_EACH = 4

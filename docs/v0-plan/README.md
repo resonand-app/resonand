@@ -81,7 +81,7 @@ it.
 | `UI` | Frontend | Every view, and the system and spine beneath them | [`interface.md`](interface.md) |
 | `OPS` | Operations | Docker, configuration, backup, observability | [`operations.md`](operations.md) |
 | `INT` | Integration | Views that cross tracks: trash, administration, security | [`integration.md`](integration.md) |
-| `TRX` | Transcription compatibility | What an engine has to look like for Sonarium to consume it | [`transcription.md`](transcription.md) |
+| `TRX` | Transcription compatibility | What an engine has to look like for Resonand to consume it | [`transcription.md`](transcription.md) |
 | `SEC` | Pre-publication hardening | What was fixed before anybody could read the source | [`security.md`](security.md) |
 | `BUG` | Defects found in use | Faults found by using the archive rather than by reading it | [`defects.md`](defects.md) |
 | `REV` | Backend review | What a read of the finished backend found, and what settled each finding | [`review.md`](review.md) |
@@ -196,13 +196,14 @@ the decision and [`naming.md`](naming.md) holds the work.
 
 | Task | What it is |
 |---|---|
-| `NAM-3` | The rename, everywhere the string appears |
 | `NAM-4` | An export written under the old name still reads |
 | `NAM-5` | The mark, the lockup and the icons |
 
-`NAM-1` and `NAM-2` are closed: the track was written, and the repository is
-`resonand-app/resonand` with all 140 of its pull requests, redirects behind it and the local
-remotes moved.
+`NAM-1`, `NAM-2` and `NAM-3` are closed: the track was written, the repository is
+`resonand-app/resonand` with all 140 of its pull requests and redirects behind it, and the tree
+says `resonand` everywhere except where it records what was decided on a day. What is left is the
+export format, which keeps reading the old one, and the artwork, which still draws a lockup built
+out of letters the name no longer has.
 
 `INF-11` waits on `NAM-5` rather than running first: the wordmark it was going to outline is the
 one the rename deletes, and outlining it twice is paying for the work twice.

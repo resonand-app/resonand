@@ -1,4 +1,4 @@
-# Sonarium — roadmap
+# Resonand — roadmap
 
 What the archive could become, after the first version does its job.
 
@@ -29,7 +29,7 @@ all.
 
 ## 1 · The transcription boundary
 
-The thing the project is actually about: Sonarium does not transcribe, it consumes an engine
+The thing the project is actually about: Resonand does not transcribe, it consumes an engine
 somebody else chose. Most of what is already understood here is scoped in
 [`docs/next-plan/transcription.md`](docs/next-plan/transcription.md); this is what is wanted and
 not yet worked out.
@@ -214,7 +214,7 @@ Not now, possibly later:
 - **Performing speaker diarisation.** The `speaker` field has been reserved since the first
   migration, and an engine that labels speakers has its labels kept — including the rule that a
   transcript assembled from several parts carries none, because labels are per request and
-  `SPEAKER_00` in part one is not `SPEAKER_00` in part four. What Sonarium does not do is work out
+  `SPEAKER_00` in part one is not `SPEAKER_00` in part four. What Resonand does not do is work out
   who is speaking.
 - **More than one level of the category tree in the interface.** The database has supported the
   tree from day one.

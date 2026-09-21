@@ -12,7 +12,7 @@
     "identity": "Who you are",
     "displayName": "Display name",
     "email": "Email address",
-    "noAvatar": "Sonarium stores no pictures of you, and fetches none from anywhere else.",
+    "noAvatar": "Resonand stores no pictures of you, and fetches none from anywhere else.",
     "saved": "Saved",
     "password": "Password",
     "passwordIntro": "Changing it signs you out everywhere else.",
@@ -81,7 +81,7 @@
     "setPassword": "Set a password",
     "setPasswordNamed": "Set a password for {{name}}",
     "resetTitle": "Set a password for {{name}}",
-    "resetBody": "This is the only way back into an account whose password has been forgotten. Give it to them yourself — Sonarium sends nothing anywhere.",
+    "resetBody": "This is the only way back into an account whose password has been forgotten. Give it to them yourself — Resonand sends nothing anywhere.",
     "resetSessions": "Every device {{name}} is signed in on will be signed out.",
     "resetOnce": "Shown once. It is not stored anywhere you can read it again.",
     "resetCopy": "Copy",
@@ -114,7 +114,7 @@
     "checkedJustNow": "Checked just now by {{who}}",
     "checkedAt": "Checked {{when}} by {{who}}",
     "neverAutomatic": "Nothing is contacted until you press this. Opening this page reaches out to nobody, and the check sends three seconds of generated tone, never one of your recordings.",
-    "unconfigured": "No provider is set up, so nothing on this instance can be transcribed. Set SONARIUM_TRANSCRIPTION_* in the environment and restart."
+    "unconfigured": "No provider is set up, so nothing on this instance can be transcribed. Set RESONAND_TRANSCRIPTION_* in the environment and restart."
   },
   "queue": {
     "title": "Background work",
@@ -168,8 +168,8 @@
     }
   },
   "about": {
-    "offer": "Sonarium {{version}}, free software under the AGPL-3.0.",
-    "unknownVersion": "Sonarium, free software under the AGPL-3.0.",
+    "offer": "Resonand {{version}}, free software under the AGPL-3.0.",
+    "unknownVersion": "Resonand, free software under the AGPL-3.0.",
     "source": "Get the source"
   }
 }

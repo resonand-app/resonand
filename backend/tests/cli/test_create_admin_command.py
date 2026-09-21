@@ -1,4 +1,4 @@
-"""``sonarium create-admin`` (``OPS-6``).
+"""``resonand create-admin`` (``OPS-6``).
 
 The command existed for the case first run does not cover -- an instance whose only administrator
 is locked out -- and was covered by nothing. It is also the first half of getting a recording into
@@ -12,14 +12,14 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 import pytest
-from sonarium.cli.main import app
-from sonarium.core.config import reset_settings_cache
-from sonarium.db import users
+from resonand.cli.main import app
+from resonand.core.config import reset_settings_cache
+from resonand.db import users
 from typer.testing import CliRunner
 
 if TYPE_CHECKING:
-    from sonarium.core.config import Settings
-    from sonarium.db.engine import Database
+    from resonand.core.config import Settings
+    from resonand.db.engine import Database
 
 runner = CliRunner()
 
@@ -29,9 +29,9 @@ def instance_env(
     database: Database, db_settings: Settings, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[Database]:
     """An empty instance, and the environment the command reads its settings from."""
-    monkeypatch.setenv("SONARIUM_DATA_DIR", str(db_settings.data_dir))
-    monkeypatch.setenv("SONARIUM_DATABASE_PATH", str(db_settings.resolved_database_path))
-    monkeypatch.setenv("SONARIUM_SECRET_KEY", "0" * 64)
+    monkeypatch.setenv("RESONAND_DATA_DIR", str(db_settings.data_dir))
+    monkeypatch.setenv("RESONAND_DATABASE_PATH", str(db_settings.resolved_database_path))
+    monkeypatch.setenv("RESONAND_SECRET_KEY", "0" * 64)
     reset_settings_cache()
     yield database
     reset_settings_cache()
@@ -50,7 +50,7 @@ def test_an_administrator_is_created(instance_env: Database) -> None:
 
 
 def test_it_says_which_library_to_import_into(instance_env: Database) -> None:
-    """The uuid is what `sonarium import --library` takes, and an account that has just been
+    """The uuid is what `resonand import --library` takes, and an account that has just been
     created from a terminal has no other way to learn it."""
     result = runner.invoke(
         app,

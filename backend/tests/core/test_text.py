@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from sonarium.core.text import clean_title, normalise_email, normalise_slug
+from resonand.core.text import clean_title, normalise_email, normalise_slug
 
 
 @pytest.mark.parametrize(

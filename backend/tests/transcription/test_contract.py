@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import pytest
 from pydantic import SecretStr
-from sonarium.core.config import Settings
-from sonarium.core.errors import ConfigurationError
-from sonarium.transcription.contract import (
+from resonand.core.config import Settings
+from resonand.core.errors import ConfigurationError
+from resonand.transcription.contract import (
     AUTO_DETECT,
     TranscriptionResult,
     TranscriptSegment,
     redact,
     resolve_language,
 )
-from sonarium.transcription.metering import InMemoryUsage, UsageRecord, record
-from sonarium.transcription.registry import build_provider
+from resonand.transcription.metering import InMemoryUsage, UsageRecord, record
+from resonand.transcription.registry import build_provider
 
 
 @pytest.mark.parametrize(

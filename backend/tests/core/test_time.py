@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
-from sonarium.core.time import (
+from resonand.core.time import (
     INSTANT_WIDTH,
     instant_after,
     is_instant,

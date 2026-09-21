@@ -17,12 +17,12 @@ import json
 
 from fastapi import status
 from fastapi.testclient import TestClient
-from sonarium.core.levels import Level
-from sonarium.db import libraries as library_repo
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Job
-from sonarium.jobs import queue
+from resonand.core.levels import Level
+from resonand.db import libraries as library_repo
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.models import Job
+from resonand.jobs import queue
 from sqlalchemy import select
 
 from tests.api.conftest import sign_in
@@ -396,7 +396,7 @@ def test_a_cancelled_transcription_leaves_the_recording_asking_again(
 ) -> None:
     """``cancelled`` is not a fifth state.
 
-    :mod:`sonarium.core.states` reads it as ``none``, so the recording comes back to its call to
+    :mod:`resonand.core.states` reads it as ``none``, so the recording comes back to its call to
     action rather than to a failure nobody caused -- which is the honest answer, because after
     cancelling there is exactly as much transcript as there was before.
     """

@@ -14,7 +14,7 @@ from typing import NamedTuple
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi.testclient import TestClient
-from sonarium.api.deps import current_admin, current_caller, optional_caller
+from resonand.api.deps import current_admin, current_caller, optional_caller
 from starlette.routing import Route
 
 PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset(

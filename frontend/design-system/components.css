@@ -511,7 +511,7 @@
 
    Two places, one meaning: a card whose job is running, and a button whose press is still out
    there waiting for an answer. */
-@keyframes sonarium-spin {
+@keyframes resonand-spin {
   to {
     transform: rotate(1turn);
   }
@@ -519,7 +519,7 @@
 
 [data-ds='state-card-glyph'][data-busy='true'] svg,
 [data-ds='button'][data-busy='true'] svg {
-  animation: sonarium-spin var(--duration-spin) linear infinite;
+  animation: resonand-spin var(--duration-spin) linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

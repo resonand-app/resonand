@@ -15,7 +15,7 @@ import { useCallback, useState, useSyncExternalStore } from 'react';
 /** Where the sidebar folds. `--breakpoint-sidebar`, which this has to know as a number. */
 export const SIDEBAR_BREAKPOINT = 1180;
 
-const REMEMBERED = 'sonarium.sidebar-collapsed';
+const REMEMBERED = 'resonand.sidebar-collapsed';
 
 export interface SidebarCollapse {
   collapsed: boolean;

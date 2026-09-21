@@ -7,9 +7,9 @@ development seed with realistic content is ``DAT-8``, not this.
 
 from __future__ import annotations
 
-from sonarium.core import colours
-from sonarium.core.ids import new_uuid
-from sonarium.core.time import now_instant
+from resonand.core import colours
+from resonand.core.ids import new_uuid
+from resonand.core.time import now_instant
 from sqlalchemy import Connection, text
 
 

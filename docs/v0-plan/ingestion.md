@@ -50,7 +50,7 @@ structural here rather than aspirational.
       no visible effect in v0 and is implemented anyway, because retrofitting it is a data-loss bug.
       ⇢ API-9 🧪
 
-- [x] **ING-11** · CLI `sonarium import` (bulk, recursive, with `--dry-run`) and `sonarium export`
+- [x] **ING-11** · CLI `resonand import` (bulk, recursive, with `--dry-run`) and `resonand export`
       (audio + a JSON sidecar carrying the `uuid`, all metadata and the full transcript, with
       `.vtt`/`.srt` derived). **Re-import is idempotent**: a recording already present is updated,
       not duplicated. ⇢ ING-3 🧪
@@ -78,11 +78,11 @@ structural here rather than aspirational.
       already has is not added a second time — matched on provenance and segments but not on
       `source`, because a transcript an engine produced goes out as `service` and comes back as
       `imported`, and every round trip would otherwise look like new content.*
-      *`sonarium.json` is only believed when it is the one recording in its directory. A folder of
+      *`resonand.json` is only believed when it is the one recording in its directory. A folder of
       loose files with a single sidecar dropped into it would otherwise hand every one of them the
       same `uuid`, and the second file would update what the first had just created.*
 
-- [x] **ING-11c** · **The archive manifest**: `sonarium-archive.json` at the root of an export,
+- [x] **ING-11c** · **The archive manifest**: `resonand-archive.json` at the root of an export,
       carrying the accounts, the libraries and who each was shared with, and an import that
       recreates the libraries and the sharing against accounts that are already here.
       ⇢ ING-11a 🧪
@@ -144,7 +144,7 @@ structural here rather than aspirational.
       carry — and renders in full, because reading an absence as date-only would withdraw a real
       time from every row a container tag populated.*
 
-- [x] **ING-13** · **`sonarium fsck`**: re-hash the stored originals against `audio.sha256`, report
+- [x] **ING-13** · **`resonand fsck`**: re-hash the stored originals against `audio.sha256`, report
       rows whose file is missing and files no row points at, and exit non-zero on any finding.
       Read-only; repairs are a separate explicit command. ⇢ ING-3, ING-11 🧪
       *This is principle 5 made checkable. The stated worst outcome for the project is shipping

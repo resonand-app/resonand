@@ -714,7 +714,7 @@
       },
       "GrantableLevel": {
         "additionalProperties": false,
-        "description": "One level a share may carry, and the sentence that explains it (``API-18``).\n\nThe wording lives in :mod:`sonarium.core.levels` and is sent from there, so the interface has\nno copy of it to go stale -- which is the whole of ``UI-34k``.",
+        "description": "One level a share may carry, and the sentence that explains it (``API-18``).\n\nThe wording lives in :mod:`resonand.core.levels` and is sent from there, so the interface has\nno copy of it to go stale -- which is the whole of ``UI-34k``.",
         "properties": {
           "description": {
             "title": "Description",
@@ -2338,7 +2338,7 @@
       "url": "https://www.gnu.org/licenses/agpl-3.0.html"
     },
     "summary": "A self-hosted archive for the recordings that matter.",
-    "title": "Sonarium",
+    "title": "Resonand",
     "version": "0.0.0"
   },
   "openapi": "3.1.0",
@@ -3504,7 +3504,7 @@
     },
     "/api/audio/{audio_uuid}/transcribe/cancel": {
       "post": {
-        "description": "Give up on the transcription in flight, and stop sending audio (``API-21``).\n\nLevel 20, the same as asking for one: a transcription is somebody's provider quota and\nsomebody's audio leaving the instance, and both directions of that decision belong to the\npeople who can edit the recording.\n\n**Cancelling is a decision, not a failure.** The job goes to ``cancelled``, which is a state\n:mod:`sonarium.core.states` already reads as ``none`` -- so the recording comes back to its\ncall to action rather than to an error nobody caused. Nothing is kept: no transcript is\nwritten from the parts that did finish, because a transcript covering the first four minutes\nof an hour is worse than none, and it would be the one thing on the screen claiming to be\nthe recording's words.\n\nA recording with nothing in flight answers 409, mirroring the endpoint above: pressing cancel\non a transcription that has just finished is the same race as pressing transcribe on one that\nhas just started, and neither is an error worth showing.",
+        "description": "Give up on the transcription in flight, and stop sending audio (``API-21``).\n\nLevel 20, the same as asking for one: a transcription is somebody's provider quota and\nsomebody's audio leaving the instance, and both directions of that decision belong to the\npeople who can edit the recording.\n\n**Cancelling is a decision, not a failure.** The job goes to ``cancelled``, which is a state\n:mod:`resonand.core.states` already reads as ``none`` -- so the recording comes back to its\ncall to action rather than to an error nobody caused. Nothing is kept: no transcript is\nwritten from the parts that did finish, because a transcript covering the first four minutes\nof an hour is worse than none, and it would be the one thing on the screen claiming to be\nthe recording's words.\n\nA recording with nothing in flight answers 409, mirroring the endpoint above: pressing cancel\non a transcription that has just finished is the same race as pressing transcribe on one that\nhas just started, and neither is an error worth showing.",
         "operationId": "cancel_transcription_api_audio__audio_uuid__transcribe_cancel_post",
         "parameters": [
           {

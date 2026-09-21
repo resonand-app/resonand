@@ -92,14 +92,14 @@ const SAME_ANSWER = () =>
     type: '/errors/unauthenticated',
   });
 
-/** The shortest password the instance stores, as `sonarium.api.routes.auth` counts it. */
+/** The shortest password the instance stores, as `resonand.api.routes.auth` counts it. */
 const MINIMUM_PASSWORD_LENGTH = 10;
 
 /** The stored waveform's header: version, duration in milliseconds, bucket count (`ING-5`). */
 const WAVEFORM_FORMAT_VERSION = 2;
 const WAVEFORM_HEADER_BYTES = 9;
 
-/** A tag name as the slug it resolves to, the way `sonarium.core.text.normalise_slug` does. */
+/** A tag name as the slug it resolves to, the way `resonand.core.text.normalise_slug` does. */
 function fold(name: string): string {
   return name.normalize('NFKD').replace(/\p{M}/gu, '').trim().toLocaleLowerCase();
 }

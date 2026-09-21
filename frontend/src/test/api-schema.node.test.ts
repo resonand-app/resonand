@@ -3,7 +3,7 @@
  *
  * The interface is a client of the API and not a privileged path into it, which only stays true
  * if a backend rename reaches the frontend as a compile error. The chain has three links: the
- * backend writes the document (`sonarium openapi`, checked in CI against a running instance's
+ * backend writes the document (`resonand openapi`, checked in CI against a running instance's
  * schema), `npm run api:types` turns it into types, and every call is typed against those. This
  * test holds the middle link -- a snapshot that moved without the types being regenerated leaves
  * the repository describing an API that no longer exists, and the compiler happily agreeing.

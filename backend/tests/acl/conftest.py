@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from typing import Protocol
 
 import pytest
-from sonarium.core.levels import Level
-from sonarium.db.engine import Database
+from resonand.core.levels import Level
+from resonand.db.engine import Database
 from sqlalchemy import text
 
 from tests.db.rows import insert_audio, insert_library, insert_user

@@ -44,7 +44,7 @@ export function amplitudeAt(peaks: Peaks, index: number): number {
  * A bucket takes the lowest low and the highest high of the pairs it covers. Averaging would
  * flatten a shout in a quiet room into the quiet room. The bucket boundaries are
  * `index * total / buckets`, floored, which is deliberately the same arithmetic as
- * `sonarium.media.waveform.resample` -- the server reduces on the way out and the client reduces
+ * `resonand.media.waveform.resample` -- the server reduces on the way out and the client reduces
  * again to the pixels available, and two different roundings would make the same recording draw
  * two different shapes depending on which one had done more of the work.
  *

@@ -1,4 +1,4 @@
-"""``sonarium fsck`` (``ING-13``).
+"""``resonand fsck`` (``ING-13``).
 
 Principle 5 made checkable. The stated worst outcome for this project is shipping something that
 loses files, and ``sha256`` is written once at ingestion and otherwise never looked at again --
@@ -11,12 +11,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from sonarium.cli.integrity import CHANGED, LEFTOVER, MISSING, ORPHAN, check
-from sonarium.core.config import Settings
-from sonarium.db import libraries, users
-from sonarium.db.audio import create_audio, trash_audio
-from sonarium.db.engine import Database
-from sonarium.media import storage
+from resonand.cli.integrity import CHANGED, LEFTOVER, MISSING, ORPHAN, check
+from resonand.core.config import Settings
+from resonand.db import libraries, users
+from resonand.db.audio import create_audio, trash_audio
+from resonand.db.engine import Database
+from resonand.media import storage
 
 
 @pytest.fixture

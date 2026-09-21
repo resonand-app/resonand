@@ -14,13 +14,13 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
-from sonarium.db import libraries as library_repo
-from sonarium.db import tags as tag_repo
-from sonarium.db import transcripts
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.transcripts import SegmentDraft
-from sonarium.jobs import queue
+from resonand.db import libraries as library_repo
+from resonand.db import tags as tag_repo
+from resonand.db import transcripts
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.transcripts import SegmentDraft
+from resonand.jobs import queue
 
 from tests.api.conftest import sign_in, statements
 

@@ -1,4 +1,4 @@
-The Sonarium lockup: the mark standing in for the S, with `onarium` set beside it. Use it in the top nav, on the sign-in screen, and nowhere else.
+The Resonand lockup: the mark standing in for the S, with `onarium` set beside it. Use it in the top nav, on the sign-in screen, and nowhere else.
 
 ```jsx
 <Logo size={18} />

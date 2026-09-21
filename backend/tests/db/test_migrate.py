@@ -15,10 +15,10 @@ from multiprocessing.process import BaseProcess
 from pathlib import Path
 
 import pytest
-from sonarium.core.config import Settings
-from sonarium.core.errors import ConfigurationError
-from sonarium.db.engine import build_engine
-from sonarium.db.migrate import (
+from resonand.core.config import Settings
+from resonand.core.errors import ConfigurationError
+from resonand.db.engine import build_engine
+from resonand.db.migrate import (
     LOCK_NAME,
     migrate_at_startup,
     migration_lock,
@@ -29,7 +29,7 @@ from sqlalchemy import text
 
 
 def test_a_fresh_instance_migrates_itself(tmp_path: Path) -> None:
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
     before, after = migrate_at_startup(settings)
     assert before is None, "there was no schema"
@@ -38,7 +38,7 @@ def test_a_fresh_instance_migrates_itself(tmp_path: Path) -> None:
 
 def test_starting_again_changes_nothing(tmp_path: Path) -> None:
     """A restart is not an upgrade, and must not be logged as one."""
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
     migrate_at_startup(settings)
     before, after = migrate_at_startup(settings)
@@ -48,7 +48,7 @@ def test_starting_again_changes_nothing(tmp_path: Path) -> None:
 def test_an_upgraded_instance_can_say_where_it_is_and_where_it_should_be(tmp_path: Path) -> None:
     """The pair is what tells an operator whether to roll the image back or the database
     forward."""
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
     engine = build_engine(settings)
     try:
@@ -63,7 +63,7 @@ def test_an_upgraded_instance_can_say_where_it_is_and_where_it_should_be(tmp_pat
 
 
 def test_the_migration_actually_produced_the_schema(tmp_path: Path) -> None:
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
     migrate_at_startup(settings)
     engine = build_engine(settings)
@@ -77,7 +77,7 @@ def test_the_migration_actually_produced_the_schema(tmp_path: Path) -> None:
 def test_the_lock_is_a_file_beside_the_database(tmp_path: Path) -> None:
     """A file lock rather than a thread lock, because the thing being guarded against is a second
     process -- an overlapping restart, or somebody running the command by hand."""
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
     with migration_lock(settings):
         assert (tmp_path / LOCK_NAME).exists()
@@ -86,7 +86,7 @@ def test_the_lock_is_a_file_beside_the_database(tmp_path: Path) -> None:
 def test_a_second_holder_waits_rather_than_failing(tmp_path: Path) -> None:
     """Two containers coming up together is an ordinary event. The second should start a moment
     later, not exit and be restarted by whatever is watching it."""
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
     started = time.monotonic()
     with _holding_the_lock(tmp_path, hold_for=0.5), migration_lock(settings, timeout_seconds=10):
@@ -96,7 +96,7 @@ def test_a_second_holder_waits_rather_than_failing(tmp_path: Path) -> None:
 
 def test_waiting_forever_is_not_an_option(tmp_path: Path) -> None:
     """A stuck lock has to say which file to delete, or an instance is simply down."""
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
     with (
         _holding_the_lock(tmp_path, hold_for=3.0),

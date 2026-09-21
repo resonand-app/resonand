@@ -21,7 +21,7 @@ import { useSession } from '@/app/session';
 export type LibrarySummary = components['schemas']['LibrarySummary'];
 export type ShareSummary = components['schemas']['ShareSummary'];
 
-/** What somebody may do here. The API's levels, named (`sonarium.core.levels`). */
+/** What somebody may do here. The API's levels, named (`resonand.core.levels`). */
 export const LEVEL = { read: 10, edit: 20, manage: 30, owner: 40 } as const;
 
 export interface LibraryContext {

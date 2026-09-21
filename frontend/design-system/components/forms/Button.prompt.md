@@ -1,4 +1,4 @@
-The text button. One `primary` per view — in Sonarium that is almost always "Upload audio" in the top nav.
+The text button. One `primary` per view — in Resonand that is almost always "Upload audio" in the top nav.
 
 ```jsx
 <Button variant="primary" icon="upload">Upload audio</Button>

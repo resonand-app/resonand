@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from sonarium.cli.main import SNAPSHOT, app
+from resonand.cli.main import SNAPSHOT, app
 from typer.testing import CliRunner
 
 runner = CliRunner()
@@ -54,7 +54,7 @@ def test_a_stale_snapshot_fails_the_check(tmp_path: Path) -> None:
     stale.write_text('{"openapi": "3.1.0"}\n', encoding="utf-8")
     result = runner.invoke(app, ["openapi", "--check", "--output", str(stale)])
     assert result.exit_code == 1
-    assert "sonarium openapi" in result.output
+    assert "resonand openapi" in result.output
 
 
 def test_a_missing_snapshot_fails_the_check_rather_than_writing_one(tmp_path: Path) -> None:

@@ -23,7 +23,7 @@ describe('Logo', () => {
 
   it('is named for the product rather than for the letters left on screen', () => {
     render(<Logo />);
-    expect(screen.getByRole('img', { name: 'Sonarium' })).toBeDefined();
+    expect(screen.getByRole('img', { name: 'Resonand' })).toBeDefined();
   });
 
   it('drops the wordmark and keeps the mark', () => {

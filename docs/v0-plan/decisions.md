@@ -17,8 +17,8 @@ All of them settled. Nothing in the first version is waiting on a conversation.
 | Licence | AGPL-3.0, no CLA | Nobody can offer a closed SaaS out of it without publishing their changes |
 | Topology | **A single container**, in-process job worker | WAL + a single serialised writer. Can be split later without touching the schema |
 | UI language | English as the base language, i18n from day one | No literal written inside a component. Shipping actual translations is a later milestone |
-| Name and repository | `sonarium`, at `sonarium-app/sonarium`, private until publishable | `DEC-7`. Created and empty; the same string is the image name and the docs namespace |
-| Visual identity | The **Sonarium design system**, vendored at `frontend/design-system/` | `DEC-8`. Signed off and final; no palette switcher ships |
+| Name and repository | `resonand`, at `resonand-app/resonand`, private until publishable | `DEC-7`, superseded by `DEC-26`: it was `sonarium` until 2026-09-21. The same string is the image name and the docs namespace |
+| Visual identity | The **Resonand design system**, vendored at `frontend/design-system/` | `DEC-8`. Signed off and final; no palette switcher ships |
 | Audio egress | Nothing leaves the instance without a request, and watched folders only when explicitly configured to | `DEC-9`. Principle 2 made operational |
 | Suggestions | No suggestion storage in the first migration | `DEC-1`, deferred with the AI features it serves |
 | Timestamps | Instants in UTC; a recording's own time as wall clock plus offset | `DEC-11`. Two kinds of value, never mixed |
@@ -248,7 +248,7 @@ forms is `JOB-14`, which is measured rather than assumed.
 - **Export layout:** one directory per recording, named for its `uuid`, holding the original, the
   sidecar and the subtitles. Two recordings that arrived under the same filename cannot overwrite
   each other, and no punctuation in a filename can separate a sidecar from its audio (`ING-11a`).
-- **Archive manifest:** `sonarium-archive.json` at the root, describing the accounts, the
+- **Archive manifest:** `resonand-archive.json` at the root, describing the accounts, the
   libraries and the sharing, so a round trip gives back the shape of the archive and not only its
   contents. **Identities, never credentials** — an export is something you hand to somebody, and
   an import therefore creates no accounts and refuses a library whose owner is not already here.

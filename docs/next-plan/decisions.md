@@ -12,7 +12,7 @@ Two accounts with the same email address, one local and one from an identity pro
 automatically, reject, or require confirmation from the account that already exists.
 
 **Recommendation:** reject by default, offer explicit linking from the profile, and put a
-`SONARIUM_OIDC_AUTO_LINK` deployment flag behind it for single-family instances. Automatic merging
+`RESONAND_OIDC_AUTO_LINK` deployment flag behind it for single-family instances. Automatic merging
 by email is a privilege escalation whenever the provider does not verify the address, and nothing
 in the protocol obliges it to.
 

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
-from sonarium.core.config import ConfigurationReport, Settings
+from resonand.core.config import ConfigurationReport, Settings
 
 
 def _runnable(tmp_path: Path, **overrides: object) -> Settings:
@@ -20,13 +20,13 @@ def _runnable(tmp_path: Path, **overrides: object) -> Settings:
 
 def test_paths_derive_from_the_data_directory(tmp_path: Path) -> None:
     settings = _runnable(tmp_path)
-    assert settings.resolved_database_path == tmp_path / "sonarium.db"
+    assert settings.resolved_database_path == tmp_path / "resonand.db"
     assert settings.resolved_storage_dir == tmp_path / "storage"
 
 
 @pytest.mark.parametrize(
     ("given", "normalised"),
-    [("", ""), ("/", ""), ("sonarium", "/sonarium"), ("/sonarium/", "/sonarium")],
+    [("", ""), ("/", ""), ("resonand", "/resonand"), ("/resonand/", "/resonand")],
 )
 def test_a_base_path_is_normalised_once_rather_than_at_every_use(
     tmp_path: Path, given: str, normalised: str
@@ -44,8 +44,8 @@ def test_every_fatal_problem_is_reported_at_once(tmp_path: Path) -> None:
     occupied = tmp_path / "occupied"
     occupied.write_text("not a directory")
     fatal = Settings(data_dir=occupied).configuration_problems().fatal
-    assert any("SONARIUM_SECRET_KEY" in problem for problem in fatal)
-    assert any("SONARIUM_DATA_DIR" in problem for problem in fatal)
+    assert any("RESONAND_SECRET_KEY" in problem for problem in fatal)
+    assert any("RESONAND_DATA_DIR" in problem for problem in fatal)
 
 
 def test_an_archive_with_no_transcriber_still_runs(tmp_path: Path) -> None:
@@ -55,11 +55,11 @@ def test_an_archive_with_no_transcriber_still_runs(tmp_path: Path) -> None:
     """
     report = _runnable(tmp_path, transcription_base_url=None).configuration_problems()
     assert report.fatal == ()
-    assert any("SONARIUM_TRANSCRIPTION_BASE_URL" in advisory for advisory in report.advisory)
+    assert any("RESONAND_TRANSCRIPTION_BASE_URL" in advisory for advisory in report.advisory)
 
 
 def test_a_secret_set_to_nothing_is_a_secret_that_is_not_set(tmp_path: Path) -> None:
-    """`deploy/.env.example` ships `SONARIUM_SECRET_KEY=`, which pydantic reads as a zero-length
+    """`deploy/.env.example` ships `RESONAND_SECRET_KEY=`, which pydantic reads as a zero-length
     SecretStr -- not None, and so past every `is None` guard in front of the signer."""
     settings = _runnable(tmp_path, secret_key="")
     assert settings.secret_key is None
@@ -89,8 +89,8 @@ def test_directories_are_created_before_anything_writes_to_them(tmp_path: Path) 
 def test_settings_are_read_from_the_environment(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    monkeypatch.setenv("SONARIUM_DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("SONARIUM_TRASH_RETENTION_DAYS", "7")
+    monkeypatch.setenv("RESONAND_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("RESONAND_TRASH_RETENTION_DAYS", "7")
     settings = Settings()
     assert settings.data_dir == tmp_path
     assert settings.trash_retention_days == 7

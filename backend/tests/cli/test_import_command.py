@@ -1,4 +1,4 @@
-"""Where ``sonarium import`` puts a recording, and which sidecar it believes (``ING-11``).
+"""Where ``resonand import`` puts a recording, and which sidecar it believes (``ING-11``).
 
 The placement is the part that only exists in the command. ``apply_sidecar`` is covered in
 ``tests/test_archive.py``; what is covered here is the decision in front of it -- the library a
@@ -17,18 +17,18 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from sonarium.archive import export_recording, find_by_uuid
-from sonarium.cli.main import app
-from sonarium.core.config import reset_settings_cache
-from sonarium.db import libraries, tags, users
-from sonarium.db.audio import create_audio
-from sonarium.db.models import Audio
-from sonarium.media import storage
+from resonand.archive import export_recording, find_by_uuid
+from resonand.cli.main import app
+from resonand.core.config import reset_settings_cache
+from resonand.db import libraries, tags, users
+from resonand.db.audio import create_audio
+from resonand.db.models import Audio
+from resonand.media import storage
 from typer.testing import CliRunner
 
 if TYPE_CHECKING:
-    from sonarium.core.config import Settings
-    from sonarium.db.engine import Database
+    from resonand.core.config import Settings
+    from resonand.db.engine import Database
 
 runner = CliRunner()
 
@@ -71,9 +71,9 @@ def instance(
         export_recording(session, audio, export, db_settings.resolved_storage_dir)
         found = Instance(uuid=audio.uuid, library_uuid=library.uuid, export=export)
 
-    monkeypatch.setenv("SONARIUM_DATA_DIR", str(db_settings.data_dir))
-    monkeypatch.setenv("SONARIUM_DATABASE_PATH", str(db_settings.resolved_database_path))
-    monkeypatch.setenv("SONARIUM_SECRET_KEY", "0" * 64)
+    monkeypatch.setenv("RESONAND_DATA_DIR", str(db_settings.data_dir))
+    monkeypatch.setenv("RESONAND_DATABASE_PATH", str(db_settings.resolved_database_path))
+    monkeypatch.setenv("RESONAND_SECRET_KEY", "0" * 64)
     reset_settings_cache()
     yield found
     reset_settings_cache()
@@ -124,7 +124,7 @@ def test_one_sidecar_does_not_claim_every_file_in_a_directory(
     and the second file would update what the first had just created."""
     crowded = tmp_path / "crowded"
     crowded.mkdir()
-    shutil.copyfile(instance.export / instance.uuid / "sonarium.json", crowded / "sonarium.json")
+    shutil.copyfile(instance.export / instance.uuid / "resonand.json", crowded / "resonand.json")
     (crowded / "first.m4a").write_bytes(b"one")
     (crowded / "second.m4a").write_bytes(b"two")
 
@@ -173,7 +173,7 @@ def test_an_import_pointed_above_an_export_says_where_the_manifest_is(
     result = runner.invoke(app, ["import", str(outer), "--dry-run"])
 
     assert result.exit_code == 0, result.output
-    assert f"{outer} carries no sonarium-archive.json" in result.output
+    assert f"{outer} carries no resonand-archive.json" in result.output
     assert str(outer / "export") in result.output
 
 
@@ -187,7 +187,7 @@ def test_an_import_with_nothing_to_place_recordings_in_says_so_once(
     result = runner.invoke(app, ["import", str(loose), "--dry-run"])
 
     assert result.exit_code == 0, result.output
-    assert result.output.count("carries no sonarium-archive.json") == 1
+    assert result.output.count("carries no resonand-archive.json") == 1
     assert "Pass --library <uuid>" in result.output
 
 
@@ -203,11 +203,11 @@ def test_loose_files_going_somewhere_named_are_not_told_about_manifests(
     result = runner.invoke(app, ["import", str(loose), "--library", instance.library_uuid])
 
     assert result.exit_code == 0, result.output
-    assert "sonarium-archive.json" not in result.output
+    assert "resonand-archive.json" not in result.output
 
 
 def libraries_of(session: object, audio: Audio) -> str:
-    from sonarium.db.models import Library  # noqa: PLC0415 -- one assertion needs the name
+    from resonand.db.models import Library  # noqa: PLC0415 -- one assertion needs the name
 
     library = session.get(Library, audio.library_id)  # type: ignore[attr-defined]
     assert library is not None

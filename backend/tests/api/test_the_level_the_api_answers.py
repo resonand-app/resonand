@@ -17,8 +17,8 @@ from pathlib import Path
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
-from sonarium.core.levels import Level
-from sonarium.db.engine import Database
+from resonand.core.levels import Level
+from resonand.db.engine import Database
 
 from tests.api.conftest import ClientFactory, sign_in
 

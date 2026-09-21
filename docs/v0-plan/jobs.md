@@ -24,7 +24,7 @@ lives here, because none of it may happen inside the request that uploaded the f
 - [x] **JOB-3** · OpenAI-compatible `/v1/audio/transcriptions` provider, verified against a local
       `faster-whisper` server as the reference deployment and against a hosted endpoint as the
       alternative. ⇢ JOB-2, JOB-13 🧪
-      *Verified on 2026-09-20 with `sonarium check-transcription` (`TRX-1`), which this entry named
+      *Verified on 2026-09-20 with `resonand check-transcription` (`TRX-1`), which this entry named
       as the verb that would produce the record, against both deployments: a `faster-whisper`
       server on the local network running a Catalan `large-v3`, and Groq's hosted
       `whisper-large-v3` behind an OpenAI-compatible base URL. Both accept the request, answer in
@@ -49,7 +49,7 @@ lives here, because none of it may happen inside the request that uploaded the f
 
 - [x] **JOB-9** · FTS5 indexes: synchronisation of `segment` → `segment_fts` and of the
       title/notes/tags projection (triggers or explicit writes, but one of the two and documented),
-      plus a `sonarium reindex` command that rebuilds both. ⇢ JOB-6, DAT-1 🧪
+      plus a `resonand reindex` command that rebuilds both. ⇢ JOB-6, DAT-1 🧪
 
 - [x] **JOB-10** · Search endpoint with the ACL applied inside the query, `snippet()` for the
       highlighted fragment, transcript and metadata matches in **one ranked list**, and results
@@ -91,17 +91,17 @@ lives here, because none of it may happen inside the request that uploaded the f
       *The whole promise is a three-second search. This is a decision to take, not to discover.*
 
 - [x] **JOB-15** · **One transcription at a time, and the other work not held up behind it.** The
-      worker runs an undifferentiated pool: `SONARIUM_JOB_CONCURRENCY` threads each claim whatever
+      worker runs an undifferentiated pool: `RESONAND_JOB_CONCURRENCY` threads each claim whatever
       is oldest, so two queued transcriptions go to the engine together. Three of the four kinds
       are this machine's own work and scale with the threads; the fourth is a request to a server
       that is usually one device, which answers two requests slower than two in a row and can run
-      out of memory doing it. A `SONARIUM_TRANSCRIPTION_CONCURRENCY`, defaulting to 1, enforced
+      out of memory doing it. A `RESONAND_TRANSCRIPTION_CONCURRENCY`, defaulting to 1, enforced
       where the claim already serialises. ⇢ JOB-1, JOB-2 🧪
       _Done when:_ a second transcription waits while one runs, and a probe queued behind both
       still runs immediately.
       🧪 Two threads claiming at once get one transcription between them; a pending probe is still
       claimed while a transcription runs; and the limit is a number, so 2 hands out 2.
-      *The limit belongs to the engine, not to Sonarium -- hence a setting rather than a lock.*
+      *The limit belongs to the engine, not to Resonand -- hence a setting rather than a lock.*
 
 ---
 

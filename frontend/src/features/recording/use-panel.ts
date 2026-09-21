@@ -12,7 +12,7 @@
 
 import { useCallback, useState } from 'react';
 
-const REMEMBERED = 'sonarium.metadata-collapsed';
+const REMEMBERED = 'resonand.metadata-collapsed';
 
 export interface PanelState {
   collapsed: boolean;

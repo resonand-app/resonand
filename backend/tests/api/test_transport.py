@@ -9,7 +9,7 @@ ignored. These are the cases in between.
 from __future__ import annotations
 
 import pytest
-from sonarium.api.transport import is_local_peer, scheme_behind
+from resonand.api.transport import is_local_peer, scheme_behind
 
 DOCKER_BRIDGE = "172.18.0.4"
 LAN = "192.168.1.20"

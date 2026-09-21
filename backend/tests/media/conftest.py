@@ -7,7 +7,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import pytest
-from sonarium.core.processes import run_tool
+from resonand.core.processes import run_tool
 
 HAS_FFMPEG = shutil.which("ffmpeg") is not None and shutil.which("ffprobe") is not None
 

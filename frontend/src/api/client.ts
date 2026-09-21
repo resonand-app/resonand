@@ -28,7 +28,7 @@ import type { paths } from './contract/schema';
 /**
  * The prefix this instance is served under, read from the shell rather than built in (`OPS-4`).
  *
- * An instance on a subpath serves everything under `/sonarium`, and the prefix is a fact of the
+ * An instance on a subpath serves everything under `/resonand`, and the prefix is a fact of the
  * deployment rather than of the build -- one image has to serve both arrangements. So the API
  * writes it into the `<base href>` of the shell it serves, and this reads it back out.
  *

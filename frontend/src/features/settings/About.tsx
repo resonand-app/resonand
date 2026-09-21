@@ -2,7 +2,7 @@
  * V10 · What this instance is, and where its source is (`UI-38`).
  *
  * **This is a licence obligation, not a credit line.** `AGPL-3.0` section 13 is the clause this
- * project chose the licence over `GPL` for: somebody who only ever meets Sonarium through a
+ * project chose the licence over `GPL` for: somebody who only ever meets Resonand through a
  * browser, on somebody else's server, is owed its Corresponding Source. Before this there was no
  * link, no About surface and no licence line anywhere in the signed-in interface -- the only
  * licence string the instance emitted was the OpenAPI document's, which points at gnu.org, and

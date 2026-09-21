@@ -6,9 +6,9 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
-from sonarium.core.errors import ConflictError, InvalidRequestError, NotFoundError
-from sonarium.core.ids import new_uuid
-from sonarium.media import storage
+from resonand.core.errors import ConflictError, InvalidRequestError, NotFoundError
+from resonand.core.ids import new_uuid
+from resonand.media import storage
 
 UUID = "abcdef01-2345-4678-8abc-def012345678"
 

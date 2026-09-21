@@ -13,13 +13,13 @@ from pathlib import Path
 
 from fastapi import status
 from fastapi.testclient import TestClient
-from sonarium.core import formats
-from sonarium.core.config import Settings
-from sonarium.core.levels import DESCRIPTIONS, GRANTABLE, Level
-from sonarium.db import libraries as library_repo
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.media import storage
+from resonand.core import formats
+from resonand.core.config import Settings
+from resonand.core.levels import DESCRIPTIONS, GRANTABLE, Level
+from resonand.db import libraries as library_repo
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.media import storage
 
 from tests.api.conftest import sign_in
 

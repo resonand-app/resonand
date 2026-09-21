@@ -1,4 +1,4 @@
-# Sonarium -- the container image (`OPS-1`).
+# Resonand -- the container image (`OPS-1`).
 #
 # One container carries both halves: the API and the built web interface come out of the same
 # build and are served on the same origin, which is what lets the session cookie be `SameSite`
@@ -6,7 +6,7 @@
 #
 # The build context is the repository root, because the frontend and the backend are both in it:
 #
-#   docker build -t sonarium:local .
+#   docker build -t resonand:local .
 #
 # Layer order is the point of this file: the lock file and the manifest arrive on their own and
 # the source arrives afterwards, so editing code does not reinstall dependencies.
@@ -38,7 +38,7 @@ COPY backend/pyproject.toml backend/uv.lock backend/.python-version ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 # Then the project. `--no-editable` installs a built wheel into the environment, so the runtime
-# stage needs the virtualenv and nothing else from here -- including the `sonarium` command and
+# stage needs the virtualenv and nothing else from here -- including the `resonand` command and
 # the migration tree, which lives inside the package for exactly that reason.
 COPY backend/ ./
 RUN uv sync --frozen --no-dev --no-editable
@@ -75,18 +75,18 @@ RUN apt-get update \
 # image, which is why /data and both of its mount points are created and chowned here instead of
 # at first run. Skipping this is how a non-root container ends up unable to write to its own
 # volume, and the failure looks like a permissions bug in the application.
-RUN groupadd --system --gid 10001 sonarium \
- && useradd --system --uid 10001 --gid 10001 --home-dir /app --no-create-home sonarium \
+RUN groupadd --system --gid 10001 resonand \
+ && useradd --system --uid 10001 --gid 10001 --home-dir /app --no-create-home resonand \
  && mkdir -p /app /data/storage /data/tmp \
- && chown -R sonarium:sonarium /app /data
+ && chown -R resonand:resonand /app /data
 
-COPY --from=backend-build --chown=sonarium:sonarium /app/.venv /app/.venv
+COPY --from=backend-build --chown=resonand:resonand /app/.venv /app/.venv
 # The licence travels with the image: it is what anyone running a modified copy has to comply with.
-COPY --chown=sonarium:sonarium LICENSE /app/LICENSE
-# The built interface. `SONARIUM_STATIC_DIR` defaults to this path, and the application installs
+COPY --chown=resonand:resonand LICENSE /app/LICENSE
+# The built interface. `RESONAND_STATIC_DIR` defaults to this path, and the application installs
 # the shell as a fallback after every router -- so an endpoint stays an endpoint, and a build
 # without this line simply serves no interface rather than failing.
-COPY --from=frontend-build --chown=sonarium:sonarium /src/dist /app/static
+COPY --from=frontend-build --chown=resonand:resonand /src/dist /app/static
 
 # `TMPDIR` inside the volume is not a tidiness preference. An upload is buffered to a temporary
 # file in full before the endpoint that stores it runs, so every recording touches disk twice and
@@ -100,12 +100,12 @@ ENV PATH="/app/.venv/bin:$PATH" \
     TMPDIR=/data/tmp
 
 WORKDIR /app
-USER sonarium
+USER resonand
 EXPOSE 8000
 
-LABEL org.opencontainers.image.title="Sonarium" \
+LABEL org.opencontainers.image.title="Resonand" \
       org.opencontainers.image.description="A self-hosted archive for the recordings that matter." \
-      org.opencontainers.image.source="https://github.com/sonarium-app/sonarium" \
+      org.opencontainers.image.source="https://github.com/resonand-app/resonand" \
       org.opencontainers.image.licenses="AGPL-3.0-only"
 
 # `/readyz` rather than `/healthz`: the question a restart should turn on is whether the
@@ -118,7 +118,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 
 # No entry-point script and no migration step here: the application migrates itself at startup
 # under a file lock (`OPS-7`), so the ordinary upgrade is to pull a new image and restart. It
-# also runs the job worker in-process; set `SONARIUM_RUN_WORKER=false` and run `sonarium work`
+# also runs the job worker in-process; set `RESONAND_RUN_WORKER=false` and run `resonand work`
 # in a second container to split them.
 #
 # `--proxy-headers` is on because this is meant to sit behind a reverse proxy (`OPS-4`). Without
@@ -127,5 +127,5 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 # the session cookie unmarked. uvicorn only trusts those headers from 127.0.0.1 by default; a
 # proxy on another host needs `--forwarded-allow-ips` set to its address, and deliberately not
 # to `*`.
-CMD ["uvicorn", "sonarium.api.app:create_app", "--factory", \
+CMD ["uvicorn", "resonand.api.app:create_app", "--factory", \
      "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

@@ -125,7 +125,7 @@ export default defineConfig(
     // starting point (`UI-1l`).
     'design-system/ui_kits/**',
     // The contract (`UI-3a`): the committed document and the types generated from it. Neither
-    // is hand-written -- `sonarium openapi` writes one and `npm run api:types` the other -- and
+    // is hand-written -- `resonand openapi` writes one and `npm run api:types` the other -- and
     // linting a generated file reports the generator's style as the author's mistakes, with the
     // only available fix being to stop generating it.
     'src/api/contract/**',

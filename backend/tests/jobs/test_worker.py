@@ -12,20 +12,20 @@ from dataclasses import replace
 from pathlib import Path
 
 import pytest
-from sonarium.core.changes import AUDIO, Change, Changes
-from sonarium.core.config import Settings
-from sonarium.core.errors import ProviderError
-from sonarium.db import libraries, transcripts, users
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Job
-from sonarium.jobs import handlers, queue
-from sonarium.jobs.handlers import Context
-from sonarium.jobs.worker import Worker, drain
-from sonarium.media import storage, waveform
-from sonarium.transcription.capabilities import Capabilities
-from sonarium.transcription.chunking import Plan, restitch
-from sonarium.transcription.contract import (
+from resonand.core.changes import AUDIO, Change, Changes
+from resonand.core.config import Settings
+from resonand.core.errors import ProviderError
+from resonand.db import libraries, transcripts, users
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.models import Audio, Job
+from resonand.jobs import handlers, queue
+from resonand.jobs.handlers import Context
+from resonand.jobs.worker import Worker, drain
+from resonand.media import storage, waveform
+from resonand.transcription.capabilities import Capabilities
+from resonand.transcription.chunking import Plan, restitch
+from resonand.transcription.contract import (
     TranscriptionHandle,
     TranscriptionRequest,
     TranscriptionResult,
@@ -472,7 +472,7 @@ def test_an_engine_that_takes_the_whole_recording_is_sent_it_whole(
     """
     settings = Settings(
         data_dir=tmp_path / "instance",
-        database_path=tmp_path / "instance" / "sonarium.db",
+        database_path=tmp_path / "instance" / "resonand.db",
         transcription_max_part_seconds=5,
     )
     root = settings.resolved_storage_dir
@@ -523,7 +523,7 @@ def test_a_recording_whose_probe_never_ran_is_measured_rather_than_sent_whole(
     """
     settings = Settings(
         data_dir=tmp_path / "instance",
-        database_path=tmp_path / "instance" / "sonarium.db",
+        database_path=tmp_path / "instance" / "resonand.db",
         transcription_max_part_seconds=5,
     )
     root = settings.resolved_storage_dir
@@ -575,7 +575,7 @@ def test_a_cancelled_transcription_stops_sending_the_parts_that_are_left(
     """
     settings = Settings(
         data_dir=tmp_path / "instance",
-        database_path=tmp_path / "instance" / "sonarium.db",
+        database_path=tmp_path / "instance" / "resonand.db",
         # Five-second parts so a recording short enough to generate in a test still splits.
         transcription_max_part_seconds=5,
     )
@@ -701,7 +701,7 @@ def test_a_job_going_back_for_another_try_says_nothing(
 def test_a_worker_with_nowhere_to_announce_still_runs_its_jobs(
     database: Database, db_settings: Settings, stored: tuple[str, int]
 ) -> None:
-    """``sonarium work`` on its own has no stream attached, and the archive does not care."""
+    """``resonand work`` on its own has no stream attached, and the archive does not care."""
     _, audio_id = stored
     with database.write_session() as session:
         queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=audio_id)

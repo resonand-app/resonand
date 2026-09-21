@@ -7,7 +7,7 @@ hours of audio to play thirty seconds in the middle -- which looks like slowness
 from __future__ import annotations
 
 import pytest
-from sonarium.media.ranges import UnsatisfiableRangeError, parse_range
+from resonand.media.ranges import UnsatisfiableRangeError, parse_range
 
 SIZE = 1000
 

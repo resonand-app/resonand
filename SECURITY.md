@@ -1,6 +1,6 @@
 # Security
 
-Sonarium holds recordings of people's families, their interviews and their thinking out loud. A
+Resonand holds recordings of people's families, their interviews and their thinking out loud. A
 flaw here is not an inconvenience; it is somebody's grandmother's voice in a stranger's hands. That
 is the standard reports are read against.
 
@@ -49,7 +49,7 @@ the same thread.
 Credit in the commit and the release notes if you want it, and not if you do not. There is no
 money; the project has none.
 
-## What Sonarium assumes
+## What Resonand assumes
 
 A report is easier to judge against the model the software is actually built on:
 
@@ -59,12 +59,12 @@ A report is easier to judge against the model the software is actually built on:
 - **Accounts are made by hand.** There is no open registration. The first account is the
   administrator; that person creates the rest. Everybody with an account is somebody the operator
   chose.
-- **Sonarium speaks plain HTTP and expects a reverse proxy in front of it** for TLS. The compose
+- **Resonand speaks plain HTTP and expects a reverse proxy in front of it** for TLS. The compose
   file binds to loopback for that reason.
 - **The operator is not an attacker in this model.** Whoever holds the database file and the
   storage tree holds the archive; the permission system exists to keep *accounts* apart from each
   other, not to keep anything from the person running the server.
-- **Audio leaves when transcription is requested**, to whatever `SONARIUM_TRANSCRIPTION_BASE_URL`
+- **Audio leaves when transcription is requested**, to whatever `RESONAND_TRANSCRIPTION_BASE_URL`
   names, and the interface says so before each request. That is principle 2, and the destination is
   the operator's choice — pointing it at a hosted endpoint uploads recordings to that company, as
   designed.
@@ -76,7 +76,7 @@ report might reasonably assume were oversights.
 
 - **The sign-in throttle is not a security boundary.** It is an in-memory counter that resets when
   the container restarts, and it exists to make guessing slow. Distributed attempts across many
-  addresses are the reverse proxy's job, and `sonarium/api/rate_limit.py` says so.
+  addresses are the reverse proxy's job, and `resonand/api/rate_limit.py` says so.
 - **`style-src` allows `'unsafe-inline'`.** The interface styles elements through React's `style`
   prop in enough places that removing it is a change to the interface rather than to a header. No
   relaxation applies to `script-src`, which is what stops an injected script running.

@@ -548,7 +548,7 @@ export interface paths {
          *     people who can edit the recording.
          *
          *     **Cancelling is a decision, not a failure.** The job goes to ``cancelled``, which is a state
-         *     :mod:`sonarium.core.states` already reads as ``none`` -- so the recording comes back to its
+         *     :mod:`resonand.core.states` already reads as ``none`` -- so the recording comes back to its
          *     call to action rather than to an error nobody caused. Nothing is kept: no transcript is
          *     written from the parts that did finish, because a transcript covering the first four minutes
          *     of an hour is worse than none, and it would be the one thing on the screen claiming to be
@@ -1506,7 +1506,7 @@ export interface components {
          * GrantableLevel
          * @description One level a share may carry, and the sentence that explains it (``API-18``).
          *
-         *     The wording lives in :mod:`sonarium.core.levels` and is sent from there, so the interface has
+         *     The wording lives in :mod:`resonand.core.levels` and is sent from there, so the interface has
          *     no copy of it to go stale -- which is the whole of ``UI-34k``.
          */
         GrantableLevel: {

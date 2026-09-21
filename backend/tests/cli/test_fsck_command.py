@@ -1,4 +1,4 @@
-"""The ``sonarium fsck`` command itself (``ING-13``).
+"""The ``resonand fsck`` command itself (``ING-13``).
 
 ``integrity.check`` is covered from every angle in ``test_integrity.py``, and the command around it
 was covered from none -- so **the one part an operator actually depends on was the one part nobody
@@ -17,16 +17,16 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
 import pytest
-from sonarium.cli.main import app
-from sonarium.core.config import reset_settings_cache
-from sonarium.db import libraries, users
-from sonarium.db.audio import create_audio
-from sonarium.media import storage
+from resonand.cli.main import app
+from resonand.core.config import reset_settings_cache
+from resonand.db import libraries, users
+from resonand.db.audio import create_audio
+from resonand.media import storage
 from typer.testing import CliRunner
 
 if TYPE_CHECKING:
-    from sonarium.core.config import Settings
-    from sonarium.db.engine import Database
+    from resonand.core.config import Settings
+    from resonand.db.engine import Database
 
 runner = CliRunner()
 
@@ -57,9 +57,9 @@ def archive_env(
         audio.size_bytes = digest.size_bytes
         uuid = audio.uuid
 
-    monkeypatch.setenv("SONARIUM_DATA_DIR", str(db_settings.data_dir))
-    monkeypatch.setenv("SONARIUM_DATABASE_PATH", str(db_settings.resolved_database_path))
-    monkeypatch.setenv("SONARIUM_SECRET_KEY", "0" * 64)
+    monkeypatch.setenv("RESONAND_DATA_DIR", str(db_settings.data_dir))
+    monkeypatch.setenv("RESONAND_DATABASE_PATH", str(db_settings.resolved_database_path))
+    monkeypatch.setenv("RESONAND_SECRET_KEY", "0" * 64)
     reset_settings_cache()
     yield uuid
     reset_settings_cache()

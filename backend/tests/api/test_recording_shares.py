@@ -11,11 +11,11 @@ from __future__ import annotations
 
 from fastapi import status
 from fastapi.testclient import TestClient
-from sonarium.core.levels import Level
-from sonarium.db import libraries as library_repo
-from sonarium.db.audio import create_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Share
+from resonand.core.levels import Level
+from resonand.db import libraries as library_repo
+from resonand.db.audio import create_audio
+from resonand.db.engine import Database
+from resonand.db.models import Share
 from sqlalchemy import func, select
 
 from tests.api.conftest import sign_in

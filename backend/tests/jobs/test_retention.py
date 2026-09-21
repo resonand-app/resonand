@@ -10,16 +10,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from sonarium.core.config import Settings
-from sonarium.core.time import instant_after, utc_now
-from sonarium.db import libraries, users
-from sonarium.db import sessions as session_repo
-from sonarium.db.audio import create_audio, trash_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Library
-from sonarium.jobs.handlers import Context
-from sonarium.jobs.worker import Worker
-from sonarium.media import storage
+from resonand.core.config import Settings
+from resonand.core.time import instant_after, utc_now
+from resonand.db import libraries, users
+from resonand.db import sessions as session_repo
+from resonand.db.audio import create_audio, trash_audio
+from resonand.db.engine import Database
+from resonand.db.models import Audio, Library
+from resonand.jobs.handlers import Context
+from resonand.jobs.worker import Worker
+from resonand.media import storage
 from sqlalchemy import select, text
 
 

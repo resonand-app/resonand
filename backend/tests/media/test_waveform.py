@@ -6,8 +6,8 @@ import struct
 from pathlib import Path
 
 import pytest
-from sonarium.core.errors import InvalidRequestError
-from sonarium.media import waveform
+from resonand.core.errors import InvalidRequestError
+from resonand.media import waveform
 
 from tests.media.conftest import make_audio, needs_ffmpeg
 

@@ -11,7 +11,7 @@ session as the migration it is meant to be checking. The walk is the version tha
 ``0004`` on the day somebody writes it, and it is the single-hop half of ``OPS-9``, which owes the
 rest: this runs against the revisions in *this* checkout, not against every version ever released.
 
-The seed is raw SQL on purpose. ``sonarium.db.models`` describes the schema at head, so using the
+The seed is raw SQL on purpose. ``resonand.db.models`` describes the schema at head, so using the
 ORM to populate a database at ``0001`` would fail on a column that revision has never heard of --
 and using it to read the rows back afterwards would only ever prove that head can read head.
 """
@@ -23,9 +23,9 @@ from typing import Any
 
 import pytest
 from alembic.script import ScriptDirectory
-from sonarium.core.config import Settings
-from sonarium.db.engine import build_engine
-from sonarium.db.migrate import alembic_config, migrate_at_startup, run_upgrade
+from resonand.core.config import Settings
+from resonand.db.engine import build_engine
+from resonand.db.migrate import alembic_config, migrate_at_startup, run_upgrade
 from sqlalchemy import Connection, text
 
 INSTANT = "2026-01-01T09:00:00.000Z"
@@ -209,7 +209,7 @@ def seed(connection: Connection, revision: str) -> dict[str, tuple[str, ...]]:
 def test_an_archive_written_at_this_revision_survives_the_upgrade_to_head(
     revision: str, tmp_path: Path
 ) -> None:
-    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "sonarium.db")
+    settings = Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
     settings.prepare_directories()
 
     engine = build_engine(settings)

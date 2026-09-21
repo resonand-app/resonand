@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from sonarium.core.formats import is_accepted, is_video_container, normalise_extension
+from resonand.core.formats import is_accepted, is_video_container, normalise_extension
 
 
 @pytest.mark.parametrize("filename", ["note.m4a", "NOTE.M4A", "talk.opus", "song.flac"])

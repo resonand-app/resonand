@@ -1,7 +1,7 @@
 /**
  * Reducing a recording keeps its shape (`UI-2a`).
  *
- * The reduction has to agree with `sonarium.media.waveform.resample`, because both run on the
+ * The reduction has to agree with `resonand.media.waveform.resample`, because both run on the
  * same recording: the server reduces on the way out and the client reduces again to the pixels
  * available, and two different roundings would make one recording draw two shapes depending on
  * which end had done more of the work. The bucket boundaries asserted below are that arithmetic.

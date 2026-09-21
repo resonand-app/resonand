@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 import pytest
-from sonarium.transcription.chunking import (
+from resonand.transcription.chunking import (
     DEFAULT_OVERLAP_MS,
     MIN_PART_MS,
     Part,
@@ -23,7 +23,7 @@ from sonarium.transcription.chunking import (
     restitch,
     seams,
 )
-from sonarium.transcription.contract import TranscriptSegment
+from resonand.transcription.contract import TranscriptSegment
 
 THREE_HOURS_MS = 3 * 60 * 60 * 1000
 TEN_MINUTES_MS = 10 * 60 * 1000

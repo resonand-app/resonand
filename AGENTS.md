@@ -2,7 +2,7 @@
 
 Instructions for coding agents working in this repository. Read this before touching anything.
 
-## What Sonarium is
+## What Resonand is
 
 A self-hosted archive for personal audio recordings: it keeps the original byte-for-byte,
 transcribes it through a provider you choose, and lets you search inside every transcript you own.
@@ -20,20 +20,20 @@ How the tree is organised, not what is in it — a file listing rots, the shape 
 
 | Path | How it is organised |
 |---|---|
-| `backend/` | The `sonarium` Python package, a test suite mirroring it, and the whole toolchain description (`pyproject.toml`, `uv.lock`) |
+| `backend/` | The `resonand` Python package, a test suite mirroring it, and the whole toolchain description (`pyproject.toml`, `uv.lock`) |
 | `frontend/` | The interface (`src/`) beside the vendored design system (`design-system/`), which sits outside `src/` on purpose (`DEC-21`) |
 | `docs/` | The committed plans. `docs/internal/` is local-only |
 | `deploy/` | What an operator needs: the compose file, `.env.example`, and a README of their own |
 | `Dockerfile` | Multi-stage. The bundle and the package come out of one image |
 | `.pre-commit-config.yaml`, `.github/workflows/ci.yml` | The quality gate, described once and run in both places |
 
-### `backend/sonarium/`
+### `backend/resonand/`
 
 Layered, and the dependency runs one way:
 `core` ← `db` / `acl` / `media` / `transcription` ← `api` / `jobs` / `cli`.
 
 - `core/` — primitives with no dependencies of their own: settings (pydantic-settings, every
-  variable prefixed `SONARIUM_`), ids, time, text, enums.
+  variable prefixed `RESONAND_`), ids, time, text, enums.
 - `db/` — the engine and its pragmas, the ORM models, Alembic wiring, and one module per
   aggregate. Named repositories, but they are application services: they resolve permissions and
   enforce invariants, not just rows (`REV-S3`).
@@ -43,7 +43,7 @@ Layered, and the dependency runs one way:
 - `media/` — everything that shells out to ffmpeg/ffprobe.
 - `transcription/` — the provider boundary: a contract, a registry, and one implementation.
 - `jobs/` — the in-process queue and its worker.
-- `cli/` — the Typer app `pyproject.toml` installs as `sonarium`.
+- `cli/` — the Typer app `pyproject.toml` installs as `resonand`.
 - `migrations/` — the Alembic tree, shipped inside the package so a container migrates itself.
 - `archive.py` — export and re-import, and the only module at the package root: it reaches across
   `db` and `media` and answers to the CLI alone, so it belongs to no one layer. Its test mirrors
@@ -112,8 +112,8 @@ uv sync --all-groups
 uv run ruff check . && uv run ruff format .
 uv run mypy                     # strict; no file arguments -- it needs the whole package
 uv run pytest -q                # add -m "not slow" for the fast loop
-uv run sonarium --help
-uv run uvicorn sonarium.api.app:create_app --factory --reload   # :8000
+uv run resonand --help
+uv run uvicorn resonand.api.app:create_app --factory --reload   # :8000
 
 cd frontend
 npm ci
@@ -133,7 +133,7 @@ run it run **on push**, because a correction to an open pull request amends its 
 every amend was paying for them again. A push is still gated, and still before anyone else can
 see the branch.
 
-- Backend, on commit: `ruff check` → `ruff format --check` → `mypy` (strict) → `sonarium openapi --check`
+- Backend, on commit: `ruff check` → `ruff format --check` → `mypy` (strict) → `resonand openapi --check`
 - Frontend, on commit: `eslint` → `prettier --check` → `tsc`
 - On push: `pytest` and `vitest` (CI adds coverage and `vite build`)
 - Pre-commit also refuses to commit `docs/internal/`, any file over 512 kB, and private keys
@@ -255,7 +255,7 @@ what the work is, and the folder says which version did it.
 | `UI` | Every view in the interface | `interface.md` |
 | `OPS` | Docker, configuration, backup, observability | `operations.md` |
 | `INT` | Views that cross tracks: trash, administration, security | `integration.md` |
-| `TRX` | What an engine has to look like for Sonarium to consume it | `transcription.md` |
+| `TRX` | What an engine has to look like for Resonand to consume it | `transcription.md` |
 | `SEC` | What was hardened before the source was readable by anybody | `security.md` |
 | `BUG` | Defects found by using the archive rather than by reading it | `defects.md` |
 | `REV` | Backend review findings, and what settled each one | `review.md` |
@@ -325,18 +325,18 @@ state consequences in numbers, at whatever length the decision needs.
 
 | File | Regenerate with |
 |---|---|
-| `frontend/src/api/openapi.json` | `cd backend && uv run sonarium openapi` |
+| `frontend/src/api/openapi.json` | `cd backend && uv run resonand openapi` |
 | `frontend/src/api/schema.ts` | `cd frontend && npm run api:types` |
 | `frontend/design-system/tokens.ts` | `cd frontend && npm run tokens` (the CSS is the source of truth) |
 
 They are committed on purpose, so a reviewer sees the API surface change. **Any change to an
 endpoint means refreshing the snapshot and the types in the same commit** — CI fails both halves
-otherwise (`sonarium openapi --check` on one side, `api-schema.node.test.ts` on the other).
+otherwise (`resonand openapi --check` on one side, `api-schema.node.test.ts` on the other).
 
 ### Backend
 
 - `from __future__ import annotations` at the top of every module.
-- **No relative imports** (`ban-relative-imports = "all"`). Import `sonarium.x.y` absolutely.
+- **No relative imports** (`ban-relative-imports = "all"`). Import `resonand.x.y` absolutely.
 - mypy `strict`, `warn_unreachable`, and `ignore-without-code` — a bare `# type: ignore` fails.
 - No `print()` (`T20`). Log through `structlog`.
 - **No naive datetimes** (`DTZ`, and `DEC-11` rests on it): instants are UTC; a recording's own
@@ -383,7 +383,7 @@ with 🧪 is not done without one.
 carries only what every area needs (a migrated temporary database on a real file, and its session
 factory); area fixtures live in `tests/<area>/conftest.py`. Row factories are in `tests/db/rows.py`.
 Two markers: `slow` (excluded from the pre-commit loop) and `ffmpeg` (needs the real binaries;
-installed in CI). Settings in tests are always explicit so a stray `SONARIUM_*` in the
+installed in CI). Settings in tests are always explicit so a stray `RESONAND_*` in the
 environment cannot point a test at a real archive.
 
 **Frontend** — `vitest` + Testing Library + `user-event`, msw for the API (`src/test/api/`). A mock
@@ -394,8 +394,8 @@ OpenAPI document against the generated types.
 
 ## Design and UI work
 
-Any interface or asset work goes through the **`sonarium-design`** skill
-(`.claude/skills/sonarium-design/SKILL.md`). Read `frontend/design-system/README.md` first, and
+Any interface or asset work goes through the **`resonand-design`** skill
+(`.claude/skills/resonand-design/SKILL.md`). Read `frontend/design-system/README.md` first, and
 the `.prompt.md` beside a component before using it. `npm run dev` then `#/specimens` shows every
 component, glyph and guideline card in either theme.
 

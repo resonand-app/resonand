@@ -9,13 +9,13 @@ result.
 from __future__ import annotations
 
 import pytest
-from sonarium.core.levels import Level
-from sonarium.core.states import TranscriptionState
-from sonarium.db import libraries, tags, transcripts, users
-from sonarium.db.audio import create_audio, trash_audio
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio
-from sonarium.db.search import (
+from resonand.core.levels import Level
+from resonand.core.states import TranscriptionState
+from resonand.db import libraries, tags, transcripts, users
+from resonand.db.audio import create_audio, trash_audio
+from resonand.db.engine import Database
+from resonand.db.models import Audio
+from resonand.db.search import (
     MATCH_METADATA,
     MATCH_TRANSCRIPT,
     SHOWN_PER_RECORDING,
@@ -23,7 +23,7 @@ from sonarium.db.search import (
     build_match_query,
     search,
 )
-from sonarium.db.transcripts import SegmentDraft
+from resonand.db.transcripts import SegmentDraft
 
 
 @pytest.fixture

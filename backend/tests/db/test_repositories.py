@@ -7,14 +7,14 @@ put it there: nothing below re-checks a permission, and nothing above is allowed
 from __future__ import annotations
 
 import pytest
-from sonarium.core.errors import (
+from resonand.core.errors import (
     ConflictError,
     InvalidRequestError,
     PermissionDeniedError,
 )
-from sonarium.core.levels import Level
-from sonarium.db import categories, libraries, tags, transcripts, users
-from sonarium.db.audio import (
+from resonand.core.levels import Level
+from resonand.db import categories, libraries, tags, transcripts, users
+from resonand.db.audio import (
     MetadataPatch,
     create_audio,
     find_duplicates,
@@ -24,9 +24,9 @@ from sonarium.db.audio import (
     trashed_audio,
     update_metadata,
 )
-from sonarium.db.engine import Database
-from sonarium.db.models import Audio, Segment
-from sonarium.db.transcripts import Origin, SegmentDraft
+from resonand.db.engine import Database
+from resonand.db.models import Audio, Segment
+from resonand.db.transcripts import Origin, SegmentDraft
 from sqlalchemy import event, select, text
 
 # --- Accounts and the personal library (DAT-5) ----------------------------

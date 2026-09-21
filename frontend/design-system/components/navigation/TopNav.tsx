@@ -142,7 +142,7 @@ export function TopNav({
           data-hit-target=""
           href={homeHref}
           onClick={onHome}
-          aria-label={labels?.home ?? 'Sonarium home'}
+          aria-label={labels?.home ?? 'Resonand home'}
         >
           <Logo size={21} />
         </a>

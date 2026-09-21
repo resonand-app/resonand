@@ -1,4 +1,4 @@
-# Running Sonarium
+# Running Resonand
 
 Everything here describes the software as it stands. Where something has not been exercised yet,
 it says so — an operations document that overstates what has been tested is worse than none.
@@ -17,12 +17,12 @@ Three things:
   archive. Everything else is replaceable.
 - **The `.env`** — every setting, all of them read from the environment.
 
-Copy [`.env.example`](.env.example) to `.env`, set `SONARIUM_SECRET_KEY` and
-`SONARIUM_TRANSCRIPTION_BASE_URL`, then:
+Copy [`.env.example`](.env.example) to `.env`, set `RESONAND_SECRET_KEY` and
+`RESONAND_TRANSCRIPTION_BASE_URL`, then:
 
 ```bash
 docker compose up -d
-docker compose logs -f sonarium
+docker compose logs -f resonand
 ```
 
 The instance migrates its own database on the way up. The first account you create through the
@@ -39,21 +39,21 @@ written to disk twice: once as that buffer, once into the archive. The image poi
 container's writable layer, which is usually much smaller and is not what your backups point at.
 The buffer is removed as soon as the request finishes.
 
-With `SONARIUM_MAX_UPLOAD_BYTES` at its default of 8 GB, that is 8 GB of headroom in the worst
+With `RESONAND_MAX_UPLOAD_BYTES` at its default of 8 GB, that is 8 GB of headroom in the worst
 case. Lower the setting if the volume cannot spare it: an upload that runs the volume out of
 space fails late, having already spent the transfer.
 
 ## Behind a reverse proxy
 
-Sonarium speaks plain HTTP and expects something in front of it for TLS. The compose file binds
+Resonand speaks plain HTTP and expects something in front of it for TLS. The compose file binds
 to `127.0.0.1` for that reason: a session cookie on plain HTTP across a network is the whole
 session in clear text.
 
 Both arrangements work and both are tested (`OPS-4`). Pick one.
 
-### A subdomain — `sonarium.example.org`
+### A subdomain — `resonand.example.org`
 
-Leave `SONARIUM_BASE_PATH` unset. Nothing is rewritten.
+Leave `RESONAND_BASE_PATH` unset. Nothing is rewritten.
 
 ```nginx
 location / {
@@ -70,14 +70,14 @@ location / {
 }
 ```
 
-### A subpath — `example.org/sonarium`
+### A subpath — `example.org/resonand`
 
-Set `SONARIUM_BASE_PATH=/sonarium`. Sonarium accepts the prefix being passed through *or*
+Set `RESONAND_BASE_PATH=/resonand`. Resonand accepts the prefix being passed through *or*
 stripped, because every guide on the internet does one or the other:
 
 ```nginx
-location /sonarium/ {
-    proxy_pass http://127.0.0.1:8000/sonarium/;   # passes the prefix through
+location /resonand/ {
+    proxy_pass http://127.0.0.1:8000/resonand/;   # passes the prefix through
     # proxy_pass http://127.0.0.1:8000/;          # strips it -- also fine
     proxy_set_header Host              $host;
     proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
@@ -88,22 +88,22 @@ location /sonarium/ {
 }
 ```
 
-The session cookie is scoped to the subpath either way, so Sonarium cannot send it to another
+The session cookie is scoped to the subpath either way, so Resonand cannot send it to another
 application on the same domain.
 
-**`SONARIUM_BASE_PATH` is the prefix the browser sees, not the one the container receives.** It is
-what Sonarium writes into the served page as the root every asset resolves against, so it has to
+**`RESONAND_BASE_PATH` is the prefix the browser sees, not the one the container receives.** It is
+what Resonand writes into the served page as the root every asset resolves against, so it has to
 match the address bar even where the proxy has already stripped it. Nothing is rebuilt to move an
 instance between the two arrangements — the same image serves both, and changing the variable and
 restarting is the whole of it.
 
-**`client_max_body_size` is a convenience here, not a boundary.** Sonarium enforces its own
-ceilings before it reads a body (`SEC-1`): `SONARIUM_MAX_UPLOAD_BYTES` for a recording and
-`SONARIUM_MAX_REQUEST_BYTES` for everything else. Raise the proxy's limit so it does not refuse an
+**`client_max_body_size` is a convenience here, not a boundary.** Resonand enforces its own
+ceilings before it reads a body (`SEC-1`): `RESONAND_MAX_UPLOAD_BYTES` for a recording and
+`RESONAND_MAX_REQUEST_BYTES` for everything else. Raise the proxy's limit so it does not refuse an
 upload the instance would have accepted — but an instance reached directly, or through a proxy
 configured generously, is not relying on that line to stay standing.
 
-**Sonarium sets its own security headers** (`SEC-4`) -- a content policy, `nosniff`,
+**Resonand sets its own security headers** (`SEC-4`) -- a content policy, `nosniff`,
 `frame-ancestors 'none'` and a referrer policy. A proxy that adds its own will produce two of
 each, and where they disagree the browser takes the stricter one, which is usually not the one
 anybody intended. Pass them through rather than adding a second set.
@@ -125,7 +125,7 @@ forging the address is the protection `SEC-3` exists to provide.
 
 ### The session cookie and how you are reached
 
-`SONARIUM_SESSION_COOKIE_SECURE` decides whether the cookie is marked `Secure`, and a browser
+`RESONAND_SESSION_COOKIE_SECURE` decides whether the cookie is marked `Secure`, and a browser
 silently discards a `Secure` cookie that arrived over plain HTTP unless the address is loopback.
 It is silent on both sides: the instance logs a successful sign-in, the browser keeps nothing, and
 the person is returned to the sign-in screen as though their password were wrong.
@@ -146,13 +146,13 @@ it does not see — falling back to `http://<address>:8000` and hitting the publ
 
 ## Backups
 
-**What `sonarium backup` covers:** the database. It uses SQLite's `VACUUM INTO`, so it runs while
+**What `resonand backup` covers:** the database. It uses SQLite's `VACUUM INTO`, so it runs while
 the service is up and produces a consistent copy — which copying the file with `cp` does not, in
 WAL mode. It refuses to overwrite an existing file, and it opens the copy to check it, because a
 backup nobody has opened is a file rather than a backup.
 
 ```bash
-docker compose exec sonarium sonarium backup /data/backups/$(date +%F).sqlite
+docker compose exec resonand resonand backup /data/backups/$(date +%F).sqlite
 ```
 
 **What it does not cover:** the originals under `/data/storage`. They are the bulk of the archive
@@ -161,12 +161,12 @@ both cheaper and better suited than anything this software could do on a schedul
 Borg, rsync or your filesystem's snapshots at the volume.
 
 A database backup without the originals restores an archive that knows about recordings it does
-not have. `sonarium fsck` will tell you exactly which ones.
+not have. `resonand fsck` will tell you exactly which ones.
 
 ### Restoring
 
 1. Stop the container.
-2. Put the backup at `/data/sonarium.db` in the volume, and restore `/data/storage` alongside it
+2. Put the backup at `/data/resonand.db` in the volume, and restore `/data/storage` alongside it
    from whatever took it.
 3. **Make sure what you restored is owned by uid 10001**, the unprivileged account the image runs
    as. Restored files carry the ownership of whoever restored them, and a database the process
@@ -174,11 +174,11 @@ not have. `sonarium fsck` will tell you exactly which ones.
    serves anything — a restore that looks finished and is not.
 
    ```bash
-   docker run --rm -u 0 -v <your-volume>:/data sonarium:<tag> chown -R 10001:10001 /data
+   docker run --rm -u 0 -v <your-volume>:/data resonand:<tag> chown -R 10001:10001 /data
    ```
 
 4. Start the container. It migrates the restored database forward if the image is newer.
-5. `docker compose exec sonarium sonarium fsck` — this is the step that tells you whether the two
+5. `docker compose exec resonand resonand fsck` — this is the step that tells you whether the two
    halves of the backup agree. `fsck` re-hashes every original, so a clean report means the
    database and the files it describes are the same pair that was backed up. A restore you have
    not run `fsck` against is a restore you have not checked.
@@ -214,12 +214,12 @@ deliberately not "downgrade the schema":
 
 ```bash
 docker compose down
-# put the pre-upgrade backup back at /data/sonarium.db
+# put the pre-upgrade backup back at /data/resonand.db
 # pin the previous tag in docker-compose.yml
 docker compose up -d
 ```
 
-Down-migrations exist and `sonarium.db.migrate.downgrade` will run one, but nothing calls it
+Down-migrations exist and `resonand.db.migrate.downgrade` will run one, but nothing calls it
 automatically and nothing should. Down-migrations are exercised far less than up-migrations, and
 a rollback that runs by itself when a container fails to start is how one bad deploy becomes a
 lost archive.
@@ -227,8 +227,8 @@ lost archive.
 ## Checking the archive
 
 ```bash
-docker compose exec sonarium sonarium fsck          # re-hashes every original
-docker compose exec sonarium sonarium fsck --fast   # checks only that the files are there
+docker compose exec resonand resonand fsck          # re-hashes every original
+docker compose exec resonand resonand fsck --fast   # checks only that the files are there
 ```
 
 `fsck` re-hashes every original and compares it against what was recorded at ingestion, reports
@@ -242,18 +242,18 @@ unchanged. Worth knowing if you run it nightly and conclude your hashes are bein
 ## Getting your data out
 
 ```bash
-docker compose exec sonarium sonarium export /data/export
+docker compose exec resonand resonand export /data/export
 ```
 
 One directory per recording, named for the recording's identifier, holding four things: the
 original file, a JSON sidecar carrying all its metadata and its full transcript, and `.vtt` and
 `.srt` derived from the same segments. The audio and the subtitles share a name, so a media player
-finds the subtitles on its own. No part of it needs Sonarium to read.
+finds the subtitles on its own. No part of it needs Resonand to read.
 
 A directory each rather than one flat folder, because two recordings made on the same phone very
 often arrive under the same filename and one of them would overwrite the other on the way out.
 
-Beside them, `sonarium-archive.json` describes the instance: the accounts, the libraries, and who
+Beside them, `resonand-archive.json` describes the instance: the accounts, the libraries, and who
 each library was shared with. It carries **no credentials of any kind** — no passwords, no hashes,
 no session keys. An export is something you copy onto a disk and carry; it says who the recordings
 belonged to, and it is not a way into an instance.
@@ -264,7 +264,7 @@ that does not match the archive has a reason written down.
 ### Reading it back
 
 ```bash
-docker compose exec sonarium sonarium import /data/export
+docker compose exec resonand resonand import /data/export
 ```
 
 The sidecar carries the recording's identifier, so an import **updates rather than duplicates** —
@@ -274,10 +274,10 @@ and importing it into an empty instance a way to verify the archive rather than 
 **Create the accounts first.** Because no credentials travel, an import cannot create people. Into
 an empty instance the order is:
 
-1. `sonarium create-admin --email … --display-name …`, which also prints the personal library's
+1. `resonand create-admin --email … --display-name …`, which also prints the personal library's
    identifier.
 2. Sign in, and create everybody else in **Settings → Administration**.
-3. `sonarium import /data/export`.
+3. `resonand import /data/export`.
 
 The manifest then recreates the libraries — with the identifiers they had — and the sharing, and
 each recording goes back into the library it came out of. A library whose owner has no account
@@ -303,19 +303,19 @@ through one in-process lock, because SQLite allows one writer at a time and a lo
 way to honour that rather than a generous timeout and the hope that nothing overlaps.
 
 A second process against the same database gives you two locks that know nothing about each
-other. Overriding the image's command with `--workers 2`, or running `sonarium work` in its own
-container with `SONARIUM_RUN_WORKER=false`, both do exactly that: the guarantee falls back to the
+other. Overriding the image's command with `--workers 2`, or running `resonand work` in its own
+container with `RESONAND_RUN_WORKER=false`, both do exactly that: the guarantee falls back to the
 five-second `busy_timeout` that exists for a backup or a `sqlite3` shell, and under write
 contention somebody's request fails with `database is locked`. Nothing in the code retries above
 that timeout, and no test covers two processes on one file.
 
-**To do more work at once, raise `SONARIUM_JOB_CONCURRENCY`**, which adds threads inside the one
+**To do more work at once, raise `RESONAND_JOB_CONCURRENCY`**, which adds threads inside the one
 process that owns the lock. Splitting the worker onto its own machine is a real thing to want —
 transcoding on a box with a GPU — and it is a change to make when the database is something two
 machines can both write to, not before. Sharing a volume is not that.
 
 Transcription is the exception, and has a second number of its own. However many threads the
-worker runs, only `SONARIUM_TRANSCRIPTION_CONCURRENCY` of them will have a recording at the engine
+worker runs, only `RESONAND_TRANSCRIPTION_CONCURRENCY` of them will have a recording at the engine
 at any moment — one, by default. The threads are this machine's; the engine is not, and a local
 server with a single GPU answers two requests slower than it answers them one after the other,
 with a real chance that the second runs it out of memory and fails a recording halfway. The other

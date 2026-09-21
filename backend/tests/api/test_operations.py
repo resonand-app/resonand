@@ -14,18 +14,18 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.api.routes import operations
-from sonarium.api.security import hash_password
-from sonarium.core.config import Settings
-from sonarium.core.errors import ToolError
-from sonarium.db import libraries as library_repo
-from sonarium.db import users as user_repo
-from sonarium.db.audio import create_audio, trash_audio
-from sonarium.db.engine import Database
-from sonarium.jobs import queue
-from sonarium.transcription import preflight
-from sonarium.transcription.openai_compatible import OpenAiCompatibleProvider
+from resonand.api.app import create_app
+from resonand.api.routes import operations
+from resonand.api.security import hash_password
+from resonand.core.config import Settings
+from resonand.core.errors import ToolError
+from resonand.db import libraries as library_repo
+from resonand.db import users as user_repo
+from resonand.db.audio import create_audio, trash_audio
+from resonand.db.engine import Database
+from resonand.jobs import queue
+from resonand.transcription import preflight
+from resonand.transcription.openai_compatible import OpenAiCompatibleProvider
 
 from tests.api.conftest import API_BASE, PASSWORD, sign_in
 
@@ -379,7 +379,7 @@ def test_a_rejected_key_is_explained_rather_than_just_reported(
     tested = client.post("/admin/transcription/test").json()
     assert tested["reachable"] is True
     assert tested["usable"] is False
-    assert "SONARIUM_TRANSCRIPTION_API_KEY" in tested["detail"]
+    assert "RESONAND_TRANSCRIPTION_API_KEY" in tested["detail"]
 
 
 # --- The instance ---------------------------------------------------------

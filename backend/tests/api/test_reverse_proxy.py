@@ -6,9 +6,9 @@ deployment, which is the worst place to find out.
 
 The two shapes:
 
-* **A subdomain** -- ``sonarium.example.org`` proxied to the container. Nothing is rewritten and
-  ``SONARIUM_BASE_PATH`` stays empty.
-* **A subpath** -- ``example.org/sonarium`` proxied with the prefix left on. Every URL the
+* **A subdomain** -- ``resonand.example.org`` proxied to the container. Nothing is rewritten and
+  ``RESONAND_BASE_PATH`` stays empty.
+* **A subpath** -- ``example.org/resonand`` proxied with the prefix left on. Every URL the
   application generates has to carry it, and the proxy has to pass it through rather than strip
   it, which is the part every guide gets wrong in a different direction.
 """
@@ -21,9 +21,9 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.core.config import Settings
-from sonarium.db.engine import Database
+from resonand.api.app import create_app
+from resonand.core.config import Settings
+from resonand.db.engine import Database
 
 from tests.api.conftest import PASSWORD, sign_in
 
@@ -69,7 +69,7 @@ def _instance(
 
 @pytest.fixture
 def on_a_subpath(tmp_path: Path, database: Database) -> TestClient:
-    return _instance(tmp_path, database, "/sonarium")
+    return _instance(tmp_path, database, "/resonand")
 
 
 @pytest.fixture
@@ -80,17 +80,17 @@ def on_a_subdomain(tmp_path: Path, database: Database) -> TestClient:
 @pytest.fixture
 def origin_on_a_subpath(tmp_path: Path, database: Database) -> TestClient:
     """The same instance, reached at the deployment root rather than at its API."""
-    return _instance(tmp_path, database, "/sonarium", at_origin=True)
+    return _instance(tmp_path, database, "/resonand", at_origin=True)
 
 
-@pytest.mark.parametrize("given", ["/sonarium", "sonarium", "/sonarium/", "sonarium/"])
+@pytest.mark.parametrize("given", ["/resonand", "resonand", "/resonand/", "resonand/"])
 def test_a_base_path_is_normalised_however_it_was_written(
     tmp_path: Path, database: Database, given: str
 ) -> None:
     """Half the breakages here are a trailing slash somewhere, so it is settled once."""
     settings = Settings(data_dir=tmp_path, base_path=given)
-    assert settings.base_path == "/sonarium"
-    assert create_app(settings).root_path == "/sonarium"
+    assert settings.base_path == "/resonand"
+    assert create_app(settings).root_path == "/resonand"
 
 
 def test_the_api_answers_whether_the_proxy_strips_the_prefix_or_passes_it_through(
@@ -101,8 +101,8 @@ def test_the_api_answers_whether_the_proxy_strips_the_prefix_or_passes_it_throug
     Both are supported, because whichever one an administrator has already written is the one
     they will keep.
     """
-    passes_through = _instance(tmp_path, database, "/sonarium")
-    strips = _instance(tmp_path, database, "/sonarium", proxy_strips=True)
+    passes_through = _instance(tmp_path, database, "/resonand")
+    strips = _instance(tmp_path, database, "/resonand", proxy_strips=True)
     try:
         assert passes_through.get("/instance").status_code == status.HTTP_200_OK
         assert strips.get("/instance").status_code == status.HTTP_200_OK
@@ -114,7 +114,7 @@ def test_the_api_answers_whether_the_proxy_strips_the_prefix_or_passes_it_throug
 def test_the_published_document_names_the_subpath(on_a_subpath: TestClient) -> None:
     """UI-3 generates its client from this, so a wrong server URL there breaks every call."""
     document = on_a_subpath.get("/openapi.json").json()
-    assert document["servers"][0]["url"] == "/sonarium"
+    assert document["servers"][0]["url"] == "/resonand"
 
 
 def test_the_document_names_no_server_on_a_subdomain(on_a_subdomain: TestClient) -> None:
@@ -127,7 +127,7 @@ def test_the_api_answers_normally_under_a_subpath(
     on_a_subpath: TestClient, origin_on_a_subpath: TestClient, accounts: dict[str, int]
 ) -> None:
     assert origin_on_a_subpath.get("/").status_code == status.HTTP_200_OK
-    assert on_a_subpath.get("/instance").json()["name"] == "sonarium"
+    assert on_a_subpath.get("/instance").json()["name"] == "resonand"
 
 
 def test_signing_in_works_under_a_subpath(
@@ -147,7 +147,7 @@ def test_the_session_cookie_is_scoped_to_the_subpath(
     response = on_a_subpath.post(
         "/auth/session", json={"email": "admin@example.test", "password": PASSWORD}
     )
-    assert "path=/sonarium/" in response.headers["set-cookie"].lower()
+    assert "path=/resonand/" in response.headers["set-cookie"].lower()
 
 
 def test_the_cookie_is_at_the_root_on_a_subdomain(
@@ -167,7 +167,7 @@ def test_signing_out_clears_the_cookie_it_actually_set(
     sign_in(on_a_subpath, "admin")
     signed_out = on_a_subpath.delete("/auth/session")
     assert signed_out.status_code == status.HTTP_204_NO_CONTENT
-    assert "path=/sonarium/" in signed_out.headers["set-cookie"].lower()
+    assert "path=/resonand/" in signed_out.headers["set-cookie"].lower()
     assert on_a_subpath.get("/auth/me").status_code == status.HTTP_401_UNAUTHORIZED
 
 

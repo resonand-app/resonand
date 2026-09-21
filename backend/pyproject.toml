@@ -1,5 +1,5 @@
 [project]
-name = "sonarium"
+name = "resonand"
 version = "0.0.0"
 description = "A self-hosted archive for the recordings that matter."
 requires-python = ">=3.12"
@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [project.scripts]
-sonarium = "sonarium.cli.main:app"
+resonand = "resonand.cli.main:app"
 
 [dependency-groups]
 # httpx2 is only here for starlette's TestClient, which now wants it. The runtime HTTP
@@ -37,14 +37,14 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["sonarium"]
+packages = ["resonand"]
 
 # --- Lint and format -------------------------------------------------------
 
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["sonarium", "tests"]
+src = ["resonand", "tests"]
 
 [tool.ruff.lint]
 select = [
@@ -71,7 +71,7 @@ select = [
 # Row factories and fixtures legitimately take many keyword arguments, and a test that
 # compares against a literal is clearer than one that compares against a named constant.
 "tests/**" = ["ARG", "PLR0913", "PLR2004", "S101", "S105", "S106"]
-"sonarium/migrations/**" = ["E501", "INP001"]
+"resonand/migrations/**" = ["E501", "INP001"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -86,7 +86,7 @@ max-args = 8
 
 [tool.mypy]
 python_version = "3.12"
-files = ["sonarium", "tests"]
+files = ["resonand", "tests"]
 strict = true
 warn_unreachable = true
 enable_error_code = ["ignore-without-code", "redundant-expr", "truthy-bool"]
@@ -99,7 +99,7 @@ ignore_missing_imports = true
 # imports. Type-checking them buys nothing and their duplicate basenames confuse the module
 # resolver.
 [[tool.mypy.overrides]]
-module = ["sonarium.migrations.*"]
+module = ["resonand.migrations.*"]
 ignore_errors = true
 
 # --- Tests -----------------------------------------------------------------
@@ -114,7 +114,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["sonarium"]
+source = ["resonand"]
 
 [tool.coverage.report]
 show_missing = true

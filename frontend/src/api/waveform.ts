@@ -34,7 +34,7 @@ const HEADER_BYTES = 9;
 /** Version 1: version, peaks per second, bucket count. Still served by an instance not yet re-derived. */
 const HEADER_V1_BYTES = 6;
 
-/** `MAX_PEAK` in `sonarium.media.waveform`. What an int8 peak is divided by to reach -1…1. */
+/** `MAX_PEAK` in `resonand.media.waveform`. What an int8 peak is divided by to reach -1…1. */
 const MAX_PEAK = 127;
 
 export interface Waveform {

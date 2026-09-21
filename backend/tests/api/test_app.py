@@ -10,12 +10,12 @@ import pytest
 from fastapi import Depends, FastAPI, status
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
-from sonarium.api.app import create_app
-from sonarium.api.errors import PROBLEM_CONTENT_TYPE
-from sonarium.api.logging import REQUEST_ID_HEADER
-from sonarium.api.pagination import MAX_LIMIT, PageRequest, page_of, page_request
-from sonarium.core.config import Settings, reset_settings_cache
-from sonarium.core.errors import (
+from resonand.api.app import create_app
+from resonand.api.errors import PROBLEM_CONTENT_TYPE
+from resonand.api.logging import REQUEST_ID_HEADER
+from resonand.api.pagination import MAX_LIMIT, PageRequest, page_of, page_request
+from resonand.core.config import Settings, reset_settings_cache
+from resonand.core.errors import (
     ConflictError,
     InvalidRequestError,
     NotFoundError,
@@ -23,12 +23,12 @@ from sonarium.core.errors import (
     ProviderError,
     UnauthenticatedError,
 )
-from sonarium.db.engine import Database
+from resonand.db.engine import Database
 
 
 def test_the_instance_answers_without_a_session(origin_client: TestClient) -> None:
     body = origin_client.get("/").json()
-    assert body["name"] == "sonarium"
+    assert body["name"] == "resonand"
     assert body["status"] == "ok"
 
 
@@ -39,7 +39,7 @@ def test_the_openapi_document_is_published(client: TestClient) -> None:
     origin would be the one path claiming the API still owns a name there.
     """
     document = client.get("/openapi.json").json()
-    assert document["info"]["title"] == "Sonarium"
+    assert document["info"]["title"] == "Resonand"
     assert document["info"]["license"]["name"] == "AGPL-3.0-only"
 
 
@@ -172,13 +172,13 @@ def test_a_subpath_instance_publishes_its_document_under_that_path(
         data_dir=tmp_path_factory.mktemp("subpath"),
         secret_key=SecretStr("0" * 64),
         transcription_base_url="http://whisper:8000/v1",
-        base_path="/sonarium",
+        base_path="/resonand",
     )
     app = create_app(subpath_settings)
     app.state.database = database
-    assert app.root_path == "/sonarium"
-    with TestClient(app, root_path="/sonarium") as client:
-        assert client.get("/api/openapi.json").json()["servers"][0]["url"] == "/sonarium"
+    assert app.root_path == "/resonand"
+    with TestClient(app, root_path="/resonand") as client:
+        assert client.get("/api/openapi.json").json()["servers"][0]["url"] == "/resonand"
 
 
 class _RecordedLog:
@@ -209,7 +209,7 @@ class _RecordedLog:
 def _start(settings: Settings, monkeypatch: pytest.MonkeyPatch) -> _RecordedLog:
     """Run one instance through its whole lifespan and return what it said on the way up."""
     recorded = _RecordedLog()
-    monkeypatch.setattr("sonarium.api.app._logger", recorded)
+    monkeypatch.setattr("resonand.api.app._logger", recorded)
     with TestClient(create_app(settings)):
         pass
     return recorded
@@ -276,20 +276,20 @@ def _forget_cached_settings() -> Iterator[None]:
 def test_an_instance_read_from_the_environment_says_what_is_missing_and_stops(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """``OPS-3``. ``deploy/.env.example`` ships ``SONARIUM_SECRET_KEY=`` empty, which pydantic
+    """``OPS-3``. ``deploy/.env.example`` ships ``RESONAND_SECRET_KEY=`` empty, which pydantic
     reads as a zero-length secret rather than as absent -- so the instance used to start and sign
     every playback token with nothing."""
-    monkeypatch.setenv("SONARIUM_DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("SONARIUM_SECRET_KEY", "")
+    monkeypatch.setenv("RESONAND_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("RESONAND_SECRET_KEY", "")
     recorded = _RecordedLog()
-    monkeypatch.setattr("sonarium.api.app._logger", recorded)
+    monkeypatch.setattr("resonand.api.app._logger", recorded)
 
     with pytest.raises(SystemExit):
         create_app()
 
     refused = recorded.of("configuration.refused")
     assert [str(fields["problem"]) for _level, _event, fields in refused], "it says what to fix"
-    assert any("SONARIUM_SECRET_KEY" in str(fields["problem"]) for *_, fields in refused)
+    assert any("RESONAND_SECRET_KEY" in str(fields["problem"]) for *_, fields in refused)
 
 
 @pytest.mark.usefixtures("_forget_cached_settings")
@@ -298,17 +298,17 @@ def test_an_instance_with_nowhere_to_transcribe_still_starts(
 ) -> None:
     """The archive is the product; transcription is a feature of it. Refusing to boot here would
     turn one missing endpoint into an archive nobody can reach."""
-    monkeypatch.setenv("SONARIUM_DATA_DIR", str(tmp_path))
-    monkeypatch.setenv("SONARIUM_SECRET_KEY", "0" * 64)
-    monkeypatch.delenv("SONARIUM_TRANSCRIPTION_BASE_URL", raising=False)
+    monkeypatch.setenv("RESONAND_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("RESONAND_SECRET_KEY", "0" * 64)
+    monkeypatch.delenv("RESONAND_TRANSCRIPTION_BASE_URL", raising=False)
     recorded = _RecordedLog()
-    monkeypatch.setattr("sonarium.api.app._logger", recorded)
+    monkeypatch.setattr("resonand.api.app._logger", recorded)
 
     app = create_app()
 
-    assert app.title == "Sonarium"
+    assert app.title == "Resonand"
     said = recorded.of("configuration.incomplete")
-    assert any("SONARIUM_TRANSCRIPTION_BASE_URL" in str(fields["detail"]) for *_, fields in said)
+    assert any("RESONAND_TRANSCRIPTION_BASE_URL" in str(fields["detail"]) for *_, fields in said)
 
 
 def test_settings_handed_in_are_never_asked_for_a_signing_key(
@@ -317,4 +317,4 @@ def test_settings_handed_in_are_never_asked_for_a_signing_key(
     """Only the branch that reads the environment is checked. Checking both would have made this
     a change to every test in the suite that builds an app without a secret."""
     app = create_app(Settings(data_dir=tmp_path_factory.mktemp("handed-in")))
-    assert app.title == "Sonarium"
+    assert app.title == "Resonand"

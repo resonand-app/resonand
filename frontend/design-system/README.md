@@ -1,6 +1,6 @@
-# Sonarium Design System
+# Resonand Design System
 
-Sonarium is a personal audio archive: you upload recordings, they get transcribed, and you can then search across everything you have ever recorded by what was said in it. Field recordings live in **libraries** the user creates, names and colours themselves; a library can be kept private or shared with specific people. The product's two hard promises shape the whole interface — **nothing is shared until you share it**, and **nothing is destroyed without being told what will be lost**.
+Resonand is a personal audio archive: you upload recordings, they get transcribed, and you can then search across everything you have ever recorded by what was said in it. Field recordings live in **libraries** the user creates, names and colours themselves; a library can be kept private or shared with specific people. The product's two hard promises shape the whole interface — **nothing is shared until you share it**, and **nothing is destroyed without being told what will be lost**.
 
 This system was designed from scratch for v0. There was no prior visual language, no existing app, and no logo.
 
@@ -17,7 +17,7 @@ What this system does **not** decide is where anything goes. Navigation, routes,
 - The Chillax variable family, supplied by the user. Shipped in `assets/fonts/`.
 - Two dark-interface screenshots supplied as mood reference (thin sidebar, quiet chrome, near-monochrome).
 
-The direction was chosen by the user from four built candidates in `Sonarium - style directions.dc.html`; the winner was **1c Trace** (floating panels), with the waveform swapped to the rounded-bar treatment from 1b. `Sonarium - design system.dc.html` is the signed-off specimen board that this system was compiled from. Both are kept under `docs/internal/design/provenance/` for the record and are not part of the shipped system.
+The direction was chosen by the user from four built candidates in `Resonand - style directions.dc.html`; the winner was **1c Trace** (floating panels), with the waveform swapped to the rounded-bar treatment from 1b. `Resonand - design system.dc.html` is the signed-off specimen board that this system was compiled from. Both are kept under `docs/internal/design/provenance/` for the record and are not part of the shipped system.
 
 ---
 
@@ -85,7 +85,7 @@ Use `Icon` for every glyph; do not inline SVG in a screen. **`name` is one of th
 
 The registry is written out by hand in `Icon.tsx`, which is what keeps the other fourteen hundred icons out of the bundle — measured at 759 KB against 2.6 KB. Adding a glyph is two lines there; using one that is not registered is a compile error at the call site, and a thrown error in development if it arrives as a computed string. Four of the names above are deprecated aliases upstream and the registry absorbs that, so the system's vocabulary does not move when Lucide's does.
 
-**The mark** (`assets/sonarium-mark.svg`) is three radiating arcs — a signal, a sound wave — curling down into the letter S -- which in the lockup is the letter S, with `onarium` set after it. It ships as a finished asset from the brand kit rather than being drawn from the `Waveform` component's own geometry, which is how its four-stroke predecessor was built. No unicode characters are used as icons. The one exception is the `↵` and `⌘K` keyboard hints, which are typographic, not iconographic.
+**The mark** (`assets/resonand-mark.svg`) is three radiating arcs — a signal, a sound wave — curling down into the letter S -- which in the lockup is the letter S, with `onarium` set after it. It ships as a finished asset from the brand kit rather than being drawn from the `Waveform` component's own geometry, which is how its four-stroke predecessor was built. No unicode characters are used as icons. The one exception is the `↵` and `⌘K` keyboard hints, which are typographic, not iconographic.
 
 ---
 
@@ -112,7 +112,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |
 | `assets/` | The mark in three treatments, and the Chillax webfont |
-| [`.claude/skills/sonarium-design/`](../../.claude/skills/sonarium-design/SKILL.md) | Agent-Skills entry point, outside this folder |
+| [`.claude/skills/resonand-design/`](../../.claude/skills/resonand-design/SKILL.md) | Agent-Skills entry point, outside this folder |
 
 **Every component is `.tsx`, and the application's own source** (`DEC-21`, `UI-1d`–`UI-1h`). Each ships two files: the component and its `.prompt.md`, which is the only record of when *not* to use it. The hand-written `.d.ts` files are gone — they folded into the components they documented.
 

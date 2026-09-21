@@ -55,7 +55,7 @@ query is the only source of truth for permissions and everything goes through it
 - [x] **DAT-8** · **No seed ships in the package.** A seeded archive writes `storage_path` rows
       naming files that were never written: right for a test, wrong for an instance somebody is
       going to click through, where nothing plays and no waveform is drawn. The demo archive is
-      built outside the repository by the local development layer, through `sonarium import` and
+      built outside the repository by the local development layer, through `resonand import` and
       the real probe and waveform jobs, so a recording in it is indistinguishable from one
       somebody uploaded. Tests construct exactly the rows they assert on. ⇢ DAT-5
 

@@ -6,7 +6,7 @@ are what every query is written against, and the migration is what the archive a
 
 from __future__ import annotations
 
-from sonarium.db.models import METADATA
+from resonand.db.models import METADATA
 from sqlalchemy import Engine, inspect
 
 FTS_TABLES = frozenset({"audio_fts", "segment_fts"})

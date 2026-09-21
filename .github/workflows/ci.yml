@@ -80,7 +80,7 @@ jobs:
         # The console entry point is declared in pyproject and is how ING-11 and ING-13 are
         # actually used. A packaging mistake that breaks it would otherwise only show up in the
         # container.
-        run: uv run sonarium --help > /dev/null && uv run sonarium version
+        run: uv run resonand --help > /dev/null && uv run resonand version
 
       - name: The published document matches the committed snapshot
         working-directory: backend
@@ -88,7 +88,7 @@ jobs:
         # so a change to any endpoint that lands without refreshing it leaves the interface
         # typed against an API that no longer exists. This is the half of the check the backend
         # owns; the frontend's own test holds the types to the snapshot.
-        run: uv run sonarium openapi --check
+        run: uv run resonand openapi --check
 
   frontend:
     name: Frontend
@@ -146,7 +146,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: sonarium:ci
+          tags: resonand:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -157,11 +157,11 @@ jobs:
         # to the source tree rather than shipped inside the package -- and that the interface
         # the same image built is the one it serves.
         run: |
-          docker run -d --name sonarium-ci -p 8000:8000 \
-            -e SONARIUM_SECRET_KEY="$(openssl rand -hex 32)" \
-            -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
-            sonarium:ci
-          .github/scripts/wait-for-healthy.sh sonarium-ci 30 || { docker rm -f sonarium-ci > /dev/null; exit 1; }
+          docker run -d --name resonand-ci -p 8000:8000 \
+            -e RESONAND_SECRET_KEY="$(openssl rand -hex 32)" \
+            -e RESONAND_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
+            resonand:ci
+          .github/scripts/wait-for-healthy.sh resonand-ci 30 || { docker rm -f resonand-ci > /dev/null; exit 1; }
           curl -fsS localhost:8000/readyz
 
           # The shell, asked for the way a browser asks for it. `#root` is what main.tsx mounts
@@ -171,7 +171,7 @@ jobs:
           echo "$shell" | grep -q 'id="root"' || {
             echo "the image served no application shell:"
             echo "$shell" | head -20
-            docker rm -f sonarium-ci > /dev/null
+            docker rm -f resonand-ci > /dev/null
             exit 1
           }
 
@@ -182,7 +182,7 @@ jobs:
           curl -fsS "localhost:8000${bundle}" > /dev/null
           echo "served the shell and ${bundle}"
 
-          docker rm -f sonarium-ci > /dev/null
+          docker rm -f resonand-ci > /dev/null
 
       - name: Check a backup restores into a clean container
         # OPS-6. The restore was covered by a test that restored into a clean *database*, which
@@ -202,14 +202,14 @@ jobs:
           secret="$(openssl rand -hex 32)"
 
           # --- An instance with an archive in it ---------------------------------------
-          docker volume create sonarium-live > /dev/null
-          docker run -d --name sonarium-live -v sonarium-live:/data \
-            -e SONARIUM_SECRET_KEY="$secret" \
-            -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
-            sonarium:ci > /dev/null
-          .github/scripts/wait-for-healthy.sh sonarium-live
+          docker volume create resonand-live > /dev/null
+          docker run -d --name resonand-live -v resonand-live:/data \
+            -e RESONAND_SECRET_KEY="$secret" \
+            -e RESONAND_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
+            resonand:ci > /dev/null
+          .github/scripts/wait-for-healthy.sh resonand-live
 
-          library=$(docker exec sonarium-live sonarium create-admin \
+          library=$(docker exec resonand-live resonand create-admin \
             --email operator@example.test --display-name Operator \
             --password "a-password-long-enough-to-accept" | sed -n 's/^Personal library: //p')
           test -n "$library" \
@@ -217,48 +217,48 @@ jobs:
 
           # Generated in the container rather than committed: audio never enters this repository,
           # and the image carries the ffmpeg that makes one.
-          docker exec sonarium-live ffmpeg -loglevel error \
+          docker exec resonand-live ffmpeg -loglevel error \
             -f lavfi -i "sine=frequency=440:duration=3" /data/tmp/recording.flac
-          docker exec sonarium-live sonarium import /data/tmp/recording.flac --library "$library"
-          docker exec sonarium-live sonarium fsck --json
+          docker exec resonand-live resonand import /data/tmp/recording.flac --library "$library"
+          docker exec resonand-live resonand fsck --json
 
           # --- The backup, taken the way the instructions say to take it ----------------
-          docker exec sonarium-live sonarium backup /data/backup.sqlite
-          docker cp sonarium-live:/data/backup.sqlite backup.sqlite
+          docker exec resonand-live resonand backup /data/backup.sqlite
+          docker cp resonand-live:/data/backup.sqlite backup.sqlite
           # The originals are not in the backup, on purpose. This is the file-level copy the
           # note printed above tells the operator to take alongside it.
-          docker cp sonarium-live:/data/storage originals
+          docker cp resonand-live:/data/storage originals
 
           # Clean means clean. The volume goes with the container, so nothing below can pass by
           # reading what this instance left behind.
-          docker rm -f sonarium-live > /dev/null
-          docker volume rm sonarium-live > /dev/null
+          docker rm -f resonand-live > /dev/null
+          docker volume rm resonand-live > /dev/null
 
           # --- The restore, into a volume nothing has ever written ----------------------
-          docker volume create sonarium-restored > /dev/null
-          docker create --name sonarium-restored -v sonarium-restored:/data \
-            -e SONARIUM_SECRET_KEY="$secret" \
-            -e SONARIUM_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
-            sonarium:ci > /dev/null
-          docker cp backup.sqlite sonarium-restored:/data/sonarium.db
-          docker cp originals/. sonarium-restored:/data/storage
+          docker volume create resonand-restored > /dev/null
+          docker create --name resonand-restored -v resonand-restored:/data \
+            -e RESONAND_SECRET_KEY="$secret" \
+            -e RESONAND_TRANSCRIPTION_BASE_URL=http://whisper.invalid/v1 \
+            resonand:ci > /dev/null
+          docker cp backup.sqlite resonand-restored:/data/resonand.db
+          docker cp originals/. resonand-restored:/data/storage
           # Restored files carry the uid of whoever restored them, and the image runs as 10001.
           # Without this the instance exits on "attempt to write a readonly database" before it
           # serves anything, which is a restore that looks done and is not.
-          docker run --rm -u 0 -v sonarium-restored:/data sonarium:ci chown -R 10001:10001 /data
-          docker start sonarium-restored > /dev/null
-          .github/scripts/wait-for-healthy.sh sonarium-restored
+          docker run --rm -u 0 -v resonand-restored:/data resonand:ci chown -R 10001:10001 /data
+          docker start resonand-restored > /dev/null
+          .github/scripts/wait-for-healthy.sh resonand-restored
 
           # --- The step the instructions end on -----------------------------------------
           # `fsck` exits non-zero on any finding by itself; the count is the other half, because
           # an empty archive is clean and is not what was backed up.
-          docker exec sonarium-restored sonarium fsck --json | tee report.json
+          docker exec resonand-restored resonand fsck --json | tee report.json
           jq -e '.checked == 1' report.json > /dev/null \
             || { echo "the restored archive is not the archive that was backed up"; exit 1; }
           echo "the restored container holds the whole archive, originals included"
 
-          docker rm -f sonarium-restored > /dev/null
-          docker volume rm sonarium-restored > /dev/null
+          docker rm -f resonand-restored > /dev/null
+          docker volume rm resonand-restored > /dev/null
 
       - name: Check the CLI works inside the image
-        run: docker run --rm sonarium:ci sonarium version
+        run: docker run --rm resonand:ci resonand version

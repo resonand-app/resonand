@@ -46,7 +46,7 @@ number with a letter (`REV-4` → `REV-4a`).
       line can still change what happens. 🧪
 
 - [x] **REV-11** · **The deployment documentation recommended a second writer process.** Running
-      `sonarium work` as its own container against the same volume was documented as "the seam
+      `resonand work` as its own container against the same volume was documented as "the seam
       that made putting the worker in-process a safe choice". It is a seam for the code and not
       for the database: two processes hold two locks, and `DAT-2`'s guarantee falls back to a
       `busy_timeout` meant for a backup or a `sqlite3` shell. Withdrawn, in the four places that
@@ -130,7 +130,7 @@ number with a letter (`REV-4` → `REV-4a`).
       writes segments out of a file somebody else's export produced, which is at least as likely to
       carry impossible timings. 🧪
 
-- [x] **REV-9** · **Export read whole originals into memory**, so `sonarium export` would have run
+- [x] **REV-9** · **Export read whole originals into memory**, so `resonand export` would have run
       out of it on a multi-gigabyte original — in the command that is principle 1's proof.
       `shutil.copyfile`. 🧪
 
