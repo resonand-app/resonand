@@ -196,11 +196,13 @@ the decision and [`naming.md`](naming.md) holds the work.
 
 | Task | What it is |
 |---|---|
-| `NAM-1` | The name and what it touches, written down before a line changes |
-| `NAM-2` | The name claimed, and the repository moved to `resonand-app` with its pull requests |
 | `NAM-3` | The rename, everywhere the string appears |
 | `NAM-4` | An export written under the old name still reads |
 | `NAM-5` | The mark, the lockup and the icons |
+
+`NAM-1` and `NAM-2` are closed: the track was written, and the repository is
+`resonand-app/resonand` with all 140 of its pull requests, redirects behind it and the local
+remotes moved.
 
 `INF-11` waits on `NAM-5` rather than running first: the wordmark it was going to outline is the
 one the rename deletes, and outlining it twice is paying for the work twice.

@@ -56,7 +56,7 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
 
 ---
 
-- [ ] **NAM-1** · **The name, and what it touches — written down before a line changes.** This
+- [x] **NAM-1** · **The name, and what it touches — written down before a line changes.** This
       file, [`DEC-26`](decisions.md) superseding `DEC-7`, and the two open entries elsewhere that
       describe a world where the name does not change: [`INF-11`](infrastructure.md), whose whole
       remaining job is to outline a wordmark this rename deletes, and
@@ -72,7 +72,7 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       [`docs/v0-plan/`](.) or [`docs/next-plan/`](../next-plan/) still instructs somebody to build
       against the old name. 🔒
 
-- [ ] **NAM-2** · **The name claimed, and the repository moved.** `resonand-app` exists;
+- [x] **NAM-2** · **The name claimed, and the repository moved.** `resonand-app` exists;
       `sonarium-app/sonarium` is renamed and then transferred into it, rather than pushed into a
       fresh repository. The reason is that this repository's own conventions put load-bearing
       documentation in pull request descriptions — the alternative that was rejected, and what was
@@ -81,9 +81,32 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       repository keeps the commits and nothing else, and every `#127` cited across this plan stops
       resolving. The placeholder repository created under the new organisation has already been
       deleted, because a transfer cannot land on a name that is occupied.
-      *Also the domain, which `DEC-7` counted as part of claiming a name.*
+      *Also the domain, which `DEC-7` counted as part of claiming a name: `resonand.app`. The
+      string in `index.html` moves with `NAM-3` and the image it points at is drawn by `NAM-5`.*
       _Done when:_ `resonand-app/resonand` is this repository with its pull requests attached, the
       local remotes point at it, and `INF-6`'s entry carries a pointer here. ⇢ NAM-1
+
+      **Done.** Renamed, then transferred, and both halves kept everything: 140 pull requests, 133
+      merged and 7 closed, with their descriptions and their comment threads. The repository's
+      `created_at` is still 2026-09-02, which is the evidence it is the same repository rather than
+      a copy — and `sonarium-app/sonarium` redirects, so the two worktrees that were open across
+      the move never noticed. Remotes live in the shared git directory, so one `set-url` moved all
+      of them at once.
+
+      Three things worth knowing before the next one like it. **The transfer API is asynchronous
+      and answers with the repository as it was**, so the call returning the old `full_name` is not
+      a failure and a 404 at the new path five seconds later is not one either; poll the old path
+      until it answers with the new name. **The rename is reversible and the transfer is not**, so
+      renaming first and checking the pull requests survived is a free rehearsal of the risky half.
+      And **139 pull request descriptions were archived to `local-dev/state/pr-archive/` first**,
+      which was better insurance than a throwaway repository would have been: this token has no
+      `delete_repo` scope, so a rehearsal repository could not have been cleaned up afterwards.
+
+      The devkit moved with it — `resonand-app/resonand-devkit`, renamed, transferred, its
+      description reset and its remote re-pointed. **The local directory names did not move**, and
+      deliberately: `repos/sonarium-devkit` is the target of every worktree's symlinks, and renaming
+      a checkout orphans this project's agent memory, so that is the last step of the whole rename
+      rather than part of this one.
 
 - [ ] **NAM-3** · **The rename, everywhere the string appears.** `backend/sonarium` becomes
       `backend/resonand` under `git mv`, and with it the distribution name, the console script, the
