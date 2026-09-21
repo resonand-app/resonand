@@ -15,7 +15,7 @@ export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 /**
- * The Resonand lockup: the mark standing in for the S, with `onarium` set beside it.
+ * The Resonand lockup: the mark standing in for the S, with `re` before it and `onand` after.
  *
  * The mark itself lives in `design-system/assets/resonand-mark*.svg` as fixed-color SVGs for
  * contexts without CSS (the favicon, the guideline swatches); this is the same geometry, colored
@@ -28,8 +28,9 @@ export interface LogoProps extends HTMLAttributes<HTMLSpanElement> {
  * after it, and shares its baseline. A caller that could set them separately could draw a lockup
  * the kit does not contain.
  *
- * The word on screen is six letters, so the name is given rather than read off it. Without that
- * the nav announces "onarium".
+ * The S is the third letter, so the word is split around the mark rather than set after it, and
+ * what is on screen is `re` + `onand`. The name is given rather than read off that: without it
+ * the nav announces "reonand".
  */
 export function Logo({
   size = 18,
@@ -39,12 +40,27 @@ export function Logo({
   style,
   ...rest
 }: LogoProps) {
+  // One style for both halves: they are the same word, and a lockup whose letters differed on
+  // either side of the mark is one the brand kit does not contain.
+  const word = {
+    fontFamily: 'var(--font-display)',
+    fontWeight: 'var(--weight-semibold)',
+    fontSize: `calc(var(--type-wordmark-scale) * ${String(size)}px)`,
+    // The mark sets the lockup's height; leading below the baseline would only pad it.
+    lineHeight: 'var(--type-wordmark-leading)',
+    color: 'var(--text)',
+  } as const;
   return (
     <span
       {...(showWordmark ? { role: 'img', 'aria-label': label } : {})}
       style={{ display: 'flex', alignItems: 'baseline', ...style }}
       {...rest}
     >
+      {showWordmark && (
+        <span aria-hidden style={{ ...word, marginRight: 'var(--type-wordmark-lead)' }}>
+          re
+        </span>
+      )}
       <svg
         width={size * MARK_ASPECT}
         height={size}
@@ -60,19 +76,8 @@ export function Logo({
         />
       </svg>
       {showWordmark && (
-        <span
-          aria-hidden
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 'var(--weight-semibold)',
-            fontSize: `calc(var(--type-wordmark-scale) * ${String(size)}px)`,
-            marginLeft: 'var(--type-wordmark-lead)',
-            // The mark sets the lockup's height; leading below the baseline would only pad it.
-            lineHeight: 'var(--type-wordmark-leading)',
-            color: 'var(--text)',
-          }}
-        >
-          onarium
+        <span aria-hidden style={{ ...word, marginLeft: 'var(--type-wordmark-lead)' }}>
+          onand
         </span>
       )}
     </span>

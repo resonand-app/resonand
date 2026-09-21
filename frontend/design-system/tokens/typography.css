@@ -17,7 +17,8 @@
 
   /* Wordmark — Chillax, and only the wordmark. The mark is the S, so the artwork fixes all three
      of these against the mark's height: the lockup has one set of proportions, not one per site.
-     `lead` is the gap after the mark; `leading` is the line box, which the mark already sets. */
+     `lead` is the gap either side of the mark, which the word is split around; `leading` is the
+     line box, which the mark already sets. */
   --type-wordmark-scale: 0.9615;
   --type-wordmark-lead: 0.101em;
   --type-wordmark-leading: 1;

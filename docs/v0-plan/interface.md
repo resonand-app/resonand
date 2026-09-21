@@ -1009,14 +1009,16 @@ The mark was signed off a long way before the wordmark was, so until now the sys
 beside each other and called it a lockup: a mark that reads as an S, and then the word starting
 with another one.
 
-- [x] **UI-36** · 🧪 The lockup as the kit draws it -- the mark standing in for the S, `onarium`
-      set after it, one baseline, and the proportions fixed rather than chosen: the wordmark is
-      `--type-wordmark-scale` of the mark's height and sits `--type-wordmark-lead` after its ink.
+- [x] **UI-36** · 🧪 The lockup as the kit draws it -- the mark standing in for the S, with
+      `re` before it and `onand` after, one baseline, and the proportions fixed rather than
+      chosen: the wordmark is `--type-wordmark-scale` of the mark's height and sits
+      `--type-wordmark-lead` either side of its ink.
       `size` reaches both halves, because a call site that could size them apart could draw a
       lockup the kit does not contain. It stays live text rather than the kit's PNGs, which is
       what keeps `color` and `[data-theme="light"]` working on it.
-      **The word on screen is six letters**, so the lockup is named rather than read: without that
-      the nav announces "onarium" to everybody who cannot see it.
+      **The letters on screen are the name without its S**, so the lockup is named rather than
+      read: without that the nav announces "reonand" to everybody who cannot see it. `NAM-3a` is
+      why the test now asserts them against the product's name rather than as a literal.
       _Done when:_ the nav, the sign-in screen and both brand specimens draw the kit's lockup, and
       a test fails if the halves stop scaling together or the name stops being the product's.
       ⇢ UI-1d, UI-1i
