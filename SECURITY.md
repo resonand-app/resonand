@@ -6,8 +6,9 @@ is the standard reports are read against.
 
 ## Status
 
-**Pre-alpha. There is no release, no published image and no supported version.** `main` is the only
-thing that exists, so a fix lands there and nowhere else — there is nothing to backport to.
+**The first version is complete and in private use. There is no release, no published image and no
+supported version.** `main` is the only thing that exists, so a fix lands there and nowhere else —
+there is nothing to backport to.
 
 If you are running this, you built it yourself from a commit you chose, and you are ahead of where
 the project says it is. That is allowed, and a report from you is worth more than one from anybody

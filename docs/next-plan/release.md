@@ -9,7 +9,7 @@ takes for somebody who is not its author to read it, install it and keep it runn
 Every task in [`docs/v0-plan/`](../v0-plan/) closed, and then these three, which are what have to
 be true the moment somebody outside can see any of it.
 
-- [ ] **INF-10** · `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue and pull request templates, and
+- [x] **INF-10** · `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue and pull request templates, and
       `SECURITY.md` with a contact address. Deliberately not done earlier: community scaffolding
       before there is anything to contribute to is furniture in an empty room. It stops being
       furniture the moment the repository opens, because from that moment somebody can file an
@@ -17,6 +17,26 @@ be true the moment somebody outside can see any of it.
       *`SECURITY.md` already ships and routes every report through GitHub's private vulnerability
       reporting, which does not exist on a private repository — so the file is correct and inert
       until this gate, and the contact address is the half that stays owed.*
+
+      **Done, and two of the four went differently.** The contact address is **not** owed after
+      all: it was declined deliberately, because an address in a public file cannot be rotated, and
+      the private reporting thread *is* the channel — `SECURITY.md` already says what to do when a
+      report goes unanswered on it. What that file did need was its status block, which still said
+      pre-alpha where `REL-6` now says the first version is complete.
+
+      And `CONTRIBUTING.md` is not the narrow rule-book this entry assumed. `REL-6`'s README says
+      contribution guidelines arrive with the first installable release, so a page of commit
+      conventions would have contradicted it on the day both landed. It says instead what *is*
+      welcome now — security reports, disagreement with `VISION.md`'s premises, bugs hit running
+      it, and whether a transcription endpoint works — and what waits, with the reason. The rules
+      are there for somebody who opens a pull request anyway, because sometimes the fix is smaller
+      than the issue describing it.
+
+      The code of conduct is deliberately **not** the Contributor Covenant: that assumes an
+      enforcement body, a reporting address and a graduated response, and this project has none of
+      the three. One that describes a process nobody will follow is worse than a short one that is
+      true, so it names the whole toolbox a repository owner actually has -- edit, delete, lock,
+      block -- rather than implying more.
 
 - [ ] **REL-6** · **The README stops describing a project being built and starts describing the
       first version**, and [`ROADMAP.md`](../../ROADMAP.md) is brought level with it: anything still
