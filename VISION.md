@@ -1,8 +1,8 @@
-# Resonand — vision
+# resonand — vision
 
 Why this project exists, who it is for, and where it is going. It carries no technical detail —
 the data model, permission resolution and interface brief live in a working specification that is
-not published while the first version is being built.
+kept out of this repository.
 
 The order is deliberate. Decisions in the early sections govern the later ones, never the other
 way round. If a technical decision ever contradicts something written here, it is the technical
@@ -14,44 +14,46 @@ decision that gets revisited.
 
 ### What it is
 
-A self-hosted archive for the recordings that matter. It keeps the original intact, transcribes
-it with whichever service you choose, and lets you search inside everything you have ever
-recorded.
+A self-hosted archive for the recordings that matter. Organised your way in libraries, categories
+and tags, shared with the people it belongs to, transcribed by whichever service you choose, and
+searchable across everything you have ever recorded.
 
 ### The problem
 
-Important audio is not lost for lack of space. It is lost because it ends up scattered across old
-phones, messaging threads and cloud accounts, and because an audio file you cannot skim is an
-audio file nobody ever opens again. It ends up existing without being available.
+The recordings that matter most are the ones with no second copy, and what they usually get is a
+folder on somebody else's hardware. A folder holds files; it does not let you find anything inside
+them. An audio file you cannot skim is an audio file nobody ever opens again, so it ends up
+existing without being available.
 
 ### The verb the project rests on
 
 **Re-find**, not store. Storing audio is what a folder does, and it is free. Everything that
-makes Resonand worth existing — transcription, search inside the audio, a navigable waveform,
+makes resonand worth existing — transcription, search inside the audio, a navigable waveform,
 organisation that persists — is in the service of finding one specific moment again inside
 hundreds of hours.
 
-Control over your data is the precondition, not the proposition. Inside the self-hosted community
-data sovereignty is not a differentiator: everybody there takes it for granted. Outside that
-community it very much is.
+Who that argument lands with decides how loudly to make it. Inside the self-hosted community data
+sovereignty is not a differentiator: everybody there takes it for granted, and re-finding is the
+whole of what is being offered. Outside it, owning the recordings that matter is the proposition
+rather than the precondition, and saying so plainly is what widens the audience past the homelab.
 
-### A destination, not a replacement
+### Where recordings end up, and later where some are made
 
-**Resonand is not a recorder.** It does not compete with the voice memos app on your phone; it is
-where those files end up. The operating system's recorder is not the rival, it is the input.
+resonand is where recordings end up. The operating system's recorder is the input, not the rival,
+and nobody has to change how they record in order to start using it.
 
-That has two intended consequences. Nobody has to change how they record. And it avoids the one
-piece of ground where device makers have a structural advantage, because their record button is
-built into the system.
-
-First-party capture — recording from the application, a mobile app — stays a long-term
-possibility for when the project is mature. Never a precondition for being useful.
+**That is sequencing, not identity.** The record button on a phone is built into the system, which
+is the one piece of ground where device makers have a structural advantage — so competing for it
+before the archive is worth keeping things in would be the wrong order, and capture is deliberately
+not part of the first version. Once the archive is worth keeping things in, recording is one more
+thing it offers rather than a different product. Recording from the browser and a mobile
+application that captures are both in [`ROADMAP.md`](ROADMAP.md).
 
 ### What it is not
 
-Not a recorder. It does not transcribe by itself. Not an audio editor, not a podcast player, not
-a music library manager. It is where audio goes once it has been recorded, with whatever it takes
-for it to still be useful ten years from now.
+It does not transcribe by itself. Not an audio editor, not a podcast player, not a music library
+manager. It is where audio goes once it has been recorded, with whatever it takes for it to still
+be useful ten years from now.
 
 ---
 
@@ -85,10 +87,11 @@ changes**; it is the same for every layer. What changes is the barrier to entry.
 
 ### The voices you do not want to lose
 
-You recorded your grandmother explaining what the village used to be like, across three
-afternoons, forty minutes each. You have not opened it in two years because you cannot remember
-which one has the part about the factory, and listening to all of it to find out is a job you
-never quite start. With an archive, you type *factory* and you are there in three seconds.
+Your child's first words. A long conversation with your father one evening. A song your
+grandmother used to sing. Years of them, spread across three phones and a chat history, and each
+one impossible to replace. You remember a few words — something somebody said, a line of a song —
+but not in which recording, and listening to all of them to find it is a job you never quite
+start. With an archive, you type the word you remember and you are there in three seconds.
 
 The emotional anchor. It is what sells the project.
 
@@ -115,7 +118,7 @@ Lectures and notes from a whole course, minutes and meetings of local organisati
 and musical ideas, association and village-history archives, language and dialect fieldwork,
 soundscapes and birdsong, a spoken personal diary.
 
-That list is visibly heterogeneous on purpose: it is what shows Resonand is a platform and not a
+That list is visibly heterogeneous on purpose: it is what shows resonand is a platform and not a
 single-purpose tool.
 
 > Soundscapes and birdsong are the one case where transcription contributes nothing and the
@@ -129,11 +132,12 @@ single-purpose tool.
 Non-negotiable. If a future decision contradicts one of these, it is the decision that falls.
 
 1. **No captivity.** The original is kept intact, and there is always one command that dumps
-   everything — audio, metadata and transcripts — in a format readable without Resonand.
+   everything — audio, metadata and transcripts — in a format readable without resonand.
 2. **Your voice does not leave unless you ask.** Audio only leaves the instance when the user
-   requests an external transcription, and the interface says so in plain words. Where a standing
-   configuration does the asking on your behalf — a watched folder set to transcribe on arrival —
-   it is opt-in, and it says what it will send.
+   requests an external transcription, and the interface says so in plain words. This version has
+   no standing configuration that sends audio anywhere on its own; where one ever does the asking
+   on your behalf — a watched folder set to transcribe on arrival — it is opt-in, and it says what
+   it will send.
 3. **Engine independence.** Transcription is a service consumed behind a provider interface.
    Changing engine must cost nothing and lose nothing.
 4. **The API is the product.** The web interface is one client among others. Every MCP tool has to
@@ -146,7 +150,7 @@ Non-negotiable. If a future decision contradicts one of these, it is the decisio
 ### Never
 
 Audio editing. Podcast player. Music library manager. A transcription engine inside the
-application.
+application. A feature reserved for paying users.
 
 ---
 
@@ -191,14 +195,24 @@ free-software exemptions do not cover high-risk systems.
 
 ---
 
-## 7. Licence and governance
+## 7. Licence, governance and sustainability
 
 **AGPL-3.0, with no CLA.** The AGPL keeps every door open: it allows third parties to host it
 provided they publish their modifications, and it prevents anyone from building a better closed
-version. Declining a CLA builds trust, and the only model it closes off is open core — which was
-the worst fit anyway.
+version. Declining a CLA builds trust.
 
 The **name** is what protects official status, independently of the code licence.
+
+**Nothing is for sale today, and nothing needs to be.** If paid services ever exist, they will
+sit around the application, never inside it: running things for people who would rather not run
+them themselves — transcription, hosting, installation and support. **There will never be a
+feature reserved for paying users.** Anything a paid service offers, a self-hosted instance can do
+with a provider of its own choosing, because a paid service would sit behind the same provider
+interface as every other engine.
+
+The application is the base the whole ecosystem stands on, and no business model gets to erode
+it. Open core is ruled out by that sentence alone: there is no part of resonand that could be held
+back without breaking the promise this document makes.
 
 ---
 

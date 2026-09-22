@@ -11,7 +11,7 @@ it says so — an operations document that overstates what has been tested is wo
 
 Three things:
 
-- **The image** — one container, backend and (later) the web interface together. It runs the job
+- **The image** — one container, the backend and the web interface together. It runs the job
   worker in-process, so there is nothing else to schedule.
 - **The volume at `/data`** — the SQLite database and the tree of original files. This is the
   archive. Everything else is replaceable.
@@ -27,6 +27,34 @@ docker compose logs -f resonand
 
 The instance migrates its own database on the way up. The first account you create through the
 API is the administrator, and after that registration is administrator-only.
+
+## Transcription
+
+`RESONAND_TRANSCRIPTION_BASE_URL` is the one setting with no sensible default, because there is
+nothing to fall back to: this application does not transcribe, and an instance without an endpoint
+stores and plays audio and searches nothing.
+
+Point it at any endpoint that speaks the OpenAI-compatible shape **and returns timed segments** —
+the two are not the same claim, and the second is where most of them fail. Give it an address on
+your own network and the interface says so on every recording, because it can tell a private
+address from a public one and you should not have to take that on trust:
+
+```ini
+# A faster-whisper server on the same network as the instance. The address below is an example
+# on private space -- substitute the one yours is actually on.
+RESONAND_TRANSCRIPTION_BASE_URL=http://192.168.10.20:8000/v1
+RESONAND_TRANSCRIPTION_MODEL=Systran/faster-whisper-large-v3
+```
+
+**Check it before you trust it.** `resonand check-transcription` sends a generated tone, never any
+of your audio, and says what the endpoint actually did with it:
+
+```bash
+docker compose exec resonand resonand check-transcription
+```
+
+Which endpoints are verified, which are known to fail and why, and the exact criterion a model has
+to meet are in [`transcription.md`](transcription.md).
 
 ### How much disk the volume needs
 
