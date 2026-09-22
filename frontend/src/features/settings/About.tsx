@@ -12,6 +12,10 @@
  * section somebody opened. Section 13 asks for a *prominent* offer, and a line reachable only by
  * guessing which tab hides it is not one.
  *
+ * The copyright holder is named beside the licence because the AGPL's appendix asks an
+ * interactive program to state one, which section 13 on its own does not. It is a legal notice
+ * and not a credit line, which is why it sits in the same sentence as the licence.
+ *
  * The link does not depend on the API. The version does -- it comes from `GET /instance` -- so the
  * sentence has a second form for the moment before that answers, or for an instance whose API is
  * unreachable. Offering the source is the part that must not be contingent on anything.

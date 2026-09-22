@@ -168,8 +168,8 @@
     }
   },
   "about": {
-    "offer": "Resonand {{version}}, free software under the AGPL-3.0.",
-    "unknownVersion": "Resonand, free software under the AGPL-3.0.",
+    "offer": "Resonand {{version}}, copyright 2026 sirwilliamdev. Free software under the AGPL-3.0.",
+    "unknownVersion": "Resonand, copyright 2026 sirwilliamdev. Free software under the AGPL-3.0.",
     "source": "Get the source"
   }
 }

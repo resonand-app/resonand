@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "description": "The Resonand web interface -- one client of the API among others.",
   "license": "AGPL-3.0-only",
+  "author": "sirwilliamdev",
   "repository": {
     "type": "git",
     "url": "https://github.com/resonand-app/resonand"
