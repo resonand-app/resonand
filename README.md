@@ -1,11 +1,8 @@
 <p align="center">
-  <img src="docs/assets/recording.png" alt="A recording open in resonand, playing a third of the way through: the waveform with the part already played drawn behind the playhead, the transcript following it with the line being spoken picked out, and the recording's metadata">
+  <img src="docs/assets/banner.jpg" alt="resonand — a self-hosted archive for the recordings that matter">
 </p>
 
-<h1 align="center">resonand</h1>
-
 <p align="center">
-  <strong>A self-hosted archive for the recordings that matter.</strong><br>
   Organised your way, shared with the people it belongs to,<br>
   and searchable inside everything you have ever recorded.
 </p>
@@ -13,6 +10,10 @@
 <p align="center">
   <a href="LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
   <img alt="Status: first version in private use" src="https://img.shields.io/badge/status-private%20use-orange">
+</p>
+
+<p align="center">
+  <img src="docs/assets/recording.png" alt="A recording open in resonand, playing a third of the way through: the waveform with the part already played drawn behind the playhead, the transcript following it with the line being spoken picked out, and the recording's metadata">
 </p>
 
 ---
