@@ -394,10 +394,10 @@ OpenAPI document against the generated types.
 
 ## Design and UI work
 
-Any interface or asset work goes through the **`resonand-design`** skill
-(`.claude/skills/resonand-design/SKILL.md`). Read `frontend/design-system/README.md` first, and
-the `.prompt.md` beside a component before using it. `npm run dev` then `#/specimens` shows every
-component, glyph and guideline card in either theme.
+Read `frontend/design-system/README.md` before any interface or asset work. It carries the whole
+visual language in prose — the foundations, the content rules, the iconography and the file index
+— and the `.prompt.md` beside a component is the only record of when *not* to use it. `npm run
+dev` then `#/specimens` shows every component, glyph and guideline card in either theme.
 
 The waveform is drawn from real stored peaks at exactly five sizes. When the peaks job has not
 run there is **no waveform** — a dashed rule and a duration, never an invented shape.

@@ -112,7 +112,6 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |
 | `assets/` | The mark in three treatments, and the Gabarito and Geist webfonts |
-| [`.claude/skills/resonand-design/`](../../.claude/skills/resonand-design/SKILL.md) | Agent-Skills entry point, outside this folder |
 
 **Every component is `.tsx`, and the application's own source** (`DEC-21`, `UI-1d`–`UI-1h`). Each ships two files: the component and its `.prompt.md`, which is the only record of when *not* to use it. The hand-written `.d.ts` files are gone — they folded into the components they documented.
 
