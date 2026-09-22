@@ -40,16 +40,26 @@ describe('the instance offers its source', () => {
     // The version comes from `GET /instance` and the link does not. Section 13 is owed whether or
     // not the instance is well enough to answer a query.
     expect(screen.getByRole('link')).toBeInTheDocument();
-    expect(screen.getByText(/free software under the AGPL-3.0/)).toBeInTheDocument();
+    expect(screen.getByText(/Free software under the AGPL-3\.0/)).toBeInTheDocument();
   });
 
   it('names the version once the instance has answered', async () => {
     show();
     await waitFor(() => {
       expect(
-        screen.getByText(/^Resonand \S+, free software under the AGPL-3\.0\.$/),
+        screen.getByText(
+          /^Resonand \S+, copyright 2026 sirwilliamdev\. Free software under the AGPL-3\.0\.$/,
+        ),
       ).toBeInTheDocument();
     });
+  });
+
+  it('names the copyright holder whether or not the version is known', () => {
+    // The appendix asks an interactive program to state who holds the copyright, and the version
+    // is the one part of this line that depends on the API. A notice that disappears when a query
+    // fails is not one.
+    show();
+    expect(screen.getByText(/copyright 2026 sirwilliamdev/)).toBeInTheDocument();
   });
 
   it('leaves the archive rather than navigating out of it', () => {

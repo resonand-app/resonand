@@ -163,6 +163,8 @@ expensive later.
 
 ## Licence
 
+Copyright (C) 2026 sirwilliamdev.
+
 [AGPL-3.0](LICENSE), with no CLA. You can run it, modify it and host it; if you host a modified
 version for others, you publish your changes. There will never be a feature reserved for paying
 users — see [`VISION.md`](VISION.md#7-licence-governance-and-sustainability).
