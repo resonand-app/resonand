@@ -48,6 +48,18 @@ repos:
         args: [--maxkb=512]
       - id: detect-private-key
 
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+        # Provider-issued credentials, which `detect-private-key` misses because it only knows PEM
+        # blocks. It will not catch a human-chosen password in prose -- no prefix, low entropy,
+        # and measured against the one that reached this repository, which it passes. That class
+        # is what the two refusals below are for.
+        # No .gitleaks.toml: it passes clean here. If a fixture ever trips it, that file names the
+        # rule and the path rather than excluding the suites, which is how a real finding gets
+        # lost among the ignored ones.
+
   - repo: local
     hooks:
       - id: no-internal-docs
@@ -58,6 +70,25 @@ repos:
         entry: docs/internal must not be committed -- it is deliberately local
         language: fail
         files: '^docs/internal/'
+
+      - id: no-agent-tooling
+        name: refuse to commit agent tooling
+        # Skills and agent definitions live in the devkit and are symlinked in, so nothing under
+        # .claude/ is tracked and AGENTS.md is the whole of what a contributor needs. A skill is
+        # written for one machine and says so -- paths, addresses, and once a working password.
+        entry: .claude must not be committed -- agent tooling lives in the devkit
+        language: fail
+        files: '^\.claude/'
+
+      - id: no-local-dev
+        name: refuse to commit the local development layer
+        # The parallel-agent layer is named in .git/info/exclude, which lives in the common git
+        # directory: it is not committed, not pushed and not in any backup. Recloning or clearing
+        # it silently re-arms `git add -A` over local-dev/state/, which holds every slot's archive
+        # and the session signing key. This says the same thing somewhere that travels.
+        entry: local-dev must not be committed -- it is this machine's development layer
+        language: fail
+        files: '^local-dev/'
 
       - id: ruff-check
         name: ruff (lint)
