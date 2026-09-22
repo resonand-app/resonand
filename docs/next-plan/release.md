@@ -76,6 +76,31 @@ be true the moment somebody outside can see any of it.
       because the panel prints its host and a published screenshot should not carry somebody's own
       network address.
 
+- [x] **REL-1a** · **The hero shot plays from a third of the way in**, with the transcript
+      following it, so the waveform carries the played trace behind its playhead instead of
+      reading as a recording nobody has opened. Out of `REL-1`, whose shot sat at three seconds.
+
+      **Done, and the constraint was not where it looked.** The player panel and the transcript
+      are one scrolling column, and following playback centres the active line — except that a
+      target inside the panel's own height snaps to the top instead, leaving the panel whole
+      (`UI-11g`). Past that the panel scrolls away behind its fade and the shot loses the waveform
+      it is of: `opacity: 0`, measured, on the first two attempts. So the line being spoken has to
+      be the **fourth or earlier** while the playhead is a third of the way in, and no recording
+      in the world met both.
+
+      What was wrong was the demo world rather than the shot. `Grandma's childhood school` runs
+      thirty-eight minutes and was transcribed for fifty-six seconds of them — a shape no real
+      archive has, and one that made every screenshot of a long recording a screenshot of its
+      first minute. Its transcript now runs the whole length, one line every few minutes, and the
+      fourth falls at `12:45` of `38:14`. That spacing is load-bearing and `demo/content.py` says
+      so where it is written.
+
+      The cost is a rebuild of `demo-base-full` rather than anything on screen: the hero keeps the
+      library, the note, the tag and the category it always had. `library.png` and
+      `library-light.png` came back byte-identical across the rebuild, which is the world
+      reproducing itself. `search.png` is retaken because the bar at the foot of the shell carries
+      the same recording and its trace moved too.
+
 ## Gate 2 · The release
 
 Several weeks of real personal use on top of gate 1, with what went wrong fixed rather than noted.
