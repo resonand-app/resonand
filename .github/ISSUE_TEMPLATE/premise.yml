@@ -1,0 +1,28 @@
+name: Disagree with a premise
+description: Something in VISION.md or ROADMAP.md is wrong, and here is why.
+labels: ["premise"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is the most useful thing you can open. Everything in this project follows from
+        `VISION.md`, so a premise is cheap to change now and expensive later — and code is not open
+        for contribution yet, which makes an argument worth more than a patch.
+  - type: input
+    id: where
+    attributes:
+      label: Which claim
+      description: The section, and the sentence if you can.
+      placeholder: "VISION.md §1 — \"resonand is where recordings end up\""
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it is wrong
+      description: What it rules out, or what it costs somebody, or where it stops being true.
+    validations: { required: true }
+  - type: textarea
+    id: instead
+    attributes:
+      label: What you would put there instead
+      description: Optional. "This is wrong" on its own is still worth opening.

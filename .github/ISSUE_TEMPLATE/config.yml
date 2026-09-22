@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/resonand-app/resonand/security/advisories/new
+    about: Privately, so a working exploit stays off a public tracker while it still works. Never open a public issue for one.
+  - name: Which transcription endpoints work
+    url: https://github.com/resonand-app/resonand/blob/main/deploy/transcription.md
+    about: The criterion an endpoint plus a model has to meet, and what has been verified. Run `resonand check-transcription` before reporting one as broken.

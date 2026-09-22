@@ -1,0 +1,41 @@
+name: Something is broken
+description: It did not do what it said it would, or it stopped doing it.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        You built this from source, which means you are ahead of where the project says it is —
+        that makes your report better than most. **Not for a vulnerability**: those go through
+        private reporting, linked on the previous page.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what you expected instead
+      placeholder: |
+        I uploaded a 3-hour .m4a and the waveform never appeared.
+        I expected a waveform within a few minutes, as the shorter ones get.
+    validations: { required: true }
+  - type: textarea
+    id: steps
+    attributes:
+      label: What you did, in order
+      description: Enough that somebody else can reach the same screen.
+    validations: { required: true }
+  - type: input
+    id: commit
+    attributes:
+      label: Which commit you built
+      description: "`git rev-parse --short HEAD`. There is no release yet, so this is the only version there is."
+    validations: { required: true }
+  - type: textarea
+    id: fsck
+    attributes:
+      label: What `resonand fsck --json` says
+      description: Only if a recording or its file is involved. It says whether the database and the files still agree.
+      render: json
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything about your instance that might matter
+      description: Reverse proxy, subpath or subdomain, transcription endpoint, how big the archive is, which browser.
