@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/recording.png" alt="A recording open in resonand: the waveform, the transcript following playback, and the recording's metadata">
+  <img src="docs/assets/recording.png" alt="A recording open in resonand, playing a third of the way through: the waveform with the part already played drawn behind the playhead, the transcript following it with the line being spoken picked out, and the recording's metadata">
 </p>
 
 <h1 align="center">resonand</h1>
