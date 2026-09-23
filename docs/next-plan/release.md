@@ -333,10 +333,28 @@ dependencies allow.
       person with an account rather than the one with the server is a different document and has no
       identifier yet.
 
-- [ ] **REL-3** · Public API documentation and a token guide. ⇢ REL-2
+- [x] **REL-3** · Public API documentation and a token guide. ⇢ REL-2
       *The token half is one sentence rather than a guide: API tokens were cut from the first
       version, the API answers to the session cookie, and documenting a credential nobody can mint
       is the fault `REL-6` took out of the README, committed a second time in a second place.*
+
+      **Done as [`API.md`](../../API.md), and it is short on purpose.** The instance already
+      publishes its own document at `/api/openapi.json` and serves a browsable copy at `/api/docs`,
+      and that document is the field-level truth — a page restating every endpoint beside it is a
+      second source that goes stale the first time one of them changes. What it carries instead is
+      what the document cannot say: how a script gets a session and holds it, what the conventions
+      mean, which endpoints are worth automating, and what the API deliberately will not do.
+
+      The token half is the sentence it was scoped as. A script signs in as an account somebody
+      created and keeps a cookie jar; personal access tokens are on [`ROADMAP.md`](../../ROADMAP.md).
+
+      *Verified against a running instance*: `/api/docs` and `/api/openapi.json` both answer,
+      sign-in sets `resonand_session` `HttpOnly` `SameSite=lax` with a 30-day `Max-Age`,
+      `GET /api/instance` answers without a session, lists carry `{items, limit, offset, total}`, a
+      uuid you cannot read answers **404** as `application/problem+json`, no session at all answers
+      401, and an `Origin` header from elsewhere gets no `Access-Control-*` back. The problem
+      document also carries a `request_id`, which this entry did not know about and which is now
+      the thing to quote in a bug report.
 
 - [ ] **REL-5** · **The tag.** Semantic versioning, `CHANGELOG.md`, and `v0.1.0` with the published
       image. ⇢ OPS-8, OPS-12, REL-2, REL-7

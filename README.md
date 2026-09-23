@@ -145,6 +145,7 @@ player, no music library manager, and no transcription engine inside the applica
 | [`docs/next-plan/`](docs/next-plan/) | What is scoped and waiting for a version to claim it |
 | [`deploy/`](deploy/README.md) | What an operator needs: the first account, the volume, the `.env`, the proxy, backups, and which transcription endpoints work |
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
+| [`API.md`](API.md) | The HTTP API: how a script signs in, the conventions, and what is worth automating |
 | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what resonand assumes, and the limitations it knows about |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | What is welcome today, what is not open yet, and the reason for each |
 
