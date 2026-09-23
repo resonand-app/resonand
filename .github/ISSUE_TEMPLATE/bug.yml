@@ -23,10 +23,10 @@ body:
       description: Enough that somebody else can reach the same screen.
     validations: { required: true }
   - type: input
-    id: commit
+    id: version
     attributes:
-      label: Which commit you built
-      description: "`git rev-parse --short HEAD`. There is no release yet, so this is the only version there is."
+      label: Which version you are running
+      description: "`resonand version`, or the line in Settings -> About. If you built a commit rather than running a release, give `git rev-parse --short HEAD` instead and say so."
     validations: { required: true }
   - type: textarea
     id: fsck

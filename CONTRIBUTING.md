@@ -1,44 +1,46 @@
 # Contributing
 
-The short version: **issues and security reports are welcome now, code is not yet.** That is a
-deliberate stage rather than a closed door, and this page says which is which.
+The short version: **issues, security reports and code are all welcome.** Code opened with
+`0.1.0`, which is what this page said it was waiting for.
 
 ## What is welcome today
 
-**Security reports.** [`SECURITY.md`](SECURITY.md) is the whole of it. If you built this from a
-commit and found a way into somebody else's recordings, that is worth hearing about long before
-there is anything to install — use GitHub's private vulnerability reporting rather than an issue.
+**Security reports.** [`SECURITY.md`](SECURITY.md) is the whole of it. If you found a way into
+somebody else's recordings, that is the report this project most wants — use GitHub's private
+vulnerability reporting rather than an issue, because a working exploit on a public tracker is one
+anybody can run against an instance that has not upgraded yet.
 
 **Disagreement with the premises.** [`VISION.md`](VISION.md) says what this is for, who it is for
 and what it will never do. An issue arguing that one of those is wrong is more useful than a patch,
 because everything else follows from them and they are cheap to change now and expensive later.
 
-**Bugs you hit running it.** You built it from source, so you are ahead of where the project says
-it is — which makes your report better than most. Say what you did, what happened and what you
-expected.
+**Bugs you hit running it.** Say what you did, what happened and what you expected, and give the
+version — `resonand version`, or the line in **Settings → About**. If you are on a commit rather
+than a release, say which.
 
 **Whether it works with your transcription endpoint.** [`deploy/`](deploy/README.md) lists what has
 been verified, and the list is short because it only contains things somebody actually ran.
 `resonand check-transcription` prints what an endpoint did with a generated tone before any of your
 audio moves — run it before reporting an endpoint as broken.
 
-## What is not open yet
+**Code.** It was held back while the first version was used in private, because in this niche
+credibility comes from the author actually using the thing. That is done, so the door is open —
+with one request: **open an issue before a large change**, so that nobody spends a weekend on
+something that turns out to disagree with [`VISION.md`](VISION.md). A small fix needs no
+permission.
 
-**Code.** Not because contributions are unwelcome, but because the first version is deliberately
-being used in private before it is offered to anyone: in this niche credibility comes from the
-author actually using the thing, and the fastest way to lose it is to ship something that loses
-files. A pull request today would be reviewed against conventions that are still moving, by
-somebody whose attention is on getting the archive to survive several weeks of real use.
+**Translations.** Every user-visible string lives in `frontend/src/i18n/en/`, so a second language
+is a directory beside it rather than a change to the interface. The machinery is there and has
+never been exercised by a real translation; the first one will find what English was hiding.
 
-**Translations.** Every user-visible string already lives in `frontend/src/i18n/en/`, so the
-machinery is there and the second language is not a big change. It waits for the same moment, for
-the same reason: a translation of copy that is still being rewritten is work thrown away.
+## What is still slow
 
-Both open with the first installable release. If you want to be told when, watch the repository.
+One person maintains this, in the evenings. A pull request will be read, and it may be read a week
+later. Nothing here is abandoned because it was quiet for a fortnight.
 
-## If you are going to open a pull request anyway
+## Opening a pull request
 
-Sometimes the fix is smaller than the issue describing it. In that case:
+Sometimes the fix is smaller than the issue describing it. Either way:
 
 - **One concern per pull request**, and its description answers four things: the problem in terms
   somebody would recognise from using the archive, what changed and why that way, what you rejected,

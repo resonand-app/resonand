@@ -9,10 +9,14 @@ transcribes it through a provider you choose, and lets you search inside every t
 A single container — Python 3.12 + FastAPI + SQLite/FTS5 on the back, React 19 + TypeScript + Vite
 on the front, one in-process job worker. Licence AGPL-3.0.
 
-**Status: pre-alpha. Nothing is released, nothing is installable, there is no published image.**
-Do not add release notes, version bumps, publish steps or "getting started — install this" copy
-unless a task asks for it. `README.md` is the product statement, `VISION.md` the principles,
-`ROADMAP.md` what is deliberately *not* in the first version.
+**Status: `0.1.0` is released**, as `ghcr.io/resonand-app/resonand` for `linux/amd64` and
+`linux/arm64`. Somebody is running this, so a change reaches an archive that already exists: a
+migration runs on somebody's data, a setting rename breaks somebody's `.env`, and an endpoint that
+moves breaks whatever they wrote against it. `CHANGELOG.md` says what the number promises -- a
+patch fixes, a minor may break and says how -- and the version is set by `scripts/release.sh`
+rather than by hand, because it is written in six places and four of them are generated.
+`README.md` is the product statement, `VISION.md` the principles, `ROADMAP.md` what is deliberately
+*not* in the first version.
 
 ## Repository map
 

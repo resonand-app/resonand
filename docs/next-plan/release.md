@@ -135,7 +135,7 @@ archive has earned the tag, the tag should be one command rather than a week of 
 written in a hurry by somebody who has already decided to ship. They are in the order their
 dependencies allow.
 
-- [ ] **REL-7** · **`deploy/` describes an instance somebody can actually start.** Two sentences in
+- [x] **REL-7** · **`deploy/` describes an instance somebody can actually start.** Two sentences in
       that directory are wrong on a public repository today.
       [`docker-compose.yml`](../../deploy/docker-compose.yml) names
       `ghcr.io/resonand-app/resonand:latest` and nothing is published, so the first command the file
@@ -154,7 +154,26 @@ dependencies allow.
       *Done when:* a clone, a copied `.env` and `docker compose up -d` reach a healthy container
       with nothing published anywhere, and no sentence in `deploy/` describes a different program.
 
-- [ ] **INF-12** · **One version, in one place, changed by one command.** `0.0.0` is written in five
+      **Done, and the premise was half wrong.** `docker compose up -d` in a clone already worked:
+      [`docker-compose.override.yml`](../../deploy/docker-compose.override.yml) is committed beside
+      the compose file and compose loads it without being asked, so the build was always there. What
+      failed was everything that assumed a registry — the instruction to copy the two files into a
+      directory of their own, which leaves the override behind and so leaves a compose file naming
+      an image that does not exist; `docker compose pull` under *Upgrading*; and pinning a previous
+      tag under *If an upgrade goes wrong*.
+
+      So this became an account of **where the image comes from**, said in the three places somebody
+      meets it — the status block, the compose file's own line and the override's header — each
+      naming the release as the day it changes. The override is pointed at rather than folded into
+      the compose file: `local-dev/bin/slot/docker.sh` names it on its command line, and that script
+      lives in a repository of its own. The cost is that two files swap over on release day instead
+      of one, with nothing enforcing it, which is why `REL-5` names both.
+
+      *Verified by running it*: built from these files and started on a development slot's address
+      rather than the `127.0.0.1` the compose file publishes, since that address belongs to another
+      slot. Healthy, `/readyz` ready, and the shell served with the bundle it references.
+
+- [x] **INF-12** · **One version, in one place, changed by one command.** `0.0.0` is written in five
       tracked places — [`pyproject.toml`](../../backend/pyproject.toml),
       [`__init__.py`](../../backend/resonand/__init__.py), `uv.lock`,
       [`package.json`](../../frontend/package.json), and the `info.version` of the committed OpenAPI
@@ -178,7 +197,24 @@ dependencies allow.
       the repository rather than a component, and already reads outside `src/`; a pytest doing it
       would put a frontend artefact in the Python suite.*
 
-- [ ] **OPS-8** · **The image, published from a tag.** The build ends at `push: false` and the
+      **Done, and there are six rather than five.** `package-lock.json` carries the root package's
+      version twice — at the top level and again under `packages[""]` — and `npm ci` refuses a lock
+      that disagrees with its manifest. So the place this entry did not count is the one that would
+      have broken every install rather than merely disagreeing with its neighbours. The script hands
+      that pair to `npm version --no-git-tag-version`, which owns both.
+
+      `scripts/release.sh` fills the directory `INF-1` created and never used. It refuses a dirty
+      tree, because the point of running it rather than editing six lines is a diff small enough to
+      read in one screen; it refuses a leading `v`, because the tag carries one and a `v` that
+      reaches `pyproject.toml` builds a wheel nobody can install; and it ends on the two checks the
+      bump itself can break — `uv lock --check` and `resonand openapi --check` — leaving the suites
+      to whoever ran it. It commits nothing and tags nothing.
+
+      The test is `one-version-everywhere.node.test.ts`, and it asserts the script is present and
+      executable as well as reading the six. A release script somebody has to remember to run with
+      `bash` is one that gets run some other way on the day it matters.
+
+- [x] **OPS-8** · **The image, published from a tag.** The build ends at `push: false` and the
       workflow declares `permissions: contents: read`, which is the whole of what changes and none
       of the decisions behind it.
 
@@ -196,7 +232,29 @@ dependencies allow.
       *Done when:* `docker pull ghcr.io/resonand-app/resonand:0.1.0` works from a machine with no
       credentials, and `docker inspect` names the commit it was built from. ⇢ INF-12
 
-- [ ] **OPS-12** · **Both architectures, built natively.** The build names no `platforms:`, so what
+      **Done, and the smoke test moved.** `release.yml` builds without pushing, runs the check the
+      gate runs, and only then logs in: a registry has no undo, and an image somebody has already
+      pulled is in their cache whatever a maintainer does to the tag afterwards. That check used to
+      be thirty lines inside `ci.yml`'s `image` job, so publishing would have meant a second copy —
+      and the copy that drifts is always the one that runs on release day. It is
+      `.github/scripts/smoke-image.sh` now, called from both, and it takes the container down on
+      its way out however it ends.
+
+      One guard the entry did not name: **the tag is checked against the manifests** before
+      anything is built. `INF-12`'s test holds the six files to each other and nothing holds them to
+      the tag, so a mistyped `git tag` would publish an image whose own `resonand version` names a
+      different release — and the image is the artefact people keep. It fails with the
+      `scripts/release.sh` line that fixes it.
+
+      `latest=auto` rather than a raw `latest`: `v0.1.0` takes it and `v0.1.0-rc.1` does not, so
+      somebody who pinned nothing stays on the last release that was finished.
+
+      *Verified as far as it can be without a tag*: `actionlint` clean on both workflows, the
+      extracted smoke script run against a locally built image, and the tag-agreement check
+      exercised against both a matching and a bumped `pyproject.toml`. **The workflow itself has
+      never run and cannot until `REL-5` pushes the first tag.**
+
+- [x] **OPS-12** · **Both architectures, built natively.** The build names no `platforms:`, so what
       exists is amd64, and every arm64 machine gets `exec format error` — a Raspberry Pi, an Apple
       Silicon machine, an ARM VPS, which between them are most of the hardware this kind of software
       is self-hosted on.
@@ -211,7 +269,34 @@ dependencies allow.
       *Done when:* the manifest list carries both platforms, and each was exercised by the same
       checks on its own architecture. ⇢ OPS-8 🧪
 
-- [ ] **REL-2** · **User documentation**: installation, transcription provider configuration,
+      **Done, and the two halves are pushed by digest rather than by tag.** Each architecture
+      builds on its own runner, runs `smoke-image.sh` there, and pushes without a name; a third job
+      joins the digests into one manifest list and puts every tag on that. The alternative that
+      every guide shows — publishing `:0.1.0-amd64` and `:0.1.0-arm64` and joining those — leaves
+      two tags in the registry for good, and a registry is a place where nothing is ever deleted
+      quietly.
+
+      `fail-fast: false`, because "arm64 broke" and "both broke" are different mornings and
+      cancelling the surviving job hides which one this is. Caches are scoped per platform, since
+      one scope would have the two jobs overwriting each other's layers on every release.
+
+      **Three things checked that the entry did not name.** The base images all publish
+      `linux/arm64` — `ghcr.io/astral-sh/uv`, `python:3.12-slim-bookworm` and
+      `node:22-bookworm-slim` — which was the one way this could have failed on the Dockerfile
+      rather than on the workflow. The labels are metadata-action's rather than written by hand:
+      its `version` is the semver the tag parses to, where `github.ref_name` would have put `v0.1.0`
+      in a label sitting beside tags that all read `0.1.0`. And the manifest is inspected by the
+      first tag rather than by a reference rebuilt out of that label, which is the same mistake in
+      the place it would have failed the job.
+
+      *Verified*: `actionlint` clean, the `jq` over metadata-action's output run against a sample
+      of the shape it emits, and the base images' platforms listed from the registry. **Neither
+      architecture has been built by this workflow** — there is no tag yet, and this machine is
+      x86_64, so the arm64 half is unexercised until `REL-5`. The cost is named rather than hidden:
+      `ci.yml` still builds amd64 only on a commit, so an arm64 break is found at release rather
+      than on the pull request that caused it.
+
+- [x] **REL-2** · **User documentation**: installation, transcription provider configuration,
       backup and restore, and **how to leave the product** — the full export, documented as a
       supported path rather than an escape hatch.
       *Two things attach to it now. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) says code
@@ -221,12 +306,57 @@ dependencies allow.
       by hand before an import — because a documented way out that nobody has walked is the most
       expensive sentence this product can print.*
 
-- [ ] **REL-3** · Public API documentation and a token guide. ⇢ REL-2
+      **Done, and three of the four were already written.** Installation, the transcription
+      endpoint, backups and restoring, and the export and its read-back all live in
+      [`deploy/README.md`](../../deploy/README.md) and
+      [`deploy/transcription.md`](../../deploy/transcription.md), written by the tasks that built
+      each of them rather than by a documentation pass afterwards, which is why they describe what
+      the code does rather than what somebody remembered about it.
+
+      What was missing was **the first run** — the gap between `docker compose up -d` and having an
+      account. One sentence covered it, and it said the first account is created "through the API",
+      which is true of the interface and useless to the person reading. The section now says what
+      the screen offers while no account exists, what `create-admin` is for when a browser cannot
+      reach the instance yet, that the administrator creates everybody else and sets their
+      passwords, and that **the instance sends no email** — which is a decision rather than an
+      unfilled setting, and which decides how a forgotten password is recovered.
+
+      *Verified against a running instance rather than by reading*: an empty one reports
+      `needs_bootstrap: true`, the bootstrap endpoint answers 409 once an account exists,
+      `create-admin` creates a second administrator on a populated instance and prints the personal
+      library it made, and the three sharing levels are quoted from what `GET /instance` actually
+      publishes.
+
+      **Not written, and not what this entry asked for:** how to *use* the archive — libraries, the
+      category tree, tags, search, the trash, asking for a transcription. Everything here is
+      operator documentation, and every one of the four topics named above is. A guide for the
+      person with an account rather than the one with the server is a different document and has no
+      identifier yet.
+
+- [x] **REL-3** · Public API documentation and a token guide. ⇢ REL-2
       *The token half is one sentence rather than a guide: API tokens were cut from the first
       version, the API answers to the session cookie, and documenting a credential nobody can mint
       is the fault `REL-6` took out of the README, committed a second time in a second place.*
 
-- [ ] **REL-5** · **The tag.** Semantic versioning, `CHANGELOG.md`, and `v0.1.0` with the published
+      **Done as [`API.md`](../../API.md), and it is short on purpose.** The instance already
+      publishes its own document at `/api/openapi.json` and serves a browsable copy at `/api/docs`,
+      and that document is the field-level truth — a page restating every endpoint beside it is a
+      second source that goes stale the first time one of them changes. What it carries instead is
+      what the document cannot say: how a script gets a session and holds it, what the conventions
+      mean, which endpoints are worth automating, and what the API deliberately will not do.
+
+      The token half is the sentence it was scoped as. A script signs in as an account somebody
+      created and keeps a cookie jar; personal access tokens are on [`ROADMAP.md`](../../ROADMAP.md).
+
+      *Verified against a running instance*: `/api/docs` and `/api/openapi.json` both answer,
+      sign-in sets `resonand_session` `HttpOnly` `SameSite=lax` with a 30-day `Max-Age`,
+      `GET /api/instance` answers without a session, lists carry `{items, limit, offset, total}`, a
+      uuid you cannot read answers **404** as `application/problem+json`, no session at all answers
+      401, and an `Origin` header from elsewhere gets no `Access-Control-*` back. The problem
+      document also carries a `request_id`, which this entry did not know about and which is now
+      the thing to quote in a bug report.
+
+- [x] **REL-5** · **The tag.** Semantic versioning, `CHANGELOG.md`, and `v0.1.0` with the published
       image. ⇢ OPS-8, OPS-12, REL-2, REL-7
 
       **`v0.1.0`, not `v0.0.0`.** `0.0.0` is what the manifests say because nothing has shipped;
@@ -247,6 +377,41 @@ dependencies allow.
       swapping back to the published image.
       *Done when:* the tag is pushed, the image it produced can be pulled, and no file in the
       repository still says that nothing is released.
+
+      **Prepared, and the tag is the one thing left.** The version is `0.1.0` in all six places
+      `INF-12` counted, `CHANGELOG.md` carries the pre-1.0 contract above its first entry, and the
+      status blocks moved together — the README's and its badge, `SECURITY.md`'s (the latest release
+      is the only supported one, and nothing is backported), and `deploy/README.md`'s.
+
+      **`REL-7`'s two files swapped, and the override went with them.** `deploy/` pulls
+      `ghcr.io/resonand-app/resonand:0.1.0` now, and `docker-compose.override.yml` is deleted rather
+      than kept: `pull_policy: never` on an instance that could be pulling is an archive pinned to
+      whatever was last built on that machine. The dev layer's `slot/docker.sh` named that file on
+      its command line and no longer does — its own generated override already carried the build,
+      so a slot still runs its worktree rather than a release.
+
+      **The pin is a version and not `latest`.** An upgrade should be a line somebody changed on
+      purpose rather than whatever a tag pointed at the morning they ran `pull`; `latest` moves with
+      each release for anybody who would rather it did.
+
+      **`CONTRIBUTING.md` opened code and translations**, because it promised both "with the first
+      installable release" and a page that says that after the release is a page that lies.
+
+      **Four more places said it and were nearly missed**, each found by grepping the tree for the
+      claim rather than by remembering where it was written: `AGENTS.md`'s status paragraph, which
+      is the first thing anybody working here reads and which told them not to add publish steps;
+      the bug report template, which asked for the commit somebody built "since there is no release
+      yet"; and the README's own *Contributing* section, which still said code was closed two
+      screens below the table saying it was open. A status block is never in one place, and the way
+      to find the others is `git grep` for the sentence rather than memory.
+
+      *The gate this waited for*: the four acts under [*When is v0 done*](../v0-plan/README.md) were
+      confirmed on 2026-09-23 — the real archive in it, a second person using a shared library, the
+      restore performed on real hardware, and the export round-tripped into an empty instance.
+
+      **Not done here, and deliberately:** the tag itself. `git tag v0.1.0` is what runs
+      `release.yml` for the first time, and it publishes something that cannot be unpublished, so it
+      is one command in a person's hands rather than the tail of a session.
 
 - [ ] **REL-4** · **Demo instance, linked from the repository itself.** "Self-hosted audio archive"
       is a sentence nobody can picture, and the first thing a reader meets should be a working

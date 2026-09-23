@@ -46,9 +46,10 @@ Nothing here is dated, and the ordering between the two halves is a rule rather 
    this, they can also file an issue against it. **It opened on 2026-09-22**, and those three are
    closed.
 2. **The release** — the tag, the published image, anything inviting somebody to trust an archive
-   to this — waits for several weeks of real personal use on top of that, with what went wrong
-   fixed rather than noted. The infrastructure it needs does not wait, and
-   [`release.md`](release.md) says which part is which.
+   to this — waited for the five conditions under [*When is v0 done*](../v0-plan/README.md), which
+   held on 2026-09-23. **`0.1.0` is prepared**: the version, the changelog, the status blocks and a
+   `deploy/` that pulls rather than builds. What is left of it is `git tag v0.1.0`, which publishes
+   and cannot be undone, so it is a person's command rather than a task's last step.
 
 Everything else here is unordered and undated, which is the honest state of it.
 

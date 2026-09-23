@@ -1,7 +1,8 @@
 # Resonand -- an example deployment (OPS-2).
 #
 # Copy this file and deploy/.env.example (as `.env`) into a directory of their own, edit the .env,
-# and `docker compose up -d`. Those two files plus the named volume are the whole instance.
+# and `docker compose up -d`. Those two files plus the named volume are the whole instance -- no
+# clone, no build, nothing else to keep in step.
 #
 # Upgrading is `docker compose pull && docker compose up -d`: the container migrates its own
 # database at startup, under a lock (OPS-7). Read the upgrade section of deploy/README.md once
@@ -12,9 +13,11 @@ name: resonand
 
 services:
   resonand:
-    image: ghcr.io/resonand-app/resonand:latest
-    # To run the image you built yourself instead:
-    #   build: { context: .., dockerfile: Dockerfile }
+    # Pinned to a version rather than `latest`, because this is somebody's archive: an upgrade
+    # should be a line somebody changed on purpose, not whatever the tag pointed at the morning
+    # they happened to run `pull`. `latest` exists and moves with each release for anyone who
+    # wants it.
+    image: ghcr.io/resonand-app/resonand:0.1.0
     restart: unless-stopped
     env_file: .env
     volumes:
