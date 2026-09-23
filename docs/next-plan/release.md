@@ -296,6 +296,27 @@ dependencies allow.
       `ci.yml` still builds amd64 only on a commit, so an arm64 break is found at release rather
       than on the pull request that caused it.
 
+- [x] **OPS-12a** · **The digest reaches the join.** Out of `OPS-12`, and found by the first tag
+      rather than by reading. Both architectures built, smoke-tested and pushed by digest — and then
+      `upload-artifact` refused the one-byte file that carries each digest to the join, because it
+      was named for the raw digest and a colon is not a legal filename on NTFS, so the action
+      refuses one for everybody rather than only for the people who would have hit it. `Publish` was
+      skipped and nothing was pullable.
+
+      The file is named for the digest without its `sha256:` prefix now, and the join puts the
+      prefix back. Both halves had to move together, which is why this is one change rather than a
+      one-character fix.
+
+      **Nothing had been published when it failed**, which is the only reason the tag could simply
+      be moved: the two architectures were in the registry as blobs nothing named, and a blob with
+      no tag is not something anybody can pull. Had the join half-succeeded, the repair would have
+      been `0.1.1` instead.
+
+      *What it says about the entry above*: `actionlint` and a sample `jq` were as far as local
+      verification went, and both passed on a workflow that could not work. Some of a release
+      workflow is only ever tested by releasing, and the useful mitigation is that the first tag
+      publishes nothing until every step has run — which is what happened.
+
 - [x] **REL-2** · **User documentation**: installation, transcription provider configuration,
       backup and restore, and **how to leave the product** — the full export, documented as a
       supported path rather than an escape hatch.
