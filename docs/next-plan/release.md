@@ -135,7 +135,7 @@ archive has earned the tag, the tag should be one command rather than a week of 
 written in a hurry by somebody who has already decided to ship. They are in the order their
 dependencies allow.
 
-- [ ] **REL-7** · **`deploy/` describes an instance somebody can actually start.** Two sentences in
+- [x] **REL-7** · **`deploy/` describes an instance somebody can actually start.** Two sentences in
       that directory are wrong on a public repository today.
       [`docker-compose.yml`](../../deploy/docker-compose.yml) names
       `ghcr.io/resonand-app/resonand:latest` and nothing is published, so the first command the file
@@ -153,6 +153,25 @@ dependencies allow.
       the people who try it in that window are the earliest ones there will ever be.
       *Done when:* a clone, a copied `.env` and `docker compose up -d` reach a healthy container
       with nothing published anywhere, and no sentence in `deploy/` describes a different program.
+
+      **Done, and the premise was half wrong.** `docker compose up -d` in a clone already worked:
+      [`docker-compose.override.yml`](../../deploy/docker-compose.override.yml) is committed beside
+      the compose file and compose loads it without being asked, so the build was always there. What
+      failed was everything that assumed a registry — the instruction to copy the two files into a
+      directory of their own, which leaves the override behind and so leaves a compose file naming
+      an image that does not exist; `docker compose pull` under *Upgrading*; and pinning a previous
+      tag under *If an upgrade goes wrong*.
+
+      So this became an account of **where the image comes from**, said in the three places somebody
+      meets it — the status block, the compose file's own line and the override's header — each
+      naming the release as the day it changes. The override is pointed at rather than folded into
+      the compose file: `local-dev/bin/slot/docker.sh` names it on its command line, and that script
+      lives in a repository of its own. The cost is that two files swap over on release day instead
+      of one, with nothing enforcing it, which is why `REL-5` names both.
+
+      *Verified by running it*: built from these files and started on a development slot's address
+      rather than the `127.0.0.1` the compose file publishes, since that address belongs to another
+      slot. Healthy, `/readyz` ready, and the shell served with the bundle it references.
 
 - [ ] **INF-12** · **One version, in one place, changed by one command.** `0.0.0` is written in five
       tracked places — [`pyproject.toml`](../../backend/pyproject.toml),

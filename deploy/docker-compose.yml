@@ -1,20 +1,28 @@
 # Resonand -- an example deployment (OPS-2).
 #
-# Copy this file and deploy/.env.example (as `.env`) into a directory of their own, edit the .env,
-# and `docker compose up -d`. Those two files plus the named volume are the whole instance.
+# Copy deploy/.env.example to deploy/.env, edit it, and `docker compose up -d` from this
+# directory. That file plus the named volume are the whole instance.
 #
-# Upgrading is `docker compose pull && docker compose up -d`: the container migrates its own
-# database at startup, under a lock (OPS-7). Read the upgrade section of deploy/README.md once
-# before the first upgrade, because the two minutes it takes is the difference between a rollback
-# and a restore.
+# Running it from a directory of its own is what this file is for, and it is not possible yet:
+# until the first release (REL-5) there is no published image, and what builds one is the
+# override beside this file. Copying this file out without it leaves a compose file naming an
+# image that does not exist.
+#
+# Upgrading is `git pull && docker compose up -d --build` while it builds, and
+# `docker compose pull && docker compose up -d` once there is something to pull. Either way the
+# container migrates its own database at startup, under a lock (OPS-7). Read the upgrade section
+# of deploy/README.md once before the first upgrade, because the two minutes it takes is the
+# difference between a rollback and a restore.
 
 name: resonand
 
 services:
   resonand:
+    # Nothing is published under this name yet, so pulling it fails. What runs instead is
+    # docker-compose.override.yml, which sits beside this file, which compose loads without being
+    # asked, and which builds the image out of the clone. This line starts being true at the first
+    # release, and that is the same day the override stops being (REL-5).
     image: ghcr.io/resonand-app/resonand:latest
-    # To run the image you built yourself instead:
-    #   build: { context: .., dockerfile: Dockerfile }
     restart: unless-stopped
     env_file: .env
     volumes:

@@ -1,10 +1,14 @@
-# Local development override -- not part of the published deployment.
+# What makes a clone runnable while no image is published.
 #
-# The image named in docker-compose.yml is not published yet, so `docker compose pull` fails with
-# a registry `denied`. This override builds it from the repository instead. Compose picks this
-# file up automatically alongside docker-compose.yml.
+# The image named in docker-compose.yml does not exist yet, so `docker compose pull` fails with a
+# registry `denied`. This override builds it from the repository instead, and compose picks the
+# file up automatically alongside docker-compose.yml -- so `docker compose up -d` in this
+# directory works, and only a copy of the compose file taken away from this one does not.
 #
 #   docker compose up -d --build
+#
+# It goes at the first release (REL-5), and going is the point: `pull_policy: never` on an
+# instance that could be pulling is an archive pinned to whatever was last built on that machine.
 
 services:
   resonand:
