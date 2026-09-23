@@ -4,10 +4,15 @@
 here is part of the first version: the first version is a working archive, and this is what it
 takes for somebody who is not its author to read it, install it and keep it running.
 
-## Gate 1 · The day the repository opens
+**Gate 1 closed on 2026-09-22.** The repository is public, so everything under it is a record
+rather than a working set. What is left is the release, and it splits in two: the things that can
+be built now, in any order, and the tag, which waits for the archive to have been lived in rather
+than for a task to be finished.
 
-Every task in [`docs/v0-plan/`](../v0-plan/) closed, and then these three, which are what have to
-be true the moment somebody outside can see any of it.
+## Gate 1 · The day the repository opened
+
+Every task in [`docs/v0-plan/`](../v0-plan/) closed, and then these, which are what had to be true
+the moment somebody outside could see any of it.
 
 - [x] **INF-10** · `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue and pull request templates, and
       `SECURITY.md` with a contact address. Deliberately not done earlier: community scaffolding
@@ -101,23 +106,147 @@ be true the moment somebody outside can see any of it.
       reproducing itself. `search.png` is retaken because the bar at the foot of the shell carries
       the same recording and its trace moved too.
 
+- [x] **REL-1b** · **The README opens with the mark rather than with a screenshot.** A reader met a
+      view of a product they could not yet name, and the name arrived underneath it twice — an
+      `h1` and a bold tagline each saying what the mark already says. Out of `REL-1`, and recorded
+      here after the fact: it shipped in `550cdf0` citing an identifier this plan did not carry,
+      which is the one thing an identifier may never do.
+
+      **Done.** The banner carries the name and the description, so the `h1` and the bold line are
+      gone and the screenshot moved below the badges, where it answers the second question somebody
+      has rather than the first. Compositing the two into one image was the obvious alternative:
+      GitHub renders a README image into roughly 880 pixels, so a stacked pair arrives with the
+      interface text too small to read — and the screenshots are regenerated from the demo archive
+      whenever the interface moves, while the mark does not move at all. Two costs, both named in
+      the commit: with images blocked the name survives only in alt text, and the banner is a JPEG
+      where everything else here is a PNG, because the gradient and its grain cost 3.5 MB
+      losslessly against a 512 kB hook.
+
 ## Gate 2 · The release
 
-Several weeks of real personal use on top of gate 1, with what went wrong fixed rather than noted.
-Then:
+**The tag waits for the archive, and nothing else here does.** The five conditions under
+[*When is v0 done*](../v0-plan/README.md) are the gate: my real archive in it, a second real person
+using it, `ING-13` clean after an upgrade with `OPS-6`'s restore performed for real, the export
+round-tripped into an empty instance, and several weeks with all of that true and nothing going
+wrong in them. Three of the five are acts and are not tickable anywhere.
 
-- [ ] **REL-5** · Semantic versioning, `CHANGELOG.md`, and the `v0.1.0` tag with the published
-      image. ⇢ OPS-8
+**Everything below except `REL-5` can be built while those weeks pass, and should be.** The day the
+archive has earned the tag, the tag should be one command rather than a week of infrastructure
+written in a hurry by somebody who has already decided to ship. They are in the order their
+dependencies allow.
 
-- [ ] **OPS-8** · Publishing the image to GHCR from CI, with `latest` and per-version tags. The
-      build already runs on every commit and ends at `push: false`; this is the line that changes
-      and the credentials behind it.
+- [ ] **REL-7** · **`deploy/` describes an instance somebody can actually start.** Two sentences in
+      that directory are wrong on a public repository today.
+      [`docker-compose.yml`](../../deploy/docker-compose.yml) names
+      `ghcr.io/resonand-app/resonand:latest` and nothing is published, so the first command the file
+      documents ends in `manifest unknown`. And [`README.md`](../../deploy/README.md)'s status block
+      still says there is no web interface, which stopped being true long before the repository
+      opened: `REL-6` brought the body of that file level and left its first paragraph behind.
+
+      **The compose file ships the build it can actually perform.** `build:` becomes the live line
+      and `image:` the commented one, and `REL-5` swaps them back — one line each way. The head of
+      the file says to copy it into a directory of its own, which stops being true while the build
+      context is a clone, so it says that too, for as long as it is true.
+
+      Waiting for `OPS-8` and fixing both at the tag is the alternative. It leaves a public
+      repository whose one documented command fails for however many weeks the archive takes, and
+      the people who try it in that window are the earliest ones there will ever be.
+      *Done when:* a clone, a copied `.env` and `docker compose up -d` reach a healthy container
+      with nothing published anywhere, and no sentence in `deploy/` describes a different program.
+
+- [ ] **INF-12** · **One version, in one place, changed by one command.** `0.0.0` is written in five
+      tracked places — [`pyproject.toml`](../../backend/pyproject.toml),
+      [`__init__.py`](../../backend/resonand/__init__.py), `uv.lock`,
+      [`package.json`](../../frontend/package.json), and the `info.version` of the committed OpenAPI
+      document — and two of them are checked from the other side. `resonand openapi --check` fails
+      on commit when the snapshot is stale, and `UV_FROZEN=1` fails CI when the lock was not
+      regenerated. A bump done by hand therefore fails the gate in two places that never mention a
+      version, which is the most expensive kind of red there is.
+
+      It is user-visible twice as well: through `GET /instance`, which is where the *About* line
+      reads it, and through `resonand version`. A tag that disagrees with the string means every bug
+      report cites a build nobody has.
+
+      **`scripts/release.sh <version>`, at the repository root** — the directory `INF-1` created and
+      never filled. It belongs to neither package's task runner because it spans both halves.
+      Deriving `__version__` from `importlib.metadata` was the alternative: it removes one of the
+      five, leaves four, and makes a checkout's version depend on whether it happens to be
+      installed.
+      *Done when:* `scripts/release.sh 0.1.0` changes all five, relocks, regenerates the snapshot,
+      and leaves the gate green. 🧪
+      🧪 *A `*.node.test.ts` holding the five to each other. That family already tests the shape of
+      the repository rather than a component, and already reads outside `src/`; a pytest doing it
+      would put a frontend artefact in the Python suite.*
+
+- [ ] **OPS-8** · **The image, published from a tag.** The build ends at `push: false` and the
+      workflow declares `permissions: contents: read`, which is the whole of what changes and none
+      of the decisions behind it.
+
+      **A second workflow, `.github/workflows/release.yml`, on `v*` tags.** Not a branch inside
+      `ci.yml`: that one runs on every pull request, and `packages: write` declared there is a
+      credential within reach of every branch that opens one. `docker/metadata-action` mints
+      `:0.1.0`, `:0.1` and `:latest`, and the three labels the Dockerfile cannot know for itself —
+      `version`, `revision`, `created` — beside the four it already carries. Actions pinned to
+      digests as everywhere else in that directory, which dependabot already moves. The package is
+      made public and linked to the repository, and the build publishes its provenance attestation.
+
+      Pushing `:latest` from `main` on every commit is the alternative, and it is a rolling release
+      nobody asked for: `deploy/docker-compose.yml` documents upgrading as `docker compose pull`, so
+      that arrangement moves somebody's archive onto an untagged build the moment they follow it.
+      *Done when:* `docker pull ghcr.io/resonand-app/resonand:0.1.0` works from a machine with no
+      credentials, and `docker inspect` names the commit it was built from. ⇢ INF-12
+
+- [ ] **OPS-12** · **Both architectures, built natively.** The build names no `platforms:`, so what
+      exists is amd64, and every arm64 machine gets `exec format error` — a Raspberry Pi, an Apple
+      Silicon machine, an ARM VPS, which between them are most of the hardware this kind of software
+      is self-hosted on.
+
+      **One job per architecture, each on its own runner** — `ubuntu-24.04` and `ubuntu-24.04-arm`,
+      both free for a public repository — each running the smoke test and the restore rehearsal
+      `ci.yml` already carries, and then `docker buildx imagetools create` to merge the manifest
+      list. `platforms: linux/amd64,linux/arm64` on a single job under QEMU is three lines instead
+      of a second job and costs 20 to 40 minutes a run; the real objection is that an emulated build
+      cannot run those two checks, so nobody would know whether the arm64 image starts, migrates and
+      serves until somebody's Pi did not.
+      *Done when:* the manifest list carries both platforms, and each was exercised by the same
+      checks on its own architecture. ⇢ OPS-8 🧪
 
 - [ ] **REL-2** · **User documentation**: installation, transcription provider configuration,
       backup and restore, and **how to leave the product** — the full export, documented as a
       supported path rather than an escape hatch.
+      *Two things attach to it now. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) says code
+      contributions open with the first installable release, so the rules it defers are owed on the
+      same day rather than after it. And the export half is written against `resonand export` and
+      `resonand import` as `ING-11b` and `ING-11c` left them — a manifest at the root, accounts made
+      by hand before an import — because a documented way out that nobody has walked is the most
+      expensive sentence this product can print.*
 
 - [ ] **REL-3** · Public API documentation and a token guide. ⇢ REL-2
+      *The token half is one sentence rather than a guide: API tokens were cut from the first
+      version, the API answers to the session cookie, and documenting a credential nobody can mint
+      is the fault `REL-6` took out of the README, committed a second time in a second place.*
+
+- [ ] **REL-5** · **The tag.** Semantic versioning, `CHANGELOG.md`, and `v0.1.0` with the published
+      image. ⇢ OPS-8, OPS-12, REL-2, REL-7
+
+      **`v0.1.0`, not `v0.0.0`.** `0.0.0` is what the manifests say because nothing has shipped;
+      spending it on the first tag leaves nothing underneath it, and a first fix would have to be
+      `0.0.1` — a patch of a release that never existed. The contract goes at the head of
+      `CHANGELOG.md`, because from that day the number is a promise: **`0.x` may break in a minor,
+      a patch only fixes, and `1.0.0` waits until the HTTP API and the on-disk archive format are
+      both frozen.** The second of those is the one that matters here, since an archive outlives the
+      software that wrote it.
+
+      `CHANGELOG.md` takes the keep-a-changelog shape, and its first entry is **not** a summary of
+      525 commits. It is what the first version is — which the README already says once, and should
+      not say differently here.
+
+      **Four status blocks move on the same day, and they are the release rather than a chore
+      beside it**: the README's, [`SECURITY.md`](../../SECURITY.md)'s *"There is no release, no
+      published image and no supported version"*, `deploy/README.md`'s, and `REL-7`'s compose lines
+      swapping back to the published image.
+      *Done when:* the tag is pushed, the image it produced can be pulled, and no file in the
+      repository still says that nothing is released.
 
 - [ ] **REL-4** · **Demo instance, linked from the repository itself.** "Self-hosted audio archive"
       is a sentence nobody can picture, and the first thing a reader meets should be a working
@@ -125,6 +254,8 @@ Then:
       on a schedule: anything a stranger can upload to is somebody's voice held with no agreement,
       no retention anybody agreed to and nobody accountable for it, which is not worth taking on
       to get a demo. A good recording of the real thing is an acceptable substitute.
+      *The README's four screenshots are that substitute as it stands, and they are why this is
+      below the tag rather than beside it.*
 
 ## Surviving an upgrade
 
@@ -139,5 +270,8 @@ survive being updated.
       image**, upgraded by a later one. The walk seeds each revision by hand from a schema the
       current code describes; only a real old instance proves that what that version actually
       wrote survives, which is the difference that matters once somebody else is running one.*
+      *It starts empty on purpose: the matrix compares published images, and the first release is
+      one row with nothing to compare against. Its first real assertion is at the second release,
+      which is the argument for building it then rather than now.*
 
 - [ ] **OPS-11** · Packaging for one-click installation platforms. ⇢ DEC-6

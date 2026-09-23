@@ -165,12 +165,13 @@ graph TD
 
 ## What is left
 
-**One thing, and it is an operation rather than a task.** Every entry in this plan is closed,
-including the three tracks that were not planned in advance and the one minted at the end of it —
-but `INF-11` is ticked for the tree and not for the history. The webfont it removed is still in
-every commit that ever carried it, and taking it out means rewriting all of them. That is held for
-a session of its own and **has to happen before the repository opens**, because publishing the
-history is the breach, not keeping the checkout.
+**Nothing, and the last of it was an operation rather than a task.** Every entry in this plan is
+closed, including the three tracks that were not planned in advance and the one minted at the end
+of it. `INF-11` was ticked for the tree well before it was ticked for the history: the webfont it
+removed was still in every commit that had ever carried it, and taking it out meant rewriting all
+of them. **That ran before the repository opened**, because publishing the history is the breach
+rather than keeping the checkout. The file is unreachable from `main`, and the commits that carried
+it survive only in clones taken before the rewrite.
 
 The last of them was the rename. `NAM` was opened on the day the name changed and closed five
 tasks later: the track written, the repository moved to `resonand-app/resonand` with all 140 of
@@ -190,10 +191,11 @@ against when `REV-10` built [`review.md`](review.md), [`security.md`](security.m
 half of it that matters is the half a pipeline cannot run; the reasoning is in
 [`integration.md`](integration.md).
 
-**What stands between this plan and the day the repository opens is three tasks in
-[`docs/next-plan/`](../next-plan/)** — `INF-10`, `REL-6` and `REL-1` — and none of them is here.
-Three of the five conditions below are acts rather than tasks, performed against the real archive
-and not tickable anywhere.
+**The repository opened on 2026-09-22.** The three tasks that stood between this plan and that
+day — `INF-10`, `REL-6` and `REL-1` — are closed in
+[`docs/next-plan/release.md`](../next-plan/release.md), which now holds the release and nothing
+else. Three of the five conditions below are acts rather than tasks, performed against the real
+archive and not tickable anywhere, and they are what the tag waits for.
 
 ---
 
