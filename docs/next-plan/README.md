@@ -42,11 +42,13 @@ test. **A task is done when it meets the criterion written next to it, not when 
 Nothing here is dated, and the ordering between the two halves is a rule rather than a schedule:
 
 1. **The repository opens** when every task in [`docs/v0-plan/`](../v0-plan/) is closed. `INF-10`,
-   `REL-1` and `REL-6` are what have to be true on that day — the moment somebody outside can read
-   this, they can also file an issue against it.
+   `REL-1` and `REL-6` were what had to be true on that day — the moment somebody outside can read
+   this, they can also file an issue against it. **It opened on 2026-09-22**, and those three are
+   closed.
 2. **The release** — the tag, the published image, anything inviting somebody to trust an archive
    to this — waits for several weeks of real personal use on top of that, with what went wrong
-   fixed rather than noted.
+   fixed rather than noted. The infrastructure it needs does not wait, and
+   [`release.md`](release.md) says which part is which.
 
 Everything else here is unordered and undated, which is the honest state of it.
 
