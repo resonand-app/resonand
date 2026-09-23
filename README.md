@@ -143,7 +143,7 @@ player, no music library manager, and no transcription engine inside the applica
 | [`ROADMAP.md`](ROADMAP.md) | What comes after the first version, and what is explicitly out of scope |
 | [`docs/v0-plan/`](docs/v0-plan/) | The build plan for the first version, one file per work track |
 | [`docs/next-plan/`](docs/next-plan/) | What is scoped and waiting for a version to claim it |
-| [`deploy/`](deploy/README.md) | What an operator needs: the volume, the `.env`, the proxy, and which transcription endpoints work |
+| [`deploy/`](deploy/README.md) | What an operator needs: the first account, the volume, the `.env`, the proxy, backups, and which transcription endpoints work |
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
 | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what resonand assumes, and the limitations it knows about |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | What is welcome today, what is not open yet, and the reason for each |

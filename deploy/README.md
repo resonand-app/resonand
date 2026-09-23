@@ -33,8 +33,46 @@ docker compose up -d          # builds the image the first time, which takes a f
 docker compose logs -f resonand
 ```
 
-The instance migrates its own database on the way up. The first account you create through the
-API is the administrator, and after that registration is administrator-only.
+The instance migrates its own database on the way up.
+
+## The first run
+
+Open the instance in a browser. While no account exists it offers **Create the first account**, and
+that account is the administrator — the one that creates all the others. The screen is gone the
+moment an account exists and the endpoint behind it refuses from then on, so it is not a door left
+standing open on an instance somebody forgot about.
+
+If a browser cannot reach it yet — a server with nothing in front of it, or a restore you want to
+check before pointing anything at it — the same account is made from the command line:
+
+```bash
+docker compose exec resonand resonand create-admin --email you@example.org --display-name "Your Name"
+```
+
+It prompts for the password rather than taking it as an argument, so it stays out of your shell
+history, and it prints the identifier of the personal library it just created. Note that down:
+`resonand import` is the other thing that wants it.
+
+**Everybody else is created in Settings → Administration → Accounts.** There is no registration
+form and no invitation link — the administrator creates the account, sets its password, and tells
+the person what it is by whatever means the two of them already trust.
+
+**The instance sends no email.** That is not a setting nobody has filled in: there is no SMTP
+configuration anywhere in it. One fewer credential to hold, one fewer service to be down, and no
+way for an archive of somebody's family to announce itself to a mail server run by a third party.
+The cost is real and worth stating. A forgotten password is reset by the administrator, in
+**Settings → Administration → Accounts**. And when the account that is locked out is the only
+administrator there is, `create-admin` is the way back in: it creates another one at any time, not
+only on an empty instance, and from there the first account's password is reset in the interface
+like anybody else's. Which is also worth knowing the other way round — anybody who can run commands
+in that container can make themselves an administrator, and `SECURITY.md` says plainly that the
+operator is not an attacker in this model.
+
+Each account gets a **personal library**, and that one cannot be shared: it is where a recording
+goes when nobody chose, so it stays theirs. Everything else is a library somebody made and shared
+from **Library settings → Who has access**, at one of three levels — **Can read** (listen and read
+the transcript), **Can edit** (change titles, categories and tags), and **Can manage** (everything
+above, plus sharing it onwards).
 
 ## Transcription
 

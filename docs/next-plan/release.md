@@ -296,7 +296,7 @@ dependencies allow.
       `ci.yml` still builds amd64 only on a commit, so an arm64 break is found at release rather
       than on the pull request that caused it.
 
-- [ ] **REL-2** · **User documentation**: installation, transcription provider configuration,
+- [x] **REL-2** · **User documentation**: installation, transcription provider configuration,
       backup and restore, and **how to leave the product** — the full export, documented as a
       supported path rather than an escape hatch.
       *Two things attach to it now. [`CONTRIBUTING.md`](../../CONTRIBUTING.md) says code
@@ -305,6 +305,33 @@ dependencies allow.
       `resonand import` as `ING-11b` and `ING-11c` left them — a manifest at the root, accounts made
       by hand before an import — because a documented way out that nobody has walked is the most
       expensive sentence this product can print.*
+
+      **Done, and three of the four were already written.** Installation, the transcription
+      endpoint, backups and restoring, and the export and its read-back all live in
+      [`deploy/README.md`](../../deploy/README.md) and
+      [`deploy/transcription.md`](../../deploy/transcription.md), written by the tasks that built
+      each of them rather than by a documentation pass afterwards, which is why they describe what
+      the code does rather than what somebody remembered about it.
+
+      What was missing was **the first run** — the gap between `docker compose up -d` and having an
+      account. One sentence covered it, and it said the first account is created "through the API",
+      which is true of the interface and useless to the person reading. The section now says what
+      the screen offers while no account exists, what `create-admin` is for when a browser cannot
+      reach the instance yet, that the administrator creates everybody else and sets their
+      passwords, and that **the instance sends no email** — which is a decision rather than an
+      unfilled setting, and which decides how a forgotten password is recovered.
+
+      *Verified against a running instance rather than by reading*: an empty one reports
+      `needs_bootstrap: true`, the bootstrap endpoint answers 409 once an account exists,
+      `create-admin` creates a second administrator on a populated instance and prints the personal
+      library it made, and the three sharing levels are quoted from what `GET /instance` actually
+      publishes.
+
+      **Not written, and not what this entry asked for:** how to *use* the archive — libraries, the
+      category tree, tags, search, the trash, asking for a transcription. Everything here is
+      operator documentation, and every one of the four topics named above is. A guide for the
+      person with an account rather than the one with the server is a different document and has no
+      identifier yet.
 
 - [ ] **REL-3** · Public API documentation and a token guide. ⇢ REL-2
       *The token half is one sentence rather than a guide: API tokens were cut from the first
