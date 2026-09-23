@@ -1,4 +1,4 @@
-# Publishing the image (OPS-8).
+# Publishing the image (OPS-8, OPS-12).
 #
 # A workflow of its own rather than a branch inside ci.yml, for one reason: this one needs
 # `packages: write`, and ci.yml runs on every pull request. A token that can publish, declared in
@@ -8,6 +8,12 @@
 # `:latest` moving with every commit -- an instance upgrades with `docker compose pull`, so a
 # rolling tag would move somebody's archive onto an untagged build the moment they followed the
 # documented upgrade.
+#
+# Two architectures, each built on its own machine. `ubuntu-24.04-arm` is free for public
+# repositories, and building there rather than emulating is what lets the arm64 image run the same
+# smoke test as the other one -- under QEMU it could be built and never started, which is how
+# somebody's Raspberry Pi finds out instead. The two halves are pushed by digest and joined into
+# one manifest list afterwards, so no per-architecture tag is left behind in the registry.
 #
 # Every action is pinned to a commit digest, for the reason ci.yml gives at length: a tag is a
 # pointer its owner can move. Dependabot moves these.
@@ -27,18 +33,22 @@ permissions:
   attestations: write
   id-token: write
 
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
 jobs:
-  publish:
-    name: Publish
+  agree:
+    name: The tag and the manifests agree
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: The tag and the manifests agree
+      - name: Compare them
         # `one-version-everywhere.node.test.ts` holds the six files to each other; nothing holds
         # them to the tag. Without this a mistyped tag publishes an image whose `resonand version`
         # and About line name a different release -- and the image is the artefact people keep.
+        # It runs before the builds rather than beside them so a typo costs five seconds.
         run: |
           tag="${GITHUB_REF_NAME#v}"
           manifest=$(sed -n '/^\[project\]/,/^\[[^p]/{s/^version = "\(.*\)"$/\1/p;}' backend/pyproject.toml | head -1)
@@ -49,17 +59,38 @@ jobs:
           fi
           echo "tag and manifests agree on $manifest"
 
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: agree
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      # Both results are wanted even when one fails: "arm64 broke" and "both broke" are different
+      # mornings, and cancelling the other job hides which one this is.
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
       - name: Build it, before anything is pushed
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
+          platforms: ${{ matrix.platform }}
           push: false
           load: true
           tags: resonand:release
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Scoped per architecture. One scope would have the two jobs overwriting each other's
+          # layers on every release, which is a cache that costs more than it returns.
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.platform }}
 
       - name: Check it starts, migrates itself, becomes ready and serves the interface
         # Before the push and not after it. A registry has no undo: an image that is pulled once
@@ -73,36 +104,87 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Push it by digest
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          cache-from: type=gha,scope=${{ matrix.platform }}
+          # No tag: this half of the image is not something anybody should pull on its own, and a
+          # `:0.1.0-arm64` published to get the manifest built is a tag the registry keeps for
+          # good. The join below is what gets the name.
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+
+      - name: Hand the digest to the join
+        run: |
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${{ steps.push.outputs.digest }}"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          # One per architecture, and the slash in `linux/amd64` is not allowed in a name.
+          name: digest-${{ strategy.job-index }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish:
+    name: Publish
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - id: meta
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ${{ env.IMAGE }}
           # `latest=auto` is what keeps a pre-release off it: v0.1.0 takes `latest`, v0.1.0-rc.1
           # does not, and somebody who pinned nothing stays on the last release that was finished.
           flavor: latest=auto
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-          # The three the Dockerfile cannot know for itself. The four it does carry -- title,
-          # description, source, licences -- are static and stay where they are.
-          labels: |
-            org.opencontainers.image.version=${{ github.ref_name }}
-            org.opencontainers.image.revision=${{ github.sha }}
+          # No `labels:` here on purpose. metadata-action already writes the three the Dockerfile
+          # cannot know for itself -- version, revision and created -- and its version is the
+          # semver the tag parses to rather than the ref name, so it says 0.1.0 where `v0.1.0`
+          # would have been wrong beside every tag in the registry.
 
-      - name: Push it
-        id: push
-        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          # Every layer is in the cache from the build above, so this is a push rather than a
-          # second build of the same tree.
-          cache-from: type=gha
+      - name: Join the two into one manifest list
+        id: join
+        working-directory: /tmp/digests
+        run: |
+          # Every tag metadata-action minted, each pointing at the same list, built out of the
+          # digests the two build jobs pushed. The word splitting is the point here -- one -t per
+          # tag, one digest per architecture -- so shellcheck is told so rather than worked around
+          # with an array it cannot see into either.
+          # shellcheck disable=SC2046
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< '${{ steps.meta.outputs.json }}') \
+            $(printf "${IMAGE}@%s " *)
+          # The first tag rather than a version rebuilt out of a label: whatever reference is
+          # inspected has to be one that was just created, and the tags are exactly those.
+          reference=$(jq -cr '.tags[0]' <<< '${{ steps.meta.outputs.json }}')
+          digest=$(docker buildx imagetools inspect "$reference" --format '{{json .Manifest.Digest}}' | tr -d '"')
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          docker buildx imagetools inspect "$reference"
 
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-name: ghcr.io/${{ github.repository }}
-          subject-digest: ${{ steps.push.outputs.digest }}
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.join.outputs.digest }}
           push-to-registry: true

@@ -254,7 +254,7 @@ dependencies allow.
       exercised against both a matching and a bumped `pyproject.toml`. **The workflow itself has
       never run and cannot until `REL-5` pushes the first tag.**
 
-- [ ] **OPS-12** · **Both architectures, built natively.** The build names no `platforms:`, so what
+- [x] **OPS-12** · **Both architectures, built natively.** The build names no `platforms:`, so what
       exists is amd64, and every arm64 machine gets `exec format error` — a Raspberry Pi, an Apple
       Silicon machine, an ARM VPS, which between them are most of the hardware this kind of software
       is self-hosted on.
@@ -268,6 +268,33 @@ dependencies allow.
       serves until somebody's Pi did not.
       *Done when:* the manifest list carries both platforms, and each was exercised by the same
       checks on its own architecture. ⇢ OPS-8 🧪
+
+      **Done, and the two halves are pushed by digest rather than by tag.** Each architecture
+      builds on its own runner, runs `smoke-image.sh` there, and pushes without a name; a third job
+      joins the digests into one manifest list and puts every tag on that. The alternative that
+      every guide shows — publishing `:0.1.0-amd64` and `:0.1.0-arm64` and joining those — leaves
+      two tags in the registry for good, and a registry is a place where nothing is ever deleted
+      quietly.
+
+      `fail-fast: false`, because "arm64 broke" and "both broke" are different mornings and
+      cancelling the surviving job hides which one this is. Caches are scoped per platform, since
+      one scope would have the two jobs overwriting each other's layers on every release.
+
+      **Three things checked that the entry did not name.** The base images all publish
+      `linux/arm64` — `ghcr.io/astral-sh/uv`, `python:3.12-slim-bookworm` and
+      `node:22-bookworm-slim` — which was the one way this could have failed on the Dockerfile
+      rather than on the workflow. The labels are metadata-action's rather than written by hand:
+      its `version` is the semver the tag parses to, where `github.ref_name` would have put `v0.1.0`
+      in a label sitting beside tags that all read `0.1.0`. And the manifest is inspected by the
+      first tag rather than by a reference rebuilt out of that label, which is the same mistake in
+      the place it would have failed the job.
+
+      *Verified*: `actionlint` clean, the `jq` over metadata-action's output run against a sample
+      of the shape it emits, and the base images' platforms listed from the registry. **Neither
+      architecture has been built by this workflow** — there is no tag yet, and this machine is
+      x86_64, so the arm64 half is unexercised until `REL-5`. The cost is named rather than hidden:
+      `ci.yml` still builds amd64 only on a commit, so an arm64 break is found at release rather
+      than on the pull request that caused it.
 
 - [ ] **REL-2** · **User documentation**: installation, transcription provider configuration,
       backup and restore, and **how to leave the product** — the full export, documented as a
