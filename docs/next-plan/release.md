@@ -214,7 +214,7 @@ dependencies allow.
       executable as well as reading the six. A release script somebody has to remember to run with
       `bash` is one that gets run some other way on the day it matters.
 
-- [ ] **OPS-8** · **The image, published from a tag.** The build ends at `push: false` and the
+- [x] **OPS-8** · **The image, published from a tag.** The build ends at `push: false` and the
       workflow declares `permissions: contents: read`, which is the whole of what changes and none
       of the decisions behind it.
 
@@ -231,6 +231,28 @@ dependencies allow.
       that arrangement moves somebody's archive onto an untagged build the moment they follow it.
       *Done when:* `docker pull ghcr.io/resonand-app/resonand:0.1.0` works from a machine with no
       credentials, and `docker inspect` names the commit it was built from. ⇢ INF-12
+
+      **Done, and the smoke test moved.** `release.yml` builds without pushing, runs the check the
+      gate runs, and only then logs in: a registry has no undo, and an image somebody has already
+      pulled is in their cache whatever a maintainer does to the tag afterwards. That check used to
+      be thirty lines inside `ci.yml`'s `image` job, so publishing would have meant a second copy —
+      and the copy that drifts is always the one that runs on release day. It is
+      `.github/scripts/smoke-image.sh` now, called from both, and it takes the container down on
+      its way out however it ends.
+
+      One guard the entry did not name: **the tag is checked against the manifests** before
+      anything is built. `INF-12`'s test holds the six files to each other and nothing holds them to
+      the tag, so a mistyped `git tag` would publish an image whose own `resonand version` names a
+      different release — and the image is the artefact people keep. It fails with the
+      `scripts/release.sh` line that fixes it.
+
+      `latest=auto` rather than a raw `latest`: `v0.1.0` takes it and `v0.1.0-rc.1` does not, so
+      somebody who pinned nothing stays on the last release that was finished.
+
+      *Verified as far as it can be without a tag*: `actionlint` clean on both workflows, the
+      extracted smoke script run against a locally built image, and the tag-agreement check
+      exercised against both a matching and a bumped `pyproject.toml`. **The workflow itself has
+      never run and cannot until `REL-5` pushes the first tag.**
 
 - [ ] **OPS-12** · **Both architectures, built natively.** The build names no `platforms:`, so what
       exists is amd64, and every arm64 machine gets `exec format error` — a Raspberry Pi, an Apple

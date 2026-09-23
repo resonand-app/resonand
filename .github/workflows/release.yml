@@ -1,0 +1,108 @@
+# Publishing the image (OPS-8).
+#
+# A workflow of its own rather than a branch inside ci.yml, for one reason: this one needs
+# `packages: write`, and ci.yml runs on every pull request. A token that can publish, declared in
+# a workflow any branch can trigger, is a token any branch can reach.
+#
+# What it publishes is whatever the tag points at. It does not build from `main`, and there is no
+# `:latest` moving with every commit -- an instance upgrades with `docker compose pull`, so a
+# rolling tag would move somebody's archive onto an untagged build the moment they followed the
+# documented upgrade.
+#
+# Every action is pinned to a commit digest, for the reason ci.yml gives at length: a tag is a
+# pointer its owner can move. Dependabot moves these.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  # The registry.
+  packages: write
+  # The provenance attestation, which says which workflow at which commit built the image and is
+  # what makes `docker inspect`'s answer checkable by somebody who was not there.
+  attestations: write
+  id-token: write
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: The tag and the manifests agree
+        # `one-version-everywhere.node.test.ts` holds the six files to each other; nothing holds
+        # them to the tag. Without this a mistyped tag publishes an image whose `resonand version`
+        # and About line name a different release -- and the image is the artefact people keep.
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          manifest=$(sed -n '/^\[project\]/,/^\[[^p]/{s/^version = "\(.*\)"$/\1/p;}' backend/pyproject.toml | head -1)
+          if [ "$tag" != "$manifest" ]; then
+            echo "the tag says $tag and backend/pyproject.toml says $manifest"
+            echo "run scripts/release.sh $tag, commit the result, and tag that commit"
+            exit 1
+          fi
+          echo "tag and manifests agree on $manifest"
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build it, before anything is pushed
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: false
+          load: true
+          tags: resonand:release
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Check it starts, migrates itself, becomes ready and serves the interface
+        # Before the push and not after it. A registry has no undo: an image that is pulled once
+        # is in somebody's cache, and `docker pull` on a moved tag is not something an operator
+        # runs again because a maintainer asked.
+        run: .github/scripts/smoke-image.sh resonand:release resonand-release
+
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          # `latest=auto` is what keeps a pre-release off it: v0.1.0 takes `latest`, v0.1.0-rc.1
+          # does not, and somebody who pinned nothing stays on the last release that was finished.
+          flavor: latest=auto
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+          # The three the Dockerfile cannot know for itself. The four it does carry -- title,
+          # description, source, licences -- are static and stay where they are.
+          labels: |
+            org.opencontainers.image.version=${{ github.ref_name }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Push it
+        id: push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          # Every layer is in the cache from the build above, so this is a push rather than a
+          # second build of the same tree.
+          cache-from: type=gha
+
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ghcr.io/${{ github.repository }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
