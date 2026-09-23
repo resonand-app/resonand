@@ -173,7 +173,7 @@ dependencies allow.
       rather than the `127.0.0.1` the compose file publishes, since that address belongs to another
       slot. Healthy, `/readyz` ready, and the shell served with the bundle it references.
 
-- [ ] **INF-12** · **One version, in one place, changed by one command.** `0.0.0` is written in five
+- [x] **INF-12** · **One version, in one place, changed by one command.** `0.0.0` is written in five
       tracked places — [`pyproject.toml`](../../backend/pyproject.toml),
       [`__init__.py`](../../backend/resonand/__init__.py), `uv.lock`,
       [`package.json`](../../frontend/package.json), and the `info.version` of the committed OpenAPI
@@ -196,6 +196,23 @@ dependencies allow.
       🧪 *A `*.node.test.ts` holding the five to each other. That family already tests the shape of
       the repository rather than a component, and already reads outside `src/`; a pytest doing it
       would put a frontend artefact in the Python suite.*
+
+      **Done, and there are six rather than five.** `package-lock.json` carries the root package's
+      version twice — at the top level and again under `packages[""]` — and `npm ci` refuses a lock
+      that disagrees with its manifest. So the place this entry did not count is the one that would
+      have broken every install rather than merely disagreeing with its neighbours. The script hands
+      that pair to `npm version --no-git-tag-version`, which owns both.
+
+      `scripts/release.sh` fills the directory `INF-1` created and never used. It refuses a dirty
+      tree, because the point of running it rather than editing six lines is a diff small enough to
+      read in one screen; it refuses a leading `v`, because the tag carries one and a `v` that
+      reaches `pyproject.toml` builds a wheel nobody can install; and it ends on the two checks the
+      bump itself can break — `uv lock --check` and `resonand openapi --check` — leaving the suites
+      to whoever ran it. It commits nothing and tags nothing.
+
+      The test is `one-version-everywhere.node.test.ts`, and it asserts the script is present and
+      executable as well as reading the six. A release script somebody has to remember to run with
+      `bash` is one that gets run some other way on the day it matters.
 
 - [ ] **OPS-8** · **The image, published from a tag.** The build ends at `push: false` and the
       workflow declares `permissions: contents: read`, which is the whole of what changes and none
