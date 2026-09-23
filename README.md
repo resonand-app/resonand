@@ -9,7 +9,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
-  <img alt="Status: first version in private use" src="https://img.shields.io/badge/status-private%20use-orange">
+  <a href="https://github.com/resonand-app/resonand/pkgs/container/resonand"><img alt="Release: 0.1.0" src="https://img.shields.io/badge/release-0.1.0-E98A5F"></a>
 </p>
 
 <p align="center">
@@ -18,14 +18,19 @@
 
 ---
 
-> ### Status: the first version is complete and in private use. Nothing is released yet.
+> ### Status: `0.1.0` is out, and it is the first one.
 >
-> The backend, the ingestion pipeline, search, the CLI and the web interface are finished, and
-> every screenshot here is a running instance rather than a mockup — a demo archive, but real
-> files, real stored waveforms and real transcripts. **Nothing is installable yet** — there is no
-> published image and no release. Before there is one, the first version has to survive several
-> weeks of real use with a real archive. When there is something to install, this section will say
-> so.
+> `ghcr.io/resonand-app/resonand:0.1.0`, for `linux/amd64` and `linux/arm64`.
+> [`deploy/`](deploy/README.md) is a compose file, an `.env` and a volume.
+>
+> It was used before it was offered: a real archive imported, transcribed and searched; a second
+> person on a shared library; a restore performed on real hardware rather than only in CI; and the
+> whole archive exported and read back into an empty instance. Every screenshot here is a running
+> instance rather than a mockup.
+>
+> It is still a first release, and the honest version of that is: one person has relied on it, on
+> one kind of hardware. [`CHANGELOG.md`](CHANGELOG.md) says what the number promises, and
+> [`SECURITY.md`](SECURITY.md) says what is known to be thin.
 
 ## The problem
 
@@ -104,10 +109,14 @@ entirely through environment variables. An instance is three things: the image, 
 `/data` holding the database and the original files, and an `.env` — plus a transcription endpoint
 that passes `resonand check-transcription`. It migrates its own database on the way up.
 
+```bash
+docker pull ghcr.io/resonand-app/resonand:0.1.0
+```
+
 [`deploy/`](deploy/README.md) describes the arrangement — the compose file, how much the volume
-needs, and both reverse-proxy layouts. **There is no published image yet**, so today that means
-building it from source; the line that changes is in
-[`docs/next-plan/release.md`](docs/next-plan/release.md).
+needs, both reverse-proxy layouts, and what a backup has to cover. The image publishes
+`linux/amd64` and `linux/arm64` under one name, so the same line works on a server and on a
+Raspberry Pi.
 
 ## What comes next
 
@@ -145,22 +154,23 @@ player, no music library manager, and no transcription engine inside the applica
 | [`docs/next-plan/`](docs/next-plan/) | What is scoped and waiting for a version to claim it |
 | [`deploy/`](deploy/README.md) | What an operator needs: the first account, the volume, the `.env`, the proxy, backups, and which transcription endpoints work |
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
+| [`CHANGELOG.md`](CHANGELOG.md) | What each release changed, and what the version number promises |
 | [`API.md`](API.md) | The HTTP API: how a script signs in, the conventions, and what is worth automating |
 | [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what resonand assumes, and the limitations it knows about |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | What is welcome today, what is not open yet, and the reason for each |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | What is welcome, what to open an issue about first, and how a pull request is read |
 
 ## Contributing
 
-**Issues are welcome now; code is not yet.** [`CONTRIBUTING.md`](CONTRIBUTING.md) says which is
-which and why. The reason is that the first version is deliberately in private use before it is
-offered to anyone: in this niche credibility comes from the author actually using the thing, and
-the fastest way to lose it is to ship something that loses files.
+**Issues, security reports and code are all welcome.** Code opened with `0.1.0`, after the first
+version had been used in private long enough to be worth offering.
+[`CONTRIBUTING.md`](CONTRIBUTING.md) is the whole of it, including the one request: open an issue
+before a large change, so that nobody spends a weekend on something that disagrees with
+[`VISION.md`](VISION.md).
 
-Two are worth opening today. A **security report**, through the private channel described in
-[`SECURITY.md`](SECURITY.md) — if you built this from a commit and found a way into somebody
-else's recordings, that is worth hearing long before there is anything to install. And a
-**disagreement with something in [`VISION.md`](VISION.md)**, which is cheap to change now and
-expensive later.
+Two are worth opening whatever else you do. A **security report**, through the private channel
+described in [`SECURITY.md`](SECURITY.md) — a way into somebody else's recordings is the report
+this project most wants. And a **disagreement with something in [`VISION.md`](VISION.md)**, which
+is cheap to change now and expensive later.
 
 ## Licence
 

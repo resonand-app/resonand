@@ -3,24 +3,20 @@
 Everything here describes the software as it stands. Where something has not been exercised yet,
 it says so — an operations document that overstates what has been tested is worse than none.
 
-> **Status: there is no published image yet.** The software is complete and every instruction
-> below is exercised — CI restores a backup into a clean container by following this file step for
-> step — but nothing is on a registry. What makes a clone work is
-> [`docker-compose.override.yml`](docker-compose.override.yml), which sits beside the compose file,
-> which compose loads without being asked, and which **builds the image out of this clone** instead
-> of pulling one. So `deploy/` is a working deployment and not yet a pair of files to copy
-> somewhere of their own: copied out without the override, the compose file names an image that
-> does not exist. The first release is what changes that, scoped as `REL-5` in
-> [`../docs/next-plan/release.md`](../docs/next-plan/release.md).
+> **Status: `0.1.0` is published**, at `ghcr.io/resonand-app/resonand`, for `linux/amd64` and
+> `linux/arm64`. Two files and a volume are an instance — copy this directory's compose file and
+> `.env.example` somewhere of their own and you never need the source. Every instruction below is
+> exercised: CI restores a backup into a clean container by following this file step for step, on
+> each architecture.
 
 ## What an instance is
 
 Three things:
 
 - **The image** — one container, the backend and the web interface together. It runs the job
-  worker in-process, so there is nothing else to schedule. Until the first release it is built
-  from this clone rather than pulled, which is the one difference between this document and the
-  one that replaces it.
+  worker in-process, so there is nothing else to schedule. It is pulled from
+  `ghcr.io/resonand-app/resonand`, which publishes `linux/amd64` and `linux/arm64` under one name,
+  so the same line works on a server and on a Raspberry Pi.
 - **The volume at `/data`** — the SQLite database and the tree of original files. This is the
   archive. Everything else is replaceable.
 - **The `.env`** — every setting, all of them read from the environment.
@@ -29,7 +25,7 @@ Copy [`.env.example`](.env.example) to `.env`, set `RESONAND_SECRET_KEY` and
 `RESONAND_TRANSCRIPTION_BASE_URL`, then, from this directory:
 
 ```bash
-docker compose up -d          # builds the image the first time, which takes a few minutes
+docker compose up -d
 docker compose logs -f resonand
 ```
 
@@ -268,11 +264,13 @@ conditions in [`../docs/v0-plan/`](../docs/v0-plan/) for the first version being
 ## Upgrading
 
 ```bash
-git pull && docker compose up -d --build
+# change the tag in docker-compose.yml to the version you are moving to, then
+docker compose pull && docker compose up -d
 ```
 
-`--build` because there is no image to pull yet; after the first release this is
-`docker compose pull && docker compose up -d` and the clone stops being part of the instance.
+The compose file pins a version rather than tracking `latest`, so an upgrade is a line somebody
+changed on purpose. `latest` moves with each release and is there for anyone who would rather it
+did.
 
 The container migrates its own database on the way up, under a file lock, so two containers
 overlapping during a restart cannot both migrate. The log line to look for is
@@ -292,9 +290,8 @@ deliberately not "downgrade the schema":
 ```bash
 docker compose down
 # put the pre-upgrade backup back at /data/resonand.db
-# go back to the commit you were on: git checkout <previous commit>
-#   -- after the first release this is pinning the previous tag in docker-compose.yml instead
-docker compose up -d --build
+# pin the previous tag in docker-compose.yml
+docker compose up -d
 ```
 
 Down-migrations exist and `resonand.db.migrate.downgrade` will run one, but nothing calls it

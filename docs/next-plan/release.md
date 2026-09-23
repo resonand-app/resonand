@@ -356,7 +356,7 @@ dependencies allow.
       document also carries a `request_id`, which this entry did not know about and which is now
       the thing to quote in a bug report.
 
-- [ ] **REL-5** · **The tag.** Semantic versioning, `CHANGELOG.md`, and `v0.1.0` with the published
+- [x] **REL-5** · **The tag.** Semantic versioning, `CHANGELOG.md`, and `v0.1.0` with the published
       image. ⇢ OPS-8, OPS-12, REL-2, REL-7
 
       **`v0.1.0`, not `v0.0.0`.** `0.0.0` is what the manifests say because nothing has shipped;
@@ -377,6 +377,41 @@ dependencies allow.
       swapping back to the published image.
       *Done when:* the tag is pushed, the image it produced can be pulled, and no file in the
       repository still says that nothing is released.
+
+      **Prepared, and the tag is the one thing left.** The version is `0.1.0` in all six places
+      `INF-12` counted, `CHANGELOG.md` carries the pre-1.0 contract above its first entry, and the
+      status blocks moved together — the README's and its badge, `SECURITY.md`'s (the latest release
+      is the only supported one, and nothing is backported), and `deploy/README.md`'s.
+
+      **`REL-7`'s two files swapped, and the override went with them.** `deploy/` pulls
+      `ghcr.io/resonand-app/resonand:0.1.0` now, and `docker-compose.override.yml` is deleted rather
+      than kept: `pull_policy: never` on an instance that could be pulling is an archive pinned to
+      whatever was last built on that machine. The dev layer's `slot/docker.sh` named that file on
+      its command line and no longer does — its own generated override already carried the build,
+      so a slot still runs its worktree rather than a release.
+
+      **The pin is a version and not `latest`.** An upgrade should be a line somebody changed on
+      purpose rather than whatever a tag pointed at the morning they ran `pull`; `latest` moves with
+      each release for anybody who would rather it did.
+
+      **`CONTRIBUTING.md` opened code and translations**, because it promised both "with the first
+      installable release" and a page that says that after the release is a page that lies.
+
+      **Four more places said it and were nearly missed**, each found by grepping the tree for the
+      claim rather than by remembering where it was written: `AGENTS.md`'s status paragraph, which
+      is the first thing anybody working here reads and which told them not to add publish steps;
+      the bug report template, which asked for the commit somebody built "since there is no release
+      yet"; and the README's own *Contributing* section, which still said code was closed two
+      screens below the table saying it was open. A status block is never in one place, and the way
+      to find the others is `git grep` for the sentence rather than memory.
+
+      *The gate this waited for*: the four acts under [*When is v0 done*](../v0-plan/README.md) were
+      confirmed on 2026-09-23 — the real archive in it, a second person using a shared library, the
+      restore performed on real hardware, and the export round-tripped into an empty instance.
+
+      **Not done here, and deliberately:** the tag itself. `git tag v0.1.0` is what runs
+      `release.yml` for the first time, and it publishes something that cannot be unpublished, so it
+      is one command in a person's hands rather than the tail of a session.
 
 - [ ] **REL-4** · **Demo instance, linked from the repository itself.** "Self-hosted audio archive"
       is a sentence nobody can picture, and the first thing a reader meets should be a working

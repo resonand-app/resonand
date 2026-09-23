@@ -217,3 +217,12 @@ Not when the checkboxes are ticked. When all of these hold:
 
 Only then does [`docs/next-plan/`](../next-plan/) begin — the repository opening, and then a
 release.
+
+**All five held on 2026-09-23**, and `0.1.0` is prepared against them. Four are acts and were
+performed: the archive is in it and is what I use, a second person works in a library shared with
+them, the restore was carried out on real hardware rather than only in CI, and the whole archive
+was exported and read back into an empty instance. The fifth is the one nobody can tick — it is a
+judgement about how long the other four have been true, and it was taken rather than measured.
+
+That is the whole of this plan. What the first version contained is above; what happens next is
+[`docs/next-plan/`](../next-plan/), and this folder is a record from here on.
