@@ -47,3 +47,193 @@ folder it was minted in.
 
       [`CONTRIBUTING.md`](../../CONTRIBUTING.md) gains the same thing from the other side: what
       happens to an issue, and why a large one is scoped before it is built.
+
+## What CI and the two suites cost
+
+Measured on 2026-09-24 against `main` at `c7af5b7`, with each suite pinned to four CPUs
+(`taskset -c 0-3`) to stand in for GitHub's four-core runner — the backend step measures 150 s
+that way and 136–221 s on GitHub, so the two track. The twenty runs before that averaged 545
+job-seconds and four and a half minutes of wall time, and every pull request pays twice: once on
+its branch and once more on the merge commit. **Seven of the first ten merged pull requests
+changed nothing any job reads** — plans, `release.yml`, `.pre-commit-config.yaml` — and paid the
+full price both times.
+
+The two suites are most of it. pytest with coverage takes 136–221 s of the backend job, and **half
+of pytest is Argon2**: 714 hashes and 274 verifications at 57 ms each, because the API fixtures
+make three accounts a test and every sign-in verifies a password. vitest with coverage takes
+104–401 s of the frontend job, and **a third of vitest is jsdom**, built afresh for each of 133
+files. Removing tests is not where the time is: the two largest candidates are 5% of the frontend
+suite between them.
+
+The ten tasks below are that measurement cut into work, in the order it is done. Each is a pull
+request of its own, and each branches from the one before it, because four of them edit `ci.yml`
+and every one of them ticks a box in this file.
+
+- [ ] **INF-15** · **CI runs the hooks a clone may not have installed.** `.pre-commit-config.yaml`
+      refuses a file over 512 kB, a private key, a credential `gitleaks` recognises, anything under
+      `docs/internal/`, `.claude/` or `local-dev/`, and whitespace, YAML, TOML and JSON faults. CI
+      ran none of them while its header said it ran the same checks, so a pull request from a clone
+      that never ran `uvx pre-commit install` was held to none of them either — and the repository
+      has been public, with a `CONTRIBUTING.md` inviting exactly those pull requests, since
+      2026-09-22.
+
+      **A `Hygiene` job runs them over the change, staged the way a commit of it would be.**
+      `git reset --soft` onto the commit the change is measured from leaves all of it in the
+      index, so each hook reads what it would have read on a laptop. The toolchain hooks are
+      skipped by name, because `Backend` and `Frontend` already run the same commands.
+
+      *Rejected:* `pre-commit run --from-ref … --to-ref …`, the documented way to run hooks over a
+      range. It hands each hook a list of file names, and the two hooks that matter most read the
+      index instead: `gitleaks --staged` would scan nothing and pass, and `check-added-large-files`
+      would find nothing added. A check that passes because it read nothing is worse than none.
+
+      *Done when:* the job passes on its own pull request, and its command fails over a change that
+      adds a 600 kB file or a file under `docs/internal/`.
+
+- [ ] **INF-16** · **A workflow is read before it runs.** `release.yml` runs on a tag and on nothing
+      else, so a mistake in it is found by the release: `OPS-12a` was found by the first tag, and
+      `OPS-12b` by inspecting what it published. Those two were behaviour and no linter would have
+      seen them. The class a linter does see — an expression naming an output that does not exist,
+      a `needs` on a job that is not there, an input an action does not take — is the class
+      `INF-17` is about to write a dozen of, and `actionlint` reads a workflow the way the runner
+      will. ⇢ INF-15
+
+      A pre-commit hook, so it runs at commit and in `Hygiene` and nothing else needs to know about
+      it. **Its shellcheck and pyflakes integrations are off**: each runs only when its binary is
+      on `PATH`, which it is on a GitHub runner and is not on this machine, so the one hook would
+      fail in one place and pass in the other — the property `INF-4` exists to prevent.
+
+      *Done when:* `actionlint` passes over both workflows and runs on any change to one.
+
+- [ ] **INF-17** · **A change runs the jobs it can reach, and the others report skipped.** A
+      `What changed` job reads the change and says which of `Backend`, `Frontend` and `Image` it
+      can reach; each of those runs only when it can; and a last job, `CI`, needs all of them and
+      passes when each one either passed or was skipped. ⇢ INF-15, INF-16
+
+      **The filters are what each job reads, found by reading the jobs**, not guessed from file
+      extensions. `Backend` also reads `frontend/src/api/contract/openapi.json`, which
+      `resonand openapi --check` compares against. `Frontend` also reads `backend/pyproject.toml`,
+      `backend/uv.lock`, `backend/resonand/__init__.py` and `scripts/`, which
+      `one-version-everywhere.node.test.ts` holds to each other. `Image` reads what the Dockerfile
+      copies, tests excepted. A change to `ci.yml` or to the filter itself runs everything, and
+      renames are read as a deletion and an addition, so a file moved out of `backend/` is a change
+      to `backend/`.
+
+      **Everything runs once a week, and on demand**, whatever changed: the backstop for a job that
+      starts reading a file its filter does not name, and for the runner image moving underneath —
+      ffmpeg comes from Ubuntu's archive, not from anything this repository pins.
+
+      *Rejected:* `paths-ignore` on the whole workflow, which is shorter. A skipped workflow leaves
+      a pull request with no checks at all, which reads exactly like one whose checks have not
+      started, and a required check on it would wait forever. A skipped job reports as a pass.
+
+      *Rejected:* skipping changes that only touch comments. Comments reach the checks — ruff's
+      line length, `# noqa`, `# type: ignore[…]`, `// eslint-disable`, `/* v8 ignore */`, which
+      moves the coverage floor — and a FastAPI route's docstring is its OpenAPI description. Only
+      the suites could be skipped, knowing needs a parser per language, and after `INF-19` the
+      suites cost seconds.
+
+      *Rejected:* filtering Markdown by extension. `frontend/design-system/**/*.md` is outside
+      Prettier today, and `.prettierignore` says folders leave that list as they convert: an
+      extension filter would go wrong the day one does, and say nothing.
+
+      *Done when:* over a change to `docs/` alone the filter reaches nothing, over one to
+      `backend/tests/` alone it reaches `Backend` and nothing else, and with no base to measure
+      from — a scheduled or dispatched run — it reaches everything.
+
+- [ ] **INF-18** · 🧪 **The suite hashes passwords at test strength.** 714 Argon2 hashes and 274
+      verifications at 57 ms each are 58 s of a 119 s backend run: the API fixtures make three
+      accounts a test, and every sign-in verifies a password. Production's parameters exist to
+      make a guess expensive, and in a test they make nothing expensive but the test.
+
+      A session fixture swaps the hasher for argon2-cffi's `CHEAPEST` profile — the one it ships
+      for this — and the hash an unknown address is verified against goes with it. **Production's
+      parameters become a named constant** rather than the library's default, pinned by a test, so
+      the swap cannot hide a weakening and an upgrade of argon2-cffi cannot move them silently. The
+      `SEC-2` tests count verifications rather than timing them, so they are unaffected.
+
+      *Rejected:* a setting for the cost. It would be a production knob that exists for tests, and
+      the one knob nobody should be able to turn down. *Rejected:* hashing the password once per
+      session, which saves the 714 hashes and keeps the 274 verifications — 16 s.
+
+      *Done when:* a backend run takes half the time it did on the same machine, the test pinning
+      production's parameters exists, and every test passes.
+
+- [ ] **INF-19** · **The backend suite runs on every core.** After `INF-18` it runs on one — 89 s
+      on four CPUs with coverage, at 93% of one CPU. `pytest-xdist` with `-n auto` in CI and in the
+      pre-push hook: 45 s on four CPUs with coverage, 22 s without, and `973 passed` three runs out
+      of three. ⇢ INF-18
+
+      **The `slow` marker goes.** No test carries it, so `-m "not slow"` in the hook and "the fast
+      loop" in `AGENTS.md` both meant the whole suite — and the hook's comment said the ffmpeg
+      tests were left out, which they are not. With the whole suite at 22 s there is one loop.
+
+      *Rejected:* `-n auto` in `addopts`. Every single-test run would pay for starting a worker per
+      core, and `--pdb` stops working. *Rejected:* `COVERAGE_CORE=sysmon`, the faster tracer: it
+      cannot measure branches on Python 3.12, and falls back with a warning.
+
+      *Done when:* CI and the pre-push hook run the suite with `-n auto`, and nothing says
+      `not slow`.
+
+- [ ] **INF-20** · **Backend coverage is a floor, as the frontend's is.** CI runs the backend
+      suite with `--cov` and prints 93% into a log nobody reads: `[tool.coverage.report]` has no
+      `fail_under`, so the number can fall to anything and CI stays green. It costs 20 s at four
+      workers. `fail_under = 90`, below where the code sits for the reason `vitest.config.ts` gives
+      for its own floor: a threshold that goes red on the ordinary shape of a commit is one
+      everybody learns to lower. ⇢ INF-19
+
+      *Rejected:* dropping `--cov`, which saves the 20 s and keeps nothing.
+
+      *Done when:* CI fails when backend coverage falls below 90%.
+
+- [ ] **INF-21** · **A test's database is a copy, not a migration.** 635 tests migrate a fresh
+      database to head, at 12 ms each — 7.5 s of a run `INF-18` brings under a minute — while
+      copying a migrated file costs 1.7 ms. One file is migrated per worker and each test gets a
+      copy of it; the migration tests keep migrating, because that is what they test. ⇢ INF-19
+
+      *Done when:* outside the migration tests, `upgrade_to_head` runs once per worker.
+
+- [ ] **INF-22** · **The repository-shape tests run in Node.** Fifteen `*.node.test.ts` files — 142
+      tests, 1.8 s of test time between them — each build a jsdom they never touch, which is 61% of
+      what they cost. A `@vitest-environment node` line in each will not do it: the setup file
+      stubs `Element.prototype`, and Node has no `Element`. Two vitest projects instead, `dom` with
+      the setup file and `node` without it.
+
+      *Done when:* the `*.node.test.ts` files run with `environment: 'node'` and without
+      `setup.ts`, and every other test runs as it did.
+
+- [ ] **INF-23** · 🧪 **A worker's test files share one document, and nothing leaks between them.**
+      jsdom is built 133 times a run, a third of what vitest spends. Without isolation it is built
+      once per worker: 116 s becomes 40 s on four CPUs, and 137 s becomes 81 s with coverage. **It
+      does not pass yet.** Three runs failed 0, 11 and 15 tests, always in files that draw a
+      recording — `TechnicalDetails`, `TranscriptVersions`, `Transcript`, `RecordingList` — and
+      different ones each time, because what leaks depends on which file ran before in the same
+      worker. The setup file resets nothing but the rendered tree. ⇢ INF-22
+
+      The leaks are found and closed before isolation is switched off, and the reset lives in one
+      place: a store, a stub or a stored preference one file leaves behind is reset for every file,
+      not in whichever test happened to fail.
+
+      *Rejected:* `vmThreads`, which keeps isolation and builds jsdom once per worker — 54 files
+      fail on `WritableStream is not defined`, and a run holds 3.4 GB. `threads`: 9% faster, and
+      `time.test.ts` fails, because a thread cannot change the time zone of the process it is in.
+      happy-dom: already declined in `vitest.config.ts`, for fidelity.
+
+      *Done when:* `isolate: false`, and ten consecutive runs with the file order shuffled pass.
+
+- [ ] **INF-24** · **Each axe audit asks something the others do not.** Every view is audited four
+      times — dark, light, the +30% locale and a phone — and two of the four read markup another
+      has already read. Light is a token redefinition and jsdom computes no colour, which is
+      `contrast.node.test.ts`'s job, so the 22 light audits read the dark theme's markup again
+      except where a component draws something different per theme: today the theme row of the
+      profile menu and the appearance panel, nothing else. The +30% locale changes the words and
+      none of the structure axe reads; its real check, that no string escapes the bundle, stays.
+      Together 30 audits and 17 s of the 319 s the frontend's tests take. ⇢ INF-23
+
+      Light is audited where the markup differs, and a guard holds that list to the code: a module
+      that reads the resolved theme has to be named by a light audit. The insurance `UI-23a` bought
+      is kept, and stops being paid for twenty times over.
+
+      *Done when:* the light audits cover exactly the surfaces whose markup depends on the theme,
+      a new theme-dependent module without one fails, and the locale pass asserts no English
+      without running axe again.
