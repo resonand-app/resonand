@@ -38,6 +38,17 @@ never been exercised by a real translation; the first one will find what English
 One person maintains this, in the evenings. A pull request will be read, and it may be read a week
 later. Nothing here is abandoned because it was quiet for a fortnight.
 
+## What happens to an issue
+
+A report small enough to just fix becomes a pull request, and the description closes the issue with
+`Fixes #12`. Nothing else is needed.
+
+A request big enough to argue about first gets **scoped into the plan** — `docs/next-plan/`, one
+file per track — where it is given an identifier, a reason and a criterion for being done. The
+issue stays where the conversation is; the plan entry is what somebody builds against, and it names
+the issue it came from. That is not ceremony for its own sake: it is how a request survives the
+six months between being a good idea and being somebody's evening.
+
 ## Opening a pull request
 
 Sometimes the fix is smaller than the issue describing it. Either way:
