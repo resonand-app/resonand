@@ -1,5 +1,9 @@
 # v0 — the archive I use
 
+> **Shipped as `0.1.0` on 2026-09-23**, which is what this folder is named for. The prose below is
+> the record as it was written, so it says *v0* throughout — that was the name of the milestone
+> while it was being built, and rewriting it now would be editing the account after the fact.
+
 The build plan for the **first version**, which has one job: to replace what I currently do with
 my own audio. Publishing is not part of this milestone. What is scoped and waiting for a version to
 claim it is in [`docs/next-plan/`](../next-plan/); what is wanted and not yet scoped is

@@ -22,13 +22,14 @@ So a piece of work sits in exactly one of three states, and its home says which:
 | `docs/next-plan/` (here) | Scoped, no version yet | Yes — code and the plans cite them |
 | `docs/<version>-plan/` | What one version contained | Yes, kept for good |
 
-[`docs/v0-plan/`](../v0-plan/) is the first of those version folders. It is the first version's
+[`docs/v0.1.0-plan/`](../v0.1.0-plan/) is the first of those version folders. It is the first version's
 working set today and becomes the record of it the day it ships.
 
 ## What is here
 
 | File | Track | What it covers |
 |---|---|---|
+| [`infrastructure.md`](infrastructure.md) | `INF` | The repository itself, after the first version |
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
 | [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
@@ -41,12 +42,12 @@ test. **A task is done when it meets the criterion written next to it, not when 
 
 Nothing here is dated, and the ordering between the two halves is a rule rather than a schedule:
 
-1. **The repository opens** when every task in [`docs/v0-plan/`](../v0-plan/) is closed. `INF-10`,
+1. **The repository opens** when every task in [`docs/v0.1.0-plan/`](../v0.1.0-plan/) is closed. `INF-10`,
    `REL-1` and `REL-6` were what had to be true on that day — the moment somebody outside can read
    this, they can also file an issue against it. **It opened on 2026-09-22**, and those three are
    closed.
 2. **The release** — the tag, the published image, anything inviting somebody to trust an archive
-   to this — waited for the five conditions under [*When is v0 done*](../v0-plan/README.md), which
+   to this — waited for the five conditions under [*When is v0 done*](../v0.1.0-plan/README.md), which
    held on 2026-09-23. **`0.1.0` is prepared**: the version, the changelog, the status blocks and a
    `deploy/` that pulls rather than builds. What is left of it is `git tag v0.1.0`, which publishes
    and cannot be undone, so it is a person's command rather than a task's last step.
