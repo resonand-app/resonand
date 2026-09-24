@@ -160,7 +160,7 @@ and every one of them ticks a box in this file.
       Of this plan's own commits, the scoping one and `INF-16`'s reach nothing, and `INF-15`'s,
       which edits `ci.yml`, reaches everything.
 
-- [ ] **INF-18** · 🧪 **The suite hashes passwords at test strength.** 714 Argon2 hashes and 274
+- [x] **INF-18** · 🧪 **The suite hashes passwords at test strength.** 714 Argon2 hashes and 274
       verifications at 57 ms each are 58 s of a 119 s backend run: the API fixtures make three
       accounts a test, and every sign-in verifies a password. Production's parameters exist to
       make a guess expensive, and in a test they make nothing expensive but the test.
@@ -177,6 +177,13 @@ and every one of them ticks a box in this file.
 
       *Done when:* a backend run takes half the time it did on the same machine, the test pinning
       production's parameters exists, and every test passes.
+
+      **Done.** 119 s became 52 s on the machine that measured it, and the 716 hashes and 275
+      verifications a run now makes take no measurable time between them. Naming the parameters
+      changes nothing stored: `RFC_9106_LOW_MEMORY` is exactly what `PasswordHasher()` built, field
+      for field, so no existing hash reads as needing a rehash. `test_security.py` pins the numbers,
+      and a second test fails if the swap itself is ever lost, which would otherwise show only as
+      a suite twice as slow.
 
 - [ ] **INF-19** · **The backend suite runs on every core.** After `INF-18` it runs on one — 89 s
       on four CPUs with coverage, at 93% of one CPU. `pytest-xdist` with `-n auto` in CI and in the

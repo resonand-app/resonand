@@ -19,7 +19,7 @@ import hashlib
 import hmac
 import secrets
 
-from argon2 import PasswordHasher
+from argon2 import PasswordHasher, profiles
 from argon2.exceptions import InvalidHashError, VerificationError, VerifyMismatchError
 
 TOKEN_BYTES = 32
@@ -27,7 +27,16 @@ TOKEN_BYTES = 32
 
 MINIMUM_PASSWORD_LENGTH = 10
 
-_hasher = PasswordHasher()
+PASSWORD_PARAMETERS = profiles.RFC_9106_LOW_MEMORY
+"""What a password is stored under: Argon2id, three passes over 64 MiB in four lanes.
+
+Named rather than left to argon2-cffi's default, which is this profile today and is the library's
+to change: an upgrade that moved it would change what every new account is stored under, and
+nothing would say so. The test suite hashes far below this (``INF-18``), which is why
+``tests/api/test_security.py`` pins these numbers rather than trusting the name.
+"""
+
+_hasher = PasswordHasher.from_parameters(PASSWORD_PARAMETERS)
 
 _NO_ACCOUNT = _hasher.hash(secrets.token_urlsafe(TOKEN_BYTES))
 """A hash of a secret nobody holds, verified against when there is no real hash to verify against.
