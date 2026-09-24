@@ -126,10 +126,9 @@ repos:
 
       - id: pytest
         name: pytest
-        # The fast subset. The ffmpeg-backed tests run in CI, where ffmpeg is installed as part
-        # of the job rather than as part of somebody's laptop.
-        # On push rather than on commit: 92s, which is 91% of everything a backend commit pays.
-        entry: bash -c 'cd backend && uv run pytest -q -m "not slow"'
+        # The whole suite on every core (INF-19): there is no fast subset left to choose, and the
+        # ffmpeg tests skip on a machine without the binaries rather than failing there.
+        entry: bash -c 'cd backend && uv run pytest -q -n auto'
         language: system
         types: [python]
         pass_filenames: false
@@ -181,8 +180,8 @@ repos:
       - id: frontend-test
         name: vitest
         # No coverage here, and coverage in CI. The threshold is a property of the whole suite
-        # and the fast loop is a property of the commit -- the same split as the backend's
-        # `-m "not slow"` above.
+        # and the fast loop is a property of the commit -- the same split the backend's hook makes
+        # by leaving out `--cov`.
         #
         # On push rather than on commit: 52s, which is 60% of everything a frontend commit pays.
         entry: bash -c 'cd frontend && { [ -d node_modules ] || npm ci --silent; } && npm run --silent test:unit'

@@ -30,6 +30,7 @@ dev = [
     "mypy>=1.13",
     "pytest>=8.3",
     "pytest-cov>=6.0",
+    "pytest-xdist>=3.8.0",
     "ruff>=0.8",
 ]
 
@@ -109,7 +110,6 @@ ignore_errors = true
 testpaths = ["tests"]
 addopts = "-q --strict-markers --strict-config"
 markers = [
-    "slow: takes more than a second; excluded from the fast loop with -m 'not slow'",
     "ffmpeg: needs ffmpeg/ffprobe on PATH",
 ]
 
