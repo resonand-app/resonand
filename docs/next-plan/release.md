@@ -317,6 +317,25 @@ dependencies allow.
       workflow is only ever tested by releasing, and the useful mitigation is that the first tag
       publishes nothing until every step has run — which is what happened.
 
+- [x] **OPS-12b** · **The published image says which commit produced it.** `OPS-8`'s criterion was
+      that `docker inspect` names that commit, and `docker inspect` on `0.1.0` named four labels —
+      the Dockerfile's static ones — and not `version`, `revision` or `created`. `OPS-12`'s
+      restructure is what dropped them: metadata-action moved into the join, and a join gathers
+      manifests that already exist rather than building any, so the labels it computed were never
+      part of an image. Found by inspecting the published release rather than by reading the
+      workflow, which had looked right twice.
+
+      metadata-action runs in the build job as well now, and its labels go to the step that pushes
+      by digest. Its tags are ignored there, because what that step pushes has no name.
+
+      The `artifact-metadata: write` permission goes in at the same time. The attestation lands
+      without it — the API has one for the index digest — but the job prints two warnings about a
+      storage record it could not create, and a warning nobody can act on is one everybody learns
+      to scroll past.
+
+      *Verified*: `actionlint`, and the labels' absence measured on the published image rather than
+      argued. **Not verifiable until the next tag**, like everything else in this file.
+
 - [x] **REL-2** · **User documentation**: installation, transcription provider configuration,
       backup and restore, and **how to leave the product** — the full export, documented as a
       supported path rather than an escape hatch.
