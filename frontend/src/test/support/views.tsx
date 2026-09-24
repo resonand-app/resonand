@@ -367,6 +367,13 @@ export const STATES: readonly StateUnderTest[] = [
     reached: 'Nothing in a library is shared until you share it.',
   },
   {
+    // Every view carries the account button, and nothing else raises the menu behind it.
+    name: 'V2 - The account menu',
+    of: view('V2 - Libraries'),
+    raise: (user) => press(user, 'Your account'),
+    reached: 'Theme',
+  },
+  {
     name: 'V8 - Move a recording',
     of: view('V5 - A recording'),
     draws: 'components/MoveDialog.tsx',

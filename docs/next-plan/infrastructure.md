@@ -301,3 +301,17 @@ and every one of them ticks a box in this file.
       *Done when:* the light audits cover exactly the surfaces whose markup depends on the theme,
       a new theme-dependent module without one fails, and the locale pass asserts no English
       without running axe again.
+
+- [x] **INF-24a** · 🧪 **The account menu is a menu.** Out of `INF-24`, and found by the audit it
+      was about to add: no audited state had ever opened the account menu, and the first audit of
+      it failed — `[critical] aria-required-children`, a `role="menu"` holding three plain
+      buttons. The role was a promise the keyboard did not keep either: `Menu`, the design
+      system's other menu, walks its rows with the arrow keys, and this one did not. ⇢ INF-23
+
+      The rows are `menuitem`s and the rule above them a `separator`, and the arrow keys, Home and
+      End walk them through `stepMenuFocus`, which `Menu` now uses too, so the two menus cannot
+      drift into walking differently. `V2 - The account menu` joins the audited states, so a menu
+      that loses its items again fails there.
+
+      *Done when:* the account menu passes axe in both themes, and its rows answer the keys
+      `Menu`'s do.

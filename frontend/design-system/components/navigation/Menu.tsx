@@ -6,6 +6,8 @@ import type { IconName } from '../foundation/Icon';
 import { IconButton } from '../forms/IconButton';
 import { useAnchoredOverlay } from '../overlay/use-anchored-overlay';
 
+import { stepMenuFocus } from './menu-focus';
+
 export interface MenuItem {
   /** Unique within one menu. Also what `onSelect` is told. */
   id: string;
@@ -90,36 +92,8 @@ export function Menu({
   /* Roving focus, unlike `Select`. A menu item is an action and therefore a real button, so the
      thing with focus is the thing `Enter` would fire -- there is no value to name, and nothing
      for `aria-activedescendant` to add. */
-  const focusItem = (index: number) => {
-    const count = items.length;
-    if (count === 0) return;
-    itemsRef.current[((index % count) + count) % count]?.focus();
-  };
-
-  const indexOfActive = () =>
-    itemsRef.current.findIndex((element) => element === document.activeElement);
-
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        focusItem(indexOfActive() + 1);
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        focusItem(indexOfActive() - 1);
-        break;
-      case 'Home':
-        event.preventDefault();
-        focusItem(0);
-        break;
-      case 'End':
-        event.preventDefault();
-        focusItem(items.length - 1);
-        break;
-      default:
-        break;
-    }
+    if (stepMenuFocus(event.key, itemsRef.current.slice(0, items.length))) event.preventDefault();
   };
 
   return (
