@@ -140,6 +140,8 @@ see the branch.
 
 - Backend, on commit: `ruff check` → `ruff format --check` → `mypy` (strict) → `resonand openapi --check`
 - Frontend, on commit: `eslint` → `prettier --check` → `tsc`
+- Workflows, on commit: `actionlint`, with its shellcheck and pyflakes passes off so that it
+  says the same thing on a laptop as on a runner
 - On push: `pytest` and `vitest` (CI adds coverage and `vite build`)
 - Pre-commit also refuses to commit `docs/internal/`, any file over 512 kB, and private keys —
   and CI's `Hygiene` job runs those hooks over every change, staged as one commit, so a clone

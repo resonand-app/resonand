@@ -99,7 +99,7 @@ and every one of them ticks a box in this file.
       edits one, locally as much as in CI. Every change is checked when it arrives, so a run with
       no change has nothing of its own to check, and says so.
 
-- [ ] **INF-16** · **A workflow is read before it runs.** `release.yml` runs on a tag and on nothing
+- [x] **INF-16** · **A workflow is read before it runs.** `release.yml` runs on a tag and on nothing
       else, so a mistake in it is found by the release: `OPS-12a` was found by the first tag, and
       `OPS-12b` by inspecting what it published. Those two were behaviour and no linter would have
       seen them. The class a linter does see — an expression naming an output that does not exist,
@@ -113,6 +113,10 @@ and every one of them ticks a box in this file.
       fail in one place and pass in the other — the property `INF-4` exists to prevent.
 
       *Done when:* `actionlint` passes over both workflows and runs on any change to one.
+
+      **Done.** Both workflows passed as they stood. A probe naming an output of a job that does
+      not exist was refused at commit, with the line and the column, which is the mistake a
+      filter written in `needs.*.outputs` is most likely to contain.
 
 - [ ] **INF-17** · **A change runs the jobs it can reach, and the others report skipped.** A
       `What changed` job reads the change and says which of `Backend`, `Frontend` and `Image` it
