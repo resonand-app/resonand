@@ -69,7 +69,7 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       brought into line wherever it sits, ticked entry or not: a filename, a variable, an address
       and a command are current facts, and one left behind is simply wrong rather than historical.
       _Done when:_ this track exists, `DEC-26` is written, and no open entry anywhere in
-      [`docs/v0-plan/`](.) or [`docs/next-plan/`](../next-plan/) still instructs somebody to build
+      [`docs/v0.1.0-plan/`](.) or [`docs/next-plan/`](../next-plan/) still instructs somebody to build
       against the old name. 🔒
 
 - [x] **NAM-2** · **The name claimed, and the repository moved.** `resonand-app` exists;

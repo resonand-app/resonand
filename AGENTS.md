@@ -91,7 +91,8 @@ identifier is the file it is in and there is no exception to remember. There are
 they have the same shape:
 
 - **`docs/<version>-plan/`** — one per version, holding what that version contained.
-  `docs/v0-plan/` is the first: the first version's working set now, its record once it ships.
+  `docs/v0.1.0-plan/` is the first, and is named for the version that shipped it. A folder is
+  minted per milestone rather than per tag: a patch release is a `CHANGELOG.md` entry, not a plan.
 - **`docs/next-plan/`** — what is scoped and waiting for a version to claim it. Always this name,
   whichever version is being built.
 
@@ -152,7 +153,7 @@ application shell and the hashed bundle the shell references, and that the CLI r
 
 > **The four subsections that follow are scoped to the build of the first version.** Commits,
 > pull requests, branches and task identifiers describe how v0 is being built against
-> `docs/v0-plan/`. When v0 ships, delete what the identifiers hold together — keeping
+> `docs/v0.1.0-plan/`. When v0 ships, delete what the identifiers hold together — keeping
 > Conventional Commits, the four things a pull request answers, and the comment rules below.
 
 ### Commits
@@ -246,7 +247,7 @@ happened to `UI-31` and then to `UI-36`.
 its identifier when a version claims it and it moves into that version's folder — the number says
 what the work is, and the folder says which version did it.
 
-**The prefix is the file.** Everything under `docs/v0-plan/`, one file per track:
+**The prefix is the file.** Everything under `docs/v0.1.0-plan/`, one file per track:
 
 | Prefix | Track | Lives in |
 |---|---|---|

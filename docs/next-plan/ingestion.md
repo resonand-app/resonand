@@ -1,7 +1,7 @@
 # Ingestion, after the first version
 
 `ING-*` — the ways audio gets in that the first version did not build. Everything else in the
-track shipped, and is recorded in [`docs/v0-plan/ingestion.md`](../v0-plan/ingestion.md).
+track shipped, and is recorded in [`docs/v0.1.0-plan/ingestion.md`](../v0.1.0-plan/ingestion.md).
 
 ## Audio that arrives without anybody asking
 

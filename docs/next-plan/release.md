@@ -11,7 +11,7 @@ than for a task to be finished.
 
 ## Gate 1 · The day the repository opened
 
-Every task in [`docs/v0-plan/`](../v0-plan/) closed, and then these, which are what had to be true
+Every task in [`docs/v0.1.0-plan/`](../v0.1.0-plan/) closed, and then these, which are what had to be true
 the moment somebody outside could see any of it.
 
 - [x] **INF-10** · `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue and pull request templates, and
@@ -45,7 +45,7 @@ the moment somebody outside could see any of it.
 
 - [x] **REL-6** · **The README stops describing a project being built and starts describing the
       first version**, and [`ROADMAP.md`](../../ROADMAP.md) is brought level with it: anything still
-      open in [`docs/v0-plan/`](../v0-plan/) on that day either ships or moves, so that a reader
+      open in [`docs/v0.1.0-plan/`](../v0.1.0-plan/) on that day either ships or moves, so that a reader
       arriving the day it opens finds one account of what exists rather than three. The status
       block is what has drifted furthest — it still says the interface is being built, which
       stopped being true before the cross-cutting pass. ⇢ REL-1
@@ -125,7 +125,7 @@ the moment somebody outside could see any of it.
 ## Gate 2 · The release
 
 **The tag waits for the archive, and nothing else here does.** The five conditions under
-[*When is v0 done*](../v0-plan/README.md) are the gate: my real archive in it, a second real person
+[*When is v0 done*](../v0.1.0-plan/README.md) are the gate: my real archive in it, a second real person
 using it, `ING-13` clean after an upgrade with `OPS-6`'s restore performed for real, the export
 round-tripped into an empty instance, and several weeks with all of that true and nothing going
 wrong in them. Three of the five are acts and are not tickable anywhere.
@@ -155,7 +155,7 @@ dependencies allow.
       with nothing published anywhere, and no sentence in `deploy/` describes a different program.
 
       **Done, and the premise was half wrong.** `docker compose up -d` in a clone already worked:
-      [`docker-compose.override.yml`](../../deploy/docker-compose.override.yml) is committed beside
+      `docker-compose.override.yml` was committed beside
       the compose file and compose loads it without being asked, so the build was always there. What
       failed was everything that assumed a registry — the instruction to copy the two files into a
       directory of their own, which leaves the override behind and so leaves a compose file naming
@@ -469,7 +469,7 @@ dependencies allow.
       screens below the table saying it was open. A status block is never in one place, and the way
       to find the others is `git grep` for the sentence rather than memory.
 
-      *The gate this waited for*: the four acts under [*When is v0 done*](../v0-plan/README.md) were
+      *The gate this waited for*: the four acts under [*When is v0 done*](../v0.1.0-plan/README.md) were
       confirmed on 2026-09-23 — the real archive in it, a second person using a shared library, the
       restore performed on real hardware, and the export round-tripped into an empty instance.
 

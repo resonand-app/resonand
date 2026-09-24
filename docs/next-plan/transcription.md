@@ -2,7 +2,7 @@
 
 `TRX-*` and the two provider shapes v0 did not build. The findings here came out of the same
 transcriber-compatibility analysis as the ones in
-[`docs/v0-plan/transcription.md`](../v0-plan/transcription.md), which is where the decisions
+[`docs/v0.1.0-plan/transcription.md`](../v0.1.0-plan/transcription.md), which is where the decisions
 governing all of them are written up; these are the ones the first version declined, and they keep
 the identifiers they were found under because the code cites several of them by name.
 

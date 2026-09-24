@@ -13,7 +13,7 @@ under [`docs/`](docs/), and there are two kinds:
 - **[`docs/next-plan/`](docs/next-plan/)** — what is scoped and waiting. Always this name, so a
   link to it never goes stale and "what is queued" is always one place.
 - **`docs/<version>-plan/`** — one per version, holding what that version contained.
-  [`docs/v0-plan/`](docs/v0-plan/) is the first, and becomes the record of the first version on the
+  [`docs/v0.1.0-plan/`](docs/v0.1.0-plan/) is the first, and becomes the record of the first version on the
   day it ships.
 
 A feature therefore travels: written here without a number, given one when it is scoped into
@@ -109,7 +109,7 @@ makes sense once the API is stable enough that tools built on it do not break.
 - **Automatic classification**: suggested tags and a suggested category, **always a suggestion,
   never applied directly**. Tags already carry the source that makes this possible; the category
   half needs the suggestion storage deferred out of the first migration, which is written up in
-  [`docs/v0-plan/decisions.md`](docs/v0-plan/decisions.md).
+  [`docs/v0.1.0-plan/decisions.md`](docs/v0.1.0-plan/decisions.md).
 
 ## 5 · What "shared" means
 

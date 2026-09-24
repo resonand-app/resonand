@@ -1,7 +1,7 @@
 # Decisions that block work after the first version
 
 `DEC-*`. The ones the first version needed are settled in
-[`docs/v0-plan/decisions.md`](../v0-plan/decisions.md); these two block work here, and each is
+[`docs/v0.1.0-plan/decisions.md`](../v0.1.0-plan/decisions.md); these two block work here, and each is
 cited from elsewhere, which is why they carry numbers at all.
 
 Each is written as a recommendation rather than an answer. Deciding one is its own commit.
