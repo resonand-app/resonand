@@ -486,6 +486,30 @@ dependencies allow.
       *The README's four screenshots are that substitute as it stands, and they are why this is
       below the tag rather than beside it.*
 
+- [ ] **REL-8** · **A guide for the person with an account, rather than the one with the server.**
+      Everything written so far is operator documentation: [`deploy/`](../../deploy/README.md) is
+      how to run an instance, [`API.md`](../../API.md) is how a script talks to one, and `REL-2`'s
+      four topics were installation, the transcription endpoint, backups and the way out. Nobody
+      has written how to *use* the archive — what a library is for and when to make a second one,
+      how the category tree and tags differ and why both exist, what search can and cannot match,
+      what the trash keeps and for how long, what asking for a transcription does and where the
+      audio goes, and what each sharing level lets somebody do.
+
+      **Written against the interface as it stands, and short.** The audience is somebody an
+      administrator has just made an account for, who has never read a word about this before; the
+      test of a sentence is whether it survives being read by that person. Where the interface
+      already says a thing well — and it says most of them, in `src/i18n/en/` — the guide points
+      rather than restates, because two wordings of one rule disagree eventually and the one in the
+      interface is the one people actually meet.
+
+      *Where it goes is part of the task.* A fifth root document is one more thing to keep level
+      with the other four; a `docs/guide/` beside the plans crosses what `docs/` has meant until
+      now, which is the committed plans. Both are defensible and the entry does not pick.
+
+      *Done when:* somebody who has just been given an account can find one moment in a recording
+      they did not upload, and nothing in the guide contradicts what the interface says.
+      ⇢ REL-2
+
 ## Surviving an upgrade
 
 The uncounted metric for the whole project: whether instances that already hold somebody's archive
