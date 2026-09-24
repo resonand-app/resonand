@@ -1,0 +1,18 @@
+# What gitleaks is told to pass over, each for a reason it names (INF-15a).
+#
+# Every default rule stays on. An entry here is as narrow as the finding it answers -- one rule and
+# one exact value -- because a path or a whole rule excluded is how a real key gets through later
+# with nobody having decided to let it.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = """\
+  The v0.1.0 security plan says the history held no secrets and that docs/internal/ was never \
+  committed. generic-api-key reads the word 'secrets' as a key's name and the path after it as \
+  its value.\
+  """
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^docs/internal/$''']

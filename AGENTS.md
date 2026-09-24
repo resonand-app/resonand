@@ -145,7 +145,7 @@ see the branch.
 - On push: `pytest` and `vitest` (CI adds coverage, held to a floor on both sides, and `vite build`)
 - Pre-commit also refuses to commit `docs/internal/`, any file over 512 kB, and private keys —
   and CI's `Hygiene` job runs those hooks over every change, staged as one commit, so a clone
-  that never installed them is held to them anyway
+  that never installed them is held to them anyway; the weekly run holds the whole tree to them
 
 `uvx pre-commit install` installs all three hook types. A clone that installed only `pre-commit`
 before this split runs the suites nowhere locally until it is run again.

@@ -99,6 +99,22 @@ and every one of them ticks a box in this file.
       edits one, locally as much as in CI. Every change is checked when it arrives, so a run with
       no change has nothing of its own to check, and says so.
 
+- [x] **INF-15a** · **The whole tree passes the hooks, and the weekly run holds it to them.** Out of
+      `INF-15`, which found the tree was not clean: `gitleaks` read the sentence in
+      [`security.md`](../v0.1.0-plan/security.md) reporting the history check as a generic API
+      key — the word before the path is *secrets*, and the path is the "value" — and `check-json`
+      refused `tsconfig.app.json` and `tsconfig.node.json`, which carry comments. Each waited for
+      the next edit to its file, locally as much as in CI. ⇢ INF-15
+
+      `.gitleaks.toml` passes over exactly that value under exactly that rule, with every default
+      rule kept; a key after the word *secret* anywhere else is still caught. `check-json` leaves
+      the `tsconfig` files alone, because TypeScript reads them as JSONC and `tsc` already fails
+      on one it cannot parse. With the tree clean, a run with nothing to measure from checks all
+      of it again, staged on an unborn branch, which is what `INF-15` first built.
+
+      *Done when:* every hook but the toolchain's passes over the whole tree staged as added, and
+      the weekly run is what does it.
+
 - [x] **INF-16** · **A workflow is read before it runs.** `release.yml` runs on a tag and on nothing
       else, so a mistake in it is found by the release: `OPS-12a` was found by the first tag, and
       `OPS-12b` by inspecting what it published. Those two were behaviour and no linter would have
