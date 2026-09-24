@@ -90,14 +90,16 @@ jobs:
           SKIP: ruff-check,ruff-format,mypy,frontend-lint,frontend-format,frontend-typecheck
         run: |
           base="$(.github/scripts/change-base.sh "$BASE")"
-          if [ -z "$base" ]; then
-            echo "Nothing to measure this run from, so no change to check."
-            exit 0
-          fi
           # Staged as one commit of the whole change would be, because two hooks read the index
           # rather than the files they are handed: gitleaks scans what is staged, and the size
           # check reads what is added. Given a list of names, both pass having read nothing.
-          git reset --quiet --soft "$base"
+          if [ -n "$base" ]; then
+            git reset --quiet --soft "$base"
+          else
+            # Nothing to measure from -- the weekly run, a dispatched one -- so the change is the
+            # whole tree: an unborn branch stages every file as added (INF-15a).
+            git checkout --quiet --orphan hygiene
+          fi
           # A major rather than latest, as with Node: a pre-commit release does not change what
           # this checked overnight. The hooks themselves are pinned in the config.
           uvx --from 'pre-commit>=4,<5' pre-commit run --show-diff-on-failure --color always

@@ -38,6 +38,9 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-json
+        # tsconfig files are JSONC, which TypeScript reads with comments and all, and `tsc` fails
+        # on one it cannot parse already. Held to plain JSON they fail the first edit (INF-15a).
+        exclude: '^frontend/tsconfig(\.[a-z]+)?\.json$'
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: mixed-line-ending
@@ -56,9 +59,9 @@ repos:
         # blocks. It will not catch a human-chosen password in prose -- no prefix, low entropy,
         # and measured against the one that reached this repository, which it passes. That class
         # is what the two refusals below are for.
-        # No .gitleaks.toml: it passes clean here. If a fixture ever trips it, that file names the
-        # rule and the path rather than excluding the suites, which is how a real finding gets
-        # lost among the ignored ones.
+        # .gitleaks.toml passes over exactly what it names, one rule and one value at a time, and
+        # nothing else: excluding a path or a suite is how a real finding gets lost among the
+        # ignored ones.
 
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
