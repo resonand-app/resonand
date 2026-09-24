@@ -336,6 +336,30 @@ dependencies allow.
       *Verified*: `actionlint`, and the labels' absence measured on the published image rather than
       argued. **Not verifiable until the next tag**, like everything else in this file.
 
+- [x] **OPS-8a** · **The release writes its own notes.** `OPS-8` published an image and stopped, so
+      `0.1.0`'s release page was made by hand — and `CHANGELOG.md` links
+      `/releases/tag/v0.1.0`, which would have been a 404 if nobody had remembered. A release step
+      that lives in somebody's memory is one that is skipped the day they are busy.
+
+      The publish job creates it, **after the attestation and never before the image is pullable**:
+      notes describing something nobody can pull are the one ordering of these two that misleads a
+      reader. The notes are this version's section of `CHANGELOG.md` and nothing else — the file
+      opens with what the number promises and will hold every earlier release underneath, so a
+      release carrying all of it says almost nothing about the version it is for. The link
+      definition is stripped, since it points at the page the notes are on.
+
+      A version with no section **fails the job** rather than publishing an empty page, and says
+      that the image is already pushed so whoever reads it knows what state they are in. A
+      pre-release — any version with a `-` in it — is marked as one and does not take *Latest*.
+
+      *Verified by running the step itself*: the `run:` block was lifted out of the workflow with a
+      YAML parser and executed against the real `CHANGELOG.md` with `gh` stubbed, which is as close
+      as this gets without a tag. It builds
+      `gh release create v0.1.0 --title 0.1.0 --notes-file … --latest` with 37 lines of notes
+      beginning at the first real sentence; a version with no section and a section holding only
+      whitespace both exit 1 with the message above. **Not verified:** the job in CI, which no
+      change to this file can be until the next tag.
+
 - [x] **REL-2** · **User documentation**: installation, transcription provider configuration,
       backup and restore, and **how to leave the product** — the full export, documented as a
       supported path rather than an escape hatch.
