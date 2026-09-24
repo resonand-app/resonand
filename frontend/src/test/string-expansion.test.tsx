@@ -25,6 +25,11 @@
  *
  * No amount of looking at English screens shows any of those, which is what this file is for.
  *
+ * **It does not run axe again** (`INF-24`). The locale changes the words and none of the structure
+ * axe reads: no component branches on the length of a string -- every `.length` test in the
+ * interface counts a list -- so a longer name cannot remove a control, and the English audits in
+ * `accessibility.test.tsx` already read every name there is.
+ *
  * **The assertion is narrow on purpose: no English *bundle value* may appear.** The obvious check
  * -- flag any text without brackets -- flags the whole archive, because a recording's title, its
  * transcript and its owner's name are content and not copy. Asking instead whether a string the
@@ -38,7 +43,6 @@ import { describe, expect, it } from 'vitest';
 import { resources } from '@/i18n';
 import { pseudo } from '@/i18n/pseudo';
 import { mockApi } from '@/test/api/server';
-import { describeViolations, violationsIn } from '@/test/support/axe';
 import { VIEWS, mountView } from '@/test/support/views';
 
 import { WHOLE_SYSTEM } from './support/timeouts';
@@ -135,19 +139,6 @@ describe.each(VIEWS)('$name in the +30% locale', WHOLE_SYSTEM, (view) => {
     await inPseudo(view);
     const untranslated = visibleText().filter((text) => ENGLISH.has(text) && !EXCUSED.has(text));
     expect(untranslated).toEqual([]);
-  });
-
-  it('still passes axe when every string is a third longer', async () => {
-    // Accessible names are built from the same strings, and a name assembled by concatenation is
-    // exactly what a longer language breaks.
-    await inPseudo(view);
-    const violations = await violationsIn();
-    expect(
-      violations,
-      violations.length === 0
-        ? ''
-        : `${view.name} fails axe at +30%:\n${describeViolations(violations)}`,
-    ).toEqual([]);
   });
 });
 

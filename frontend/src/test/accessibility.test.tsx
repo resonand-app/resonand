@@ -1,17 +1,19 @@
 /**
- * 🧪 Every view passes axe, in both themes (`UI-23a`, §1.7).
+ * 🧪 Every view passes axe, and in both themes wherever the two draw different markup (`UI-23a`,
+ * `INF-24`, §1.7).
  *
  * One of the four criteria the views were declared done against, checked here because this is the
  * first point at which every view exists. A per-view assertion written while that view was being
  * built would have been eight separate promises; this is one, and it is the one that keeps being
  * true.
  *
- * **Both themes, because the markup differs between them.** Light is a token redefinition and not
- * a second stylesheet, so most of what changes is colour -- which axe cannot see in jsdom anyway,
- * and which `contrast.node.test.ts` owns. What it does catch is the thing a token swap is not:
- * an icon that changes with the theme, a control that draws a different label, a state that is
- * conveyed by an attribute in one theme and not the other. Cheap to check, and the failure it
- * catches is one nobody would look for.
+ * **Light where the markup differs, and only there.** Light is a token redefinition and not a
+ * second stylesheet, so most of what changes is colour -- which axe cannot see in jsdom anyway,
+ * and which `contrast.node.test.ts` owns. What an audit in light does catch is the thing a token
+ * swap is not: an icon that changes with the theme, a control that draws a different label. That
+ * happens in the modules that read the theme and nowhere else, so a state that puts one on the
+ * page names it as `themed`, and `every-view-is-audited.node.test.ts` holds those names to every
+ * module that reads it. Auditing everything twice read the same markup twenty times over.
  *
  * **And the states behind a trigger** (`UI-23a1`). A view has more surfaces than the one a URL
  * lands on: an overlay is raised by a click, a panel is reached by a query parameter, and a trash
@@ -35,7 +37,10 @@ import { WHOLE_SYSTEM } from './support/timeouts';
 
 mockApi();
 
-const THEMES = ['dark', 'light'] as const;
+/** Dark everywhere, and light as well where the surface draws something different in it. */
+function themesOf(surface: { themed?: string }): readonly ('dark' | 'light')[] {
+  return surface.themed === undefined ? ['dark'] : ['dark', 'light'];
+}
 
 /**
  * The audit can fail.
@@ -63,14 +68,14 @@ describe('the audit itself', () => {
 });
 
 describe.each(VIEWS)('$name', WHOLE_SYSTEM, (view) => {
-  it.each(THEMES)('has nothing for axe to report in the %s theme', async (theme) => {
+  it.each(themesOf(view))('has nothing for axe to report in the %s theme', async (theme) => {
     await mountView(view, { theme });
     await nothingToReport(view.name, theme);
   });
 });
 
 describe.each(STATES)('$name', WHOLE_SYSTEM, (state) => {
-  it.each(THEMES)('has nothing for axe to report in the %s theme', async (theme) => {
+  it.each(themesOf(state))('has nothing for axe to report in the %s theme', async (theme) => {
     await mountState(state, { theme });
     await nothingToReport(state.name, theme);
   });

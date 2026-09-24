@@ -1,7 +1,9 @@
-import type { HTMLAttributes, Ref } from 'react';
+import type { HTMLAttributes, KeyboardEvent, Ref } from 'react';
 
 import { Icon } from '../foundation/Icon';
 import type { IconName } from '../foundation/Icon';
+
+import { stepMenuFocus } from './menu-focus';
 
 interface RowProps {
   icon: IconName;
@@ -14,6 +16,7 @@ function Row({ icon, label, value, onClick }: RowProps) {
   return (
     <button
       type="button"
+      role="menuitem"
       onClick={onClick}
       data-ds="menu-row"
       style={{
@@ -102,12 +105,24 @@ export function ProfileMenu({
   ref,
   onSignOut,
   style,
+  onKeyDown,
   ...rest
 }: ProfileMenuProps) {
+  // A menu is walked with the arrow keys, as `Menu` is: the role is a promise about the keyboard
+  // as much as a name for the screen reader (`INF-24a`).
+  const walk = (event: KeyboardEvent<HTMLDivElement>) => {
+    onKeyDown?.(event);
+    const rows = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]')];
+    if (stepMenuFocus(event.key, rows)) event.preventDefault();
+  };
+
   return (
     <div
       ref={ref}
       role="menu"
+      // Programmatically focusable and not a tab stop, as `Menu` is: the rows take the focus.
+      tabIndex={-1}
+      onKeyDown={walk}
       data-ds="profile-menu"
       style={{
         width: 236,
@@ -168,7 +183,10 @@ export function ProfileMenu({
           </span>
         </div>
       </div>
-      <div style={{ height: 1, background: 'var(--hairline)', margin: '2px 0 4px' }} />
+      <div
+        role="separator"
+        style={{ height: 1, background: 'var(--hairline)', margin: '2px 0 4px' }}
+      />
       <Row icon={themeIcon} label={labels?.theme ?? 'Theme'} value={theme} onClick={onTheme} />
       <Row
         icon="sliders-horizontal"

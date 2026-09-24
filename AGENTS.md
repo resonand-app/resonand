@@ -142,7 +142,7 @@ see the branch.
 - Frontend, on commit: `eslint` → `prettier --check` → `tsc`
 - Workflows, on commit: `actionlint`, with its shellcheck and pyflakes passes off so that it
   says the same thing on a laptop as on a runner
-- On push: `pytest` and `vitest` (CI adds coverage and `vite build`)
+- On push: `pytest` and `vitest` (CI adds coverage, held to a floor on both sides, and `vite build`)
 - Pre-commit also refuses to commit `docs/internal/`, any file over 512 kB, and private keys —
   and CI's `Hygiene` job runs those hooks over every change, staged as one commit, so a clone
   that never installed them is held to them anyway
@@ -444,7 +444,9 @@ the environment cannot point a test at a real archive.
 handler must honour the parameters the real endpoint documents; one that ignores a filter makes
 the feature untestable. `*.node.test.ts` files test the shape of the repository rather than a
 component — the token union against the CSS, the fonts being shipped, contrast, the committed
-OpenAPI document against the generated types.
+OpenAPI document against the generated types. They run in Node, in a vitest project of their own
+with no setup file (`vitest --project node`); everything else runs in `dom`, over jsdom, each
+file in a VM context of its own inside a worker that keeps jsdom loaded (`vmForks`).
 
 ## Design and UI work
 

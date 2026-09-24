@@ -222,7 +222,8 @@ describe('the account menu', () => {
     expect(within(menu).getByText('Theme')).toBeInTheDocument();
     expect(within(menu).getByText('Settings')).toBeInTheDocument();
     expect(within(menu).getByText('Sign out')).toBeInTheDocument();
-    expect(within(menu).getAllByRole('button')).toHaveLength(3);
+    expect(within(menu).getAllByRole('menuitem')).toHaveLength(3);
+    expect(within(menu).queryAllByRole('button')).toHaveLength(0);
   });
 
   it('goes to Settings and closes on the way', async () => {

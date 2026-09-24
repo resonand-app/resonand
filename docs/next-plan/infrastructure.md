@@ -206,7 +206,7 @@ and every one of them ticks a box in this file.
       the pre-push hook's whole cost now, against the 92 s its comment used to quote for a subset
       that was never smaller than the suite.
 
-- [ ] **INF-20** · **Backend coverage is a floor, as the frontend's is.** CI runs the backend
+- [x] **INF-20** · **Backend coverage is a floor, as the frontend's is.** CI runs the backend
       suite with `--cov` and prints 93% into a log nobody reads: `[tool.coverage.report]` has no
       `fail_under`, so the number can fall to anything and CI stays green. It costs 20 s at four
       workers. `fail_under = 90`, below where the code sits for the reason `vitest.config.ts` gives
@@ -217,14 +217,25 @@ and every one of them ticks a box in this file.
 
       *Done when:* CI fails when backend coverage falls below 90%.
 
-- [ ] **INF-21** · **A test's database is a copy, not a migration.** 635 tests migrate a fresh
+      **Done.** pytest-cov reads the floor from `[tool.coverage.report]`, so CI's command did not
+      change. Raised to 99 as a probe, the same run failed with *Required test coverage of 99.0% not
+      reached. Total coverage: 92.80%* and exit 1; at 90 it passes. The pre-push hook runs without
+      coverage, as the frontend's does, so the floor is CI's to hold.
+
+- [x] **INF-21** · **A test's database is a copy, not a migration.** 635 tests migrate a fresh
       database to head, at 12 ms each — 7.5 s of a run `INF-18` brings under a minute — while
       copying a migrated file costs 1.7 ms. One file is migrated per worker and each test gets a
       copy of it; the migration tests keep migrating, because that is what they test. ⇢ INF-19
 
       *Done when:* outside the migration tests, `upgrade_to_head` runs once per worker.
 
-- [ ] **INF-22** · **The repository-shape tests run in Node.** Fifteen `*.node.test.ts` files — 142
+      **Done.** A serial run migrates 23 times where it migrated 635: once for the file every test
+      copies, and 22 times inside the migration tests, which build their own engines. The copy is
+      taken after the migrating engine is disposed, because closing the last connection is what
+      checkpoints the WAL into the file; copied a moment earlier, what the migration wrote could
+      still be sitting in `resonand.db-wal`, which the copy leaves behind.
+
+- [x] **INF-22** · **The repository-shape tests run in Node.** Fifteen `*.node.test.ts` files — 142
       tests, 1.8 s of test time between them — each build a jsdom they never touch, which is 61% of
       what they cost. A `@vitest-environment node` line in each will not do it: the setup file
       stubs `Element.prototype`, and Node has no `Element`. Two vitest projects instead, `dom` with
@@ -233,7 +244,11 @@ and every one of them ticks a box in this file.
       *Done when:* the `*.node.test.ts` files run with `environment: 'node'` and without
       `setup.ts`, and every other test runs as it did.
 
-- [ ] **INF-23** · 🧪 **A worker's test files share one document, and nothing leaks between them.**
+      **Done.** All fifteen passed in Node at the first attempt — none of them had been leaning on
+      the document it was built — and take 3.7 s as a project of their own. The rest of the suite
+      is unchanged: 133 files and 1428 tests, the same totals as before the split.
+
+- [x] **INF-23** · 🧪 **A worker's test files share one document, and nothing leaks between them.**
       jsdom is built 133 times a run, a third of what vitest spends. Without isolation it is built
       once per worker: 116 s becomes 40 s on four CPUs, and 137 s becomes 81 s with coverage. **It
       does not pass yet.** Three runs failed 0, 11 and 15 tests, always in files that draw a
@@ -252,7 +267,25 @@ and every one of them ticks a box in this file.
 
       *Done when:* `isolate: false`, and ten consecutive runs with the file order shuffled pass.
 
-- [ ] **INF-24** · **Each axe audit asks something the others do not.** Every view is audited four
+      **Done differently: no document is shared, and nothing is left to leak.** Finding the leaks
+      found how many there were. `widen()` in the view harness redefines `innerWidth` and
+      `matchMedia` for the phone passes and puts nothing back, so the next file drew a phone; the
+      recording view remembers a collapsed panel in `localStorage`; nine files stub the viewport,
+      ten stub globals, four spy on `HTMLElement.prototype`, five fake the clock, and the
+      harness patches `offsetHeight` on the prototype when it is imported. Every one had been safe
+      only because the next file got a new jsdom, and every one would need a reset — and so would
+      the next one anybody writes.
+
+      `pool: 'vmForks'` keeps what isolation gave and drops what it cost. The worker loads jsdom
+      once, and each file runs in a VM context of its own with a fresh document and module graph:
+      jsdom falls from 28% of tracked time to 3%, and at the same load a run with coverage takes
+      193 s where it took 271 s, with the same coverage to the hundredth of a point. The one thing
+      a context lacks is Node's web streams, which msw builds responses from, and the setup file
+      asks the process for them. `vmThreads` would do the same in threads, where `time.test.ts`
+      cannot move the time zone. Three runs with the file order shuffled pass, which under this
+      pool is a property rather than an achievement.
+
+- [x] **INF-24** · **Each axe audit asks something the others do not.** Every view is audited four
       times — dark, light, the +30% locale and a phone — and two of the four read markup another
       has already read. Light is a token redefinition and jsdom computes no colour, which is
       `contrast.node.test.ts`'s job, so the 22 light audits read the dark theme's markup again
@@ -268,3 +301,28 @@ and every one of them ticks a box in this file.
       *Done when:* the light audits cover exactly the surfaces whose markup depends on the theme,
       a new theme-dependent module without one fails, and the locale pass asserts no English
       without running axe again.
+
+      **Done, and the light pass had been auditing less than it said.** No audited state had ever
+      opened the account menu, so the one module whose markup light changes most was the one the
+      twenty-two light audits never saw — and the first audit of it failed, which is `INF-24a`.
+      Light is audited on two surfaces now, the account menu and the appearance panel, which are
+      the only two modules that call `useTheme()`; a surface names its module as `themed`, and
+      `every-view-is-audited.node.test.ts` holds those names to the code in both directions, with
+      the design system reading the theme nowhere. The locale pass kept its real check and lost
+      its axe half: no component branches on the length of a string — every `.length` test in the
+      interface counts a list — so a longer word cannot take a control away. Twenty-nine audits
+      go, three guard tests arrive.
+
+- [x] **INF-24a** · 🧪 **The account menu is a menu.** Out of `INF-24`, and found by the audit it
+      was about to add: no audited state had ever opened the account menu, and the first audit of
+      it failed — `[critical] aria-required-children`, a `role="menu"` holding three plain
+      buttons. The role was a promise the keyboard did not keep either: `Menu`, the design
+      system's other menu, walks its rows with the arrow keys, and this one did not. ⇢ INF-23
+
+      The rows are `menuitem`s and the rule above them a `separator`, and the arrow keys, Home and
+      End walk them through `stepMenuFocus`, which `Menu` now uses too, so the two menus cannot
+      drift into walking differently. `V2 - The account menu` joins the audited states, so a menu
+      that loses its items again fails there.
+
+      *Done when:* the account menu passes axe in both themes, and its rows answer the keys
+      `Menu`'s do.

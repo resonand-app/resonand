@@ -31,6 +31,34 @@ createI18n('en');
 configure({ asyncUtilTimeout: 5_000 });
 
 /**
+ * Web streams, which a file's VM context does not have (`INF-23`).
+ *
+ * The context's globals are the jsdom window's, and the window has no `WritableStream` -- Node
+ * does, and the worker running the context is Node, so these are Node's own. msw builds responses
+ * out of them, so without this every file that mocks the API fails before its first test.
+ */
+interface WebStreams {
+  ReadableStream: typeof ReadableStream;
+  TransformStream: typeof TransformStream;
+  WritableStream: typeof WritableStream;
+}
+// Asked of the process rather than imported: this file is compiled as browser code, without
+// Node's types, and `getBuiltinModule` needs none of them to answer.
+const { process } = globalThis as unknown as {
+  process: { getBuiltinModule: (id: 'node:stream/web') => WebStreams };
+};
+const streams = process.getBuiltinModule('node:stream/web');
+for (const name of ['ReadableStream', 'TransformStream', 'WritableStream'] as const) {
+  if (!(name in globalThis)) {
+    Object.defineProperty(globalThis, name, {
+      configurable: true,
+      writable: true,
+      value: streams[name],
+    });
+  }
+}
+
+/**
  * Pointer capture, which jsdom does not implement.
  *
  * `Sheet` claims the pointer so a drag that leaves the element still reaches it -- that is what

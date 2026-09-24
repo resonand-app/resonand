@@ -947,6 +947,8 @@ checked once everything exists because that is the only point at which they can 
 
 - [x] **UI-23a** · 🧪 An axe audit as a test **on every view**, in both themes.
       _Done when:_ a new view without one fails CI. ⇢ every view
+      _Narrowed by `INF-24`:_ light is audited where it draws different markup, which a guard
+      holds to every module that reads the theme; everywhere else it read the dark theme's again.
 
 - [x] **UI-23a1** · The harness says the upload and move dialogs are "audited where they are
       raised", and no test raises either. `UI-23a`'s criterion — a new view without an audit fails

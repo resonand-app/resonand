@@ -67,6 +67,8 @@ export interface ViewUnderTest {
    * passing. A selector says "the content is here" in a way no wording can.
    */
   drawn?: string;
+  /** The module on this view that draws something different per theme, as `StateUnderTest` has. */
+  themed?: string;
 }
 
 /**
@@ -301,6 +303,15 @@ export interface StateUnderTest {
    * rather than something drawn over it.
    */
   draws?: string;
+  /**
+   * The module this state puts on the page that draws something different per theme, relative to
+   * `src/` (`INF-24`).
+   *
+   * A state that names one is audited in light as well as dark. Light is a token redefinition and
+   * jsdom computes no colour, so everywhere else a light audit reads the dark one's markup again;
+   * `every-view-is-audited.node.test.ts` holds these to every module that reads the theme.
+   */
+  themed?: string;
   /** Where to mount, when the state is a query parameter away. The view's own address otherwise. */
   at?: string;
   /**
@@ -365,6 +376,14 @@ export const STATES: readonly StateUnderTest[] = [
     draws: 'features/libraries/CreateLibraryDialog.tsx',
     raise: (user) => press(user, /Create a library/),
     reached: 'Nothing in a library is shared until you share it.',
+  },
+  {
+    // Every view carries the account button, and nothing else raises the menu behind it.
+    name: 'V2 - The account menu',
+    of: view('V2 - Libraries'),
+    themed: 'app/shell/Profile.tsx',
+    raise: (user) => press(user, 'Your account'),
+    reached: 'Theme',
   },
   {
     name: 'V8 - Move a recording',
@@ -436,6 +455,7 @@ export const STATES: readonly StateUnderTest[] = [
   {
     name: 'V10 - Appearance',
     of: view('V10 - Settings'),
+    themed: 'features/settings/AppearancePanel.tsx',
     at: `${routes.settings}?${SECTION_PARAM}=appearance`,
     reached: 'Saved on this device, because it is a property of the screen you are looking at.',
   },

@@ -30,6 +30,10 @@
  * its own comment that the dialogs were audited where they were raised. Two more checks, on the
  * same principle as the first: every overlay that exists must be named by a state, and every
  * section must be reached by one.
+ *
+ * **And light is audited only where it draws something different** (`INF-24`), so the list of
+ * where that is has to be held to the code as well: every module that reads the theme must be
+ * named as `themed` by a state, and the design system, whose colours are tokens, reads it nowhere.
  */
 
 import { globSync, readFileSync } from 'node:fs';
@@ -102,6 +106,35 @@ function overlaysAudited(): string[] {
  * `sectionIn` falls back to it for an unknown section and for Administration asked for by
  * somebody who is not an administrator, so it is the one section reachable without naming it.
  */
+/** Where the theme is read: `resolved` or `choice` out of `useTheme()`, and nothing else can. */
+const READS_THE_THEME = /\buseTheme\(/;
+
+/** The design system's theme module, which is where the theme is defined rather than read. */
+const THEME_MODULE = 'theme/';
+
+const DESIGN_SYSTEM = resolve(SOURCE, '..', 'design-system');
+
+function sourcesIn(root: string): string[] {
+  return globSync('**/*.tsx', { cwd: root })
+    .map((path) => path.split('\\').join('/'))
+    .filter(
+      (path) =>
+        !path.includes('.test.') && !path.startsWith('dev/') && !path.split('/').includes('tests'),
+    );
+}
+
+function themedOnDisk(): string[] {
+  return sourcesIn(SOURCE)
+    .filter((path) => READS_THE_THEME.test(readFileSync(resolve(SOURCE, path), 'utf8')))
+    .sort();
+}
+
+function themedAudited(): string[] {
+  return [...harness().matchAll(/^\s*themed:\s*'([^']+)',$/gm)]
+    .map((match) => match[1] ?? '')
+    .sort();
+}
+
 const DEFAULT_SECTION = 'account';
 
 /** Every section Settings has, read out of the tuple that defines them. */
@@ -148,5 +181,24 @@ describe('the audited list and the settings sections', () => {
 
   it('still has a section it does not have to name, so the exception is a real one', () => {
     expect(sectionsOnDisk()).toContain(DEFAULT_SECTION);
+  });
+});
+
+describe('the light audits and the modules that read the theme', () => {
+  it('audits in light every module that reads the theme, and names no module that does not', () => {
+    expect(themedAudited()).toEqual(themedOnDisk());
+  });
+
+  it('found some at all, so a passing run is not two empty arrays', () => {
+    expect(themedOnDisk().length).toBeGreaterThan(0);
+  });
+
+  it('leaves the design system reading none, because its colours are tokens', () => {
+    const readers = sourcesIn(DESIGN_SYSTEM).filter(
+      (path) =>
+        !path.startsWith(THEME_MODULE) &&
+        READS_THE_THEME.test(readFileSync(resolve(DESIGN_SYSTEM, path), 'utf8')),
+    );
+    expect(readers).toEqual([]);
   });
 });

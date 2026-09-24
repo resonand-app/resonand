@@ -120,3 +120,6 @@ source = ["resonand"]
 [tool.coverage.report]
 show_missing = true
 exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
+# A floor below where the code sits (93%), for the reason the frontend's is: a threshold that goes
+# red on the ordinary shape of a commit is one everybody learns to lower (INF-20).
+fail_under = 90
