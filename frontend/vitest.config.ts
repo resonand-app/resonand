@@ -10,18 +10,17 @@
 
 import { fileURLToPath } from 'node:url';
 
-import { defineConfig, mergeConfig } from 'vitest/config';
+import { configDefaults, defineConfig, mergeConfig } from 'vitest/config';
 
 import viteConfig from './vite.config.ts';
+
+/** The tests whose subject is the repository -- files at paths -- rather than a component. */
+const REPOSITORY_TESTS = 'src/**/*.node.test.ts';
 
 export default mergeConfig(
   viteConfig,
   defineConfig({
     test: {
-      // jsdom rather than happy-dom: the player, the follow-and-release scroll and the
-      // anchored overlays are all measured behaviour, and the more faithful DOM is worth the
-      // slower start.
-      environment: 'jsdom',
       // Five seconds is vitest's default and it is not enough here, because this machine runs
       // several agents at once: each has its own worktree and its own copy of this suite, and a
       // second one testing turns a one-second test into a six-second one. The failures that
@@ -38,24 +37,47 @@ export default mergeConfig(
       // its own vocabulary comes from is one the type checker and ESLint can both read without
       // a second global namespace to be told about.
       globals: false,
-      setupFiles: [fileURLToPath(new URL('./src/test/support/setup.ts', import.meta.url))],
-      // Both trees. `design-system/` is the application's component source (`DEC-21`), so a
-      // component's test sits with the component rather than in a parallel folder under `src/`
-      // that has to be kept in step with it by hand.
-      //
-      // Under `src/` "with" means a `tests/` folder inside the folder it covers, so that what a
-      // feature lists is the feature and not twice the feature. It is still local -- it moves,
-      // renames and dies with what it tests, which is the whole objection to a parallel tree --
-      // and this glob needs no knowledge of it, because a test is known by its name and not by
-      // where it sits. The design system keeps its tests flat: there a component is a set of
-      // three files, and `.prompt.md` is the one that would be left behind.
-      include: ['src/**/*.{test,spec}.{ts,tsx}', 'design-system/**/*.{test,spec}.{ts,tsx}'],
       // No stylesheet is processed or injected -- a component test asserts what a component
       // renders, not what a browser would paint it -- with one exception, added by `UI-32a`:
       // `?raw`. `interaction-layer.test.tsx` reads `components.css` as text and holds every
       // component to what the stylesheet claims to own, and a bare `css: false` answers a `?raw`
       // request with an empty string, which is a check that passes because it read nothing.
       css: { include: [/\?raw/] },
+
+      // Two worlds, because the two kinds of test want different ones (`INF-22`). A component
+      // needs a document and the setup file that prepares it; a repository test reads files, and
+      // building it a jsdom was most of what it cost -- while the setup file, which stubs
+      // `Element.prototype`, cannot even load outside one.
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: 'dom',
+            // jsdom rather than happy-dom: the player, the follow-and-release scroll and the
+            // anchored overlays are all measured behaviour, and the more faithful DOM is worth
+            // the slower start.
+            environment: 'jsdom',
+            setupFiles: [fileURLToPath(new URL('./src/test/support/setup.ts', import.meta.url))],
+            // Both trees. `design-system/` is the application's component source (`DEC-21`), so a
+            // component's test sits with the component rather than in a parallel folder under
+            // `src/` that has to be kept in step with it by hand.
+            //
+            // Under `src/` "with" means a `tests/` folder inside the folder it covers, so that
+            // what a feature lists is the feature and not twice the feature. It is still local --
+            // it moves, renames and dies with what it tests, which is the whole objection to a
+            // parallel tree -- and this glob needs no knowledge of it, because a test is known by
+            // its name and not by where it sits. The design system keeps its tests flat: there a
+            // component is a set of three files, and `.prompt.md` is the one that would be left
+            // behind.
+            include: ['src/**/*.{test,spec}.{ts,tsx}', 'design-system/**/*.{test,spec}.{ts,tsx}'],
+            exclude: [...configDefaults.exclude, REPOSITORY_TESTS],
+          },
+        },
+        {
+          extends: true,
+          test: { name: 'node', environment: 'node', include: [REPOSITORY_TESTS] },
+        },
+      ],
 
       coverage: {
         provider: 'v8',

@@ -444,7 +444,8 @@ the environment cannot point a test at a real archive.
 handler must honour the parameters the real endpoint documents; one that ignores a filter makes
 the feature untestable. `*.node.test.ts` files test the shape of the repository rather than a
 component — the token union against the CSS, the fonts being shipped, contrast, the committed
-OpenAPI document against the generated types.
+OpenAPI document against the generated types. They run in Node, in a vitest project of their own
+with no setup file (`vitest --project node`); everything else runs in `dom`, over jsdom.
 
 ## Design and UI work
 

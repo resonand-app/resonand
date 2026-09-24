@@ -235,7 +235,7 @@ and every one of them ticks a box in this file.
       checkpoints the WAL into the file; copied a moment earlier, what the migration wrote could
       still be sitting in `resonand.db-wal`, which the copy leaves behind.
 
-- [ ] **INF-22** · **The repository-shape tests run in Node.** Fifteen `*.node.test.ts` files — 142
+- [x] **INF-22** · **The repository-shape tests run in Node.** Fifteen `*.node.test.ts` files — 142
       tests, 1.8 s of test time between them — each build a jsdom they never touch, which is 61% of
       what they cost. A `@vitest-environment node` line in each will not do it: the setup file
       stubs `Element.prototype`, and Node has no `Element`. Two vitest projects instead, `dom` with
@@ -243,6 +243,10 @@ and every one of them ticks a box in this file.
 
       *Done when:* the `*.node.test.ts` files run with `environment: 'node'` and without
       `setup.ts`, and every other test runs as it did.
+
+      **Done.** All fifteen passed in Node at the first attempt — none of them had been leaning on
+      the document it was built — and take 3.7 s as a project of their own. The rest of the suite
+      is unchanged: 133 files and 1428 tests, the same totals as before the split.
 
 - [ ] **INF-23** · 🧪 **A worker's test files share one document, and nothing leaks between them.**
       jsdom is built 133 times a run, a third of what vitest spends. Without isolation it is built
