@@ -151,10 +151,11 @@ application shell and the hashed bundle the shell references, and that the CLI r
 
 ## Conventions
 
-> **The four subsections that follow are scoped to the build of the first version.** Commits,
-> pull requests, branches and task identifiers describe how v0 is being built against
-> `docs/v0.1.0-plan/`. When v0 ships, delete what the identifiers hold together — keeping
-> Conventional Commits, the four things a pull request answers, and the comment rules below.
+> **These held while the first version was built, and they hold now, with one thing added.** The
+> repository is public and `0.1.0` is out, so work arrives from outside as well as from a plan —
+> and an identifier that resolves to a file in this repository and an issue number that resolves
+> to a page on GitHub are different kinds of thing. *Identifiers and issues*, below, says how the
+> two meet. Everything else here is unchanged.
 
 ### Commits
 
@@ -247,7 +248,13 @@ happened to `UI-31` and then to `UI-36`.
 its identifier when a version claims it and it moves into that version's folder — the number says
 what the work is, and the folder says which version did it.
 
-**The prefix is the file.** Everything under `docs/v0.1.0-plan/`, one file per track:
+**The prefix is the file, and the folder says which version.** New work is scoped in
+`docs/next-plan/`; `docs/v0.1.0-plan/` is the record of the first version and is not added to. A
+track that outlives a version has a file in both, and the numbering runs across them: `INF-13` was
+minted in `docs/next-plan/infrastructure.md` and continues `docs/v0.1.0-plan/infrastructure.md`,
+because an identifier is never reused whichever folder minted it.
+
+The tracks of the first version, one file per track:
 
 | Prefix | Track | Lives in |
 |---|---|---|
@@ -282,6 +289,38 @@ test. **A task is done when it meets the criterion written next to it, not when 
 Gaps in the numbering are expected: a task that moves to `docs/next-plan/` keeps its identifier,
 and one that turns out not to be scoped work at all becomes a feature in `ROADMAP.md` and gives its
 number up — which is only safe while nothing cites it.
+
+### Identifiers and issues
+
+The repository is public, so two trackers now exist and they are not the same thing. **An
+identifier resolves to a file in this repository**, which whoever reads `git log` in ten years is
+already holding. **An issue number resolves to a page on github.com**, which they may not be able
+to reach and which nothing in a clone can answer.
+
+That asymmetry decides where each one goes:
+
+- **Issue references live in the pull request description, never in a commit.** `Fixes #12` there
+  is what closes the issue on merge, so nothing is lost by keeping it out of the message — and a
+  `#12` in a commit body is a dangling reference the moment `git log` is read anywhere but GitHub.
+  This is the rule *Commits* already states, kept for the reason it was written rather than out of
+  habit.
+- **The commit's last line stays identifiers only**, bare and space-separated, so
+  `git log --grep='^REL-8$'` finds every commit for a task and finds nothing else.
+- **When an issue is big enough to scope, the plan entry names it** — `Raised as #12`, one line.
+  One direction only: the plan names the issue and the issue need not name the plan, because the
+  plan is the document somebody reads a year later and a link maintained in two places is
+  maintained in neither.
+
+Three cases, which is all of them:
+
+| What it is | Pull request title | Commit's last line | The issue |
+|---|---|---|---|
+| Planned work, no issue | `[REL-8] docs: …` | `REL-8` | — |
+| A report small enough to just fix | `fix: …` | *(none)* | `Fixes #12` in the description |
+| A report big enough to scope | `[REL-9] feat: …` | `REL-9` | `Fixes #12`, and `Raised as #12` in the plan entry |
+
+A change with neither — a dependency bump, a typo — carries no bracket and no last line, which is
+already what *Pull requests* says.
 
 ### Comments
 
