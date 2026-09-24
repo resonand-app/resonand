@@ -222,12 +222,18 @@ and every one of them ticks a box in this file.
       reached. Total coverage: 92.80%* and exit 1; at 90 it passes. The pre-push hook runs without
       coverage, as the frontend's does, so the floor is CI's to hold.
 
-- [ ] **INF-21** · **A test's database is a copy, not a migration.** 635 tests migrate a fresh
+- [x] **INF-21** · **A test's database is a copy, not a migration.** 635 tests migrate a fresh
       database to head, at 12 ms each — 7.5 s of a run `INF-18` brings under a minute — while
       copying a migrated file costs 1.7 ms. One file is migrated per worker and each test gets a
       copy of it; the migration tests keep migrating, because that is what they test. ⇢ INF-19
 
       *Done when:* outside the migration tests, `upgrade_to_head` runs once per worker.
+
+      **Done.** A serial run migrates 23 times where it migrated 635: once for the file every test
+      copies, and 22 times inside the migration tests, which build their own engines. The copy is
+      taken after the migrating engine is disposed, because closing the last connection is what
+      checkpoints the WAL into the file; copied a moment earlier, what the migration wrote could
+      still be sitting in `resonand.db-wal`, which the copy leaves behind.
 
 - [ ] **INF-22** · **The repository-shape tests run in Node.** Fifteen `*.node.test.ts` files — 142
       tests, 1.8 s of test time between them — each build a jsdom they never touch, which is 61% of

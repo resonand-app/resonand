@@ -14,6 +14,7 @@ production.
 from __future__ import annotations
 
 import secrets
+import shutil
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -54,11 +55,28 @@ def db_settings(tmp_path: Path) -> Settings:
     return Settings(data_dir=tmp_path, database_path=tmp_path / "resonand.db")
 
 
+@pytest.fixture(scope="session")
+def migrated_database(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """One empty database migrated to head, which every test's database is a copy of (``INF-21``).
+
+    Migrating costs about 12 ms and copying the file about 2, and 635 tests ask for a database. The
+    migration tests build engines of their own and keep migrating, because that is what they test.
+    """
+    path = tmp_path_factory.mktemp("migrated") / "resonand.db"
+    engine = build_engine(Settings(data_dir=path.parent, database_path=path))
+    try:
+        upgrade_to_head(engine)
+    finally:
+        # The last connection closing is what checkpoints the WAL into the file being copied.
+        engine.dispose()
+    return path
+
+
 @pytest.fixture
-def db_engine(db_settings: Settings) -> Iterator[Engine]:
-    """An engine on an empty database, migrated to head."""
+def db_engine(db_settings: Settings, migrated_database: Path) -> Iterator[Engine]:
+    """An engine on an empty database at head: a copy of the one migrated for this worker."""
+    shutil.copyfile(migrated_database, db_settings.resolved_database_path)
     engine = build_engine(db_settings)
-    upgrade_to_head(engine)
     try:
         yield engine
     finally:
