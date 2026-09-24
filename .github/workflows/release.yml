@@ -25,7 +25,9 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: read
+  # `read` to check the tag out, and `write` for the one thing this workflow creates outside the
+  # registry: the release itself.
+  contents: write
   # The registry.
   packages: write
   # The provenance attestation, which says which workflow at which commit built the image and is
@@ -154,6 +156,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
+      # For CHANGELOG.md, which is where the release notes come from.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           path: /tmp/digests
@@ -207,3 +212,34 @@ jobs:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.join.outputs.digest }}
           push-to-registry: true
+
+      - name: Announce it
+        # Last, and only once the image is pullable. A release whose notes describe something
+        # nobody can pull is the one order these two can be done in that misleads somebody.
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          notes="$(mktemp)"
+          # This version's section alone. CHANGELOG.md opens with what the number promises and
+          # will hold every earlier release under this one, so a release carrying the whole file
+          # says almost nothing about the version it is for. The link definition goes too: it
+          # points at the page these notes are on.
+          awk -v want="## [$version]" '
+            index($0, want) == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md | sed '/^\[[0-9][^]]*\]: /d' | sed '/./,$!d' > "$notes"
+          # Not `-s`: a section holding nothing but the blank line under its heading is a file
+          # with a size, and notes that render as nothing are worse than a job that stopped.
+          if ! grep -q '[^[:space:]]' "$notes"; then
+            echo "CHANGELOG.md has no section for $version, so there are no notes to publish."
+            echo "Add one, move the tag, and run this again -- the image above is already pushed."
+            exit 1
+          fi
+          # A pre-release is not what somebody lands on when they open the repository.
+          case "$version" in
+            *-*) gh release create "$TAG" --title "$version" --notes-file "$notes" --prerelease ;;
+            *)   gh release create "$TAG" --title "$version" --notes-file "$notes" --latest ;;
+          esac
