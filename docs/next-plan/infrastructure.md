@@ -285,7 +285,7 @@ and every one of them ticks a box in this file.
       cannot move the time zone. Three runs with the file order shuffled pass, which under this
       pool is a property rather than an achievement.
 
-- [ ] **INF-24** · **Each axe audit asks something the others do not.** Every view is audited four
+- [x] **INF-24** · **Each axe audit asks something the others do not.** Every view is audited four
       times — dark, light, the +30% locale and a phone — and two of the four read markup another
       has already read. Light is a token redefinition and jsdom computes no colour, which is
       `contrast.node.test.ts`'s job, so the 22 light audits read the dark theme's markup again
@@ -301,6 +301,17 @@ and every one of them ticks a box in this file.
       *Done when:* the light audits cover exactly the surfaces whose markup depends on the theme,
       a new theme-dependent module without one fails, and the locale pass asserts no English
       without running axe again.
+
+      **Done, and the light pass had been auditing less than it said.** No audited state had ever
+      opened the account menu, so the one module whose markup light changes most was the one the
+      twenty-two light audits never saw — and the first audit of it failed, which is `INF-24a`.
+      Light is audited on two surfaces now, the account menu and the appearance panel, which are
+      the only two modules that call `useTheme()`; a surface names its module as `themed`, and
+      `every-view-is-audited.node.test.ts` holds those names to the code in both directions, with
+      the design system reading the theme nowhere. The locale pass kept its real check and lost
+      its axe half: no component branches on the length of a string — every `.length` test in the
+      interface counts a list — so a longer word cannot take a control away. Twenty-nine audits
+      go, three guard tests arrive.
 
 - [x] **INF-24a** · 🧪 **The account menu is a menu.** Out of `INF-24`, and found by the audit it
       was about to add: no audited state had ever opened the account menu, and the first audit of
