@@ -69,7 +69,7 @@ The ten tasks below are that measurement cut into work, in the order it is done.
 request of its own, and each branches from the one before it, because four of them edit `ci.yml`
 and every one of them ticks a box in this file.
 
-- [ ] **INF-15** · **CI runs the hooks a clone may not have installed.** `.pre-commit-config.yaml`
+- [x] **INF-15** · **CI runs the hooks a clone may not have installed.** `.pre-commit-config.yaml`
       refuses a file over 512 kB, a private key, a credential `gitleaks` recognises, anything under
       `docs/internal/`, `.claude/` or `local-dev/`, and whitespace, YAML, TOML and JSON faults. CI
       ran none of them while its header said it ran the same checks, so a pull request from a clone
@@ -89,6 +89,15 @@ and every one of them ticks a box in this file.
 
       *Done when:* the job passes on its own pull request, and its command fails over a change that
       adds a 600 kB file or a file under `docs/internal/`.
+
+      **Done, and a run with nothing to measure from checks nothing.** The first draft staged the
+      whole tree on an unborn branch for that case, and the whole tree is not clean: `gitleaks`
+      reads the sentence in [`security.md`](../v0.1.0-plan/security.md) reporting the history check
+      as a generic API key, and `check-json` cannot parse `tsconfig.app.json` or
+      `tsconfig.node.json`, which carry comments. Neither is reached by a change that leaves those
+      lines alone, which is every change so far — but both are waiting for the next person who
+      edits one, locally as much as in CI. Every change is checked when it arrives, so a run with
+      no change has nothing of its own to check, and says so.
 
 - [ ] **INF-16** · **A workflow is read before it runs.** `release.yml` runs on a tag and on nothing
       else, so a mistake in it is found by the release: `OPS-12a` was found by the first tag, and
