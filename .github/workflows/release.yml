@@ -29,8 +29,11 @@ permissions:
   # The registry.
   packages: write
   # The provenance attestation, which says which workflow at which commit built the image and is
-  # what makes `docker inspect`'s answer checkable by somebody who was not there.
+  # what makes `docker inspect`'s answer checkable by somebody who was not there. The metadata
+  # write is the store it keeps beside the attestation; without it the attestation still lands and
+  # the job prints two warnings about a record it could not create.
   attestations: write
+  artifact-metadata: write
   id-token: write
 
 env:
@@ -79,6 +82,14 @@ jobs:
 
       - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
+      - id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+        # Here as well as in the join, because a label is part of the image and the join only
+        # gathers manifests that already exist. Its tags are ignored in this job -- what is pushed
+        # below is a digest with no name.
+
       - name: Build it, before anything is pushed
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
@@ -111,6 +122,10 @@ jobs:
           context: .
           platforms: ${{ matrix.platform }}
           cache-from: type=gha,scope=${{ matrix.platform }}
+          # version, revision and created. The four the Dockerfile carries are static; these three
+          # are facts about the run, and without them `docker inspect` on a published image cannot
+          # say which commit produced it.
+          labels: ${{ steps.meta.outputs.labels }}
           # No tag: this half of the image is not something anybody should pull on its own, and a
           # `:0.1.0-arm64` published to get the manifest built is a tag the registry keeps for
           # good. The join below is what gets the name.
