@@ -53,6 +53,13 @@ export default mergeConfig(
           extends: true,
           test: {
             name: 'dom',
+            // A VM context per file inside a worker that keeps jsdom loaded (`INF-23`): building
+            // jsdom again for each of 118 files was a third of the run, and a fresh context still
+            // gives each file a document and a module graph of its own. `isolate: false` was
+            // faster and let one file's stubs -- a viewport, a stored preference -- reach the next.
+            // `vmThreads` would do the same but a thread cannot change the process's time zone,
+            // which `time.test.ts` does.
+            pool: 'vmForks',
             // jsdom rather than happy-dom: the player, the follow-and-release scroll and the
             // anchored overlays are all measured behaviour, and the more faithful DOM is worth
             // the slower start.

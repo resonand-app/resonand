@@ -248,7 +248,7 @@ and every one of them ticks a box in this file.
       the document it was built — and take 3.7 s as a project of their own. The rest of the suite
       is unchanged: 133 files and 1428 tests, the same totals as before the split.
 
-- [ ] **INF-23** · 🧪 **A worker's test files share one document, and nothing leaks between them.**
+- [x] **INF-23** · 🧪 **A worker's test files share one document, and nothing leaks between them.**
       jsdom is built 133 times a run, a third of what vitest spends. Without isolation it is built
       once per worker: 116 s becomes 40 s on four CPUs, and 137 s becomes 81 s with coverage. **It
       does not pass yet.** Three runs failed 0, 11 and 15 tests, always in files that draw a
@@ -266,6 +266,24 @@ and every one of them ticks a box in this file.
       happy-dom: already declined in `vitest.config.ts`, for fidelity.
 
       *Done when:* `isolate: false`, and ten consecutive runs with the file order shuffled pass.
+
+      **Done differently: no document is shared, and nothing is left to leak.** Finding the leaks
+      found how many there were. `widen()` in the view harness redefines `innerWidth` and
+      `matchMedia` for the phone passes and puts nothing back, so the next file drew a phone; the
+      recording view remembers a collapsed panel in `localStorage`; nine files stub the viewport,
+      ten stub globals, four spy on `HTMLElement.prototype`, five fake the clock, and the
+      harness patches `offsetHeight` on the prototype when it is imported. Every one had been safe
+      only because the next file got a new jsdom, and every one would need a reset — and so would
+      the next one anybody writes.
+
+      `pool: 'vmForks'` keeps what isolation gave and drops what it cost. The worker loads jsdom
+      once, and each file runs in a VM context of its own with a fresh document and module graph:
+      jsdom falls from 28% of tracked time to 3%, and at the same load a run with coverage takes
+      193 s where it took 271 s, with the same coverage to the hundredth of a point. The one thing
+      a context lacks is Node's web streams, which msw builds responses from, and the setup file
+      asks the process for them. `vmThreads` would do the same in threads, where `time.test.ts`
+      cannot move the time zone. Three runs with the file order shuffled pass, which under this
+      pool is a property rather than an achievement.
 
 - [ ] **INF-24** · **Each axe audit asks something the others do not.** Every view is audited four
       times — dark, light, the +30% locale and a phone — and two of the four read markup another
