@@ -153,6 +153,11 @@ before this split runs the suites nowhere locally until it is run again.
 CI additionally builds the image and asserts it migrates itself, reports healthy, serves the
 application shell and the hashed bundle the shell references, and that the CLI runs inside it.
 
+**CI runs the jobs a change can reach, and the others report skipped.** A change to `docs/` alone
+runs `Hygiene` and nothing heavier; `.github/scripts/changed-areas.sh` says what each job reads,
+and a job that starts reading something new has to be named there. The check to wait on is `CI`,
+the one that always reports. Everything runs weekly, and on `workflow_dispatch`, whatever changed.
+
 ## Conventions
 
 > **These held while the first version was built, and they hold now, with one thing added.** The

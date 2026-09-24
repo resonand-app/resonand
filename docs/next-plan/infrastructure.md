@@ -118,7 +118,7 @@ and every one of them ticks a box in this file.
       not exist was refused at commit, with the line and the column, which is the mistake a
       filter written in `needs.*.outputs` is most likely to contain.
 
-- [ ] **INF-17** · **A change runs the jobs it can reach, and the others report skipped.** A
+- [x] **INF-17** · **A change runs the jobs it can reach, and the others report skipped.** A
       `What changed` job reads the change and says which of `Backend`, `Frontend` and `Image` it
       can reach; each of those runs only when it can; and a last job, `CI`, needs all of them and
       passes when each one either passed or was skipped. ⇢ INF-15, INF-16
@@ -153,6 +153,12 @@ and every one of them ticks a box in this file.
       *Done when:* over a change to `docs/` alone the filter reaches nothing, over one to
       `backend/tests/` alone it reaches `Backend` and nothing else, and with no base to measure
       from — a scheduled or dispatched run — it reaches everything.
+
+      **Done.** Sixteen changes were put through the filter before it was wired in, one per row of
+      the arrangement — a test alone, a source file, the snapshot, the lock, the Dockerfile, a
+      script, `release.yml`, `deploy/`, the filter itself — and each reached what the entry says.
+      Of this plan's own commits, the scoping one and `INF-16`'s reach nothing, and `INF-15`'s,
+      which edits `ci.yml`, reaches everything.
 
 - [ ] **INF-18** · 🧪 **The suite hashes passwords at test strength.** 714 Argon2 hashes and 274
       verifications at 57 ms each are 58 s of a 119 s backend run: the API fixtures make three
