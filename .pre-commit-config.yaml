@@ -60,6 +60,16 @@ repos:
         # rule and the path rather than excluding the suites, which is how a real finding gets
         # lost among the ignored ones.
 
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
+        # A workflow as the runner will read it (INF-16): release.yml runs on a tag and nothing
+        # else, so without this its first reader is the release.
+        # Its shellcheck and pyflakes passes run only when their binary is on PATH, which a GitHub
+        # runner has and a laptop may not -- off, so the hook says the same thing everywhere.
+        args: [-shellcheck=, -pyflakes=]
+
   - repo: local
     hooks:
       - id: no-internal-docs
