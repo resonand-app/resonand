@@ -326,3 +326,17 @@ and every one of them ticks a box in this file.
 
       *Done when:* the account menu passes axe in both themes, and its rows answer the keys
       `Menu`'s do.
+
+- [x] **INF-25** · **Every commit on `main` keeps its run.** `ci.yml` says a result on `main` is
+      worth having on the record, and set `cancel-in-progress` off there to keep it. On
+      2026-09-24 six merges landed in four minutes and three of their runs were cancelled anyway:
+      a concurrency group holds one run and one waiting, and a third arriving cancels the one
+      waiting, whatever `cancel-in-progress` says. A merge whose run was cancelled is a commit
+      nobody checked, and the next green run says nothing about which one broke it.
+
+      `main`'s group is its commit now, so no two merges share one; a pull request's is still its
+      ref, so a push to a branch goes on superseding the push before it. Two runs of the same
+      commit — its push and a dispatch — still share a group, which is right: it is one result
+      being asked for twice.
+
+      *Done when:* the group names the commit on `main` and the ref everywhere else.

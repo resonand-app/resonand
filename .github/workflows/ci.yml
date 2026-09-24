@@ -37,8 +37,10 @@ permissions:
 
 concurrency:
   # A second push to the same branch supersedes the first. Not for main, where every commit's
-  # result is worth having on the record.
-  group: ci-${{ github.ref }}
+  # result is worth having on the record -- so each commit on main is a group of its own (INF-25):
+  # a group holds one run and one waiting, and a third cancels the one waiting, whatever
+  # `cancel-in-progress` says.
+  group: ci-${{ github.ref }}-${{ github.ref == 'refs/heads/main' && github.sha || 'latest' }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 env:
