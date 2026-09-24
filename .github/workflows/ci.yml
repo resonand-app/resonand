@@ -144,7 +144,7 @@ jobs:
 
       - name: Test
         working-directory: backend
-        run: uv run pytest -q --cov --cov-report=term-missing
+        run: uv run pytest -q -n auto --cov --cov-report=term-missing
 
       - name: Check the CLI is installed and runnable
         working-directory: backend

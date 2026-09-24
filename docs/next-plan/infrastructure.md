@@ -185,7 +185,7 @@ and every one of them ticks a box in this file.
       and a second test fails if the swap itself is ever lost, which would otherwise show only as
       a suite twice as slow.
 
-- [ ] **INF-19** · **The backend suite runs on every core.** After `INF-18` it runs on one — 89 s
+- [x] **INF-19** · **The backend suite runs on every core.** After `INF-18` it runs on one — 89 s
       on four CPUs with coverage, at 93% of one CPU. `pytest-xdist` with `-n auto` in CI and in the
       pre-push hook: 45 s on four CPUs with coverage, 22 s without, and `973 passed` three runs out
       of three. ⇢ INF-18
@@ -200,6 +200,11 @@ and every one of them ticks a box in this file.
 
       *Done when:* CI and the pre-push hook run the suite with `-n auto`, and nothing says
       `not slow`.
+
+      **Done.** On four CPUs the suite takes 43 s with coverage and 23 s without, and on the
+      twelve of the machine that measured it, 16 s — `975 passed` three runs out of three. That is
+      the pre-push hook's whole cost now, against the 92 s its comment used to quote for a subset
+      that was never smaller than the suite.
 
 - [ ] **INF-20** · **Backend coverage is a floor, as the frontend's is.** CI runs the backend
       suite with `--cov` and prints 93% into a log nobody reads: `[tool.coverage.report]` has no

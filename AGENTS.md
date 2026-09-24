@@ -116,7 +116,7 @@ cd backend
 uv sync --all-groups
 uv run ruff check . && uv run ruff format .
 uv run mypy                     # strict; no file arguments -- it needs the whole package
-uv run pytest -q                # add -m "not slow" for the fast loop
+uv run pytest -q -n auto        # every core; -n 0 to step through one test
 uv run resonand --help
 uv run uvicorn resonand.api.app:create_app --factory --reload   # :8000
 
@@ -435,9 +435,10 @@ with 🧪 is not done without one.
 **Backend** — `pytest`, mirroring the package layout under `backend/tests/`. Root `conftest.py`
 carries only what every area needs (a migrated temporary database on a real file, its session
 factory, and Argon2 at test strength); area fixtures live in `tests/<area>/conftest.py`. Row
-factories are in `tests/db/rows.py`. Two markers: `slow` (excluded from the pre-commit loop) and
-`ffmpeg` (needs the real binaries; installed in CI). Settings in tests are always explicit so a
-stray `RESONAND_*` in the environment cannot point a test at a real archive.
+factories are in `tests/db/rows.py`. One marker, `ffmpeg`: the test needs the real binaries, which
+CI installs, and it skips where they are missing. The suite runs on every core (`-n auto`) in CI
+and in the pre-push hook alike. Settings in tests are always explicit so a stray `RESONAND_*` in
+the environment cannot point a test at a real archive.
 
 **Frontend** — `vitest` + Testing Library + `user-event`, msw for the API (`src/test/api/`). A mock
 handler must honour the parameters the real endpoint documents; one that ignores a filter makes
