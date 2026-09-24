@@ -433,11 +433,11 @@ Evaluate whether a change needs new tests or breaks existing ones. A behaviour t
 with 🧪 is not done without one.
 
 **Backend** — `pytest`, mirroring the package layout under `backend/tests/`. Root `conftest.py`
-carries only what every area needs (a migrated temporary database on a real file, and its session
-factory); area fixtures live in `tests/<area>/conftest.py`. Row factories are in `tests/db/rows.py`.
-Two markers: `slow` (excluded from the pre-commit loop) and `ffmpeg` (needs the real binaries;
-installed in CI). Settings in tests are always explicit so a stray `RESONAND_*` in the
-environment cannot point a test at a real archive.
+carries only what every area needs (a migrated temporary database on a real file, its session
+factory, and Argon2 at test strength); area fixtures live in `tests/<area>/conftest.py`. Row
+factories are in `tests/db/rows.py`. Two markers: `slow` (excluded from the pre-commit loop) and
+`ffmpeg` (needs the real binaries; installed in CI). Settings in tests are always explicit so a
+stray `RESONAND_*` in the environment cannot point a test at a real archive.
 
 **Frontend** — `vitest` + Testing Library + `user-event`, msw for the API (`src/test/api/`). A mock
 handler must honour the parameters the real endpoint documents; one that ignores a filter makes
