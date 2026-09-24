@@ -206,7 +206,7 @@ and every one of them ticks a box in this file.
       the pre-push hook's whole cost now, against the 92 s its comment used to quote for a subset
       that was never smaller than the suite.
 
-- [ ] **INF-20** · **Backend coverage is a floor, as the frontend's is.** CI runs the backend
+- [x] **INF-20** · **Backend coverage is a floor, as the frontend's is.** CI runs the backend
       suite with `--cov` and prints 93% into a log nobody reads: `[tool.coverage.report]` has no
       `fail_under`, so the number can fall to anything and CI stays green. It costs 20 s at four
       workers. `fail_under = 90`, below where the code sits for the reason `vitest.config.ts` gives
@@ -216,6 +216,11 @@ and every one of them ticks a box in this file.
       *Rejected:* dropping `--cov`, which saves the 20 s and keeps nothing.
 
       *Done when:* CI fails when backend coverage falls below 90%.
+
+      **Done.** pytest-cov reads the floor from `[tool.coverage.report]`, so CI's command did not
+      change. Raised to 99 as a probe, the same run failed with *Required test coverage of 99.0% not
+      reached. Total coverage: 92.80%* and exit 1; at 90 it passes. The pre-push hook runs without
+      coverage, as the frontend's does, so the floor is CI's to hold.
 
 - [ ] **INF-21** · **A test's database is a copy, not a migration.** 635 tests migrate a fresh
       database to head, at 12 ms each — 7.5 s of a run `INF-18` brings under a minute — while
