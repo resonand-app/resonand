@@ -5,9 +5,9 @@ here is part of the first version: the first version is a working archive, and t
 takes for somebody who is not its author to read it, install it and keep it running.
 
 **Gate 1 closed on 2026-09-22.** The repository is public, so everything under it is a record
-rather than a working set. What is left is the release, and it splits in two: the things that can
-be built now, in any order, and the tag, which waits for the archive to have been lived in rather
-than for a task to be finished.
+rather than a working set. **Gate 2 closed on 2026-09-23**, with `v0.1.0`. What is still open here
+comes after the tag: the demo instance, a guide for somebody with an account, the cross-version
+upgrade matrix and one-click packaging.
 
 ## Gate 1 · The day the repository opened
 
@@ -476,6 +476,9 @@ dependencies allow.
       **Not done here, and deliberately:** the tag itself. `git tag v0.1.0` is what runs
       `release.yml` for the first time, and it publishes something that cannot be unpublished, so it
       is one command in a person's hands rather than the tail of a session.
+
+      **Tagged on 2026-09-23.** `release.yml` published `ghcr.io/resonand-app/resonand:0.1.0` for
+      both architectures and wrote the release notes.
 
 - [ ] **REL-4** · **Demo instance, linked from the repository itself.** "Self-hosted audio archive"
       is a sentence nobody can picture, and the first thing a reader meets should be a working

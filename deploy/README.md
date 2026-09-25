@@ -258,8 +258,8 @@ destroys the container *and its volume*, restores into a fresh one, and ends on 
 of a populated database is covered too, at every revision in the tree rather than only the last
 one.
 
-Neither has yet been performed against a real archive on real hardware, which is one of the
-conditions in [`../docs/v0.1.0-plan/`](../docs/v0.1.0-plan/) for the first version being finished.
+Both have also been performed against a real archive on real hardware — two of the conditions in
+[`../docs/v0.1.0-plan/`](../docs/v0.1.0-plan/) that the first version was released against.
 
 ## Upgrading
 

@@ -13,8 +13,8 @@ under [`docs/`](docs/), and there are two kinds:
 - **[`docs/next-plan/`](docs/next-plan/)** — what is scoped and waiting. Always this name, so a
   link to it never goes stale and "what is queued" is always one place.
 - **`docs/<version>-plan/`** — one per version, holding what that version contained.
-  [`docs/v0.1.0-plan/`](docs/v0.1.0-plan/) is the first, and becomes the record of the first version on the
-  day it ships.
+  [`docs/v0.1.0-plan/`](docs/v0.1.0-plan/) is the first: the record of the first version, which
+  shipped as `0.1.0`.
 
 A feature therefore travels: written here without a number, given one when it is scoped into
 `next-plan/`, and coming to rest in the folder of the version that shipped it.
@@ -185,9 +185,10 @@ more once the seven above are true.
   connection with headphones in. Whether that is enough is what decides the last line here.
 - **Shipping actual translations.** The plumbing is in the first version; this is the part where
   Catalan, and then others, genuinely exist.
-- **A mobile application with capture.** The only item here that changes the positioning — the
-  project is a destination and not a recorder, and it stays that way until the archive is mature
-  enough that being a recorder as well is an addition rather than a distraction.
+- **Recording into the archive itself**, from the browser and from a mobile application with
+  capture. The only item here that changes the positioning — the project is a destination and not a
+  recorder, and it stays that way until the archive is mature enough that being a recorder as well
+  is an addition rather than a distraction.
 - **Somewhere to try it without installing anything**, reachable from the repository itself. The
   demo instance is already scoped in
   [`docs/next-plan/release.md`](docs/next-plan/release.md); what belongs here is that the link is
@@ -210,7 +211,6 @@ schema decision before it has been explicitly discussed.**
 
 Not now, possibly later:
 
-- **Recording from the browser.**
 - **Performing speaker diarisation.** The `speaker` field has been reserved since the first
   migration, and an engine that labels speakers has its labels kept — including the rule that a
   transcript assembled from several parts carries none, because labels are per request and

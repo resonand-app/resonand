@@ -22,8 +22,8 @@ So a piece of work sits in exactly one of three states, and its home says which:
 | `docs/next-plan/` (here) | Scoped, no version yet | Yes — code and the plans cite them |
 | `docs/<version>-plan/` | What one version contained | Yes, kept for good |
 
-[`docs/v0.1.0-plan/`](../v0.1.0-plan/) is the first of those version folders. It is the first version's
-working set today and becomes the record of it the day it ships.
+[`docs/v0.1.0-plan/`](../v0.1.0-plan/) is the first of those version folders: the record of the
+first version, which shipped as `0.1.0` on 2026-09-23.
 
 ## What is here
 
@@ -49,9 +49,8 @@ Nothing here is dated, and the ordering between the two halves is a rule rather 
    closed.
 2. **The release** — the tag, the published image, anything inviting somebody to trust an archive
    to this — waited for the five conditions under [*When is v0 done*](../v0.1.0-plan/README.md), which
-   held on 2026-09-23. **`0.1.0` is prepared**: the version, the changelog, the status blocks and a
-   `deploy/` that pulls rather than builds. What is left of it is `git tag v0.1.0`, which publishes
-   and cannot be undone, so it is a person's command rather than a task's last step.
+   held on 2026-09-23. **`0.1.0` was released the same day**: tagged `v0.1.0`, and published as
+   `ghcr.io/resonand-app/resonand:0.1.0` for `linux/amd64` and `linux/arm64`.
 
 Everything else here is unordered and undated, which is the honest state of it.
 

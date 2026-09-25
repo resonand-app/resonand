@@ -13,7 +13,7 @@ body:
     attributes:
       label: Which claim
       description: The section, and the sentence if you can.
-      placeholder: "VISION.md §1 — \"resonand is where recordings end up\""
+      placeholder: "VISION.md §1 — \"Resonand is where recordings end up\""
     validations: { required: true }
   - type: textarea
     id: why

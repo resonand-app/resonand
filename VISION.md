@@ -1,4 +1,4 @@
-# resonand — vision
+# Resonand — vision
 
 Why this project exists, who it is for, and where it is going. It carries no technical detail —
 the data model, permission resolution and interface brief live in a working specification that is
@@ -28,7 +28,7 @@ existing without being available.
 ### The verb the project rests on
 
 **Re-find**, not store. Storing audio is what a folder does, and it is free. Everything that
-makes resonand worth existing — transcription, search inside the audio, a navigable waveform,
+makes Resonand worth existing — transcription, search inside the audio, a navigable waveform,
 organisation that persists — is in the service of finding one specific moment again inside
 hundreds of hours.
 
@@ -39,7 +39,7 @@ rather than the precondition, and saying so plainly is what widens the audience 
 
 ### Where recordings end up, and later where some are made
 
-resonand is where recordings end up. The operating system's recorder is the input, not the rival,
+Resonand is where recordings end up. The operating system's recorder is the input, not the rival,
 and nobody has to change how they record in order to start using it.
 
 **That is sequencing, not identity.** The record button on a phone is built into the system, which
@@ -118,7 +118,7 @@ Lectures and notes from a whole course, minutes and meetings of local organisati
 and musical ideas, association and village-history archives, language and dialect fieldwork,
 soundscapes and birdsong, a spoken personal diary.
 
-That list is visibly heterogeneous on purpose: it is what shows resonand is a platform and not a
+That list is visibly heterogeneous on purpose: it is what shows Resonand is a platform and not a
 single-purpose tool.
 
 > Soundscapes and birdsong are the one case where transcription contributes nothing and the
@@ -211,7 +211,7 @@ with a provider of its own choosing, because a paid service would sit behind the
 interface as every other engine.
 
 The application is the base the whole ecosystem stands on, and no business model gets to erode
-it. Open core is ruled out by that sentence alone: there is no part of resonand that could be held
+it. Open core is ruled out by that sentence alone: there is no part of Resonand that could be held
 back without breaking the promise this document makes.
 
 ---
