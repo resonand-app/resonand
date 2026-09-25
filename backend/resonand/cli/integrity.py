@@ -24,7 +24,8 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from resonand.db.models import Audio
+from resonand.db.models import Audio, Job
+from resonand.jobs.queue import PENDING, RUNNING
 from resonand.media import storage
 from resonand.media.hashing import hash_file
 
@@ -74,11 +75,15 @@ def check(session: Session, storage_root: Path, *, verify_hashes: bool = True) -
     """
     report = Report()
     seen: set[Path] = set()
+    unfinished = _with_unfinished_work(session)
+    being_written: set[Path] = set()
 
     for audio in session.execute(select(Audio).order_by(Audio.id)).scalars().all():
         report.checked += 1
         path = storage.resolve(storage_root, audio.storage_path)
         seen.add(path)
+        if audio.id in unfinished:
+            being_written.add(storage.recording_dir(storage_root, audio.uuid))
         if not path.exists():
             report.findings.append(
                 Finding(MISSING, f"{audio.title!r}: no file at {audio.storage_path}", audio.uuid)
@@ -112,6 +117,8 @@ def check(session: Session, storage_root: Path, *, verify_hashes: bool = True) -
     # Reported, and reported separately. A fragment is not a lost recording, and calling it an
     # orphan would spend the word this check most needs to keep its force.
     for path in storage.leftover_files(storage_root):
+        if path.parent in being_written:
+            continue
         report.findings.append(
             Finding(
                 LEFTOVER,
@@ -121,3 +128,17 @@ def check(session: Session, storage_root: Path, *, verify_hashes: bool = True) -
         )
 
     return report
+
+
+def _with_unfinished_work(session: Session) -> set[int]:
+    """Recordings with a job still to finish, whose fragments are work in progress (``ING-13a``).
+
+    ``fsck`` runs against a live instance, and a transcode half-way through its staging file is not
+    something that did not finish. A pending job counts as much as a running one: after a restart
+    it will write its fragment again over the one its interrupted attempt left. A fragment beside a
+    recording whose jobs are all done, failed or cancelled is the one that was left behind.
+    """
+    rows = session.execute(
+        select(Job.audio_id).where(Job.state.in_((PENDING, RUNNING)), Job.audio_id.is_not(None))
+    )
+    return {audio_id for audio_id in rows.scalars() if audio_id is not None}

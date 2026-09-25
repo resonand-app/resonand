@@ -31,7 +31,7 @@ working set today and becomes the record of it the day it ships.
 |---|---|---|
 | [`infrastructure.md`](infrastructure.md) | `INF` | The repository itself, after the first version |
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
-| [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build |
+| [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build, and corrections to what it did |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
 

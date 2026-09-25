@@ -18,6 +18,15 @@ will later:
 Every release migrates its own database on the way up, whatever the number says. The path back is
 in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a down-migration.
 
+## [Unreleased]
+
+### Fixed
+
+- **`resonand fsck` no longer fails on work in progress.** Run on a live instance while a recording
+  was being transcoded or cut up for transcription, it reported the file being written as left
+  behind and exited non-zero. A fragment is now a finding only once every job for its recording
+  has finished, failed or been cancelled.
+
 ## [0.1.0] — 2026-09-23
 
 The first release: an archive for the recordings that matter, which keeps the original
