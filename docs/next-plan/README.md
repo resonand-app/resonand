@@ -34,6 +34,7 @@ working set today and becomes the record of it the day it ships.
 | [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build, and corrections to what it did |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
+| [`defects.md`](defects.md) | `BUG` | Faults found by using the archive since it shipped |
 
 Notation is the plan's: `⇢ X, Y` depends on those · `🔒` critical path · `🧪` carries a mandatory
 test. **A task is done when it meets the criterion written next to it, not when it works.**
