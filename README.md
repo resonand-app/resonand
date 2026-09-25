@@ -144,6 +144,17 @@ a feature. The parts most likely to arrive first:
 It also says what will **not** happen, which is the more useful half: no audio editing, no podcast
 player, no music library manager, and no transcription engine inside the application.
 
+## LLM-assisted development
+
+To be clear and upfront about it: resonand is built with the help of LLMs.
+
+I've been a software developer for more than five years, and since AI made its explosion in
+capabilities, it has become a tool that, used with the right criteria and with me on top of every
+little decision, makes an unquestionable difference compared to the years before. Before these
+tools arrived, creating a project like this in such a short period of time was impossible — at
+least not without giving up its quality and maintainability, something I deeply care about, as
+I'll be the one maintaining it in the end :)
+
 ## Documentation
 
 | Document | Contents |
