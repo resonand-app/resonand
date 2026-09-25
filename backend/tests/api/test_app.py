@@ -96,7 +96,9 @@ def test_an_unreadable_resource_is_a_404_and_says_nothing_more(app: FastAPI) -> 
         raise NotFoundError("no such recording")
 
     with TestClient(app, raise_server_exceptions=False) as client:
-        response = client.get("/hidden")
+        # Pinned, because the body carries the request id and a random one contains "403" about
+        # one run in a hundred.
+        response = client.get("/hidden", headers={REQUEST_ID_HEADER: "request-under-test"})
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert "403" not in response.text
 
