@@ -16,7 +16,10 @@ from resonand.core.config import Settings
 from resonand.db import libraries, users
 from resonand.db.audio import create_audio, trash_audio
 from resonand.db.engine import Database
+from resonand.db.models import Audio
+from resonand.jobs.queue import CANCELLED, DONE, FAILED, KIND_TRANSCODE, PENDING, RUNNING, enqueue
 from resonand.media import storage
+from sqlalchemy import select
 
 
 @pytest.fixture
@@ -204,3 +207,37 @@ def test_a_fragment_is_not_called_an_orphan(
     with database.read_session() as session:
         report = check(session, db_settings.resolved_storage_dir)
     assert sorted(finding.kind for finding in report.findings) == [LEFTOVER, ORPHAN]
+
+
+def _transcode_in_state(database: Database, uuid: str, state: str) -> None:
+    with database.write_session() as session:
+        audio = session.execute(select(Audio).where(Audio.uuid == uuid)).scalar_one()
+        job = enqueue(session, KIND_TRANSCODE, audio_id=audio.id)
+        assert job is not None
+        job.state = state
+
+
+@pytest.mark.parametrize("state", [PENDING, RUNNING])
+def test_a_fragment_a_job_is_still_writing_is_not_left_behind(
+    database: Database, db_settings: Settings, archive: str, state: str
+) -> None:
+    """🧪 ``ING-13a``. fsck is run against a live instance, and a transcode half-way through its
+    staging file is work in progress rather than something that did not finish. A pending job
+    counts too: after a restart it writes the fragment again."""
+    _transcode_in_state(database, archive, state)
+    (_recording_dir(db_settings, archive) / ".derived.opus.partial").write_bytes(b"half")
+    with database.read_session() as session:
+        report = check(session, db_settings.resolved_storage_dir)
+    assert report.is_clean
+
+
+@pytest.mark.parametrize("state", [DONE, FAILED, CANCELLED])
+def test_a_fragment_beside_finished_work_is_still_left_behind(
+    database: Database, db_settings: Settings, archive: str, state: str
+) -> None:
+    """Once every job for the recording has stopped, nothing is going to write that file again."""
+    _transcode_in_state(database, archive, state)
+    (_recording_dir(db_settings, archive) / ".derived.opus.partial").write_bytes(b"half")
+    with database.read_session() as session:
+        report = check(session, db_settings.resolved_storage_dir)
+    assert [finding.kind for finding in report.findings] == [LEFTOVER]
