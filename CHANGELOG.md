@@ -22,6 +22,9 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ### Fixed
 
+- **A recording no longer opens with its transcript missing.** About one load in five showed
+  how many segments there were and no lines under them, until the column was scrolled. The
+  lines are now drawn on every load.
 - **`resonand fsck` no longer fails on work in progress.** Run on a live instance while a recording
   was being transcoded or cut up for transcription, it reported the file being written as left
   behind and exited non-zero. A fragment is now a finding only once every job for its recording

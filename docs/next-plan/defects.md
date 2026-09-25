@@ -6,7 +6,7 @@ minted in. The bar is the same as there — a defect gets a number when it is wo
 
 ---
 
-- [ ] **BUG-4** · **A recording sometimes opens with its transcript missing.** The heading says
+- [x] **BUG-4** · **A recording sometimes opens with its transcript missing.** The heading says
       *14 segments* and no line is drawn under it, and nothing brings them back: not waiting, not
       playing, not the next line becoming active. Scrolling the column by a single pixel draws all
       fourteen at once. Somebody who opens a recording and sees an empty transcript has no reason to
@@ -38,3 +38,38 @@ minted in. The bar is the same as there — a defect gets a number when it is wo
       and the fix says in the code which ordering it guards. 🧪 *A test that reproduces that
       ordering — the column measured before it has a size, and no scroll after it — and fails on
       the current `Transcript.tsx`.*
+
+      It was established in a headed browser first, on the old code and the same archive: headed
+      Chrome came up blank on 8 loads of 30 and headless on 6 of 30. It is not a headless race.
+
+      The suspicion had the virtualiser right and the ordering wrong. The column was never read
+      before it had a size — it was read before it existed, as far as the virtualiser could tell.
+      The scroller is a ref that `RecordingView` owns, and React attaches an element's ref only
+      after the layout effects of everything inside it have run in the same commit.
+      `RecordingView` shows a loading state until the recording itself arrives; when the
+      transcript request had answered first, the column and the transcript mounted in one commit,
+      and the virtualiser's layout effect asked for its scroll element and got `null`. It looks
+      again only when `Transcript` renders again. Most loads were rescued by something unrelated —
+      a later query changing a prop — and a scroll releases following, which is a state change,
+      which is a render: that is the pixel. Which request answered last decided it, and the
+      transcript, the larger response, usually lost.
+
+      A passive effect in `Transcript` now compares the virtualiser's scroll element with the
+      column's ref — by the time passive effects run, the ref is attached — and renders once more
+      when they differ. On the phone, where the transcript owns its scroller, they never differ
+      and nothing extra happens. Holding the scroller in state in `RecordingView` through a
+      callback ref is the textbook answer and was rejected: the player, the waveform fade and the
+      follow hook take the same ref and read it in passive effects, where it is always attached,
+      and their contract would change to serve one consumer's layout-phase read. Walking up from
+      the list to find the scroller was rejected too — the element exists before its ref does,
+      but a selector for another component's markup is a coupling nobody would see break. The
+      cost is that, in the ordering that used to go blank, the lines arrive one frame after the
+      heading rather than with it.
+
+      With the fix: 100 cold loads from the library card headed, 100 headless, and 100 headless by
+      direct address, none blank; heading to first line at a median of 238 to 358 ms, 973 ms at
+      worst. 🧪 *`src/features/recording/tests/Transcript.test.tsx` opens the recording twice on
+      one cache with nothing going stale, so the second mount puts the column and the transcript
+      in one commit and nothing renders them again — the heading is there and, on the old code, no
+      line is. The criterion above names the ordering that was suspected; the test reproduces the
+      one that was found.*
