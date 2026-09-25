@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/banner.jpg" alt="resonand — a self-hosted archive for the recordings that matter">
+  <img src="docs/assets/banner.jpg" alt="Resonand — a self-hosted archive for the recordings that matter">
 </p>
 
 <p align="center">
@@ -13,7 +13,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/recording.png" alt="A recording open in resonand, playing a third of the way through: the waveform with the part already played drawn behind the playhead, the transcript following it with the line being spoken picked out, and the recording's metadata">
+  <img src="docs/assets/recording.png" alt="A recording open in Resonand, playing a third of the way through: the waveform with the part already played drawn behind the playhead, the transcript following it with the line being spoken picked out, and the recording's metadata">
 </p>
 
 ---
@@ -45,7 +45,7 @@ nobody ever opens again.
 
 ## What it does
 
-Most self-hosted tools in this space are transcribers that happen to store files. resonand is an
+Most self-hosted tools in this space are transcribers that happen to store files. Resonand is an
 archive that happens to transcribe.
 
 - 🔎 **Search inside the audio.** One query across every transcript in your archive, not inside
@@ -93,7 +93,7 @@ it has to lose nothing.
 
 ## Transcription
 
-resonand works with any transcription endpoint that speaks the OpenAI-compatible shape and
+Resonand works with any transcription endpoint that speaks the OpenAI-compatible shape and
 returns timed segments: a faster-whisper server on your own network is the reference
 deployment, and hosted services such as Groq work too. There is no list of supported models,
 because compatibility depends on the endpoint and the model together, so instead there is a
@@ -137,7 +137,7 @@ a feature. The parts most likely to arrive first:
 - 🤖 **An MCP server**, over HTTP with a token, so an assistant can search your archive — text and
   metadata, never raw audio.
 - ⏺️ **Recording into the archive itself**, from the browser and from a mobile application. Today
-  resonand is where recordings end up rather than where they are made; capture becomes one more
+  Resonand is where recordings end up rather than where they are made; capture becomes one more
   thing it offers once the archive underneath is worth keeping things in.
 - 📱 **Real PWA quality on a phone**, and somewhere to try the thing without installing anything.
 
@@ -146,7 +146,7 @@ player, no music library manager, and no transcription engine inside the applica
 
 ## LLM-assisted development
 
-To be clear and upfront about it: resonand is built with the help of LLMs.
+To be clear and upfront about it: Resonand is built with the help of LLMs.
 
 I've been a software developer for more than five years, and since AI made its explosion in
 capabilities, it has become a tool that, used with the right criteria and with me on top of every
@@ -167,7 +167,7 @@ I'll be the one maintaining it in the end :)
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |
 | [`CHANGELOG.md`](CHANGELOG.md) | What each release changed, and what the version number promises |
 | [`API.md`](API.md) | The HTTP API: how a script signs in, the conventions, and what is worth automating |
-| [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what resonand assumes, and the limitations it knows about |
+| [`SECURITY.md`](SECURITY.md) | How to report a vulnerability, what Resonand assumes, and the limitations it knows about |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | What is welcome, what to open an issue about first, and how a pull request is read |
 
 ## Contributing

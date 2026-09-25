@@ -1,6 +1,6 @@
 # Transcription endpoints
 
-resonand does not transcribe. When you ask, it sends a recording to a transcription endpoint you
+Resonand does not transcribe. When you ask, it sends a recording to a transcription endpoint you
 configure — a server on your own network or a hosted service — and keeps what comes back as timed
 segments. This page says which endpoints work and how to find out for yourself.
 
@@ -22,7 +22,7 @@ An endpoint plus a model works when it:
 
 A bearer key, a `language` parameter and a speaker per segment are used when present and never
 required. Timestamps in seconds or in milliseconds are both accepted. An answer without segments
-is refused outright: resonand stores timed segments, never a block of prose.
+is refused outright: Resonand stores timed segments, never a block of prose.
 
 ## Check before you trust
 
