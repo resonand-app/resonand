@@ -46,7 +46,7 @@
  */
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -131,6 +131,14 @@ export function Transcript({ context, transcripts, fills = false, scroller }: Tr
     estimateSize: () => ESTIMATED_LINE,
     overscan: OVERSCAN,
     scrollMargin: margin,
+  });
+
+  // Mounted in one commit with the column, this runs its layout effects before the column's ref is
+  // attached, so the virtualiser's first look finds no scroller and nothing makes it look again.
+  // A passive effect runs after the ref is attached, and re-renders to let it.
+  const [, lookAgain] = useReducer((renders: number) => renders + 1, 0);
+  useEffect(() => {
+    if (virtualiser.scrollElement !== scrolling.current) lookAgain();
   });
 
   // Keep the line being spoken in the middle of the scroller. The offset comes from the

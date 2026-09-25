@@ -11,6 +11,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
@@ -65,9 +66,13 @@ function Where() {
   return <div data-testid="where">{location.pathname}</div>;
 }
 
-function renderRecording(uuid: string = FIELD_TAKE) {
+function testClient(): QueryClient {
   const client = createQueryClient();
   client.setDefaultOptions({ queries: { retry: false } });
+  return client;
+}
+
+function renderRecording(uuid: string = FIELD_TAKE, client: QueryClient = testClient()) {
   return render(
     <QueryClientProvider client={client}>
       <ThemeProvider>
@@ -145,6 +150,21 @@ describe('the lines', () => {
     // line gets a name and every other line keeps its own left edge.
     expect(await screen.findByText('Speaker A')).toBeInTheDocument();
     expect(screen.getByText(/The second segment/)).toBeInTheDocument();
+  });
+
+  it('draws them when the transcript mounts in the same commit as the column it scrolls in', async () => {
+    measured();
+    const client = testClient();
+    // Nothing refetches, so nothing re-renders the transcript once it has mounted.
+    client.setDefaultOptions({ queries: { retry: false, staleTime: Infinity } });
+    const first = renderRecording(FIELD_TAKE, client);
+    await screen.findByText(/The first segment of the transcript/);
+    first.unmount();
+    // Everything is cached now, so the column and the transcript arrive in one commit -- the
+    // ordering in which the column's ref is attached only after the transcript's layout effects.
+    renderRecording(FIELD_TAKE, client);
+    expect(screen.getByText('6 segments')).toBeInTheDocument();
+    expect(lines()).not.toHaveLength(0);
   });
 });
 
