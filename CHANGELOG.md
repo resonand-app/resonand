@@ -20,6 +20,11 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ## [Unreleased]
 
+### Changed
+
+- **The browser tab shows the whole mark.** The favicon was the S on its own, which read as a
+  stray letter rather than as Resonand; it is now the full mark, arcs included.
+
 ### Fixed
 
 - **A recording no longer opens with its transcript missing.** About one load in five showed

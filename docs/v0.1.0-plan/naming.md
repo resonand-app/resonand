@@ -222,6 +222,10 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       arcs. The three arcs merge into a smudge below about 40px and a favicon is never drawn above
       32, so the SVG slot -- which a browser prefers over the `.ico` -- now gets the simplified
       mark, and the `.ico` carries both, at 16, 32 and 48.
+
+      *Reversed on 2026-09-26*: the S alone read as a stray letter in a browser tab rather than
+      as Resonand, so the SVG slot and every size of the `.ico` carry the full mark again, and
+      the arcs blurring at 16px is the accepted cost. `favicon-small.svg` stays in the kit.
       _Done when:_ nothing in the interface or the brand kit draws the old mark, and the specimen
       board renders in both themes. ⇢ NAM-1
 
