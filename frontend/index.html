@@ -53,12 +53,11 @@
     -->
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <!--
-      The simplified mark, not the full one. The three arcs merge into a smudge below about 40px
-      and a favicon is never drawn above 32, so the SVG slot -- which a modern browser prefers
-      over the .ico -- gets the S on its own. The .ico carries both: simplified at 16 and 32, the
-      full mark at 48. `favicon.svg` is still shipped for anywhere it is drawn large.
+      The full mark, as is the .ico at every size. The S on its own read as a stray letter in a
+      tab rather than as Resonand; the arcs blur at 16px, and that is the price paid for it.
+      `favicon-small.svg` stays in the kit for a surface too small for anything but the S.
     -->
-    <link rel="icon" href="/favicon-small.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
     <!--
