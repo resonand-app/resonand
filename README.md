@@ -16,10 +16,6 @@
   <a href="https://github.com/resonand-app/resonand/pkgs/container/resonand"><img alt="Release: 0.1.0" src="https://img.shields.io/badge/release-0.1.0-E98A5F"></a>
 </p>
 
-<p align="center">
-  <img src="docs/assets/recording.png" alt="A recording open in Resonand, playing a third of the way through: the waveform with the part already played drawn behind the playhead, the transcript following it with the line being spoken picked out, and the recording's metadata">
-</p>
-
 ---
 
 > ### Status: `0.1.0` is out, and it is the first one.
