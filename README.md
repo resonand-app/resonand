@@ -8,6 +8,10 @@
 </p>
 
 <p align="center">
+  <a href="https://resonand.app"><strong>resonand.app</strong></a>
+</p>
+
+<p align="center">
   <a href="LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
   <a href="https://github.com/resonand-app/resonand/pkgs/container/resonand"><img alt="Release: 0.1.0" src="https://img.shields.io/badge/release-0.1.0-E98A5F"></a>
 </p>
