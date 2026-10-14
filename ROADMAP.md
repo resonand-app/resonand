@@ -85,7 +85,6 @@ probably the highest felt value per hour spent on it.
 - **A library's settings in two blocks** rather than one column.
 - **Sending to transcribe from the list**, not only from inside a recording.
 - **Emptying the trash in bulk**, which today is one row at a time.
-- **Favourites**, kept with a heart.
 - **Looping or stopping at the end, as a setting**, stopping by default.
 - **A waveform whose shape somebody can choose.**
 - **On a phone, the metadata panel closed on arrival**, so that the recording is what is on screen.

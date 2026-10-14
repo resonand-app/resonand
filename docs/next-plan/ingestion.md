@@ -1,7 +1,7 @@
 # Ingestion, after the first version
 
-`ING-*` — the ways audio gets in that the first version did not build, and corrections to what it
-did. Everything else in the track shipped, and is recorded in
+`ING-*` — the ways audio gets in that the first version did not build, what an export carries
+with it, and corrections to what it did. Everything else in the track shipped, and is recorded in
 [`docs/v0.1.0-plan/ingestion.md`](../v0.1.0-plan/ingestion.md).
 
 ## Audio that arrives without anybody asking
@@ -47,3 +47,22 @@ did. Everything else in the track shipped, and is recorded in
       *Done when:* a fragment beside a recording with a pending or running job is not a finding,
       one beside a recording whose jobs have all stopped still is, and the restore check cannot race
       the worker.
+
+## The archive, leaving and coming back
+
+- [ ] **ING-15** · 🧪 **Favourites survive an export and an import.** Nobody types a favourite twice:
+      a set somebody spent a year curating, gone after a restore, is a loss even though no audio
+      was. The per-recording sidecar gains `favourited_by` beside `shares`, a list of
+      `{email, at}`, so the order `UI-44` sorts by survives as well as the mark. Import resolves
+      the addresses the way `_grant_all` resolves grantees: an address with no account is skipped
+      and named among the missing, never invented. An archive written before this has no key and
+      imports exactly as it did. ⇢ DAT-11, ING-11b
+
+      *Rejected:* a top-level list in `resonand-archive.json`. Everything else about a recording
+      lives in its own sidecar, so a recording copied on its own carries its favourites with it.
+
+      🧪 `ING-11b`'s round trip carries favourites across, `at` included; an address with no
+      account is reported and not marked; an export from before this imports unchanged.
+
+      *Done when:* exporting an archive and importing it into an empty instance with the same
+      accounts gives every account back its favourites, in the order they were marked.
