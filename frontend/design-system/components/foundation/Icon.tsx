@@ -16,6 +16,7 @@ import {
   Folder,
   FolderInput,
   HardDrive,
+  Heart,
   LayoutGrid,
   Library,
   Loader,
@@ -70,7 +71,8 @@ import type { HTMLAttributes } from 'react';
  * `eye-off` are the sign-in password field's reveal toggle -- what it shows next depends on
  * which state it is in, so the one control needs both. `folder` is a category, for the bulk bar's
  * picker once it lost its label -- `folder-input` is beside it and means moving to another
- * library, which is the one thing it must not be confused with.
+ * library, which is the one thing it must not be confused with. `heart` is a favourite, and the
+ * one glyph drawn filled as well as stroked: marked is the shape filled in (`UI-41`).
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -90,6 +92,7 @@ const GLYPHS = {
   folder: Folder,
   'folder-input': FolderInput,
   'hard-drive': HardDrive,
+  heart: Heart,
   library: Library,
   loader: Loader,
   'log-out': LogOut,
@@ -144,6 +147,9 @@ export interface IconProps extends HTMLAttributes<HTMLSpanElement> {
    *  cannot pass a value that might be absent to a merely optional prop. Requiring each of them
    *  to strip the key first would buy nothing and be forgotten once. */
   color?: string | undefined;
+  /** Paints the glyph's interior. Only a closed shape means anything filled, which is the heart;
+   *  everything else stays a stroke, as the system draws it. */
+  fill?: string | undefined;
 }
 
 /**
@@ -158,6 +164,7 @@ export function Icon({
   size = 17,
   strokeWidth = 1.7,
   color = 'currentColor',
+  fill,
   style,
   ...rest
 }: IconProps) {
@@ -198,6 +205,7 @@ export function Icon({
           width: size,
           height: size,
           strokeWidth,
+          ...(fill === undefined ? {} : { fill }),
           'aria-hidden': true,
           focusable: 'false',
         })}

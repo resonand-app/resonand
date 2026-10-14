@@ -15,7 +15,7 @@ The strings these tasks need — the heart's two labels, the view's title, its e
 bulk actions, a failure — are drafted in the task against the design system's content rules, and
 reviewed as copy in its pull request rather than taken as settled.
 
-- [ ] **UI-41** · **A heart, in the design system.** `heart` joins `Icon`'s registry, and the
+- [x] **UI-41** · **A heart, in the design system.** `heart` joins `Icon`'s registry, and the
       ICONOGRAPHY list in `design-system/README.md` and `Icon.test.tsx`'s documented names follow
       it. A marked recording draws the heart **filled**, which `Icon` cannot do today: it strokes
       every glyph at 1.7 and fills none. The filled state takes the accent from a token, never from

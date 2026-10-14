@@ -113,6 +113,9 @@ const GRAPHIC_PAIRS: [string, string][] = [
   ['--wave', '--surface'],
   ['--wave', '--bg'],
   ['--wave-dim', '--bg'],
+  // A marked heart on a hovered or selected card (`UI-41`); at rest it is `--accent` on
+  // `--surface`, which the text pairs already hold to the stricter ratio.
+  ['--accent', '--surface-2'],
   ...(['amber', 'clay', 'slate', 'moss', 'stone', 'plum', 'teal'] as const).flatMap(
     (name): [string, string][] => [
       [`--library-${name}`, '--surface'],

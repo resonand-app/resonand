@@ -48,6 +48,31 @@ describe('RecordingRow', () => {
     expect(onOpen).not.toHaveBeenCalled();
   });
 
+  it('draws no heart unless marking is offered', () => {
+    render(<RecordingRow name="A recording" duration="48:12" onOpen={vi.fn()} />);
+    expect(screen.queryByRole('button', { name: 'Favourite A recording' })).toBeNull();
+  });
+
+  it('marks on a click or on Enter, and opens on neither (UI-41)', async () => {
+    const onOpen = vi.fn();
+    const onToggle = vi.fn();
+    render(
+      <RecordingRow
+        name="A recording"
+        duration="48:12"
+        onOpen={onOpen}
+        favourite={{ on: true, onToggle }}
+      />,
+    );
+    const heart = screen.getByRole('button', { name: 'Favourite A recording' });
+    expect(heart.getAttribute('aria-pressed')).toBe('true');
+    await userEvent.click(heart);
+    heart.focus();
+    await userEvent.keyboard('{Enter}');
+    expect(onToggle).toHaveBeenCalledTimes(2);
+    expect(onOpen).not.toHaveBeenCalled();
+  });
+
   it('is not a control when there is nothing to open', () => {
     render(<RecordingRow name="A recording" duration="48:12" />);
     expect(screen.queryByRole('button')).toBeNull();

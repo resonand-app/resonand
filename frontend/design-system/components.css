@@ -318,6 +318,14 @@
   color: var(--accent);
 }
 
+/* `solid` is the on state of a toggle drawn as a shape filled in -- the favourite heart (`UI-41`).
+   Colour only: the background stays the variant's, so a marked heart reads as a mark on the
+   recording rather than as a second accent control beside the play button. */
+[data-ds='icon-button'][data-solid='true'],
+[data-ds='icon-button'][data-solid='true']:hover:not(:disabled) {
+  color: var(--accent);
+}
+
 /* TextField. The error ring, and nothing else -- the focus ring is the shared rule above, and the
    two must be able to appear together: a field can be both wrong and focused, and hiding one of
    those is how somebody loses the thread of what they were fixing. */
@@ -824,6 +832,30 @@
 [data-ds='recording-card']:focus-within [data-ds='card-select'],
 [data-ds='recording-card'][data-selecting='true'] [data-ds='card-select'] {
   visibility: visible;
+}
+
+/* The heart follows the checkbox's rule for the same reason, with one difference: a recording that
+   is marked says so at rest, because that is the fact it exists to show (`UI-41`). Where nothing
+   can hover -- a phone -- an empty heart would never appear at all, so there it always does. The
+   dense list hides it the same way, keeping the column's width so no row is narrower than the
+   next. */
+[data-ds='card-favourite'][data-on='false'],
+[data-ds='row-favourite'][data-on='false'] {
+  visibility: hidden;
+}
+
+[data-ds='recording-card']:hover [data-ds='card-favourite'],
+[data-ds='recording-card']:focus-within [data-ds='card-favourite'],
+[data-ds='recording-row']:hover [data-ds='row-favourite'],
+[data-ds='recording-row']:focus-within [data-ds='row-favourite'] {
+  visibility: visible;
+}
+
+@media (hover: none) {
+  [data-ds='card-favourite'][data-on='false'],
+  [data-ds='row-favourite'][data-on='false'] {
+    visibility: visible;
+  }
 }
 
 /* A selected card takes the surface step, and keeps the accent ring if it is also playing --
