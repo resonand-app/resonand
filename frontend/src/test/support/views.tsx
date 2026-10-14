@@ -35,7 +35,14 @@ import { routes, toLibrary, toLibrarySettings, toRecording, toSearch } from '@/a
 import { THEME_STORAGE_KEY, ThemeProvider, type ResolvedTheme } from '@/design-system';
 import { SECTION_PARAM } from '@/features/settings/sections';
 import { createI18n } from '@/i18n';
-import { archive, CASSETTE, MEETINGS, RECORDINGS, FIELD_TAKE } from '@/test/api/archive';
+import {
+  archive,
+  CASSETTE,
+  MEETINGS,
+  RECORDINGS,
+  FIELD_TAKE,
+  VOICE_NOTE,
+} from '@/test/api/archive';
 
 /** A screen from the specification's §7, with what it takes to get one on the page. */
 export interface ViewUnderTest {
@@ -72,7 +79,7 @@ export interface ViewUnderTest {
 }
 
 /**
- * The eight screens, in the specification's §7 order.
+ * The eight screens, in the specification's §7 order, and Favourites after them (`UI-44`).
  *
  * V4 and V8 are absent because they are not routes: the upload dialog and the move sheet are
  * overlays raised from inside another view. They are in `STATES` below, which is what makes
@@ -136,6 +143,14 @@ export const VIEWS: readonly ViewUnderTest[] = [
     module: 'features/settings/SettingsView.tsx',
     at: routes.settings,
     settled: 'Appearance',
+  },
+  {
+    name: 'Favourites',
+    module: 'features/favourites/FavouritesView.tsx',
+    at: routes.favourites,
+    // The fixtures mark nothing, so this is the empty state: a mock that pre-marked recordings
+    // would put a filled heart on every other view's cards as well.
+    settled: 'Nothing marked yet',
   },
 ];
 
@@ -359,6 +374,14 @@ function fillTheTrash(): void {
   );
 }
 
+/** Mark two recordings in two libraries, so Favourites has cards rather than its empty state. */
+function markTwo(): void {
+  archive.recordings = archive.recordings.map((one) =>
+    one.uuid === FIELD_TAKE || one.uuid === VOICE_NOTE ? { ...one, is_favourite: true } : one,
+  );
+  archive.favouriteOrder = [FIELD_TAKE, VOICE_NOTE];
+}
+
 /** Every state behind a trigger or a parameter, in the order of the views they belong to. */
 export const STATES: readonly StateUnderTest[] = [
   {
@@ -472,6 +495,13 @@ export const STATES: readonly StateUnderTest[] = [
     at: `${routes.settings}?${SECTION_PARAM}=administration`,
     raise: (user) => press(user, 'Set a password for Sam Rivera'),
     reached: /This is the only way back into an account/,
+  },
+  {
+    name: 'Favourites - Two libraries marked',
+    of: view('Favourites'),
+    prepare: markTwo,
+    settled: 'Short voice note',
+    reached: 'Field recording, long take',
   },
 ];
 

@@ -265,6 +265,7 @@ export function AppShell({ children, player, tray, header, onUpload, onProfile }
             labels={{
               libraries: t('sidebar.libraries'),
               search: t('sidebar.search'),
+              favourites: t('sidebar.favourites'),
               yours: t('sidebar.yours'),
               shared: t('sidebar.shared'),
               trash: t('sidebar.trash'),

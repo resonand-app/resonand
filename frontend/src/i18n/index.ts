@@ -21,6 +21,7 @@ import type { i18n as I18n } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import common from './en/common.json';
+import favourites from './en/favourites.json';
 import libraries from './en/libraries.json';
 import library from './en/library.json';
 import librarySettings from './en/librarySettings.json';
@@ -48,6 +49,7 @@ export const PSEUDO = 'pseudo';
 
 export const NAMESPACES = [
   'common',
+  'favourites',
   'libraries',
   'library',
   'librarySettings',
@@ -64,6 +66,7 @@ export const NAMESPACES = [
 
 const english = {
   common,
+  favourites,
   libraries,
   library,
   librarySettings,

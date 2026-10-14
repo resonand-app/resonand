@@ -35,7 +35,8 @@ import { TagPicker } from './TagPicker';
 import type { Category } from './recordings';
 
 export interface LibraryFiltersProps {
-  categories: readonly Category[];
+  /** The library's tree. Absent where the list spans libraries, and so does the picker. */
+  categories?: readonly Category[] | undefined;
   /** What the right-hand end says: the count, or how many a filter matched. */
   meta?: string;
 }
@@ -48,13 +49,15 @@ export function LibraryFilters({ categories, meta }: LibraryFiltersProps) {
 
   const controls = (
     <>
-      <CategoryPicker
-        categories={categories}
-        value={filters.categoryId}
-        onChange={(categoryId) => {
-          set({ categoryId });
-        }}
-      />
+      {categories !== undefined && (
+        <CategoryPicker
+          categories={categories}
+          value={filters.categoryId}
+          onChange={(categoryId) => {
+            set({ categoryId });
+          }}
+        />
+      )}
       <TagPicker
         value={filters.tags}
         onChange={(tags) => {
