@@ -45,6 +45,16 @@ export interface RecordingCardProps
   /** A discreet mark for a recording shared on its own, apart from its library. */
   sharedIndividually?: boolean;
   /**
+   * Whether this recording is one of the caller's favourites, and what pressing the heart does
+   * (`UI-41`). Absent, and there is no heart: a card in a specimen, or anywhere marking means
+   * nothing, draws none.
+   *
+   * It sits at the foot of the card, across the waveform from the play control, because a heart
+   * and a play button in one corner is the confusion the checkbox was moved away from. Marked, it
+   * is always drawn; unmarked, it appears the way the checkbox does.
+   */
+  favourite?: { on: boolean; onToggle: () => void };
+  /**
    * Whether this card is selected, and the control that changes that (`UI-9a`).
    *
    * The checkbox is in the corner **opposite the play button**, which is the whole design of it:
@@ -94,6 +104,8 @@ export interface RecordingCardProps
     moreTags?: (count: number) => string;
     select?: (name: string) => string;
     sharedIndividually?: string;
+    /** The heart's name, which does not change with its state: `aria-pressed` carries that. */
+    favourite?: (name: string) => string;
   };
 }
 
@@ -121,6 +133,7 @@ export function RecordingCard({
   tags = [],
   maxTags = 3,
   sharedIndividually = false,
+  favourite,
   selected = false,
   onSelect,
   selecting = false,
@@ -139,10 +152,12 @@ export function RecordingCard({
     <article
       onClick={(event) => {
         if (onOpen === undefined) return;
-        // The checkbox picks the recording and the play button plays it. Neither opens it.
+        // The checkbox picks it, the play button plays it and the heart marks it. None opens it.
         if (
           event.target instanceof Element &&
-          event.target.closest('[data-ds="card-select"], [data-ds="card-play"]') !== null
+          event.target.closest(
+            '[data-ds="card-select"], [data-ds="card-play"], [data-ds="card-favourite"]',
+          ) !== null
         ) {
           return;
         }
@@ -236,8 +251,21 @@ export function RecordingCard({
         pending={pending}
         noWaveformLabel={labels?.noWaveform}
       />
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-        <StateBadge state={state} {...(labels?.state === undefined ? {} : { label: labels.state })} />
+      <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: 6,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
+          <StateBadge
+            state={state}
+            {...(labels?.state === undefined ? {} : { label: labels.state })}
+          />
         {sharedIndividually && (
           <Chip data-kind="shared" title={labels?.sharedIndividually}>
             <Icon name="share-2" size={13} />
@@ -251,6 +279,25 @@ export function RecordingCard({
           <Chip data-kind="overflow">
             {labels?.moreTags?.(tags.length - maxTags) ?? `+${String(tags.length - maxTags)}`}
           </Chip>
+        )}
+        </div>
+        {favourite !== undefined && (
+          <span
+            data-ds="card-favourite"
+            data-on={favourite.on ? 'true' : 'false'}
+            // The chips set the row's height; the heart's hit target is grown outside its box.
+            style={{ flex: '0 0 auto', display: 'flex', marginBlock: -3 }}
+          >
+            <IconButton
+              icon="heart"
+              variant="ghost"
+              size={26}
+              solid={favourite.on}
+              aria-pressed={favourite.on}
+              label={labels?.favourite?.(name) ?? `Favourite ${name}`}
+              onClick={favourite.onToggle}
+            />
+          </span>
         )}
       </div>
     </article>

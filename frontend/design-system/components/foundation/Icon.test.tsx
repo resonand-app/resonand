@@ -24,6 +24,7 @@ const DOCUMENTED: IconName[] = [
   'chevron-left',
   'circle-dashed',
   'clock',
+  'heart',
   'library',
   'loader',
   'log-out',
@@ -48,6 +49,13 @@ describe('Icon', () => {
   it.each(DOCUMENTED)('draws %s', (name) => {
     const { container } = render(<Icon name={name} data-testid="icon" />);
     expect(container.querySelector('svg')).not.toBeNull();
+  });
+
+  it('fills a glyph only when asked, which is how a marked heart is drawn (UI-41)', () => {
+    const { container, rerender } = render(<Icon name="heart" />);
+    expect(container.querySelector('svg')?.getAttribute('fill')).toBe('none');
+    rerender(<Icon name="heart" fill="currentColor" />);
+    expect(container.querySelector('svg')?.getAttribute('fill')).toBe('currentColor');
   });
 
   it('sizes the box and the glyph together', () => {

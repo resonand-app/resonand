@@ -33,6 +33,14 @@ export interface RecordingRowProps
   onSelect?: (selected: boolean) => void;
   /** Whether this is the recording the player is playing (`UI-7a`). */
   playing?: boolean;
+  /**
+   * Whether this recording is one of the caller's favourites, and what pressing the heart does
+   * (`UI-41`). Absent, and the row has no heart column at all.
+   *
+   * The last column, so it is the one place on the row a click marks rather than opens. An
+   * unmarked heart keeps its width while hidden, for the reason every other column does.
+   */
+  favourite?: { on: boolean; onToggle: () => void };
   onOpen?: () => void;
   /**
    * Play this recording. Present in the dense list, where play is one of the four columns that
@@ -45,6 +53,8 @@ export interface RecordingRowProps
     pause?: (name: string) => string;
     state?: string;
     select?: (name: string) => string;
+    /** The heart's name, which does not change with its state: `aria-pressed` carries that. */
+    favourite?: (name: string) => string;
   };
 }
 
@@ -71,6 +81,7 @@ export function RecordingRow({
   state = 'done',
   selected = false,
   playing = false,
+  favourite,
   onOpen,
   onSelect,
   onPlay,
@@ -108,6 +119,8 @@ export function RecordingRow({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     onKeyDown?.(event);
     if (event.defaultPrevented) return;
+    // A key pressed on a control inside the row is that control's: Enter on the heart marks it.
+    if (event.target !== event.currentTarget) return;
     if (event.key === 'Enter' && interactive) {
       event.preventDefault();
       onOpen();
@@ -248,6 +261,27 @@ export function RecordingRow({
           <Chip key={tag}>{tag}</Chip>
         ))}
       </span>
+      {favourite !== undefined && (
+        <span
+          data-ds="row-favourite"
+          data-on={favourite.on ? 'true' : 'false'}
+          style={{ flex: '0 0 auto', display: 'flex' }}
+        >
+          <IconButton
+            icon="heart"
+            variant="ghost"
+            size={26}
+            solid={favourite.on}
+            aria-pressed={favourite.on}
+            label={labels?.favourite?.(name) ?? `Favourite ${name}`}
+            onClick={(event) => {
+              // As with play: marking it must not also open it.
+              event.stopPropagation();
+              favourite.onToggle();
+            }}
+          />
+        </span>
+      )}
     </div>
   );
 }

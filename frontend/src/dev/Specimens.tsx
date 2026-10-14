@@ -575,9 +575,10 @@ export default function Specimens() {
             tags={['field', 'outdoor']}
             peaks={PEAKS}
             playing
+            favourite={{ on: true, onToggle: () => undefined }}
           />
         </Panel>
-        <Panel label="RecordingRow" width={520}>
+        <Panel label="RecordingRow" width={720}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             {TRANSCRIPTION_STATE_NAMES.map((state, i) => (
               <RecordingRow
@@ -589,6 +590,7 @@ export default function Specimens() {
                 state={state}
                 selected={i === 1}
                 onOpen={() => undefined}
+                favourite={{ on: i === 0, onToggle: () => undefined }}
               />
             ))}
           </div>

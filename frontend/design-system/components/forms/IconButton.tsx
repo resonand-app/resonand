@@ -30,6 +30,12 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
   /** Renders the accent-soft fill for the current nav destination or an engaged toggle. */
   active?: boolean;
   /**
+   * Draws the glyph filled, in the accent: the on state of a toggle whose on state is a shape
+   * filled in, which is the favourite heart (`UI-41`). Pair it with `aria-pressed`, because a
+   * filled shape is not something a screen reader can see.
+   */
+  solid?: boolean;
+  /**
    * Renders an `<a>` with the control's shape, for a navigation the browser performs itself.
    *
    * `Button` carries the same pair and for the same reason: a download is a navigation, and one
@@ -55,6 +61,7 @@ export function IconButton({
   size = 32,
   label,
   active,
+  solid,
   href,
   download,
   style,
@@ -64,6 +71,7 @@ export function IconButton({
     'aria-label': label,
     'data-variant': variant,
     'data-active': active === true ? 'true' : undefined,
+    'data-solid': solid === true ? 'true' : undefined,
     'data-hit-target': '',
     style: {
       width: size,
@@ -78,7 +86,13 @@ export function IconButton({
     },
   };
 
-  const glyph = <Icon name={icon} size={Math.round(size * 0.53)} />;
+  const glyph = (
+    <Icon
+      name={icon}
+      size={Math.round(size * 0.53)}
+      {...(solid === true ? { fill: 'currentColor' } : {})}
+    />
+  );
 
   // No `rest` on the anchor, as on `Button`: a button's handlers on a link are how a download
   // becomes something else.
