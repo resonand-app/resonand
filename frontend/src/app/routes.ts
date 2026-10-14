@@ -19,6 +19,7 @@ export const routes = {
   library: '/library/:uuid',
   librarySettings: '/library/:uuid/settings',
   recording: '/recording/:uuid',
+  favourites: '/favourites',
   search: '/search',
   trash: '/trash',
   settings: '/settings',

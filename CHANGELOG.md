@@ -22,6 +22,14 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ### Added
 
+- **Favourites.** A heart on every recording, on its card, its row and its own page, marks it as
+  one of yours, and *Favourites* in the sidebar gathers every recording you have marked, whichever
+  library it is in, newest mark first. A mark is yours alone: nobody else sees it, and nothing
+  counts how many people marked anything. A library shared with you read-only can now be
+  selected, to mark or unmark a selection. Over the API, `PUT` and `DELETE` on
+  `/api/audio/{audio_uuid}/favourite` mark and unmark, every recording carries `is_favourite`, and
+  `GET /api/audio` now takes a library's filters and sorts, with `favourite=true` and
+  `sort=favourited_at`, and without a `sort` lists the most recently recorded first.
 - **The trash can be destroyed in one call, whole or in part.** `GET /api/trash/summary` says
   what emptying it would destroy, in numbers and as of an instant; `DELETE /api/trash` takes that
   instant as `trashed_before` and leaves anything trashed since; `POST /api/trash/purge` destroys a

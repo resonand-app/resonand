@@ -18,10 +18,12 @@
  * how the same recordings are drawn, and it lives at the sort's end of the bar for that reason.
  */
 
+import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { IconButton, Select } from '@/design-system';
 import type { SelectOption } from '@/design-system';
+import { SortDefaults } from '@/app/url-state';
 import type { SortDirection, SortField, ViewMode } from '@/app/url-state';
 
 export interface SortControlProps {
@@ -30,15 +32,25 @@ export interface SortControlProps {
   onSort: (sort: SortField, direction: SortDirection) => void;
 }
 
-/** The four the API offers, in the order the control lists them (`API-10`). */
-const FIELDS: readonly SortField[] = ['recorded_at', 'created_at', 'duration_ms', 'title'];
+/** Every field the API sorts by, in the order the control lists them (`API-10`, `API-27`). */
+const FIELDS: readonly SortField[] = [
+  'favourited_at',
+  'recorded_at',
+  'created_at',
+  'duration_ms',
+  'title',
+];
 
 export function SortControl({ sort, direction, onSort }: SortControlProps) {
   const { t } = useTranslation('library');
-  const options: SelectOption<SortField>[] = FIELDS.map((field) => ({
-    value: field,
-    label: t(`sort.${field}`),
-  }));
+  // The ones this view offers: when a favourite was marked means something only among favourites.
+  const { sorts } = useContext(SortDefaults);
+  const options: SelectOption<SortField>[] = FIELDS.filter((field) => sorts.includes(field)).map(
+    (field) => ({
+      value: field,
+      label: t(`sort.${field}`),
+    }),
+  );
 
   return (
     <>

@@ -81,7 +81,7 @@ reviewed as copy in its pull request rather than taken as settled.
       *Done when:* a library view behaves exactly as before, and the same components can be handed
       a listing that spans libraries.
 
-- [ ] **UI-44** · 🧪 **Favourites, in the sidebar.** A route, `/favourites`; a destination,
+- [x] **UI-44** · 🧪 **Favourites, in the sidebar.** A route, `/favourites`; a destination,
       `favourites`, in `destinations.ts`; and an entry in the design-system `Sidebar` below Search
       and above *Your libraries*. `Sidebar`'s layout is fixed and has no slot for one, so the entry
       is added to the component, its labels and its specimen, collapsed and expanded. On a phone it
@@ -94,22 +94,31 @@ reviewed as copy in its pull request rather than taken as settled.
       before the library's own, and all of it lives in the URL like the library's.
 
       **Unmarking a card here does not take it away.** It stays where it is with an empty heart,
-      so the same click undoes a mistaken one, and it is gone the next time the view loads. Removing
-      it at once would reflow the grid under the pointer.
+      so the same click undoes a mistaken one, and it is gone the next time the list is fetched: the
+      view loading, the next page asked for, or something on the list changing. Coming back to the
+      tab is not one of those, so this listing is not refetched on focus. Removing it at once would
+      reflow the grid under the pointer, and asking for the next page off the stale pages would
+      skip as many favourites as were unmarked.
 
       Selection offers, **per action, only what every selected recording allows**, read from each
       row's `level`:
 
       | Action | Drawn when |
       |---|---|
-      | Remove from favourites | Always — it needs read, and every row here is readable |
+      | Add to favourites, Remove from favourites | Always — they need read, and every row here is readable |
       | Tag | Every selected row is at Can edit or above |
       | Category | Every selected row is at Can edit or above **and** they sit in one library |
-      | Move, Trash | Every selected row is at Can manage or above (`DEC-27`) |
+      | Move | Every selected row is at Can manage or above (`DEC-27`) **and** they sit in one library |
+      | Trash | Every selected row is at Can manage or above (`DEC-27`) |
 
-      So a selection of recordings the caller only reads offers *Remove from favourites* and
+      So a selection of recordings the caller only reads offers the two favourite actions and
       nothing else, and one read-only row in a selection of editable ones takes Tag and Category
       away until it is deselected. Absent, never disabled (§3.5).
+
+      The move asks for one library as the category does, for a reason found while building it:
+      the move dialog names who gains and who loses access against the library the recordings
+      leave, and a selection from two libraries would have it name the wrong people for half of
+      them.
 
       The page header names the view and how many recordings it holds. The empty state says how a
       recording gets here — the heart on any card — rather than apologising; loading and failure

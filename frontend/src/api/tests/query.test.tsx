@@ -72,6 +72,16 @@ describe('what is worth asking twice', () => {
   });
 });
 
+describe('coming back to the tab', () => {
+  it('refetches every list but the favourites, where an unmarked card is waiting to be undone', () => {
+    const client = createQueryClient();
+    const focus = (key: readonly unknown[]) => client.getQueryDefaults(key).refetchOnWindowFocus;
+    expect(focus(keys.everyRecording({ favourite: true, sort: 'title', offset: 50 }))).toBe(false);
+    expect(focus(keys.everyRecording({ sort: 'title' }))).toBeUndefined();
+    expect(client.getDefaultOptions().queries?.refetchOnWindowFocus).toBe(true);
+  });
+});
+
 describe('a write that failed', () => {
   /** Run a mutation that fails, and answer what the client reported. */
   async function failing(meta?: Record<string, unknown>): Promise<string[]> {

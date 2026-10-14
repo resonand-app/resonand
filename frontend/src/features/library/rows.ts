@@ -22,7 +22,8 @@
  * it loads, which is the same lie in a slower form.
  */
 
-import { keepPreviousData, useQueries, useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import type { Query } from '@tanstack/react-query';
 
 import { useLiveArchive } from '@/app/live-archive';
@@ -108,10 +109,24 @@ export function useRows(
   range: { start: number; end: number },
 ): Rows {
   const live = useLiveArchive();
+  const client = useQueryClient();
   const pages = pagesFor(range);
-  const results = useQueries({
-    queries: pages.map((page) => pageQuery(source, query, page, live)),
-  });
+  const queries = pages.map((page) => pageQuery(source, query, page, live));
+  const results = useQueries({ queries });
+  const fetching = results.some((one) => one.isFetching);
+  const held = JSON.stringify(queries.map((one) => one.queryKey));
+
+  // Each page is fetched at its own offset. A new one read beside pages that are out of date (a
+  // favourite unmarked in place) starts as many rows late as the list has lost, so those come too.
+  useEffect(() => {
+    if (!fetching) return;
+    for (const queryKey of JSON.parse(held) as unknown[][]) {
+      const state = client.getQueryState(queryKey);
+      if (state?.isInvalidated === true && state.fetchStatus === 'idle') {
+        void client.refetchQueries({ queryKey, exact: true });
+      }
+    }
+  }, [client, fetching, held]);
 
   const loaded = new Map<number, Page<Recording>>();
   pages.forEach((page, index) => {

@@ -23,6 +23,7 @@
 
 import { MutationCache, QueryCache, QueryClient } from '@tanstack/react-query';
 
+import { keys } from './keys';
 import { ApiProblem } from './problem';
 
 /** How long a fetched thing is treated as current. */
@@ -106,7 +107,7 @@ export function createQueryClient(
   onSessionEnded?: SessionEnded,
   onWriteFailed?: WriteFailed,
 ): QueryClient {
-  return new QueryClient({
+  const client = new QueryClient({
     queryCache: new QueryCache({
       onError: (error) => {
         if (error instanceof ApiProblem && error.isUnauthenticated) onSessionEnded?.();
@@ -141,4 +142,10 @@ export function createQueryClient(
       },
     },
   });
+  // A favourite unmarked in place stays on screen until the list is next asked for, and coming
+  // back to the tab is not asking (`UI-44`).
+  client.setQueryDefaults(keys.everyRecording({ favourite: true }), {
+    refetchOnWindowFocus: false,
+  });
+  return client;
 }
