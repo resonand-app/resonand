@@ -104,6 +104,17 @@ function fold(name: string): string {
   return name.normalize('NFKD').replace(/\p{M}/gu, '').trim().toLocaleLowerCase();
 }
 
+/** Marking or unmarking (`API-26`): idempotent both ways, and not found for anything absent or
+ *  trashed, as the API answers. */
+function favourite(uuid: string, on: boolean): Response {
+  const existing = archive.recordings.find((one) => one.uuid === uuid && one.deleted_at === null);
+  if (!existing) return NOT_FOUND();
+  archive.recordings = archive.recordings.map((one) =>
+    one === existing ? { ...one, is_favourite: on } : one,
+  );
+  return new HttpResponse(null, { status: 204 });
+}
+
 /** Answer with a thing, or with the 404 that covers both "gone" and "not yours" (`DEC-14`). */
 function found(value: unknown): Response {
   return value === undefined ? NOT_FOUND() : HttpResponse.json(value);
@@ -473,6 +484,12 @@ export const handlers: HttpHandler[] = [
     );
     return found(detailOf(String(params.audio_uuid)));
   }),
+  http.put('/api/audio/:audio_uuid/favourite', ({ params }) =>
+    favourite(String(params.audio_uuid), true),
+  ),
+  http.delete('/api/audio/:audio_uuid/favourite', ({ params }) =>
+    favourite(String(params.audio_uuid), false),
+  ),
   http.post('/api/audio/:audio_uuid/transcribe', ({ params }) => {
     const existing = archive.recordings.find((one) => one.uuid === params.audio_uuid);
     if (!existing) return NOT_FOUND();

@@ -345,6 +345,33 @@ export interface paths {
         patch: operations["update_audio_api_audio__audio_uuid__patch"];
         trace?: never;
     };
+    "/api/audio/{audio_uuid}/favourite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Mark Favourite
+         * @description Mark a recording as one of the caller's favourites. Reading it is enough.
+         *
+         *     ``PUT`` and ``DELETE`` rather than a toggle: both are idempotent, so a retry or a double click
+         *     repeats what was meant instead of undoing it.
+         */
+        put: operations["mark_favourite_api_audio__audio_uuid__favourite_put"];
+        post?: never;
+        /**
+         * Unmark Favourite
+         * @description Take the caller's mark off a recording. Not an error when there was none.
+         */
+        delete: operations["unmark_favourite_api_audio__audio_uuid__favourite_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/audio/{audio_uuid}/move": {
         parameters: {
             query?: never;
@@ -1324,6 +1351,8 @@ export interface components {
             duration_ms: number | null;
             /** Has Waveform */
             has_waveform: boolean;
+            /** Is Favourite */
+            is_favourite: boolean;
             /** Is Shared Individually */
             is_shared_individually: boolean;
             level: components["schemas"]["Level"];
@@ -1374,6 +1403,8 @@ export interface components {
             duration_ms: number | null;
             /** Has Waveform */
             has_waveform: boolean;
+            /** Is Favourite */
+            is_favourite: boolean;
             /** Is Shared Individually */
             is_shared_individually: boolean;
             level: components["schemas"]["Level"];
@@ -2602,6 +2633,64 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AudioDetail"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    mark_favourite_api_audio__audio_uuid__favourite_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unmark_favourite_api_audio__audio_uuid__favourite_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                audio_uuid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

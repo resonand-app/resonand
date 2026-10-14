@@ -125,7 +125,7 @@ def upload(
             # The level the library resolved to, not owner: uploading needs edit, and a
             # recording with no individual grant carries exactly its library's level. The
             # interface decides what to offer from this field (``REV-S5``).
-            return audio_detail(write, audio, level)
+            return audio_detail(write, caller.id, audio, level)
     except BaseException:
         # Whatever went wrong -- a file over the limit, a permission withdrawn between the two
         # checks, a failed commit -- the bytes belong to a recording that does not exist. They

@@ -20,6 +20,7 @@ from resonand.api.filters import RecordingFilters
 from resonand.api.pagination import Page, PageRequest, page_of, page_request
 from resonand.api.presenters import audio_summary
 from resonand.api.schemas import SearchMatch, SearchResult
+from resonand.db import favourites
 from resonand.db.search import Filters, recall_note, search
 
 router = APIRouter(prefix="/search", tags=["search"])
@@ -56,10 +57,13 @@ def run_search(
     hits, total = search(
         session, caller.id, q, filters=filters, limit=paging.limit, offset=paging.offset
     )
+    marked = favourites.marked_among(session, caller.id, [hit.audio.id for hit in hits])
     return page_of(
         [
             SearchResult(
-                audio=audio_summary(session, hit.audio, hit.level),
+                audio=audio_summary(
+                    session, caller.id, hit.audio, hit.level, favourite=hit.audio.id in marked
+                ),
                 matches=[
                     SearchMatch(kind=match.kind, fragment=match.fragment, start_ms=match.start_ms)
                     for match in hit.matches

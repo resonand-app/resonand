@@ -327,6 +327,9 @@ class AudioSummary(Api):
 
     has_waveform: bool
     is_shared_individually: bool
+    is_favourite: bool
+    """Whether the caller has marked it (``API-26``). Another account's marks are never told."""
+
     deleted_at: str | None
 
 

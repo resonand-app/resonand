@@ -86,6 +86,7 @@ function recording(
     deleted_at: null,
     duration_ms: minutes(3),
     has_waveform: true,
+    is_favourite: false,
     is_shared_individually: false,
     level: 40,
     notes: null,
