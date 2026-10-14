@@ -17,6 +17,7 @@ import {
   FolderInput,
   HardDrive,
   Heart,
+  HeartOff,
   LayoutGrid,
   Library,
   Loader,
@@ -72,7 +73,8 @@ import type { HTMLAttributes } from 'react';
  * which state it is in, so the one control needs both. `folder` is a category, for the bulk bar's
  * picker once it lost its label -- `folder-input` is beside it and means moving to another
  * library, which is the one thing it must not be confused with. `heart` is a favourite, and the
- * one glyph drawn filled as well as stroked: marked is the shape filled in (`UI-41`).
+ * one glyph drawn filled as well as stroked: marked is the shape filled in (`UI-41`). `heart-off`
+ * is the bulk bar's taking the marks off, which an empty heart beside a filled one cannot say.
  */
 const GLYPHS = {
   'align-left': TextAlignStart,
@@ -93,6 +95,7 @@ const GLYPHS = {
   'folder-input': FolderInput,
   'hard-drive': HardDrive,
   heart: Heart,
+  'heart-off': HeartOff,
   library: Library,
   loader: Loader,
   'log-out': LogOut,

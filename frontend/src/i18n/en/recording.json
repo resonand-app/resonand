@@ -74,6 +74,7 @@
     "unknown": "Not known yet"
   },
   "actions": {
+    "favourite": "Favourite",
     "download": "Download the original",
     "share": "Share",
     "move": "Move to another library",
