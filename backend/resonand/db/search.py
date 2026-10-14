@@ -55,6 +55,7 @@ from sqlalchemy.sql.elements import ColumnElement
 from resonand.acl.query import audio_acl
 from resonand.core.levels import Level
 from resonand.core.states import TranscriptionState
+from resonand.db import favourites
 from resonand.db.models import Audio, Job, Segment, Transcript
 from resonand.jobs import queue
 
@@ -136,6 +137,9 @@ class Filters:
     has to mean *either*. Empty means no state filter at all, which is not the same as all four
     ticked only in that it is cheaper.
     """
+    favourite_of: int | None = None
+    """Only what this account has marked (``DAT-11``). Set from the caller and never from a
+    parameter, so nobody can ask what somebody else has marked."""
 
 
 def build_match_query(raw: str) -> str:
@@ -376,6 +380,8 @@ def apply_filters(query: Any, filters: Filters) -> Any:
         query = query.where(
             or_(*(_state_predicate(state) for state in set(filters.transcription_states)))
         )
+    if filters.favourite_of is not None:
+        query = query.where(Audio.id.in_(favourites.marked_by(filters.favourite_of)))
     return query
 
 

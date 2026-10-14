@@ -50,7 +50,7 @@ held recordings from five others would be a second permission model wearing the 
 The tasks are `DAT-11` here, `API-26` and `API-27` in [`api.md`](api.md), `ING-15` in
 [`ingestion.md`](ingestion.md), and `UI-41` to `UI-44` in [`interface.md`](interface.md).
 
-- [ ] **DAT-11** · 🧪 **A recording can be marked as a favourite, by the account that marks it
+- [x] **DAT-11** · 🧪 **A recording can be marked as a favourite, by the account that marks it
       and for nobody else.** Migration `0005_favourites`: a `favourite` table of `user_id`,
       `audio_id` and `created_at`, the pair as the primary key, both foreign keys
       `ON DELETE CASCADE`, an index on `audio_id` for the cascade, and `created_at` an instant in
@@ -86,4 +86,5 @@ The tasks are `DAT-11` here, `API-26` and `API-27` in [`api.md`](api.md), `ING-1
       deleting the account removes the row; the upgrade test walks `0005`.
 
       *Done when:* an account's favourites are a set of recordings it can read right now, no query
-      can tell anybody else what is in it, and nothing but the cascade ever deletes from it.
+      can tell anybody else what is in it, and nothing but its owner and the cascade ever deletes
+      from it.
