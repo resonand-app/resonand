@@ -81,6 +81,13 @@ updates:
       backend:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    ignore:
+      # SQLAlchemy 2.1 types a multi-entity `select()` row differently, and mypy rejects the way
+      # `db/` and `api/` unpack those rows -- eighteen errors in seven files. Only the minor is
+      # ignored, so 2.0 patches and the rest of the group still arrive. Ends when that code is
+      # moved to 2.1's row types.
+      - dependency-name: "sqlalchemy"
+        update-types: ["version-update:semver-minor"]
 
   - package-ecosystem: "npm"
     directory: "/frontend"
@@ -106,6 +113,11 @@ updates:
       # later release fixes it; this ignores that one version rather than the package.
       - dependency-name: "jsdom"
         versions: ["30.1.0"]
+        update-types: ["version-update:semver-major"]
+      # msw 3 is held back by `@vitest/mocker`, which peers on msw ^2, so `npm ci` cannot reconcile
+      # the lockfile. Ends when that range opens, and even then 3 is a migration of the test mocks
+      # rather than a bump: ESM only, `onUnhandledRequest` renamed, cookies no longer managed.
+      - dependency-name: "msw"
         update-types: ["version-update:semver-major"]
       # TypeScript 7 is held back by `typescript-eslint`, whose peer range stops below it. Ends
       # when that range opens.
