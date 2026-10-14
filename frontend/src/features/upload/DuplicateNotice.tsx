@@ -10,7 +10,8 @@
  * deliberately included in the check, because excluding them would let somebody upload a file,
  * then restore the copy they had deleted, and end up with the real duplicate. Restoring is also
  * the better answer: the recording that comes back has its title, its notes, its tags and its
- * transcript, and a fresh upload has none of them.
+ * transcript, and a fresh upload has none of them. Only a manager may restore (`DEC-27`), so
+ * anybody else is told who can, rather than offered a button the API refuses.
  *
  * The restore happens here rather than in the queue because this is where React and the query
  * cache are: a store outside the routes has no client to tell what went stale.
@@ -22,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { Button } from '@/design-system';
+import { LEVEL } from '@/features/library/data';
 
 import { useUploads } from './uploads';
 import type { Upload } from './uploads';
@@ -42,6 +44,12 @@ export function DuplicateNotice({ upload }: { upload: Upload }) {
   });
 
   if (duplicate === undefined) return null;
+  const mayRestore = duplicate.in_trash && duplicate.level >= LEVEL.manage;
+  const said = !duplicate.in_trash
+    ? 'duplicate.here'
+    : mayRestore
+      ? 'duplicate.inTrash'
+      : 'duplicate.inTrashForAManager';
 
   return (
     <div
@@ -57,12 +65,10 @@ export function DuplicateNotice({ upload }: { upload: Upload }) {
           textWrap: 'pretty',
         }}
       >
-        {t(duplicate.in_trash ? 'duplicate.inTrash' : 'duplicate.here', {
-          name: duplicate.title,
-        })}
+        {t(said, { name: duplicate.title })}
       </span>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
-        {duplicate.in_trash && (
+        {mayRestore && (
           <Button
             variant="secondary"
             disabled={restore.isPending}

@@ -493,6 +493,20 @@ describe('selecting recordings', () => {
     expect(within(card).queryByRole('checkbox')).toBeNull();
   });
 
+  it('offers neither a move nor the trash on a library you only edit (DEC-27)', async () => {
+    const user = userEvent.setup();
+    archive.libraries = archive.libraries.map((one) =>
+      one.uuid === RECORDINGS ? { ...one, level: 20 } : one,
+    );
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    expect(screen.getByRole('button', { name: 'Add a tag' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: /^Move/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send to trash' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'More for the selection' })).toBeNull();
+  });
+
   it('says whether every card in view is selected, or only some', async () => {
     const user = userEvent.setup();
     renderLibrary();

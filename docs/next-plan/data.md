@@ -7,7 +7,7 @@ identifier is never reused, whichever folder minted it.
 
 ## Who may do what
 
-- [ ] **DAT-10** · 🧪 **Taking a recording out of a library needs Can manage.** `DEC-27`, applied
+- [x] **DAT-10** · 🧪 **Taking a recording out of a library needs Can manage.** `DEC-27`, applied
       on both sides at once, because either half alone ships a button the other half refuses.
 
       In the access layer, `db/audio.py`: trashing, restoring and purging a recording resolve at

@@ -146,7 +146,7 @@ def test_a_manager_cannot_trash_the_owners_last_library(database: Database) -> N
 
 
 def test_only_a_manager_can_share_onwards(database: Database) -> None:
-    """The one thing an editor cannot do, which is the whole difference between the levels."""
+    """An editor changes what is in a library; who else sees it is a manager's to decide."""
     with database.write_session() as session:
         owner = users.create_user(session, email="o@x.test", display_name="O")
         editor = users.create_user(session, email="e@x.test", display_name="E")

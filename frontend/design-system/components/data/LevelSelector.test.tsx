@@ -16,8 +16,8 @@ import { LevelSelector } from './LevelSelector';
 /** Exactly what the API sends, owner included. */
 const LEVELS = [
   { level: 10, description: 'Can read: listen and read the transcript, and change nothing.' },
-  { level: 20, description: 'Can edit: change titles, categories and tags, but not share.' },
-  { level: 30, description: 'Can manage: everything above, plus sharing with other people.' },
+  { level: 20, description: 'Can edit: upload, and change titles, categories and tags, but not move, trash or share.' },
+  { level: 30, description: 'Can manage: everything above, plus moving, trashing and sharing with other people.' },
   { level: 40, description: 'Owner: the library belongs to them.' },
 ];
 
@@ -25,7 +25,7 @@ describe('LevelSelector', () => {
   it('renders the words the API sent, not words of its own', () => {
     render(<LevelSelector label="What Sam Rivera can do" levels={LEVELS} value={20} onChange={vi.fn()} />);
     expect(screen.getByText('listen and read the transcript, and change nothing.')).toBeDefined();
-    expect(screen.getByText('change titles, categories and tags, but not share.')).toBeDefined();
+    expect(screen.getByText('upload, and change titles, categories and tags, but not move, trash or share.')).toBeDefined();
   });
 
   it('drops owner rather than drawing it disabled', () => {

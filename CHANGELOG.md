@@ -22,6 +22,12 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ### Changed
 
+- **Only somebody who can manage a library can take a recording out of it.** Moving a recording
+  out to another library, sending it to the trash, restoring it and deleting it for good now need
+  *Can manage*; *Can edit* no longer allows any of them. A move used to let an editor carry a
+  recording off into a library of their own, which handed it to them. **If you gave somebody
+  *Can edit* and want them to keep moving and trashing recordings, raise them to *Can manage*** in
+  the library's *Who has access*. Uploading and changing titles, categories and tags are unchanged.
 - **The browser tab shows the whole mark.** The favicon was the S on its own, which read as a
   stray letter rather than as Resonand; it is now the full mark, arcs included.
 

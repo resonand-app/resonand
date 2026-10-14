@@ -21,10 +21,12 @@ class Level(IntEnum):
     """See it, play it, read its transcript."""
 
     EDIT = 20
-    """Change its title, notes, recording date, category and tags."""
+    """Change its title, notes, recording date, category and tags, and add recordings to a
+    library."""
 
     MANAGE = 30
-    """Everything above, plus sharing it onwards."""
+    """Everything above, plus taking a recording out of a library -- moving it elsewhere or
+    sending it to the trash -- and sharing it onwards (``DEC-27``)."""
 
     OWNER = 40
     """The library's owner. Never granted, only held."""
@@ -35,8 +37,12 @@ GRANTABLE: tuple[Level, ...] = (Level.READ, Level.EDIT, Level.MANAGE)
 
 DESCRIPTIONS: dict[Level, str] = {
     Level.READ: "Can read: listen and read the transcript, and change nothing.",
-    Level.EDIT: "Can edit: change titles, categories and tags, but not share.",
-    Level.MANAGE: "Can manage: everything above, plus sharing with other people.",
+    Level.EDIT: (
+        "Can edit: upload, and change titles, categories and tags, but not move, trash or share."
+    ),
+    Level.MANAGE: (
+        "Can manage: everything above, plus moving, trashing and sharing with other people."
+    ),
     Level.OWNER: "Owner: the library belongs to them.",
 }
 """The wording ``UI-17`` uses. Kept next to the levels so the interface and the model cannot

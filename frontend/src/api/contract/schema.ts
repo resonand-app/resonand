@@ -1495,6 +1495,7 @@ export interface components {
         DuplicateWarning: {
             /** In Trash */
             in_trash: boolean;
+            level: components["schemas"]["Level"];
             /** Library Uuid */
             library_uuid: string;
             /** Title */

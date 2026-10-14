@@ -690,6 +690,9 @@
             "title": "In Trash",
             "type": "boolean"
           },
+          "level": {
+            "$ref": "#/components/schemas/Level"
+          },
           "library_uuid": {
             "title": "Library Uuid",
             "type": "string"
@@ -707,7 +710,8 @@
           "uuid",
           "title",
           "in_trash",
-          "library_uuid"
+          "library_uuid",
+          "level"
         ],
         "title": "DuplicateWarning",
         "type": "object"

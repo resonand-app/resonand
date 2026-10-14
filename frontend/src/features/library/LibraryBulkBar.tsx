@@ -34,6 +34,9 @@
  * their category. `MoveDialog` states all three and hands back a destination; the moving is done
  * here, through the same `useBulk` run as the other three, so a selection where a third of the
  * moves fail reports itself the way the rest of this bar does (`UI-19b`, `UI-9c`).
+ *
+ * **Move and trash need Can manage** (`DEC-27`), so a library somebody only edits gets the first
+ * two and no overflow menu at all: a menu holding nothing they may do is a door to a refusal.
  */
 
 import { useState } from 'react';
@@ -76,6 +79,8 @@ export interface LibraryBulkBarProps {
   /** The recordings selected, which "add a tag" needs in full to avoid replacing what is there. */
   selected: readonly Recording[];
   categories: readonly Category[];
+  /** Whether the caller manages the library, which moving out and trashing need. */
+  canRemove: boolean;
   bulk: Bulk;
   /** After a run: keep only these selected, which is what did not succeed (`UI-9c`). */
   onOutcome: (outcome: Outcome) => void;
@@ -90,6 +95,7 @@ export function LibraryBulkBar({
   onSelectEverything,
   selected,
   categories,
+  canRemove,
   bulk,
   onOutcome,
 }: LibraryBulkBarProps) {
@@ -136,7 +142,7 @@ export function LibraryBulkBar({
                   setTagging(true);
                 }}
               />
-              {collapsed ? (
+              {!canRemove ? null : collapsed ? (
                 <Menu
                   label={t('bulk.more')}
                   items={[

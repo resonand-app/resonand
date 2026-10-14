@@ -133,7 +133,7 @@ describe('the sharing panel', () => {
     show();
     // The sentence lives beside the levels in the backend and arrives with the share.
     expect(
-      await screen.findByText(/change titles, categories and tags, but not share/i),
+      await screen.findByText(/change titles, categories and tags, but not move, trash or share/i),
     ).toBeVisible();
   });
 
@@ -175,8 +175,8 @@ describe('the level selector explains a level nobody holds (API-18)', () => {
     // render, because `level_description` rides on a grant and describes the levels in use.
     for (const clause of [
       /listen and read the transcript, and change nothing/i,
-      /change titles, categories and tags, but not share/i,
-      /everything above, plus sharing with other people/i,
+      /change titles, categories and tags, but not move, trash or share/i,
+      /everything above, plus moving, trashing and sharing with other people/i,
     ]) {
       expect((await screen.findAllByText(clause)).length).toBeGreaterThan(0);
     }

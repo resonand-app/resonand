@@ -67,8 +67,9 @@ operator is not an attacker in this model.
 Each account gets a **personal library**, and that one cannot be shared: it is where a recording
 goes when nobody chose, so it stays theirs. Everything else is a library somebody made and shared
 from **Library settings → Who has access**, at one of three levels — **Can read** (listen and read
-the transcript), **Can edit** (change titles, categories and tags), and **Can manage** (everything
-above, plus sharing it onwards).
+the transcript), **Can edit** (upload, and change titles, categories and tags), and **Can manage**
+(everything above, plus moving a recording out of the library, sending it to the trash, and sharing
+it onwards).
 
 ## Transcription
 

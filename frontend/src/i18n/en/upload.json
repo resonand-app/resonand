@@ -22,6 +22,7 @@
   "duplicate": {
     "here": "This exact file is already here, as \"{{name}}\".",
     "inTrash": "This exact file is in the trash, as \"{{name}}\". Restoring that one keeps its title, its notes and its transcript.",
+    "inTrashForAManager": "This exact file is in the trash, as \"{{name}}\". Somebody who can manage its library can restore it, with its title, its notes and its transcript.",
     "restore": "Restore that one instead",
     "anyway": "Upload it anyway",
     "skip": "Leave it out"
