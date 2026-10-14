@@ -36,6 +36,8 @@ export type Change =
   | { kind: 'recording-settled'; recording: string }
   /** Who a library is shared with. */
   | { kind: 'share'; library: string }
+  /** The signed-in account marked a recording as a favourite, or took the mark off (`UI-42`). */
+  | { kind: 'favourite'; recording: string }
   /** The signed-in account: display name, address, language. */
   | { kind: 'account' }
   /** A session was revoked, here or elsewhere. */
@@ -108,6 +110,10 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
       return staleAfter({ kind: 'transcription', recording: change.recording });
     case 'share':
       return [keys.libraryShares(change.library), keys.libraries()];
+    case 'favourite':
+      // Every copy was already marked in place; what is left is which recordings the favourites
+      // view lists, and the recording itself for whoever opens it next.
+      return [keys.recording(change.recording), keys.everyRecording()];
     case 'account':
       return [keys.me()];
     case 'session':
@@ -119,8 +125,13 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
 
 /** Tell the cache what a change made stale. Await it to let a view settle before it re-renders. */
 export async function invalidate(client: QueryClient, change: Change): Promise<void> {
+  // A mark is stale and not refetched: the favourites view keeps a card somebody has just
+  // unmarked where it is until it next loads, so the same click can undo it (`UI-44`).
+  const quietly = change.kind === 'favourite' ? { refetchType: 'none' as const } : {};
   await Promise.all(
-    staleAfter(change).map((queryKey) => client.invalidateQueries({ queryKey: [...queryKey] })),
+    staleAfter(change).map((queryKey) =>
+      client.invalidateQueries({ queryKey: [...queryKey], ...quietly }),
+    ),
   );
 }
 

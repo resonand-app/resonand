@@ -31,7 +31,7 @@ reviewed as copy in its pull request rather than taken as settled.
       *Done when:* both components draw a marked and an unmarked heart that pass the contrast
       audit, from tokens alone, and nothing changes for a caller that does not pass `favourite`.
 
-- [ ] **UI-42** · 🧪 **Marking a favourite from wherever a recording is.** The heart on every card,
+- [x] **UI-42** · 🧪 **Marking a favourite from wherever a recording is.** The heart on every card,
       every row, and in a recording's header beside its other actions. **Unlike every other action
       it is drawn on everything the caller can read**, a library shared read-only included, because
       the mark belongs to the person making it and asks nothing of the recording.

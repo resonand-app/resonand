@@ -1,7 +1,8 @@
 /**
- * The four bulk actions, and what happens when some of them fail (`UI-9b`, `UI-9c`, §V3).
+ * The bulk actions, and what happens when some of them fail (`UI-9b`, `UI-9c`, §V3).
  *
- * Assign a category, add a tag, move, send to trash. Each is one request per recording, and the
+ * Assign a category, add a tag, move, send to trash, and mark or unmark as favourites (`UI-42`).
+ * Each is one request per recording, and the
  * outcome is a report rather than a success or a failure -- see `bulk.ts` for why that is the
  * design and not a compromise.
  *
@@ -17,15 +18,15 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { patch, post, remove } from '@/api/client';
+import { patch, post, put, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 
 import { runBulk } from './bulk';
 import type { Outcome } from './bulk';
 import type { Recording } from './recordings';
 
-/** Which of the four is running, or has just finished. */
-export type BulkKind = 'category' | 'tag' | 'move' | 'trash';
+/** Which one is running, or has just finished. */
+export type BulkKind = 'category' | 'tag' | 'move' | 'trash' | 'favourite' | 'unfavourite';
 
 export interface BulkState {
   /** What is running now, and how far through it is. */
@@ -39,6 +40,8 @@ export interface Bulk extends BulkState {
   addTag: (recordings: readonly Recording[], tag: string) => Promise<Outcome>;
   move: (uuids: readonly string[], libraryUuid: string) => Promise<Outcome>;
   trash: (uuids: readonly string[]) => Promise<Outcome>;
+  /** Mark every one of them, or take every mark off. */
+  favourite: (uuids: readonly string[], on: boolean) => Promise<Outcome>;
   dismiss: () => void;
 }
 
@@ -107,6 +110,12 @@ export function useBulk(libraryUuid: string): Bulk {
     trash: (uuids) =>
       run('trash', uuids, (uuid) =>
         remove('/api/audio/{audio_uuid}', { path: { audio_uuid: uuid } }),
+      ),
+    favourite: (uuids, on) =>
+      run(on ? 'favourite' : 'unfavourite', uuids, (uuid) =>
+        on
+          ? put('/api/audio/{audio_uuid}/favourite', { path: { audio_uuid: uuid } })
+          : remove('/api/audio/{audio_uuid}/favourite', { path: { audio_uuid: uuid } }),
       ),
     dismiss: () => {
       setState((was) => ({ ...was, outcome: null }));

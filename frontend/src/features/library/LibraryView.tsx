@@ -28,11 +28,11 @@
  * recordings behind it is a selection that cannot be tagged without stripping what is there.
  *
  * **A library you can only read is a different screen, and it has to look intentional** (`UI-10c`,
- * §3.5). No checkboxes, so no bulk bar; no Settings; no invitation to upload. Every one of those
- * is absent rather than disabled, because a disabled row of controls reads as a bug and their
- * absence reads as a decision -- and one quiet line at the top says why, once. What stays is
- * everything the screen is for: the recordings, the filters, the sort, the two densities, and
- * play.
+ * §3.5). No Settings, no invitation to upload, and a bulk bar holding the heart alone (`UI-42`).
+ * Every one of those is absent rather than disabled, because a disabled row of controls reads as a
+ * bug and their absence reads as a decision -- and one quiet line at the top says why, once. What
+ * stays is everything the screen is for: the recordings, the filters, the sort, the two
+ * densities, play, and marking favourites.
  *
  * **The grid ends in a count and a button, and the dense list does not** (`UI-6b`, `UI-7a`).
  * A request answers fifty rows and a library is routinely longer, so both densities owe somebody
@@ -135,15 +135,13 @@ export function LibraryView() {
     !recordings.isPending &&
     recordings.items.length > 0;
   const fills = dense && !isPhone;
-  // Absent rather than disabled: a library you can only read has no checkboxes (§3.5).
-  const selectable = context.canEdit
-    ? {
-        selected: selection.selected,
-        onToggle: (one: string, extend: boolean) => {
-          setSelection((was) => (extend ? extendTo(was, one, order) : toggle(was, one)));
-        },
-      }
-    : undefined;
+  // Every library has one, a read-only one included: marking favourites asks only for reading.
+  const selectable = {
+    selected: selection.selected,
+    onToggle: (one: string, extend: boolean) => {
+      setSelection((was) => (extend ? extendTo(was, one, order) : toggle(was, one)));
+    },
+  };
 
   /**
    * Which of the six things this screen can be.
@@ -177,7 +175,7 @@ export function LibraryView() {
           query={libraryQuery(filters)}
           headerOffset={`${String(headerHeight)}px`}
           fills={fills}
-          {...(selectable === undefined ? {} : { selection: selectable })}
+          selection={selectable}
         />
       );
     }
@@ -187,7 +185,7 @@ export function LibraryView() {
           recordings={recordings.items}
           places={places}
           waveforms={painted}
-          {...(selectable === undefined ? {} : { selection: selectable })}
+          selection={selectable}
         />
         <MoreRecordings
           shown={recordings.items.length}
@@ -241,6 +239,7 @@ export function LibraryView() {
             }}
             selected={pool.filter((one) => selection.selected.has(one.uuid))}
             categories={categories.all}
+            canEdit={context.canEdit}
             canRemove={context.canManage}
             bulk={bulk}
             onOutcome={(outcome) => {
