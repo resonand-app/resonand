@@ -45,6 +45,7 @@ __all__ = [
     "AudioTag",
     "Base",
     "Category",
+    "Favourite",
     "Job",
     "Library",
     "Segment",
@@ -267,6 +268,24 @@ class AudioTag(Base):
     )
     source: Mapped[str] = mapped_column(Text, nullable=False, server_default=text("'user'"))
     """``user`` or ``llm``. Kept while suggestion storage is deferred (``DEC-1``)."""
+
+
+class Favourite(Base):
+    """A recording one account has marked, for that account alone (``DAT-11``).
+
+    Read through the ACL like everything else, so a mark on something the account can no longer
+    see is hidden rather than deleted.
+    """
+
+    __tablename__ = "favourite"
+
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("user.id", ondelete="CASCADE"), primary_key=True
+    )
+    audio_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("audio.id", ondelete="CASCADE"), primary_key=True
+    )
+    created_at: Mapped[str] = mapped_column(Text, nullable=False, default=now_instant)
 
 
 class Transcript(Base):
