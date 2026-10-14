@@ -156,6 +156,8 @@ function favourite(uuid: string, on: boolean): Response {
   archive.recordings = archive.recordings.map((one) =>
     one === existing ? { ...one, is_favourite: on } : one,
   );
+  if (!on) archive.favouriteOrder = archive.favouriteOrder.filter((one) => one !== uuid);
+  else if (!archive.favouriteOrder.includes(uuid)) archive.favouriteOrder.push(uuid);
   return new HttpResponse(null, { status: 204 });
 }
 
@@ -491,7 +493,19 @@ export const handlers: HttpHandler[] = [
   http.get('/api/audio', ({ request }) => {
     const url = new URL(request.url);
     const live = archive.recordings.filter((one) => one.deleted_at === null);
-    return HttpResponse.json(page(applyFilters(live, url), url));
+    const filtered = applyFilters(live, url);
+    const sort = url.searchParams.get('sort');
+    if (sort === null) return HttpResponse.json(page(filtered, url));
+    // `API-27`: only favourites have a time they were marked, so the API refuses this otherwise.
+    if (sort === 'favourited_at' && url.searchParams.get('favourite') !== 'true') {
+      return problem(400, 'Only favourites can be ordered by when they were marked.');
+    }
+    const key = (one: Schemas['AudioSummary']): string | number | null =>
+      sort === 'favourited_at'
+        ? archive.favouriteOrder.indexOf(one.uuid)
+        : (one[sort as 'recorded_at' | 'created_at' | 'duration_ms' | 'title'] ?? null);
+    const descending = url.searchParams.get('direction') !== 'asc';
+    return HttpResponse.json(page(ordered(filtered, key, descending), url));
   }),
   http.get('/api/audio/duplicates/:sha256', () => HttpResponse.json([])),
   http.get('/api/audio/:audio_uuid', ({ params }) => found(detailOf(String(params.audio_uuid)))),
@@ -881,6 +895,24 @@ function providerStatus(): Schemas['ProviderStatus'] {
   };
 }
 
+/** The API's `ORDER BY`: nulls last in both directions, and the fixture's order breaking ties. */
+function ordered<Item>(
+  items: Item[],
+  key: (item: Item) => string | number | null,
+  descending: boolean,
+): Item[] {
+  return items
+    .map((item, index) => ({ item, index, value: key(item) }))
+    .sort((a, b) => {
+      if (a.value === b.value) return a.index - b.index;
+      if (a.value === null) return 1;
+      if (b.value === null) return -1;
+      const rising = a.value < b.value ? -1 : 1;
+      return descending ? -rising : rising;
+    })
+    .map(({ item }) => item);
+}
+
 /**
  * The filters a list or a search carries in the URL (§2.1).
  *
@@ -893,6 +925,7 @@ function applyFilters<
     transcription_state: string;
     category_id: number | null;
     tags?: { slug: string }[];
+    is_favourite?: boolean;
   },
 >(items: Item[], url: URL): Item[] {
   const states = url.searchParams.getAll('transcription_state');
@@ -901,8 +934,10 @@ function applyFilters<
   // narrows rather than widens. Without this the mock answered a tag filter with the whole
   // library, so `UI-8b`'s filter and `UI-10a`'s "nothing matched" state were untestable.
   const tags = url.searchParams.getAll('tag');
+  const favourites = url.searchParams.get('favourite') === 'true';
   return items
     .filter((one) => states.length === 0 || states.includes(one.transcription_state))
     .filter((one) => category === null || String(one.category_id) === category)
-    .filter((one) => tags.every((slug) => (one.tags ?? []).some((tag) => tag.slug === slug)));
+    .filter((one) => tags.every((slug) => (one.tags ?? []).some((tag) => tag.slug === slug)))
+    .filter((one) => !favourites || one.is_favourite === true);
 }

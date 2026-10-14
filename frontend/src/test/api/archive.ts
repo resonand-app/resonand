@@ -166,6 +166,14 @@ export interface Archive {
    * counter. Reset between tests, or the eleventh test to sign in would be rate limited.
    */
   attempts: Record<string, number>;
+  /**
+   * The signed-in account's favourites, oldest mark first (`API-27`).
+   *
+   * An order rather than a time, because the mock marks things faster than a clock ticks: what
+   * `sort=favourited_at` needs is which came first, and two marks in one millisecond would leave
+   * the answer to the sort's stability.
+   */
+  favouriteOrder: string[];
 }
 
 /** An account the mock instance will let in, or deliberately will not. */
@@ -453,6 +461,7 @@ function fresh(): Archive {
       { email: SAM.email, password: PASSWORD, disabled: true },
     ],
     attempts: {},
+    favouriteOrder: [],
     recall:
       'Search ignores accents and matches the start of the last word you type. It does not ' +
       'know that words are related: searching for one form of a word will not find its other ' +

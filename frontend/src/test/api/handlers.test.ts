@@ -8,7 +8,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { get, patch, post, remove } from '@/api/client';
+import { get, patch, post, put, remove } from '@/api/client';
 import { ApiProblem } from '@/api/problem';
 
 import openapi from '@/api/contract/openapi.json';
@@ -80,6 +80,31 @@ describe('what a view sees', () => {
     });
     const again = await get('/api/audio/{audio_uuid}', { path: { audio_uuid: FIELD_TAKE } });
     expect(again.title).toBe('A renamed recording');
+  });
+
+  it('lists favourites across libraries, newest mark first, as API-27 does', async () => {
+    await put('/api/audio/{audio_uuid}/favourite', { path: { audio_uuid: VOICE_NOTE } });
+    await put('/api/audio/{audio_uuid}/favourite', { path: { audio_uuid: FIELD_TAKE } });
+    const page = await get('/api/audio', {
+      query: { favourite: true, sort: 'favourited_at' },
+    });
+    expect(page.items.map((one) => one.uuid)).toEqual([FIELD_TAKE, VOICE_NOTE]);
+    const refused = (await get('/api/audio', { query: { sort: 'favourited_at' } }).catch(
+      (error: unknown) => error,
+    )) as ApiProblem;
+    expect(refused.status).toBe(400);
+  });
+
+  it('orders every recording by any sort the API takes, in either direction', async () => {
+    const live = archive.recordings.filter((one) => one.deleted_at === null);
+    const titles = live.map((one) => one.title).sort((a, b) => a.localeCompare(b));
+    const byTitle = await get('/api/audio', { query: { sort: 'title', direction: 'asc' } });
+    expect(byTitle.items.map((one) => one.title)).toEqual(titles);
+    const longest = await get('/api/audio', { query: { sort: 'duration_ms', direction: 'desc' } });
+    const durations = longest.items.map((one) => one.duration_ms);
+    const known = durations.filter((one) => one !== null);
+    expect(known).toEqual([...known].sort((a, b) => b - a));
+    expect(durations.slice(known.length).every((one) => one === null)).toBe(true);
   });
 
   it('refuses the way the API refuses', async () => {
