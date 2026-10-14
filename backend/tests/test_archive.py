@@ -28,11 +28,12 @@ from resonand.archive import (
 )
 from resonand.core.config import Settings
 from resonand.core.levels import Level
+from resonand.core.time import is_instant
 from resonand.db import libraries, tags, transcripts, users
 from resonand.db.audio import create_audio
 from resonand.db.engine import Database, build_engine
 from resonand.db.migrate import upgrade_to_head
-from resonand.db.models import Audio, Category, Library, Share, User
+from resonand.db.models import Audio, Category, Favourite, Library, Share, User
 from resonand.db.transcripts import Origin, SegmentDraft
 from resonand.media import storage
 from resonand.media.subtitles import Cue, to_srt, to_vtt
@@ -649,6 +650,66 @@ def test_an_individual_share_travels_in_the_sidecar(
         session.flush()
         payload = sidecar_for(session, audio)
     assert payload["shares"] == [{"grantee": "b@x.test", "level": 10}]
+
+
+def test_who_marked_a_recording_and_when_travels_in_its_sidecar(
+    database: Database, db_settings: Settings
+) -> None:
+    """``ING-15``. These names are the archive format: a round trip passes under any pair both
+    halves agree on, and an export already on somebody's disk would quietly lose its favourites."""
+    with database.write_session() as session:
+        first, second = two_accounts(session)
+        library = libraries.create_library(session, first.id, name="Interviews")
+        libraries.share_library(
+            session, first.id, library.uuid, grantee_id=second.id, level=Level.READ
+        )
+        audio = store_recording(
+            session,
+            db_settings,
+            filename="note.m4a",
+            library_id=library.id,
+            owner_id=first.id,
+            transcript=False,
+        )
+        session.add_all(
+            [
+                Favourite(
+                    user_id=first.id, audio_id=audio.id, created_at="2025-01-05T09:30:00.000Z"
+                ),
+                Favourite(
+                    user_id=second.id, audio_id=audio.id, created_at="2024-11-02T17:40:00.000Z"
+                ),
+            ]
+        )
+        session.flush()
+        payload = sidecar_for(session, audio)
+    assert payload["favourited_by"] == [
+        {"email": "b@x.test", "at": "2024-11-02T17:40:00.000Z"},
+        {"email": "a@x.test", "at": "2025-01-05T09:30:00.000Z"},
+    ], "oldest first, whoever made it"
+
+
+def test_a_favourite_with_no_usable_instant_is_still_marked(
+    database: Database, db_settings: Settings
+) -> None:
+    """A sidecar written by hand may get the instant wrong. The mark is what nobody should have to
+    make twice; when it was made only decides where it sorts."""
+    with database.write_session() as session:
+        first, _ = two_accounts(session)
+        audio = store_recording(
+            session,
+            db_settings,
+            filename="note.m4a",
+            library_id=users.personal_library(session, first.id).id,
+            owner_id=first.id,
+            transcript=False,
+        )
+        payload = sidecar_for(session, audio)
+        payload["favourited_by"] = [{"email": "a@x.test", "at": "last spring"}]
+        apply_sidecar(session, audio, payload)
+        marked = session.get(Favourite, (first.id, audio.id))
+        assert marked is not None
+        assert is_instant(marked.created_at)
 
 
 # --- Subtitles ------------------------------------------------------------
