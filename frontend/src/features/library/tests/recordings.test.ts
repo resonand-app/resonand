@@ -15,7 +15,7 @@ import { MAX_PAGE_SIZE } from '@/api/paged';
 import { RECORDINGS, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
-import { fetchEveryRecording } from '../recordings';
+import { fetchEveryRecording, inLibrary } from '../recordings';
 
 mockApi();
 
@@ -48,7 +48,7 @@ function aLibraryOf(total: number): string[] {
 describe('every recording a filter matches', () => {
   it('pages through the lot at the largest page the API answers', async () => {
     const asked = aLibraryOf(450);
-    const every = await fetchEveryRecording(RECORDINGS, { sort: 'recorded_at' });
+    const every = await fetchEveryRecording(inLibrary(RECORDINGS), { sort: 'recorded_at' });
     expect(every).toHaveLength(450);
     // Three requests and not nine: none of these pages is going on screen, so the only thing that
     // matters about the window is how few round trips it costs.
@@ -73,7 +73,7 @@ describe('every recording a filter matches', () => {
         });
       }),
     );
-    expect(await fetchEveryRecording(RECORDINGS, {})).toEqual([]);
+    expect(await fetchEveryRecording(inLibrary(RECORDINGS), {})).toEqual([]);
   });
 
   it('carries the filter into every page, so the selection is what is on screen', async () => {
@@ -85,7 +85,7 @@ describe('every recording a filter matches', () => {
         return HttpResponse.json({ items: [], total: 0, limit: 200, offset: 0 });
       }),
     );
-    await fetchEveryRecording(RECORDINGS, { tag: ['field'] });
+    await fetchEveryRecording(inLibrary(RECORDINGS), { tag: ['field'] });
     expect(asked).toEqual(['field']);
   });
 });

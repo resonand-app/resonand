@@ -48,7 +48,8 @@ export type Change =
  *
  * Search is in almost every list because it reads titles, notes, tags and transcripts (`DEC-13`)
  * -- a renamed recording is a different search result, and a stale one is a result that opens
- * something with another name on it.
+ * something with another name on it. The listing across libraries goes wherever search does: it
+ * draws the same recordings, from every library at once.
  */
 export function staleAfter(change: Change): readonly (readonly unknown[])[] {
   switch (change.kind) {
@@ -57,12 +58,14 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
         keys.libraries(),
         keys.trash(),
         keys.search(),
+        keys.everyRecording(),
         ...(change.library ? [keys.library(change.library)] : []),
       ];
     case 'recording':
       return [
         keys.recording(change.recording),
         keys.search(),
+        keys.everyRecording(),
         keys.allTags(),
         ...(change.library ? [keys.library(change.library)] : []),
       ];
@@ -75,6 +78,7 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
         keys.library(change.to),
         keys.libraries(),
         keys.search(),
+        keys.everyRecording(),
       ];
     case 'recording-lifecycle':
       return [
@@ -82,14 +86,20 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
         keys.trash(),
         keys.libraries(),
         keys.search(),
+        keys.everyRecording(),
         ...(change.library ? [keys.library(change.library)] : []),
       ];
     case 'upload':
-      return [keys.library(change.library), keys.libraries(), keys.search()];
+      return [keys.library(change.library), keys.libraries(), keys.search(), keys.everyRecording()];
     case 'transcription':
       // The four states are derived from the job, and the badge, the filter and the detail view
       // all read them -- so the recording and everything that lists it.
-      return [keys.recording(change.recording), keys.search(), keys.libraries()];
+      return [
+        keys.recording(change.recording),
+        keys.search(),
+        keys.everyRecording(),
+        keys.libraries(),
+      ];
     case 'recording-settled':
       // Which job finished is deliberately not in the event, so this has to cover all of them: a
       // probe changes a duration and so a library's total, a waveform changes a card, a
