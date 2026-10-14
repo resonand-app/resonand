@@ -130,7 +130,7 @@ def list_library_audio(
     total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
-        audio_summaries(session, [(row[0], row[1]) for row in rows]),
+        audio_summaries(session, caller.id, [(row[0], row[1]) for row in rows]),
         total=total,
         request=paging,
     )

@@ -16,6 +16,8 @@ thing that removes one its owner did not.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
 
@@ -40,6 +42,19 @@ def unmark(session: Session, user_id: int, audio_uuid: str) -> Audio:
         session.delete(existing)
         session.flush()
     return audio
+
+
+def marked_among(session: Session, user_id: int, audio_ids: Sequence[int]) -> set[int]:
+    """Which of these recordings this account has marked, in one query for a whole page."""
+    if not audio_ids:
+        return set()
+    return set(
+        session.execute(
+            select(Favourite.audio_id).where(
+                Favourite.user_id == user_id, Favourite.audio_id.in_(audio_ids)
+            )
+        ).scalars()
+    )
 
 
 def marked_by(user_id: int) -> Select[tuple[int]]:

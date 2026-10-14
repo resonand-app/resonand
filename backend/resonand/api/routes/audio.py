@@ -48,6 +48,7 @@ from resonand.api.schemas import (
 )
 from resonand.core.errors import ConflictError, NotFoundError
 from resonand.core.levels import Level
+from resonand.db import favourites
 from resonand.db import tags as tag_repo
 from resonand.db import transcripts as transcript_repo
 from resonand.db.audio import (
@@ -78,7 +79,7 @@ def list_audio(caller: CurrentCaller, session: ReadSession, paging: Paging) -> P
     total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
-        audio_summaries(session, [(row[0], row[1]) for row in rows]),
+        audio_summaries(session, caller.id, [(row[0], row[1]) for row in rows]),
         total=total,
         request=paging,
     )
@@ -87,7 +88,7 @@ def list_audio(caller: CurrentCaller, session: ReadSession, paging: Paging) -> P
 @router.get("/audio/{audio_uuid}", response_model=AudioDetail)
 def get_audio(audio_uuid: str, caller: CurrentCaller, session: ReadSession) -> AudioDetail:
     audio, level = require_audio(session, caller.id, audio_uuid)
-    return audio_detail(session, audio, level)
+    return audio_detail(session, caller.id, audio, level)
 
 
 @router.patch("/audio/{audio_uuid}", response_model=AudioDetail)
@@ -110,7 +111,7 @@ def update_audio(
             tags=body.tags,
         ),
     )
-    return audio_detail(session, audio, level)
+    return audio_detail(session, caller.id, audio, level)
 
 
 @router.post("/audio/{audio_uuid}/move", response_model=AudioDetail)
@@ -123,7 +124,7 @@ def move(
     changes, the category is cleared, and grants made on the recording itself survive.
     """
     audio, level = move_audio(session, caller.id, audio_uuid, body.library_uuid)
-    return audio_detail(session, audio, level)
+    return audio_detail(session, caller.id, audio, level)
 
 
 @router.delete("/audio/{audio_uuid}", status_code=status.HTTP_204_NO_CONTENT)
@@ -135,7 +136,26 @@ def trash(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> None
 @router.post("/audio/{audio_uuid}/restore", response_model=AudioDetail)
 def restore(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> AudioDetail:
     audio, level = restore_audio(session, caller.id, audio_uuid)
-    return audio_detail(session, audio, level)
+    return audio_detail(session, caller.id, audio, level)
+
+
+# --- Favourites (``API-26``) ----------------------------------------------
+
+
+@router.put("/audio/{audio_uuid}/favourite", status_code=status.HTTP_204_NO_CONTENT)
+def mark_favourite(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> None:
+    """Mark a recording as one of the caller's favourites. Reading it is enough.
+
+    ``PUT`` and ``DELETE`` rather than a toggle: both are idempotent, so a retry or a double click
+    repeats what was meant instead of undoing it.
+    """
+    favourites.mark(session, caller.id, audio_uuid)
+
+
+@router.delete("/audio/{audio_uuid}/favourite", status_code=status.HTTP_204_NO_CONTENT)
+def unmark_favourite(audio_uuid: str, caller: CurrentCaller, session: WriteSession) -> None:
+    """Take the caller's mark off a recording. Not an error when there was none."""
+    favourites.unmark(session, caller.id, audio_uuid)
 
 
 # --- Sharing one recording ------------------------------------------------
@@ -184,7 +204,7 @@ def list_trash(caller: CurrentCaller, session: ReadSession, paging: Paging) -> P
     total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(
-        audio_summaries(session, [(row[0], row[1]) for row in rows]),
+        audio_summaries(session, caller.id, [(row[0], row[1]) for row in rows]),
         total=total,
         request=paging,
     )

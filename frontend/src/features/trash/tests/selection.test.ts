@@ -40,6 +40,7 @@ function recording(uuid: string, libraryUuid: string): Schemas['AudioSummary'] {
     has_waveform: true,
     transcription_state: 'none',
     is_shared_individually: false,
+    is_favourite: false,
     level: 40,
     recorded_at: null,
     recorded_at_offset: null,
