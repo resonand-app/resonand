@@ -31,9 +31,11 @@ first version, which shipped as `0.1.0` on 2026-09-23.
 |---|---|---|
 | [`infrastructure.md`](infrastructure.md) | `INF` | The repository itself, after the first version |
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
-| [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build, and corrections to what it did |
+| [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build, what an export carries, and corrections to what it did |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
-| [`data.md`](data.md) | `DAT` | The schema and who may do what, after the first version |
+| [`data.md`](data.md) | `DAT` | The schema and who may do what, after the first version, and where favourites are introduced |
+| [`api.md`](api.md) | `API` | Endpoints the first version did not have: marking a favourite, and the listing across libraries |
+| [`interface.md`](interface.md) | `UI` | Views the first version did not build: the heart, and the favourites view |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
 | [`defects.md`](defects.md) | `BUG` | Faults found by using the archive since it shipped |
 
