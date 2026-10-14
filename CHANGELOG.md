@@ -20,6 +20,17 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ## [Unreleased]
 
+### Added
+
+- **Favourites.** A heart on every recording, on its card, its row and its own page, marks it as
+  one of yours, and *Favourites* in the sidebar gathers every recording you have marked, whichever
+  library it is in, newest mark first. A mark is yours alone: nobody else sees it, and nothing
+  counts how many people marked anything. A library shared with you read-only can now be
+  selected, to mark or unmark a selection. Over the API, `PUT` and `DELETE` on
+  `/api/audio/{audio_uuid}/favourite` mark and unmark, every recording carries `is_favourite`, and
+  `GET /api/audio` now takes a library's filters and sorts, with `favourite=true` and
+  `sort=favourited_at`.
+
 ### Changed
 
 - **Only somebody who can manage a library can take a recording out of it.** Moving a recording

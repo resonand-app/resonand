@@ -14,7 +14,8 @@
  * contents become the Libraries tab, and the trash is a sidebar entry; the four tabs are
  * Libraries, Search, Upload and Settings, so without this a recording deleted on a phone could be
  * restored only by typing the URL -- the one gesture the whole retention promise exists to make
- * safe. On a desktop the sidebar already carries it and this draws nothing.
+ * safe. Favourites is a sidebar entry for the same reason and sits beside it (`UI-44`). On a
+ * desktop the sidebar already carries both and this draws nothing.
  *
  * **The grid is `auto-fill` from `--card-width`.** Three columns at 1440 is what the drawing
  * shows, but three columns is the consequence of the card being 320px wide and not the rule -- a
@@ -123,7 +124,7 @@ export function LibrariesView() {
           </Grid>
         </section>
       )}
-      <PhoneTrash />
+      <PhoneElsewhere />
     </section>
   );
 }
@@ -317,7 +318,7 @@ export function Grid({ children }: { children: ReactNode }) {
  * same reason. The count is the one the sidebar shows, from the same hook, and is absent rather
  * than zero -- "Trash 0" is a row that asks to be read and then says nothing.
  */
-function PhoneTrash() {
+function PhoneElsewhere() {
   const { t } = useTranslation('libraries');
   const isPhone = useIsPhone();
   const count = useTrashCount();
@@ -326,16 +327,36 @@ function PhoneTrash() {
   if (!isPhone) return null;
 
   return (
-    <nav style={{ marginTop: 'var(--space-8)' }} aria-label={t('trash.region')}>
-      <Button
-        variant="ghost"
-        icon="trash-2"
-        onClick={() => {
-          void navigate(routes.trash);
-        }}
-      >
-        {count > 0 ? t('trash.withCount', { count }) : t('trash.empty')}
-      </Button>
-    </nav>
+    <div
+      style={{
+        marginTop: 'var(--space-8)',
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 'var(--space-2)',
+      }}
+    >
+      <nav aria-label={t('favourites:phone.region')}>
+        <Button
+          variant="ghost"
+          icon="heart"
+          onClick={() => {
+            void navigate(routes.favourites);
+          }}
+        >
+          {t('favourites:phone.open')}
+        </Button>
+      </nav>
+      <nav aria-label={t('trash.region')}>
+        <Button
+          variant="ghost"
+          icon="trash-2"
+          onClick={() => {
+            void navigate(routes.trash);
+          }}
+        >
+          {count > 0 ? t('trash.withCount', { count }) : t('trash.empty')}
+        </Button>
+      </nav>
+    </div>
   );
 }

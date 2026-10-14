@@ -18,7 +18,7 @@
  * empty string, and the API would be right to answer nothing.
  */
 
-import { useCallback, useMemo } from 'react';
+import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useSearchParams } from 'react-router';
 
 import type { components } from '@/api/contract/schema';
@@ -64,8 +64,26 @@ export const DEFAULTS = {
 const STATES: readonly TranscriptionState[] = ['none', 'running', 'done', 'failed'];
 const SORTS: readonly SortField[] = ['recorded_at', 'created_at', 'title', 'duration_ms'];
 
+/**
+ * The sort a view starts from, and the sorts it offers (`UI-44`).
+ *
+ * A view's own, because the sort it starts from is the one never written to the URL: if the
+ * favourites view started from "recently favourited" through a global default, choosing
+ * "Recorded" there would write nothing, read back as the view's default, and could never be
+ * chosen at all. A library and search use `LIBRARY`; a view that differs says so with
+ * `SortDefaults`, and every control under it reads the same answer.
+ */
+export interface ViewSorts {
+  sort: SortField;
+  sorts: readonly SortField[];
+}
+
+export const LIBRARY: ViewSorts = { sort: DEFAULTS.sort, sorts: SORTS };
+
+export const SortDefaults = createContext<ViewSorts>(LIBRARY);
+
 /** Read the filters out of a query string. Anything unrecognised is dropped rather than passed on. */
-export function filtersFrom(parameters: URLSearchParams): Filters {
+export function filtersFrom(parameters: URLSearchParams, sorts: ViewSorts = LIBRARY): Filters {
   return {
     ...text(parameters, 'q', 'q'),
     ...text(parameters, 'library', 'library'),
@@ -78,7 +96,7 @@ export function filtersFrom(parameters: URLSearchParams): Filters {
     ...text(parameters, 'recorded_to', 'recordedTo'),
     ...number(parameters, 'min_duration_ms', 'minDurationMs'),
     ...number(parameters, 'max_duration_ms', 'maxDurationMs'),
-    sort: SORTS.find((one) => one === parameters.get('sort')) ?? DEFAULTS.sort,
+    sort: sorts.sorts.find((one) => one === parameters.get('sort')) ?? sorts.sort,
     direction: parameters.get('direction') === 'asc' ? 'asc' : DEFAULTS.direction,
     view: parameters.get('view') === 'list' ? 'list' : DEFAULTS.view,
   };
@@ -90,7 +108,7 @@ export function filtersFrom(parameters: URLSearchParams): Filters {
  * A value at its default is left out, so an unfiltered list has a clean URL and the one somebody
  * copies says only what they actually changed.
  */
-export function searchFrom(filters: Filters): URLSearchParams {
+export function searchFrom(filters: Filters, sorts: ViewSorts = LIBRARY): URLSearchParams {
   const parameters = new URLSearchParams();
   if (filters.q) parameters.set('q', filters.q);
   if (filters.library) parameters.set('library', filters.library);
@@ -105,7 +123,7 @@ export function searchFrom(filters: Filters): URLSearchParams {
   if (filters.maxDurationMs !== undefined) {
     parameters.set('max_duration_ms', String(filters.maxDurationMs));
   }
-  if (filters.sort !== DEFAULTS.sort) parameters.set('sort', filters.sort);
+  if (filters.sort !== sorts.sort) parameters.set('sort', filters.sort);
   if (filters.direction !== DEFAULTS.direction) parameters.set('direction', filters.direction);
   if (filters.view !== DEFAULTS.view) parameters.set('view', filters.view);
   return parameters;
@@ -157,33 +175,39 @@ export interface UrlState {
 
 export function useUrlState(): UrlState {
   const [parameters, setParameters] = useSearchParams();
-  const filters = useMemo(() => filtersFrom(parameters), [parameters]);
+  const sorts = useContext(SortDefaults);
+  const filters = useMemo(() => filtersFrom(parameters, sorts), [parameters, sorts]);
 
   const set = useCallback(
     (changes: Partial<Filters>) => {
       // `replace` deliberately: typing in a filter bar would otherwise put one history entry per
       // keystroke between somebody and the page they came from.
-      setParameters(searchFrom({ ...filtersFrom(parameters), ...changes }), { replace: true });
+      setParameters(searchFrom({ ...filtersFrom(parameters, sorts), ...changes }, sorts), {
+        replace: true,
+      });
     },
-    [parameters, setParameters],
+    [parameters, setParameters, sorts],
   );
 
   const clear = useCallback(() => {
-    const kept = filtersFrom(parameters);
+    const kept = filtersFrom(parameters, sorts);
     setParameters(
-      searchFrom({
-        ...kept,
-        categoryId: undefined,
-        tags: [],
-        states: [],
-        recordedFrom: undefined,
-        recordedTo: undefined,
-        minDurationMs: undefined,
-        maxDurationMs: undefined,
-      }),
+      searchFrom(
+        {
+          ...kept,
+          categoryId: undefined,
+          tags: [],
+          states: [],
+          recordedFrom: undefined,
+          recordedTo: undefined,
+          minDurationMs: undefined,
+          maxDurationMs: undefined,
+        },
+        sorts,
+      ),
       { replace: true },
     );
-  }, [parameters, setParameters]);
+  }, [parameters, setParameters, sorts]);
 
   return { filters, set, clear };
 }

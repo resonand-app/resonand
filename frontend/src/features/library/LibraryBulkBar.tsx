@@ -83,11 +83,21 @@ export interface LibraryBulkBarProps {
   onSelectEverything: () => void;
   /** The recordings selected, which "add a tag" needs in full to avoid replacing what is there. */
   selected: readonly Recording[];
-  categories: readonly Category[];
-  /** Whether the caller edits the library, which a category and a tag need. */
+  /**
+   * The tree a category is picked from. Absent where the selection spans libraries, because a
+   * category belongs to one library and means nothing in the next (`UI-44`).
+   */
+  categories?: readonly Category[] | undefined;
+  /** Whether the caller edits everything selected, which a category and a tag need. */
   canEdit: boolean;
-  /** Whether the caller manages the library, which moving out and trashing need. */
-  canRemove: boolean;
+  /**
+   * Whether the caller manages everything selected, and so may move it out (`DEC-27`). The view
+   * also asks that it all sit in one library: the move dialog names who gains and loses access
+   * against the library the recordings are leaving.
+   */
+  canMove: boolean;
+  /** Whether the caller manages everything selected, which sending it to the trash needs. */
+  canTrash: boolean;
   bulk: Bulk;
   /** After a run: keep only these selected, which is what did not succeed (`UI-9c`). */
   onOutcome: (outcome: Outcome) => void;
@@ -103,7 +113,8 @@ export function LibraryBulkBar({
   selected,
   categories,
   canEdit,
-  canRemove,
+  canMove,
+  canTrash,
   bulk,
   onOutcome,
 }: LibraryBulkBarProps) {
@@ -139,42 +150,48 @@ export function LibraryBulkBar({
                   void bulk.favourite(uuids, !allFavourites).then(after);
                 }}
               />
-              {canEdit && (
-                <>
-                  <CategoryPicker
-                    categories={categories}
-                    value={undefined}
-                    compact
-                    // Not "Any category": in the bulk bar this control does something rather than
-                    // narrowing something, and a filter's words on an action is how somebody assigns
-                    // a category by accident while trying to clear a filter.
-                    placeholder={t('bulk.category')}
-                    onChange={(categoryId) => {
-                      void bulk.assignCategory(uuids, categoryId ?? null).then(after);
-                    }}
-                  />
-                  <IconButton
-                    icon="tag"
-                    label={t('bulk.addTag')}
-                    aria-expanded={tagging}
-                    onClick={() => {
-                      setTagging(true);
-                    }}
-                  />
-                </>
+              {canEdit && categories !== undefined && (
+                <CategoryPicker
+                  categories={categories}
+                  value={undefined}
+                  compact
+                  // Not "Any category": in the bulk bar this control does something rather than
+                  // narrowing something, and a filter's words on an action is how somebody assigns
+                  // a category by accident while trying to clear a filter.
+                  placeholder={t('bulk.category')}
+                  onChange={(categoryId) => {
+                    void bulk.assignCategory(uuids, categoryId ?? null).then(after);
+                  }}
+                />
               )}
-              {!canRemove ? null : collapsed ? (
+              {canEdit && (
+                <IconButton
+                  icon="tag"
+                  label={t('bulk.addTag')}
+                  aria-expanded={tagging}
+                  onClick={() => {
+                    setTagging(true);
+                  }}
+                />
+              )}
+              {!canMove && !canTrash ? null : collapsed ? (
                 <Menu
                   label={t('bulk.more')}
                   items={[
-                    { id: 'move', label: t('bulk.move'), icon: 'folder-input' },
-                    {
-                      id: 'trash',
-                      label: t('bulk.trash'),
-                      icon: 'trash-2',
-                      destructive: true,
-                      separated: true,
-                    },
+                    ...(canMove
+                      ? [{ id: 'move', label: t('bulk.move'), icon: 'folder-input' as const }]
+                      : []),
+                    ...(canTrash
+                      ? [
+                          {
+                            id: 'trash',
+                            label: t('bulk.trash'),
+                            icon: 'trash-2' as const,
+                            destructive: true,
+                            separated: canMove,
+                          },
+                        ]
+                      : []),
                   ]}
                   onSelect={(id) => {
                     if (id === 'move') setMoving(true);
@@ -183,20 +200,24 @@ export function LibraryBulkBar({
                 />
               ) : (
                 <>
-                  <IconButton
-                    icon="folder-input"
-                    label={t('bulk.move')}
-                    onClick={() => {
-                      setMoving(true);
-                    }}
-                  />
-                  <IconButton
-                    icon="trash-2"
-                    label={t('bulk.trash')}
-                    onClick={() => {
-                      void bulk.trash(uuids).then(after);
-                    }}
-                  />
+                  {canMove && (
+                    <IconButton
+                      icon="folder-input"
+                      label={t('bulk.move')}
+                      onClick={() => {
+                        setMoving(true);
+                      }}
+                    />
+                  )}
+                  {canTrash && (
+                    <IconButton
+                      icon="trash-2"
+                      label={t('bulk.trash')}
+                      onClick={() => {
+                        void bulk.trash(uuids).then(after);
+                      }}
+                    />
+                  )}
                 </>
               )}
             </>
@@ -222,7 +243,7 @@ export function LibraryBulkBar({
       {moving && (
         <MoveDialog
           recordings={selected}
-          categoryName={(id) => categories.find((one) => one.id === id)?.name}
+          categoryName={(id) => categories?.find((one) => one.id === id)?.name}
           onClose={() => {
             setMoving(false);
           }}

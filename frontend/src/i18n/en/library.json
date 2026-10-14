@@ -55,6 +55,7 @@
   },
   "sort": {
     "label": "Sort by",
+    "favourited_at": "Favourited",
     "recorded_at": "Recorded",
     "created_at": "Uploaded",
     "duration_ms": "Length",

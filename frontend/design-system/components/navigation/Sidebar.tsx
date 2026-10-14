@@ -139,11 +139,11 @@ export interface SidebarProps
   trashCount?: number;
   /** Collapsed to 52px: icons only, libraries hidden behind the Libraries destination. */
   collapsed?: boolean;
-  /** Current destination: "libraries", "trash", "settings", or a library id. */
+  /** Current destination: "libraries", "favourites", "trash", "settings", or a library id. */
   activeId?: string;
   onSelect?: (id: string) => void;
   /**
-   * The six fixed strings, for an application that has a language (`UI-24c`).
+   * The seven fixed strings, for an application that has a language (`UI-24c`).
    *
    * They default to English so the standalone specimen kit renders with no bundle behind it,
    * which is the same arrangement `RecordingCard` uses. The application always passes them: a
@@ -154,6 +154,7 @@ export interface SidebarProps
   labels?: {
     libraries?: string;
     search?: string;
+    favourites?: string;
     yours?: string;
     shared?: string;
     trash?: string;
@@ -163,6 +164,10 @@ export interface SidebarProps
 
 /**
  * The toggleable left bar: libraries you own, libraries shared with you, then Trash and Settings.
+ *
+ * **Favourites sits under Libraries and above the list, and does not scroll with it** (`UI-44`).
+ * It gathers recordings from every library, so it belongs with the destinations that are not one
+ * library -- and collapsed, it follows Search, the other way into everything at once.
  *
  * **"Shared with you" disappears entirely rather than sitting empty** -- an empty group is a
  * standing reminder that nobody has shared anything with you, on every screen. Administration is
@@ -252,14 +257,22 @@ export function Sidebar({
           collapsed={collapsed}
           onClick={pick('libraries')}
         />
-        {collapsed ? (
+        {collapsed && (
           <Item
             icon="search"
             label={labels?.search ?? 'Search'}
             collapsed
             onClick={pick('search')}
           />
-        ) : (
+        )}
+        <Item
+          icon="heart"
+          label={labels?.favourites ?? 'Favourites'}
+          active={activeId === 'favourites'}
+          collapsed={collapsed}
+          onClick={pick('favourites')}
+        />
+        {collapsed ? null : (
           <div
             ref={list}
             data-ds="sidebar-libraries"

@@ -50,8 +50,9 @@ archive that happens to transcribe.
 
 - 🔎 **Search inside the audio.** One query across every transcript in your archive, not inside
   one file at a time. Every result carries a timestamp and plays from that exact second.
-- 🗂️ **Organisation that persists.** Libraries, a category tree and cross-cutting tags. Built for
-  hundreds of hours, not for one work session.
+- 🗂️ **Organisation that persists.** Libraries, a category tree and cross-cutting tags, and a heart
+  for the recordings you keep coming back to, gathered from every library. Built for hundreds of
+  hours, not for one work session.
 - 👥 **Multi-user from the ground up.** Real accounts for the people you share an archive with,
   and sharing at library level, with permissions resolved on every single read.
 - 🔒 **Your audio stays on your hardware.** It leaves the instance only when you ask for a

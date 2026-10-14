@@ -139,8 +139,13 @@ describe('which destination is lit', () => {
     expect(destinationOf('/recording/abc')).toBe('');
   });
 
-  it('maps the three fixed entries to their routes and a uuid to its library', () => {
+  it('lights Favourites on its own route (UI-44)', () => {
+    expect(destinationOf(routes.favourites)).toBe('favourites');
+  });
+
+  it('maps the four fixed entries to their routes and a uuid to its library', () => {
     expect(destinationTo('libraries')).toBe(routes.libraries);
+    expect(destinationTo('favourites')).toBe(routes.favourites);
     expect(destinationTo('trash')).toBe(routes.trash);
     expect(destinationTo('settings')).toBe(routes.settings);
     expect(destinationTo(PERSONAL)).toBe(toLibrary(PERSONAL));

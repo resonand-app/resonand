@@ -1,0 +1,16 @@
+{
+  "title": "Favourites",
+  "empty": {
+    "title": "Nothing marked yet",
+    "body": "Press the heart on a recording, on its card, its row or its own page, and it is gathered here, whichever library it is in."
+  },
+  "nothingMatched": {
+    "title": "None of your favourites match",
+    "body": "The filters are narrower than anything you have marked.",
+    "clear": "Clear the filters"
+  },
+  "phone": {
+    "region": "Recordings you marked",
+    "open": "Favourites"
+  }
+}

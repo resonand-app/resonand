@@ -45,7 +45,8 @@ export interface Bulk extends BulkState {
   dismiss: () => void;
 }
 
-export function useBulk(libraryUuid: string): Bulk {
+/** For one library, or for a selection that spans several (the favourites view), with none. */
+export function useBulk(libraryUuid?: string): Bulk {
   const client = useQueryClient();
   const [state, setState] = useState<BulkState>({ running: null, outcome: null });
 
@@ -69,7 +70,10 @@ export function useBulk(libraryUuid: string): Bulk {
 
     // Once, at the end. Two hundred invalidations of one key is two hundred refetches of one list.
     if (outcome.succeeded.length > 0) {
-      await invalidate(client, { kind: 'library', library: libraryUuid });
+      await invalidate(client, {
+        kind: 'library',
+        ...(libraryUuid === undefined ? {} : { library: libraryUuid }),
+      });
     }
     setState({ running: null, outcome: { ...outcome, kind } });
     return outcome;
