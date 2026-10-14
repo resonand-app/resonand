@@ -229,8 +229,8 @@ def share_library(
 ) -> Share:
     """Grant somebody access to a library, or raise the level they already have.
 
-    Requires manage. Sharing is the one thing an editor cannot do, which is the whole difference
-    between the two levels.
+    Requires manage, as taking a recording out does (``DEC-27``): an editor changes what is in a
+    library, and decides neither who sees it nor whether it stays.
     """
     if level not in GRANTABLE:
         raise InvalidRequestError("A share can grant read, edit or manage, and nothing else.")

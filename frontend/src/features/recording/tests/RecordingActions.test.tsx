@@ -107,16 +107,23 @@ describe('what a level does not allow', () => {
     expect(document.querySelectorAll('[disabled]')).toHaveLength(0);
   });
 
-  it('offers moving and trashing at level 20, and sharing only at 30', async () => {
+  it('offers neither moving, trashing nor sharing at level 20', async () => {
     at(20);
+    renderRecording();
+    await screen.findByRole('link', { name: 'Download the original' });
+    // Taking a recording out of its library needs 30 (DEC-27), and so does sharing it.
+    expect(screen.queryByRole('button', { name: 'Move to another library' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Trash' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
+  });
+
+  it('offers moving and trashing at level 30', async () => {
+    at(30);
     renderRecording();
     expect(
       await screen.findByRole('button', { name: 'Move to another library' }),
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Trash' })).toBeInTheDocument();
-    // Sharing is granted on the library and needs 30 there. Offering it at 20 would be offering
-    // a way into a screen the API refuses.
-    expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
   });
 
   it('offers sharing at level 30, and it leads to the library that grants it', async () => {

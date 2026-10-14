@@ -149,12 +149,16 @@ def move_audio(
     move that quietly dropped them would be a data-loss bug that only shows up once the feature
     that creates them exists, by which time the grants are already gone.
 
+    Leaving needs manage on the recording and arriving needs edit on the destination
+    (``DEC-27``): ownership lives on the library, so a move out of a shared library hands the
+    recording to whoever owns the one it lands in.
+
     The level is resolved **again, afterwards**, and that is the one place where a second
     resolution is not the waste ``REV-7`` removed: a recording's permissions come from the library
     it is in, so an owner who moves one into a library they merely edit may edit it and no more.
     Returning the level from before the move would report a permission the caller no longer has.
     """
-    audio, level = require_audio(session, user_id, audio_uuid, Level.EDIT)
+    audio, level = require_audio(session, user_id, audio_uuid, Level.MANAGE)
     destination, _ = require_library(session, user_id, library_uuid, Level.EDIT)
     if destination.id == audio.library_id:
         return audio, level
@@ -166,8 +170,11 @@ def move_audio(
 
 
 def trash_audio(session: Session, user_id: int, audio_uuid: str) -> Audio:
-    """Send a recording to the trash. Never a hard delete: that is ``INT-2``, after retention."""
-    audio, _ = require_audio(session, user_id, audio_uuid, Level.EDIT)
+    """Send a recording to the trash. Never a hard delete: that is ``INT-2``, after retention.
+
+    Requires manage, the line a library already has for its own trash (``DEC-27``).
+    """
+    audio, _ = require_audio(session, user_id, audio_uuid, Level.MANAGE)
     audio.deleted_at = now_instant()
     session.flush()
     search_index.remove_audio(session, audio.id)
@@ -180,7 +187,7 @@ def restore_audio(session: Session, user_id: int, audio_uuid: str) -> tuple[Audi
     Being in the trash is not a permission, so the level resolved on the way in is the level that
     comes back out (``REV-7``).
     """
-    audio, level = require_audio(session, user_id, audio_uuid, Level.EDIT, include_trashed=True)
+    audio, level = require_audio(session, user_id, audio_uuid, Level.MANAGE, include_trashed=True)
     audio.deleted_at = None
     session.flush()
     search_index.index_audio(session, audio.id)
@@ -189,12 +196,12 @@ def restore_audio(session: Session, user_id: int, audio_uuid: str) -> tuple[Audi
 
 def trashed_audio(user_id: int) -> Select[tuple[Audio, int]]:
     """What is in this user's trash, oldest deletion first -- so what is about to go is at the
-    top (``INT-1``)."""
+    top (``INT-1``). Only what they manage, so nothing is listed that they could not restore."""
     acl = audio_acl(user_id, include_trashed=True)
     return (
         select(Audio, acl.c.level)
         .join(acl, acl.c.audio_id == Audio.id)
-        .where(acl.c.level >= int(Level.EDIT), Audio.deleted_at.is_not(None))
+        .where(acl.c.level >= int(Level.MANAGE), Audio.deleted_at.is_not(None))
         .order_by(Audio.deleted_at)
     )
 
@@ -225,7 +232,7 @@ def purge_audio(session: Session, user_id: int, audio_uuid: str) -> str:
     lists what it would destroy, and a 400 here would confirm the recording exists to somebody who
     guessed at the URL (``DEC-14``).
     """
-    audio, _ = require_audio(session, user_id, audio_uuid, Level.EDIT, include_trashed=True)
+    audio, _ = require_audio(session, user_id, audio_uuid, Level.MANAGE, include_trashed=True)
     if audio.deleted_at is None:
         raise NotFoundError("No such recording in the trash.")
     return remove_recording(session, audio)
@@ -326,21 +333,22 @@ def unshare_audio(session: Session, user_id: int, audio_uuid: str, *, grantee_id
     session.flush()
 
 
-def find_duplicates(session: Session, user_id: int, sha256: str) -> list[tuple[Audio, bool]]:
+def find_duplicates(session: Session, user_id: int, sha256: str) -> list[tuple[Audio, bool, Level]]:
     """Recordings with byte-identical content, **including trashed ones** (``DEC-16``).
 
     Excluding the trash would let a restore produce a real duplicate, so a match there is reported
     with the flag that lets the interface offer to restore instead of uploading again. It only
     catches byte-identical files: a re-encoded copy of the same recording hashes differently, and
-    the interface must not imply otherwise.
+    the interface must not imply otherwise. The caller's level comes with each, because only a
+    manager may restore the one in the trash (``DEC-27``).
     """
     acl = audio_acl(user_id, include_trashed=True)
     rows = session.execute(
-        select(Audio)
+        select(Audio, acl.c.level)
         .join(acl, acl.c.audio_id == Audio.id)
         .where(acl.c.level >= int(Level.READ), Audio.sha256 == sha256)
     ).all()
-    return [(row[0], row[0].deleted_at is not None) for row in rows]
+    return [(row[0], row[0].deleted_at is not None, Level(row[1])) for row in rows]
 
 
 def create_audio(  # noqa: PLR0913 -- columns of one row, and every one of them named

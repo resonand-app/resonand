@@ -366,6 +366,8 @@ class DuplicateWarning(Api):
     title: str
     in_trash: bool
     library_uuid: str
+    level: Level
+    """The caller's, which says whether restoring the copy in the trash is theirs to offer."""
 
 
 # --- Transcripts ----------------------------------------------------------

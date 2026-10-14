@@ -30,9 +30,10 @@ export interface LibraryContext {
   shares: ShareSummary[];
   /** Whether the library belongs to the signed-in account. */
   isOwn: boolean;
-  /** Level 20 or above: titles, notes, categories, tags, uploads, the trash. */
+  /** Level 20 or above: titles, notes, categories, tags, uploads. */
   canEdit: boolean;
-  /** Level 30 or above: the settings view, and sharing it onwards. */
+  /** Level 30 or above: the settings view, sharing it onwards, and moving recordings out of it or
+   * to the trash (`DEC-27`). */
   canManage: boolean;
   /** Level 10 exactly. The screen says so once, quietly, and drops what it cannot offer. */
   isReadOnly: boolean;

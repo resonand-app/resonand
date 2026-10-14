@@ -40,8 +40,10 @@ export interface RecordingContext {
   categoryName: string | undefined;
   /** The categories of the library it is in, for the picker in the panel. */
   categories: ReturnType<typeof useCategories>;
-  /** Level 20 or above: the title, the notes, the category, the tags, and every action but one. */
+  /** Level 20 or above: the title, the notes, the category, the tags, and a transcription. */
   canEdit: boolean;
+  /** Level 30 or above: moving it out of its library, and sending it to the trash (`DEC-27`). */
+  canRemove: boolean;
   /**
    * Level 30 or above **on the library**, which is what sharing needs.
    *
@@ -56,12 +58,11 @@ export interface RecordingContext {
   /** In the trash: playable and restorable, never editable (`UI-11d`). */
   isTrashed: boolean;
   /**
-   * Level 20 or above, whether or not it is in the trash.
+   * Level 30 or above, whether or not it is in the trash.
    *
-   * `canEdit` is false for a trashed recording because nothing about it may be changed while it
-   * is in there -- but putting it back is exactly what somebody at level 20 is allowed to do, and
-   * being in the trash is not a permission (`REV-7`). So restoring asks the level rather than
-   * `canEdit`.
+   * `canRemove` is false for a trashed recording, which cannot be moved or trashed twice -- but
+   * putting it back is exactly what the level that sent it there allows, and being in the trash is
+   * not a permission (`REV-7`). So restoring asks the level rather than `canRemove`.
    */
   canRestore: boolean;
   isPending: boolean;
@@ -104,8 +105,9 @@ export function useRecording(uuid: string): RecordingContext {
     // A recording in the trash is not editable at any level: it can be played and put back, and
     // that is the whole of what the trashed band offers (§V5).
     canEdit: level >= LEVEL.edit && !trashed,
+    canRemove: level >= LEVEL.manage && !trashed,
     canShare: (library?.level ?? LEVEL.read) >= LEVEL.manage && !trashed,
-    canRestore: level >= LEVEL.edit,
+    canRestore: level >= LEVEL.manage,
     isReadOnly: recording.data !== undefined && level < LEVEL.edit,
     isTrashed: trashed,
     isPending: recording.isPending,

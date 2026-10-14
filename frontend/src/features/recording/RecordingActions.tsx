@@ -20,10 +20,10 @@
  *
  * **Everything else is absent rather than disabled** (§3.5, `UI-10c`). A row of greyed-out
  * buttons reads as a bug; their absence reads as a decision, and the decision was made by whoever
- * shared the library. Move and Trash need level 20; **Share needs 30 on the library**,
- * which is stricter than `UI-13e`'s line and deliberately so: access to a recording is granted on
- * the library it sits in (`UI-17`), sharing one recording on its own is not in v0, and a way into
- * a screen the API refuses is worse than no way in.
+ * shared the library. Move and Trash need level 30 on the recording (`DEC-27`); **Share needs 30
+ * on the library**, which is stricter than `UI-13e`'s line and deliberately so: access to a
+ * recording is granted on the library it sits in (`UI-17`), sharing one recording on its own is
+ * not in v0, and a way into a screen the API refuses is worse than no way in.
  *
  * **Sending something to the trash says what that means first.** Not a typed confirmation -- that
  * is V9's hard delete, where something is actually destroyed -- but a dialog stating the retention
@@ -106,7 +106,7 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
           }}
         />
       )}
-      {context.canEdit && (
+      {context.canRemove && (
         <IconButton
           icon="folder-input"
           variant="ghost"
@@ -116,7 +116,7 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
           }}
         />
       )}
-      {context.canEdit && (
+      {context.canRemove && (
         <IconButton
           icon="trash-2"
           variant="ghost"

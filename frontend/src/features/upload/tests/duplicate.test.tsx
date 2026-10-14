@@ -22,7 +22,7 @@ import { useUploads } from '../uploads';
 mockApi();
 
 /** The instance says this file is already here, in the trash or not. */
-function alreadyHere(over: { in_trash: boolean }) {
+function alreadyHere(over: { in_trash: boolean; level?: number }) {
   server.use(
     http.get('/api/audio/duplicates/:sha256', () =>
       HttpResponse.json([
@@ -31,6 +31,7 @@ function alreadyHere(over: { in_trash: boolean }) {
           title: 'Field recording, long take',
           library_uuid: PERSONAL,
           in_trash: over.in_trash,
+          level: over.level ?? 40,
         },
       ]),
     ),
@@ -99,6 +100,16 @@ describe('a byte-identical file', () => {
     await waitFor(() => {
       expect(useUploads.getState().files[0]?.status).toBe('skipped');
     });
+  });
+
+  it('tells somebody who cannot restore the copy in the trash who can (DEC-27)', async () => {
+    alreadyHere({ in_trash: true, level: 20 });
+    useUploads.getState().add([file()], { library: PERSONAL });
+    await statusOf();
+    showNotice();
+    expect(screen.getByText(/somebody who can manage its library can restore it/i)).toBeVisible();
+    expect(screen.queryByRole('button', { name: /restore that one instead/i })).toBeNull();
+    expect(screen.getByRole('button', { name: /upload it anyway/i })).toBeVisible();
   });
 
   it('is never a silent block: it can be sent anyway', async () => {

@@ -220,11 +220,13 @@ function fresh(): Archive {
         { level: 10, description: 'Can read: listen and read the transcript, and change nothing.' },
         {
           level: 20,
-          description: 'Can edit: change titles, categories and tags, but not share.',
+          description:
+            'Can edit: upload, and change titles, categories and tags, but not move, trash or share.',
         },
         {
           level: 30,
-          description: 'Can manage: everything above, plus sharing with other people.',
+          description:
+            'Can manage: everything above, plus moving, trashing and sharing with other people.',
         },
       ],
       trash_retention_days: 30,
@@ -358,7 +360,8 @@ function fresh(): Archive {
           // The wording `resonand.core.levels.DESCRIPTIONS` sends, colon and all: `LevelSelector`
           // splits on it to draw the name and the sentence, and a fixture worded differently
           // would test a split that never happens.
-          level_description: 'Can edit: change titles, categories and tags, but not share.',
+          level_description:
+            'Can edit: upload, and change titles, categories and tags, but not move, trash or share.',
           granted_by: ALEX.id,
           created_at: '2026-02-01T12:00:00Z',
           source: 'library',

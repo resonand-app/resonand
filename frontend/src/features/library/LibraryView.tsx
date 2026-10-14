@@ -235,6 +235,7 @@ export function LibraryView() {
             }}
             selected={pool.filter((one) => selection.selected.has(one.uuid))}
             categories={categories.all}
+            canRemove={context.canManage}
             bulk={bulk}
             onOutcome={(outcome) => {
               // What is left selected is what did not succeed, so Retry is one click rather than a

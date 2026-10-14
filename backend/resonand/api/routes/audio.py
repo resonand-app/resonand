@@ -220,7 +220,7 @@ def duplicates(sha256: str, caller: CurrentCaller, session: ReadSession) -> list
     interface must not imply otherwise.
     """
     found = []
-    for audio, in_trash in find_duplicates(session, caller.id, sha256):
+    for audio, in_trash, level in find_duplicates(session, caller.id, sha256):
         library = session.get(Library, audio.library_id)
         found.append(
             DuplicateWarning(
@@ -228,6 +228,7 @@ def duplicates(sha256: str, caller: CurrentCaller, session: ReadSession) -> list
                 title=audio.title,
                 in_trash=in_trash,
                 library_uuid=library.uuid if library is not None else "",
+                level=level,
             )
         )
     return found
