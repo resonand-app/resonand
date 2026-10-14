@@ -65,5 +65,9 @@
     "local": "Transcription runs on {{host}}, on your own network. The audio does not leave it.",
     "retry": "Retrying sends the audio to {{host}} again.",
     "external": "Transcription is sent to {{host}}. The audio leaves this instance."
+  },
+  "favourite": {
+    "markFailed": "That recording could not be marked as a favourite, so its heart is empty again.",
+    "unmarkFailed": "The mark could not be taken off that recording, so its heart is still filled."
   }
 }

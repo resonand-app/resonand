@@ -39,6 +39,7 @@ import { useNavigate } from 'react-router';
 
 import { post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
+import { useFavourite } from '@/app/hooks/use-favourite';
 import { toLibrary, toLibrarySettings } from '@/app/routes';
 import { useInstance } from '@/app/session';
 import { MoveDialog } from '@/components/MoveDialog';
@@ -54,6 +55,7 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
   const instance = useInstance();
   const [confirming, setConfirming] = useState(false);
   const [moving, setMoving] = useState(false);
+  const favourite = useFavourite();
   const recording = context.recording;
 
   if (recording === undefined) return null;
@@ -89,6 +91,20 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
 
   return (
     <>
+      {/* For anybody who can read it, unlike everything after it: the mark is theirs alone. A
+          recording in the trash cannot be marked, so its heart is not drawn either. */}
+      {!context.isTrashed && (
+        <IconButton
+          icon="heart"
+          variant="ghost"
+          solid={recording.is_favourite}
+          aria-pressed={recording.is_favourite}
+          label={t('actions.favourite')}
+          onClick={() => {
+            favourite(recording.uuid, !recording.is_favourite);
+          }}
+        />
+      )}
       <IconButton
         icon="download"
         variant="ghost"

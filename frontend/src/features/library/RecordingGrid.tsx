@@ -25,6 +25,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { BUCKETS, useWaveform } from '@/api/waveform';
+import { useFavourite } from '@/app/hooks/use-favourite';
 import { shiftHeld } from '@/app/modifiers';
 import { toRecording } from '@/app/routes';
 import { RecordingCard } from '@/design-system';
@@ -49,10 +50,10 @@ export interface RecordingGridProps {
   /** Whether the deferred per-card waveform fetches may start (`UI-31b`). */
   waveforms: boolean;
   /**
-   * The selection, when this library offers one (`UI-9a`).
+   * The selection, when the view offers one (`UI-9a`).
    *
-   * Absent on a read-only library rather than disabled: what somebody cannot do is not drawn
-   * (§3.5), and a grid of ticked-off checkboxes reads as a bug.
+   * Absent where nothing could be done with it rather than disabled: what somebody cannot do is
+   * not drawn (§3.5), and a grid of ticked-off checkboxes leading nowhere reads as a bug.
    */
   selection?: {
     selected: ReadonlySet<string>;
@@ -62,6 +63,7 @@ export interface RecordingGridProps {
 
 export function RecordingGrid({ recordings, places, waveforms, selection }: RecordingGridProps) {
   const { root, open } = useKeepPlace();
+  const favourite = useFavourite();
   const resolved = usePlaces(places === undefined ? recordings : []);
   const where = places ?? resolved;
   return (
@@ -83,6 +85,7 @@ export function RecordingGrid({ recordings, places, waveforms, selection }: Reco
           showLibrary={where.spansLibraries}
           waveforms={waveforms}
           onOpen={open}
+          onFavourite={favourite}
           {...(selection === undefined ? {} : { selection })}
         />
       ))}
@@ -97,6 +100,7 @@ function Card({
   showLibrary,
   waveforms,
   onOpen,
+  onFavourite,
   selection,
 }: {
   recording: Recording;
@@ -106,6 +110,7 @@ function Card({
   showLibrary: boolean;
   waveforms: boolean;
   onOpen: (uuid: string) => void;
+  onFavourite: (uuid: string, on: boolean) => void;
   selection?: RecordingGridProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
@@ -155,6 +160,13 @@ function Card({
       {...(category === undefined ? {} : { category })}
       tags={recording.tags.map((tag) => tag.name)}
       sharedIndividually={recording.is_shared_individually}
+      // Everything the caller can read: the mark is theirs, and asks nothing of the recording.
+      favourite={{
+        on: recording.is_favourite,
+        onToggle: () => {
+          onFavourite(recording.uuid, !recording.is_favourite);
+        },
+      }}
       peaks={peaks}
       pending={pending}
       playing={isPlaying}
@@ -193,6 +205,7 @@ function Card({
         state: t(`common:transcription.${state}`),
         moreTags: (count) => t('card.moreTags', { count }),
         sharedIndividually: t('card.sharedIndividually'),
+        favourite: (name) => t('card.favourite', { name }),
       }}
     />
   );

@@ -18,7 +18,8 @@
     "moreTags": "+{{count}}",
     "sharedIndividually": "Shared on its own, apart from this library",
     "pause": "Pause {{name}}",
-    "select": "Select {{name}}"
+    "select": "Select {{name}}",
+    "favourite": "Favourite {{name}}"
   },
   "list": {
     "label": "Recordings",
@@ -67,6 +68,8 @@
     "list": "List"
   },
   "bulk": {
+    "favourite": "Add to favourites",
+    "unfavourite": "Remove from favourites",
     "addTag": "Add a tag",
     "tagName": "Tag",
     "apply": "Add it",
@@ -81,7 +84,11 @@
       "move_one": "One recording moved",
       "move_other": "{{count}} recordings moved",
       "trash_one": "One recording sent to the trash",
-      "trash_other": "{{count}} recordings sent to the trash"
+      "trash_other": "{{count}} recordings sent to the trash",
+      "favourite_one": "One recording added to your favourites",
+      "favourite_other": "{{count}} recordings added to your favourites",
+      "unfavourite_one": "One recording taken out of your favourites",
+      "unfavourite_other": "{{count}} recordings taken out of your favourites"
     },
     "partial": "{{done}} done, {{failed}} not",
     "reason_one": "One: {{detail}}",

@@ -482,15 +482,20 @@ describe('selecting recordings', () => {
     expect(await screen.findByRole('button', { name: /Any category/ })).toBeVisible();
   });
 
-  it('has no checkboxes at all on a library you can only read', async () => {
+  it('offers a library you can only read a selection holding the heart alone (UI-42)', async () => {
+    const user = userEvent.setup();
     archive.libraries = archive.libraries.map((one) =>
       one.uuid === RECORDINGS ? { ...one, level: 10 } : one,
     );
     renderLibrary();
     const card = await cardFor('Field recording, long take');
-    // Absent rather than disabled: a grid of ticked-off checkboxes leading to a dead bar reads as
-    // a bug, and their absence reads as a decision (§3.5).
-    expect(within(card).queryByRole('checkbox')).toBeNull();
+    // `UI-9a` drew no checkboxes here, because a selection had nothing to lead to. A favourite is
+    // the caller's own mark and asks only for reading, so now it has.
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    expect(screen.getByRole('button', { name: 'Add to favourites' })).toBeVisible();
+    for (const name of [/Assign a category/, 'Add a tag', /^Move/, 'Send to trash', /^More/]) {
+      expect(screen.queryByRole('button', { name })).toBeNull();
+    }
   });
 
   it('offers neither a move nor the trash on a library you only edit (DEC-27)', async () => {
@@ -697,9 +702,8 @@ describe('a library you can only read', () => {
   it('drops what cannot be done rather than disabling it', async () => {
     readOnly();
     renderLibrary();
-    const card = await cardFor('Field recording, long take');
+    await cardFor('Field recording, long take');
     // Absent, not disabled -- a disabled row of controls reads as a bug (§3.5).
-    expect(within(card).queryByRole('checkbox')).toBeNull();
     expect(screen.queryByRole('button', { name: /Settings/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /Send to trash/ })).toBeNull();
     // And nothing on screen is disabled at all, which is the stronger version of the same claim.

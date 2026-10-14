@@ -36,6 +36,7 @@ import { useRef } from 'react';
 import type { CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useFavourite } from '@/app/hooks/use-favourite';
 import { shiftHeld } from '@/app/modifiers';
 import { useUrlState } from '@/app/url-state';
 import type { SortDirection, SortField } from '@/app/url-state';
@@ -138,6 +139,7 @@ export function RecordingList({
   const resolved = usePlaces(
     places === undefined ? items.map((item) => rows.rowAt(item.index)) : [],
   );
+  const favourite = useFavourite();
   const where = places ?? resolved;
 
   return (
@@ -194,6 +196,7 @@ export function RecordingList({
                     category={placeOf(recording, where)}
                     libraryName={where.libraryOf(recording)}
                     onOpen={open}
+                    onFavourite={favourite}
                     {...(selection === undefined ? {} : { selection })}
                   />
                 )}
@@ -390,6 +393,7 @@ function Row({
   category,
   libraryName,
   onOpen,
+  onFavourite,
   selection,
 }: {
   recording: Recording;
@@ -397,6 +401,7 @@ function Row({
   /** Undefined where the caller cannot read the library this recording sits in. */
   libraryName: string | undefined;
   onOpen: (uuid: string) => void;
+  onFavourite: (uuid: string, on: boolean) => void;
   selection?: RecordingListProps['selection'];
 }) {
   const { t, i18n } = useTranslation('library');
@@ -424,6 +429,12 @@ function Row({
       tags={recording.tags.map((tag) => tag.name)}
       state={state}
       playing={isPlaying}
+      favourite={{
+        on: recording.is_favourite,
+        onToggle: () => {
+          onFavourite(recording.uuid, !recording.is_favourite);
+        },
+      }}
       {...(selection === undefined
         ? {}
         : {
@@ -456,6 +467,7 @@ function Row({
         pause: (name) => t('card.pause', { name }),
         select: (name) => t('card.select', { name }),
         state: t(`common:transcription.${state}`),
+        favourite: (name) => t('card.favourite', { name }),
       }}
     />
   );
