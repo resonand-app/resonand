@@ -17,6 +17,8 @@ first, on purpose (``ING-11c``), and credentials never travel. Restoring an inst
 
 from __future__ import annotations
 
+import json
+import shutil
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,7 +32,7 @@ from resonand.db import libraries, tags, transcripts, users
 from resonand.db.audio import create_audio
 from resonand.db.engine import Database, build_engine
 from resonand.db.migrate import upgrade_to_head
-from resonand.db.models import Audio, Library, Share, Transcript, User
+from resonand.db.models import Audio, Favourite, Library, Share, Transcript, User
 from resonand.db.transcripts import Origin, SegmentDraft
 from resonand.media import storage
 from sqlalchemy import select
@@ -55,6 +57,9 @@ class Archive:
     trashed: str
     shared_uuids: dict[str, str]
     """Library name to uuid, for the two that are not personal."""
+
+    favourites: list[tuple[str, str, str | None]]
+    """Every mark, as when, whose and on which file, oldest first."""
 
 
 Command = Callable[[list[str], Settings], "Result"]
@@ -100,7 +105,8 @@ def store(
 
 @pytest.fixture
 def here(database: Database, db_settings: Settings) -> Archive:
-    """Two people, four libraries, shares in both directions, and one recording in the trash."""
+    """Two people, four libraries, shares in both directions with a favourite marked through each,
+    and one recording in the trash."""
     with database.write_session() as session:
         one = users.create_user(session, email="a@x.test", display_name="A", is_admin=True)
         two = users.create_user(session, email="b@x.test", display_name="B")
@@ -138,6 +144,16 @@ def here(database: Database, db_settings: Settings) -> Archive:
             [SegmentDraft(0, 4_200, "She starts by talking about the village.")],
             Origin(provider="openai-compatible", model="whisper-1", language="en"),
         )
+        harbour = session.execute(
+            select(Audio).where(Audio.original_filename == "the harbour.m4a")
+        ).scalar_one()
+        marks = [
+            ("2024-11-02T17:40:00.000Z", one, detailed),
+            ("2025-01-05T09:30:00.000Z", one, harbour),
+            ("2025-02-14T20:15:00.000Z", two, detailed),
+        ]
+        for at, account, marked in marks:
+            session.add(Favourite(user_id=account.id, audio_id=marked.id, created_at=at))
 
         gone = store(session, db_settings, library=mine, owner=one, filename="deleted.m4a")
         gone.deleted_at = "2026-09-20T10:00:00Z"
@@ -146,6 +162,9 @@ def here(database: Database, db_settings: Settings) -> Archive:
             recordings=placed,
             trashed=gone.uuid,
             shared_uuids={"Interviews": interviews.uuid, "Field notes": field.uuid},
+            favourites=[
+                (at, account.email, marked.original_filename) for at, account, marked in marks
+            ],
         )
 
 
@@ -223,6 +242,7 @@ def test_the_whole_archive_round_trips_into_an_empty_instance(
         assert transcripts.segments_of(session, transcript.id)[0].text == (
             "She starts by talking about the village."
         )
+        assert _favourites(session) == here.favourites, "every mark, at the instant it was made"
     far.engine.dispose()
 
     checked = run(["fsck"], empty)
@@ -254,6 +274,7 @@ def test_reading_the_same_export_twice_does_not_double_the_archive(
         assert session.query(Library).count() == 4
         assert session.query(Share).count() == 2
         assert session.query(Transcript).count() == 1
+        assert session.query(Favourite).count() == 3
     far.engine.dispose()
 
 
@@ -272,14 +293,90 @@ def test_an_export_read_without_its_accounts_refuses_by_name(
     read_back = run(["import", str(export)], empty)
 
     assert read_back.exit_code == 0, read_back.output
-    assert "no account here for b@x.test" in read_back.output
+    assert read_back.output.count("no account here for b@x.test") == 1, (
+        "once, though B's mark names B as well"
+    )
     assert "Field notes" in read_back.output
     far = Database(build_engine(empty))
     with far.read_session() as session:
         assert session.query(Share).count() == 0
         placed = session.execute(select(Audio)).scalars().all()
         assert len(placed) == 3, "A's own recordings arrived; B's had nowhere to go"
+        assert _favourites(session) == [
+            ("2024-11-02T17:40:00.000Z", "a@x.test", "grandmother.m4a")
+        ], "B's mark waits for B, and the harbour never arrived to be marked"
     far.engine.dispose()
+
+
+def test_a_recording_copied_out_on_its_own_keeps_its_favourites(
+    here: Archive, run: Command, db_settings: Settings, empty: Settings, tmp_path: Path
+) -> None:
+    """``ING-15`` puts favourites in the sidecar rather than the manifest for this case: one
+    directory taken out of an export still says who marked it, and names whoever is not here."""
+    export = tmp_path / "export"
+    assert run(["export", str(export)], db_settings).exit_code == 0
+    lone = tmp_path / "lone"
+    shutil.copytree(next(export.glob("*/grandmother.m4a")).parent, lone)
+    run(
+        ["create-admin", "--email", "a@x.test", "--display-name", "A", "--password", PASSWORD],
+        empty,
+    )
+    far = Database(build_engine(empty))
+    with far.read_session() as session:
+        account = users.find_by_email(session, "a@x.test")
+        assert account is not None
+        personal = users.personal_library(session, account.id).uuid
+
+    read_back = run(["import", str(lone), "--library", personal], empty)
+
+    assert read_back.exit_code == 0, read_back.output
+    assert "no account here for b@x.test" in read_back.output
+    with far.read_session() as session:
+        assert _favourites(session) == [("2024-11-02T17:40:00.000Z", "a@x.test", "grandmother.m4a")]
+        assert users.find_by_email(session, "b@x.test") is None, "an address, never an account"
+    far.engine.dispose()
+
+
+def test_an_export_from_before_favourites_still_imports(
+    here: Archive, run: Command, db_settings: Settings, empty: Settings, tmp_path: Path
+) -> None:
+    """Every export already on somebody's disk has no ``favourited_by`` anywhere in it, and reads
+    back exactly as it did."""
+    export = tmp_path / "export"
+    assert run(["export", str(export)], db_settings).exit_code == 0
+    for sidecar in export.glob("*/resonand.json"):
+        payload = json.loads(sidecar.read_text(encoding="utf-8"))
+        del payload["favourited_by"]
+        sidecar.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    run(
+        ["create-admin", "--email", "a@x.test", "--display-name", "A", "--password", PASSWORD],
+        empty,
+    )
+    far = Database(build_engine(empty))
+    with far.write_session() as session:
+        users.create_user(session, email="b@x.test", display_name="B")
+
+    read_back = run(["import", str(export)], empty)
+
+    assert read_back.exit_code == 0, read_back.output
+    assert "Imported 5 recordings, updated 0." in read_back.output
+    assert "no account here" not in read_back.output
+    with far.read_session() as session:
+        assert session.query(Share).count() == 2
+        assert session.query(Favourite).count() == 0
+    far.engine.dispose()
+
+
+def _favourites(session: Session) -> list[tuple[str, str, str | None]]:
+    return [
+        (at, email, filename)
+        for at, email, filename in session.execute(
+            select(Favourite.created_at, User.email, Audio.original_filename)
+            .join(User, Favourite.user_id == User.id)
+            .join(Audio, Favourite.audio_id == Audio.id)
+            .order_by(Favourite.created_at)
+        ).all()
+    ]
 
 
 def _sharing(session: Session) -> dict[tuple[str, str], int]:

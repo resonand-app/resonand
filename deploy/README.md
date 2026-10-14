@@ -332,7 +332,8 @@ often arrive under the same filename and one of them would overwrite the other o
 Beside them, `resonand-archive.json` describes the instance: the accounts, the libraries, and who
 each library was shared with. It carries **no credentials of any kind** — no passwords, no hashes,
 no session keys. An export is something you copy onto a disk and carry; it says who the recordings
-belonged to, and it is not a way into an instance.
+belonged to and which of them each person marked as a favourite, and it is not a way into an
+instance.
 
 Recordings in the trash are not exported. The manifest records how many were skipped, so a count
 that does not match the archive has a reason written down.
@@ -356,9 +357,11 @@ an empty instance the order is:
 3. `resonand import /data/export`.
 
 The manifest then recreates the libraries — with the identifiers they had — and the sharing, and
-each recording goes back into the library it came out of. A library whose owner has no account
-here is refused by name rather than handed to whoever ran the import, and the addresses it is
-waiting for are printed. Create them and run the import again; it is safe to repeat.
+each recording goes back into the library it came out of. Every account gets its favourites back,
+in the order it marked them. A library whose owner has no account here is refused by name rather
+than handed to whoever ran the import, a favourite whose account is not here is skipped, and the
+addresses they are waiting for are printed. Create them and run the import again; it is safe to
+repeat.
 
 A personal library is the one thing that does not keep its identifier: it arrives with the
 account, so the one here already has its own and the export's is mapped onto it.
