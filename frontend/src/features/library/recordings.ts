@@ -1,5 +1,6 @@
 /**
- * The recordings in a library, and the tree their categories hang in (`UI-6b`, §V3).
+ * The recordings in a library or across them, and the tree their categories hang in (`UI-6b`,
+ * `UI-43`, §V3).
  *
  * One query, keyed by the filters, so a filter change is a new key rather than a refetch of the
  * same one -- which is what lets what is already on screen stay there while the next arrives.
@@ -35,6 +36,43 @@ export type Recording = components['schemas']['AudioSummary'];
 export type Category = components['schemas']['CategorySummary'];
 
 /**
+ * Where a list of recordings comes from (`UI-43`).
+ *
+ * One library's listing, or every recording the caller can see -- which is what the favourites
+ * view lists, and what a view of recordings shared on their own will. The grid, the dense list
+ * and the second select-all step all fetch through it, so none of them is tied to a library.
+ */
+export type RecordingSource = { kind: 'library'; uuid: string } | { kind: 'everywhere' };
+
+export const EVERYWHERE: RecordingSource = { kind: 'everywhere' };
+
+export function inLibrary(uuid: string): RecordingSource {
+  return { kind: 'library', uuid };
+}
+
+/** The key a source's rows are cached under, so a change can find them. */
+export function sourceKey(source: RecordingSource, query: Record<string, unknown>) {
+  return source.kind === 'library'
+    ? keys.libraryAudio(source.uuid, query)
+    : keys.everyRecording(query);
+}
+
+/** Whether there is anything to ask yet: a library route before its uuid is read has none. */
+export function sourceReady(source: RecordingSource): boolean {
+  return source.kind === 'everywhere' || source.uuid !== '';
+}
+
+/** One page of a source, the window included in `query`. */
+export function fetchSource(
+  source: RecordingSource,
+  query: Record<string, unknown>,
+): Promise<Page<Recording>> {
+  return source.kind === 'library'
+    ? get('/api/libraries/{library_uuid}/audio', { path: { library_uuid: source.uuid }, query })
+    : get('/api/audio', { query });
+}
+
+/**
  * What the API is asked for a library's list, from what the URL says.
  *
  * `url-state.ts` owns the filter vocabulary for every view that has one, and this is the one
@@ -53,21 +91,17 @@ export function libraryQuery(filters: UrlFilters): Record<string, unknown> {
 }
 
 export function useRecordings(
-  uuid: string,
+  source: RecordingSource,
   query: Record<string, unknown>,
 ): InfiniteResult<Recording> {
   const live = useLiveArchive();
   return useInfinitePages<Recording>(
     // The window is deliberately absent from the key: the pages of one filter are one cached
     // thing, and an offset in the key would make each of them a separate one.
-    keys.libraryAudio(uuid, query),
-    (window) =>
-      get('/api/libraries/{library_uuid}/audio', {
-        path: { library_uuid: uuid },
-        query: { ...query, ...window },
-      }),
+    sourceKey(source, query),
+    (window) => fetchSource(source, { ...query, ...window }),
     {
-      enabled: uuid !== '',
+      enabled: sourceReady(source),
       // A card uploaded into a grid somebody is looking at grows its duration and its shape where
       // it stands, and the grid stops asking the moment nothing on it is still being made
       // (`FBK-3`).
@@ -90,15 +124,16 @@ export function useRecordings(
  * and none of these pages is going on screen.
  */
 export async function fetchEveryRecording(
-  uuid: string,
+  source: RecordingSource,
   query: Record<string, unknown>,
 ): Promise<Recording[]> {
   const all: Recording[] = [];
   for (;;) {
-    const page = (await get('/api/libraries/{library_uuid}/audio', {
-      path: { library_uuid: uuid },
-      query: { ...query, limit: MAX_PAGE_SIZE, offset: all.length },
-    })) as Page<Recording>;
+    const page = await fetchSource(source, {
+      ...query,
+      limit: MAX_PAGE_SIZE,
+      offset: all.length,
+    });
     all.push(...page.items);
     // The second test is not redundant: a library that shrank between two of these pages would
     // otherwise ask for an offset past its own end for ever.
@@ -113,8 +148,9 @@ export interface Categories {
   nameOf: (id: number | null) => string | undefined;
 }
 
-export function useCategories(uuid: string): Categories {
-  const query = useQuery({
+/** One library's tree, cached under the key every view that reads it shares. */
+export function categoriesQuery(uuid: string) {
+  return {
     queryKey: keys.libraryCategories(uuid),
     queryFn: () =>
       get('/api/libraries/{library_uuid}/categories', { path: { library_uuid: uuid } }),
@@ -122,7 +158,11 @@ export function useCategories(uuid: string): Categories {
     // A tree changes when somebody edits it in V7, and not otherwise. Refetching it per card grid
     // would be the landing page's waveform mistake in a different place.
     staleTime: 5 * 60_000,
-  });
+  };
+}
+
+export function useCategories(uuid: string): Categories {
+  const query = useQuery(categoriesQuery(uuid));
   const all = useMemo(() => query.data ?? [], [query.data]);
   const byId = useMemo(() => new Map(all.map((one) => [one.id, one.name])), [all]);
 

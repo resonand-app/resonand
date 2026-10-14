@@ -25,6 +25,10 @@
  * a heading and choosing in the bar are indistinguishable in effect, and the arrow on the heading
  * is right even when the bar was what changed it. `aria-sort` says the same thing to a screen
  * reader that the arrow says to everybody else.
+ *
+ * **It draws whatever source it is handed** (`UI-43`): one library's listing or every recording
+ * the caller can see. Across libraries the category column names the library first, because a
+ * category means nothing without the library it belongs to.
  */
 
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -40,10 +44,12 @@ import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 import { usePlayback } from '@/player/store';
 
+import { usePlaces } from './places';
+import type { Places } from './places';
 import { transcriptionState } from './recordings';
 import { useKeepPlace } from './use-keep-place';
 import { useLongPress } from './use-long-press';
-import type { Categories, Recording } from './recordings';
+import type { Recording, RecordingSource } from './recordings';
 import { useRowCount, useRows } from './rows';
 
 /** `--row-height`. The virtualiser needs it as a number, and it is the token's value. */
@@ -59,18 +65,20 @@ const OVERSCAN = 8;
 const MAX_HEIGHT = 720;
 
 export interface RecordingListProps {
-  libraryUuid: string;
+  /** Where the rows come from: one library, or every recording the caller can see. */
+  source: RecordingSource;
   /** The selection, when this library offers one (`UI-9a`). Absent where it does not. */
   selection?: {
     selected: ReadonlySet<string>;
     onToggle: (uuid: string, extend: boolean) => void;
   };
-  /** The library's category tree, for the column that names one. */
-  categories: Categories;
+  /**
+   * Where the rows live, when the view already knows: one library's name and tree. Absent, and
+   * each row is named against its own library (`UI-43`).
+   */
+  places?: Places;
   /** The API query the rows are drawn from: the filters, without a window. */
   query: Record<string, unknown>;
-  /** The library's name, which the player shows under the title (§3.1). */
-  libraryName: string;
   /**
    * How far down the viewport this header has to start, because something else is sticky above it.
    *
@@ -88,10 +96,9 @@ export interface RecordingListProps {
 }
 
 export function RecordingList({
-  libraryUuid,
-  categories,
+  source,
+  places,
   query,
-  libraryName,
   headerOffset = '0',
   fills = false,
   selection,
@@ -111,7 +118,7 @@ export function RecordingList({
 
   // The height first, from page zero alone: `total` is in every page response, so the list knows
   // how tall it is one request in and never grows as the rest arrive (§V4).
-  const { total } = useRowCount(libraryUuid, query);
+  const { total } = useRowCount(source, query);
 
   // eslint-disable-next-line react-hooks/incompatible-library -- see the directive above
   const virtualiser = useVirtualizer({
@@ -124,10 +131,14 @@ export function RecordingList({
   const items = virtualiser.getVirtualItems();
   // Which pages the current scroll position needs. Page zero is in the set whatever the range
   // says, and it is already in the cache from the count above.
-  const rows = useRows(libraryUuid, query, {
+  const rows = useRows(source, query, {
     start: items[0]?.index ?? 0,
     end: items[items.length - 1]?.index ?? OVERSCAN,
   });
+  const resolved = usePlaces(
+    places === undefined ? items.map((item) => rows.rowAt(item.index)) : [],
+  );
+  const where = places ?? resolved;
 
   return (
     <div
@@ -139,7 +150,11 @@ export function RecordingList({
         fills ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } : undefined
       }
     >
-      <Columns selecting={selection !== undefined} offset={headerOffset} />
+      <Columns
+        selecting={selection !== undefined}
+        offset={headerOffset}
+        spans={where.spansLibraries}
+      />
       <div
         ref={scroller}
         style={{
@@ -176,8 +191,8 @@ export function RecordingList({
                 ) : (
                   <Row
                     recording={recording}
-                    category={categories.nameOf(recording.category_id)}
-                    libraryName={libraryName}
+                    category={placeOf(recording, where)}
+                    libraryName={where.libraryOf(recording)}
                     onOpen={open}
                     {...(selection === undefined ? {} : { selection })}
                   />
@@ -199,7 +214,15 @@ export function RecordingList({
  * The four headings the API can sort by are buttons (`UI-7d`); the rest are labels, because a
  * heading that looks pressable and does nothing is worse than one that plainly is not.
  */
-function Columns({ selecting, offset }: { selecting: boolean; offset: string }) {
+function Columns({
+  selecting,
+  offset,
+  spans,
+}: {
+  selecting: boolean;
+  offset: string;
+  spans: boolean;
+}) {
   const { t } = useTranslation('library');
   const { filters, set } = useUrlState();
 
@@ -279,13 +302,22 @@ function Columns({ selecting, offset }: { selecting: boolean; offset: string }) 
         {...sortable('duration_ms')}
       />
       <span role="columnheader" data-column="category" style={{ width: 116, flex: '0 0 auto' }}>
-        {t('list.category')}
+        {spans ? t('list.library') : t('list.category')}
       </span>
       <span role="columnheader" data-column="tags" style={{ width: 148, flex: '0 0 auto' }}>
         {t('list.tags')}
       </span>
     </div>
   );
+}
+
+/** The category column's cell: the category, or across libraries the library and then it. */
+function placeOf(recording: Recording, where: Places): string | undefined {
+  if (!where.spansLibraries) return where.categoryOf(recording);
+  const named = [where.libraryOf(recording), where.categoryOf(recording)].filter(
+    (part) => part !== undefined,
+  );
+  return named.length === 0 ? undefined : named.join(' · ');
 }
 
 /** What pressing a heading will do, which is what its accessible name has to say (`UI-8d`). */
@@ -362,7 +394,8 @@ function Row({
 }: {
   recording: Recording;
   category: string | undefined;
-  libraryName: string;
+  /** Undefined where the caller cannot read the library this recording sits in. */
+  libraryName: string | undefined;
   onOpen: (uuid: string) => void;
   selection?: RecordingListProps['selection'];
 }) {
@@ -413,7 +446,7 @@ function Row({
           player.play({
             uuid: recording.uuid,
             title: recording.title,
-            library: libraryName,
+            library: libraryName ?? '',
             durationMs: recording.duration_ms,
             hasWaveform: recording.has_waveform,
           });

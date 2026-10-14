@@ -28,6 +28,7 @@
     "duration": "Length",
     "date": "Recorded",
     "category": "Category",
+    "library": "Library",
     "tags": "Tags",
     "select": "Selected"
   },
