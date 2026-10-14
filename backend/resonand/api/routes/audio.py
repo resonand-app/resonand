@@ -11,7 +11,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from resonand.acl.query import audio_select, require_audio
+from resonand.acl.query import require_audio
 from resonand.api.deps import (
     ArchiveDatabase,
     CurrentCaller,
@@ -19,6 +19,7 @@ from resonand.api.deps import (
     ReadSession,
     WriteSession,
 )
+from resonand.api.filters import ArchiveFilters, RecordingSort
 from resonand.api.pagination import Page, PageRequest, count_of, page_of, page_request
 from resonand.api.presenters import (
     audio_detail,
@@ -53,6 +54,7 @@ from resonand.db import tags as tag_repo
 from resonand.db import transcripts as transcript_repo
 from resonand.db.audio import (
     MetadataPatch,
+    every_audio,
     find_duplicates,
     list_audio_shares,
     move_audio,
@@ -74,8 +76,20 @@ Paging = Annotated[PageRequest, Depends(page_request)]
 
 
 @router.get("/audio", response_model=Page[AudioSummary], summary="Every recording you can see")
-def list_audio(caller: CurrentCaller, session: ReadSession, paging: Paging) -> Page[AudioSummary]:
-    query = audio_select(caller.id)
+def list_audio(
+    caller: CurrentCaller,
+    session: ReadSession,
+    paging: Paging,
+    filters: ArchiveFilters,
+    sorting: RecordingSort,
+) -> Page[AudioSummary]:
+    """Every readable recording across libraries, filtered and sorted like one (``API-27``).
+
+    ``favourite=true`` narrows it to the caller's favourites, which is the whole of what that view
+    lists, and ``sort=favourited_at`` is accepted only beside it.
+    """
+    sort, direction = sorting
+    query = every_audio(caller.id, filters=filters, sort=sort, direction=direction)
     total = count_of(session, query)
     rows = session.execute(query.limit(paging.limit).offset(paging.offset)).all()
     return page_of(

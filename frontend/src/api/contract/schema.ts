@@ -286,7 +286,13 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Every recording you can see */
+        /**
+         * Every recording you can see
+         * @description Every readable recording across libraries, filtered and sorted like one (``API-27``).
+         *
+         *     ``favourite=true`` narrows it to the caller's favourites, which is the whole of what that view
+         *     lists, and ``sort=favourited_at`` is accepted only beside it.
+         */
         get: operations["list_audio_api_audio_get"];
         put?: never;
         post?: never;
@@ -1850,11 +1856,12 @@ export interface components {
          * SortField
          * @description What a list of recordings can be ordered by (``API-10``).
          *
-         *     Four, and deliberately not every column: these are the ones ``UI-7d`` offers, and a sort
-         *     nobody can reach from the interface is a query somebody can make expensive for no benefit.
+         *     Deliberately not every column: the four ``UI-7d`` offers, and when a favourite was marked,
+         *     which the favourites view sorts by (``API-27``). A sort nobody can reach from the interface is
+         *     a query somebody can make expensive for no benefit.
          * @enum {string}
          */
-        SortField: "recorded_at" | "created_at" | "duration_ms" | "title";
+        SortField: "recorded_at" | "created_at" | "duration_ms" | "title" | "favourited_at";
         /**
          * StorageStatus
          * @description What the archive is using.
@@ -2492,6 +2499,20 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                /** @description Tag slugs, all of which must match. */
+                tag?: string[] | null;
+                /** @description Wall-clock, inclusive. */
+                recorded_from?: string | null;
+                /** @description Wall-clock, inclusive. */
+                recorded_to?: string | null;
+                min_duration_ms?: number | null;
+                max_duration_ms?: number | null;
+                /** @description Any of the four states. Repeat it to mean either. */
+                transcription_state?: components["schemas"]["TranscriptionState"][] | null;
+                /** @description Only the recordings you have marked as favourites. */
+                favourite?: boolean;
+                sort?: components["schemas"]["SortField"];
+                direction?: components["schemas"]["SortDirection"];
             };
             header?: never;
             path?: never;
@@ -3627,6 +3648,8 @@ export interface operations {
                 max_duration_ms?: number | null;
                 /** @description Any of the four states. Repeat it to mean either. */
                 transcription_state?: components["schemas"]["TranscriptionState"][] | null;
+                /** @description Only the recordings you have marked as favourites. */
+                favourite?: boolean;
                 sort?: components["schemas"]["SortField"];
                 direction?: components["schemas"]["SortDirection"];
             };
@@ -4007,6 +4030,8 @@ export interface operations {
                 max_duration_ms?: number | null;
                 /** @description Any of the four states. Repeat it to mean either. */
                 transcription_state?: components["schemas"]["TranscriptionState"][] | null;
+                /** @description Only the recordings you have marked as favourites. */
+                favourite?: boolean;
             };
             header?: never;
             path?: never;

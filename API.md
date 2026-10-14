@@ -66,8 +66,8 @@ setting a cookie the browser will discard.
 |---|---|
 | `GET /api/instance` | Answers before you have a session: version, upload ceiling, accepted extensions, sharing levels, how long the trash keeps things |
 | `POST /api/libraries/{library_uuid}/audio` | Upload, `multipart/form-data`, fields `file`, `language` and `transcribe`. Ask for the transcription here and there is no second call |
-| `GET /api/audio` | Every recording you can see, paged |
-| `GET /api/search` | The whole archive, with `q`, `library`, `category_id`, `tag`, `recorded_from`, `recorded_to`, `min_duration_ms`, `max_duration_ms` and `transcription_state`. `GET /api/search/about` says in words what this index can and cannot match, so a client can show its limits rather than guess them |
+| `GET /api/audio` | Every recording you can see, across libraries, paged — with a library's filters apart from `category_id`, its `sort` and `direction`, and `favourite=true` for only the ones you have marked. `sort=favourited_at` orders those by when you marked them, and is refused without `favourite=true` |
+| `GET /api/search` | The whole archive, with `q`, `library`, `category_id`, `tag`, `recorded_from`, `recorded_to`, `min_duration_ms`, `max_duration_ms`, `transcription_state` and `favourite`. `GET /api/search/about` says in words what this index can and cannot match, so a client can show its limits rather than guess them |
 | `POST /api/audio/{audio_uuid}/transcribe` | Ask for one; `GET …/transcription` is what is happening to it; `…/transcribe/cancel` gives up |
 | `GET /api/audio/{audio_uuid}/transcript` | The active transcript as timed segments. `…/transcripts` lists every version, and one is made active with `…/transcripts/{id}/activate` |
 | `GET /api/audio/{audio_uuid}/original` | The original file, byte for byte, exactly as it was ingested |
