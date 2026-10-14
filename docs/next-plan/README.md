@@ -33,6 +33,7 @@ first version, which shipped as `0.1.0` on 2026-09-23.
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
 | [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build, and corrections to what it did |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
+| [`data.md`](data.md) | `DAT` | The schema and who may do what, after the first version |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
 | [`defects.md`](defects.md) | `BUG` | Faults found by using the archive since it shipped |
 
