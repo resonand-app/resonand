@@ -8,12 +8,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { get, patch, post } from '@/api/client';
+import { get, patch, post, put } from '@/api/client';
 import { ApiProblem } from '@/api/problem';
 
 import openapi from '@/api/contract/openapi.json';
 
-import { RECORDINGS, REHEARSAL, FIELD_TAKE, PERSONAL, archive } from './archive';
+import { RECORDINGS, REHEARSAL, FIELD_TAKE, PERSONAL, VOICE_NOTE, archive } from './archive';
 import { handlers } from './handlers';
 import { mockApi } from './server';
 
@@ -71,6 +71,19 @@ describe('what a view sees', () => {
     });
     const again = await get('/api/audio/{audio_uuid}', { path: { audio_uuid: FIELD_TAKE } });
     expect(again.title).toBe('A renamed recording');
+  });
+
+  it('lists favourites across libraries, newest mark first, as API-27 does', async () => {
+    await put('/api/audio/{audio_uuid}/favourite', { path: { audio_uuid: VOICE_NOTE } });
+    await put('/api/audio/{audio_uuid}/favourite', { path: { audio_uuid: FIELD_TAKE } });
+    const page = await get('/api/audio', {
+      query: { favourite: true, sort: 'favourited_at' },
+    });
+    expect(page.items.map((one) => one.uuid)).toEqual([FIELD_TAKE, VOICE_NOTE]);
+    const refused = (await get('/api/audio', { query: { sort: 'favourited_at' } }).catch(
+      (error: unknown) => error,
+    )) as ApiProblem;
+    expect(refused.status).toBe(400);
   });
 
   it('refuses the way the API refuses', async () => {

@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from sqlalchemy import Select, delete, select
+from sqlalchemy import Select, and_, delete, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.elements import ColumnElement
 
@@ -26,7 +26,7 @@ from resonand.core.levels import GRANTABLE, Level
 from resonand.core.text import clean_title
 from resonand.core.time import PRECISION_SECOND, is_wall_clock, now_instant
 from resonand.db import search_index
-from resonand.db.models import Audio, Library, Share, User
+from resonand.db.models import Audio, Favourite, Library, Share, User
 from resonand.db.search import Filters, SortDirection, SortField, apply_filters
 from resonand.db.tags import set_audio_tags
 
@@ -53,6 +53,43 @@ def library_audio(
     query = audio_select(user_id).where(Audio.library_id == library.id)
     if filters is not None:
         query = apply_filters(query, filters)
+    return _sorted(query, filters, sort, direction)
+
+
+def every_audio(
+    user_id: int,
+    *,
+    filters: Filters | None = None,
+    sort: SortField = SortField.RECORDED_AT,
+    direction: SortDirection = SortDirection.DESCENDING,
+) -> Select[tuple[Audio, int]]:
+    """Everything readable, across every library, filtered and sorted like one (``API-27``).
+
+    The listing the favourites view is built on, and the one a view of recordings shared on their
+    own will be: the question is the same, and only the filter differs.
+    """
+    query = audio_select(user_id)
+    if filters is not None:
+        query = apply_filters(query, filters)
+    return _sorted(query, filters, sort, direction)
+
+
+def _sorted(
+    query: Select[tuple[Audio, int]],
+    filters: Filters | None,
+    sort: SortField,
+    direction: SortDirection,
+) -> Select[tuple[Audio, int]]:
+    """Order a listing, joining the caller's marks when that is what it is ordered by."""
+    if sort is SortField.FAVOURITED_AT:
+        if filters is None or filters.favourite_of is None:
+            raise InvalidRequestError(
+                "Only favourites can be ordered by when they were marked: ask for favourite=true."
+            )
+        query = query.join(
+            Favourite,
+            and_(Favourite.audio_id == Audio.id, Favourite.user_id == filters.favourite_of),
+        )
     return query.order_by(*_ordering(sort, direction))
 
 
@@ -69,6 +106,7 @@ def _ordering(sort: SortField, direction: SortDirection) -> tuple[ColumnElement[
         SortField.CREATED_AT: Audio.created_at,
         SortField.DURATION_MS: Audio.duration_ms,
         SortField.TITLE: Audio.title,
+        SortField.FAVOURITED_AT: Favourite.created_at,
     }[sort]
     if direction is SortDirection.DESCENDING:
         # Nulls last in both directions: a recording whose date is unknown is not the oldest

@@ -1578,12 +1578,13 @@
         "type": "string"
       },
       "SortField": {
-        "description": "What a list of recordings can be ordered by (``API-10``).\n\nFour, and deliberately not every column: these are the ones ``UI-7d`` offers, and a sort\nnobody can reach from the interface is a query somebody can make expensive for no benefit.",
+        "description": "What a list of recordings can be ordered by (``API-10``).\n\nDeliberately not every column: the four ``UI-7d`` offers, and when a favourite was marked,\nwhich the favourites view sorts by (``API-27``). A sort nobody can reach from the interface is\na query somebody can make expensive for no benefit.",
         "enum": [
           "recorded_at",
           "created_at",
           "duration_ms",
-          "title"
+          "title",
+          "favourited_at"
         ],
         "title": "SortField",
         "type": "string"
@@ -2850,6 +2851,7 @@
     },
     "/api/audio": {
       "get": {
+        "description": "Every readable recording across libraries, filtered and sorted like one (``API-27``).\n\n``favourite=true`` narrows it to the caller's favourites, which is the whole of what that view\nlists, and ``sort=favourited_at`` is accepted only beside it.",
         "operationId": "list_audio_api_audio_get",
         "parameters": [
           {
@@ -2873,6 +2875,146 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Tag slugs, all of which must match.",
+            "in": "query",
+            "name": "tag",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Tag slugs, all of which must match.",
+              "title": "Tag"
+            }
+          },
+          {
+            "description": "Wall-clock, inclusive.",
+            "in": "query",
+            "name": "recorded_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wall-clock, inclusive.",
+              "title": "Recorded From"
+            }
+          },
+          {
+            "description": "Wall-clock, inclusive.",
+            "in": "query",
+            "name": "recorded_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Wall-clock, inclusive.",
+              "title": "Recorded To"
+            }
+          },
+          {
+            "in": "query",
+            "name": "min_duration_ms",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Min Duration Ms"
+            }
+          },
+          {
+            "in": "query",
+            "name": "max_duration_ms",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Max Duration Ms"
+            }
+          },
+          {
+            "description": "Any of the four states. Repeat it to mean either.",
+            "in": "query",
+            "name": "transcription_state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/TranscriptionState"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Any of the four states. Repeat it to mean either.",
+              "title": "Transcription State"
+            }
+          },
+          {
+            "description": "Only the recordings you have marked as favourites.",
+            "in": "query",
+            "name": "favourite",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Only the recordings you have marked as favourites.",
+              "title": "Favourite",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortField",
+              "default": "recorded_at"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection",
+              "default": "desc"
             }
           }
         ],
@@ -4539,6 +4681,18 @@
             }
           },
           {
+            "description": "Only the recordings you have marked as favourites.",
+            "in": "query",
+            "name": "favourite",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Only the recordings you have marked as favourites.",
+              "title": "Favourite",
+              "type": "boolean"
+            }
+          },
+          {
             "in": "query",
             "name": "sort",
             "required": false,
@@ -5258,6 +5412,18 @@
               ],
               "description": "Any of the four states. Repeat it to mean either.",
               "title": "Transcription State"
+            }
+          },
+          {
+            "description": "Only the recordings you have marked as favourites.",
+            "in": "query",
+            "name": "favourite",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Only the recordings you have marked as favourites.",
+              "title": "Favourite",
+              "type": "boolean"
             }
           }
         ],

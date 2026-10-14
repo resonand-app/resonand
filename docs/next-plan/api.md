@@ -37,7 +37,7 @@ The feature is introduced in [`data.md`](data.md), beside `DAT-11`.
       *Done when:* any client can mark and unmark a recording and read the mark back from every
       shape a recording is presented in, at a cost that does not grow with the page.
 
-- [ ] **API-27** · 🧪 **Every recording you can see, filtered and sorted like a library.**
+- [x] **API-27** · 🧪 **Every recording you can see, filtered and sorted like a library.**
       `GET /api/audio` already lists every readable recording across libraries, and nothing calls
       it, because it takes no filter, no sort and no ordering at all — so its offset paging is not
       even stable. It takes the library listing's `recording_filters` and `recording_sort`, except
