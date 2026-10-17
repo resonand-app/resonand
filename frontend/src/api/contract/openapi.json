@@ -115,6 +115,10 @@
             "title": "Has Waveform",
             "type": "boolean"
           },
+          "is_favourite": {
+            "title": "Is Favourite",
+            "type": "boolean"
+          },
           "is_shared_individually": {
             "title": "Is Shared Individually",
             "type": "boolean"
@@ -276,6 +280,7 @@
           "transcription_state",
           "has_waveform",
           "is_shared_individually",
+          "is_favourite",
           "deleted_at",
           "original_filename",
           "mime",
@@ -332,6 +337,10 @@
           },
           "has_waveform": {
             "title": "Has Waveform",
+            "type": "boolean"
+          },
+          "is_favourite": {
+            "title": "Is Favourite",
             "type": "boolean"
           },
           "is_shared_individually": {
@@ -437,6 +446,7 @@
           "transcription_state",
           "has_waveform",
           "is_shared_individually",
+          "is_favourite",
           "deleted_at"
         ],
         "title": "AudioSummary",
@@ -3063,6 +3073,76 @@
           }
         },
         "summary": "Update Audio",
+        "tags": [
+          "recordings"
+        ]
+      }
+    },
+    "/api/audio/{audio_uuid}/favourite": {
+      "delete": {
+        "description": "Take the caller's mark off a recording. Not an error when there was none.",
+        "operationId": "unmark_favourite_api_audio__audio_uuid__favourite_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unmark Favourite",
+        "tags": [
+          "recordings"
+        ]
+      },
+      "put": {
+        "description": "Mark a recording as one of the caller's favourites. Reading it is enough.\n\n``PUT`` and ``DELETE`` rather than a toggle: both are idempotent, so a retry or a double click\nrepeats what was meant instead of undoing it.",
+        "operationId": "mark_favourite_api_audio__audio_uuid__favourite_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "audio_uuid",
+            "required": true,
+            "schema": {
+              "title": "Audio Uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark Favourite",
         "tags": [
           "recordings"
         ]

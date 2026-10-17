@@ -71,6 +71,7 @@ setting a cookie the browser will discard.
 | `POST /api/audio/{audio_uuid}/transcribe` | Ask for one; `GET …/transcription` is what is happening to it; `…/transcribe/cancel` gives up |
 | `GET /api/audio/{audio_uuid}/transcript` | The active transcript as timed segments. `…/transcripts` lists every version, and one is made active with `…/transcripts/{id}/activate` |
 | `GET /api/audio/{audio_uuid}/original` | The original file, byte for byte, exactly as it was ingested |
+| `PUT /api/audio/{audio_uuid}/favourite` | Mark a recording as one of your favourites; `DELETE` takes the mark off. Both are safe to repeat, and every recording says whether you have marked it, as `is_favourite` — nobody else's marks are ever told |
 | `GET /api/events` | `text/event-stream`: what changed, as it changes, rather than polling |
 
 **Playback is the one endpoint shaped by the browser rather than by the API.**

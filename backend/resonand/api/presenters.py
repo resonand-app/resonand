@@ -35,9 +35,9 @@ from resonand.api.schemas import (
 from resonand.core.colours import Colour
 from resonand.core.levels import DESCRIPTIONS, Level
 from resonand.core.states import TranscriptionState
+from resonand.db import favourites, transcripts
 from resonand.db import libraries as library_repo
 from resonand.db import tags as tag_repo
-from resonand.db import transcripts
 from resonand.db.models import (
     Audio,
     Category,
@@ -208,17 +208,19 @@ def category_summary(category: Category) -> CategorySummary:
     return CategorySummary.model_validate(category)
 
 
-def audio_summary(
+def audio_summary(  # noqa: PLR0913 -- the page-wide facts, each one optional and each named
     session: DbSession,
+    user_id: int,
     audio: Audio,
     level: Level,
     *,
     tags: Sequence[Tag] | None = None,
     shared: bool | None = None,
+    favourite: bool | None = None,
     library_uuid: str | None = None,
     state: TranscriptionState | None = None,
 ) -> AudioSummary:
-    """A recording as the grid and the list draw it.
+    """A recording as the grid and the list draw it, for the account asking.
 
     Everything after ``level`` can be passed in when the caller has already fetched it for a
     whole page, which is the difference between one query and eighty. ``session.get(Library,
@@ -250,15 +252,20 @@ def audio_summary(
         is_shared_individually=(
             shared if shared is not None else bool(_individually_shared(session, [audio.id]))
         ),
+        is_favourite=(
+            favourite
+            if favourite is not None
+            else bool(favourites.marked_among(session, user_id, [audio.id]))
+        ),
         deleted_at=audio.deleted_at,
     )
 
 
-def audio_detail(session: DbSession, audio: Audio, level: Level) -> AudioDetail:
+def audio_detail(session: DbSession, user_id: int, audio: Audio, level: Level) -> AudioDetail:
     """Everything the detail view shows, including the technical metadata it keeps collapsed."""
     uploader = session.get(User, audio.uploaded_by)
     return AudioDetail.model_validate(
-        audio_summary(session, audio, level).model_dump()
+        audio_summary(session, user_id, audio, level).model_dump()
         | {
             "original_filename": audio.original_filename,
             "mime": audio.mime,
@@ -274,25 +281,30 @@ def audio_detail(session: DbSession, audio: Audio, level: Level) -> AudioDetail:
     )
 
 
-def audio_summaries(session: DbSession, rows: Sequence[tuple[Audio, int]]) -> list[AudioSummary]:
+def audio_summaries(
+    session: DbSession, user_id: int, rows: Sequence[tuple[Audio, int]]
+) -> list[AudioSummary]:
     """Many recordings at once, each thing a card needs fetched once for the whole page.
 
-    Five queries for a page of any size (``REV-3``). What it replaced grew three statements per
+    Six queries for a page of any size (``REV-3``). What it replaced grew three statements per
     card on a fixed floor of six -- 21 for five cards, 81 for twenty-five, 156 for fifty -- which
     is the shape somebody meets as the grid getting slower the more they archive.
     """
     audio_ids = [row[0].id for row in rows]
     tags_by_audio = tag_repo.tags_for_audios(session, audio_ids)
     shared_ids = _individually_shared(session, audio_ids)
+    marked = favourites.marked_among(session, user_id, audio_ids)
     states = transcription_states(session, audio_ids)
     library_uuids = _library_uuids(session, [row[0].library_id for row in rows])
     return [
         audio_summary(
             session,
+            user_id,
             audio,
             Level(level),
             tags=tags_by_audio.get(audio.id, []),
             shared=audio.id in shared_ids,
+            favourite=audio.id in marked,
             library_uuid=library_uuids.get(audio.library_id, ""),
             state=states.get(audio.id, TranscriptionState.NONE),
         )

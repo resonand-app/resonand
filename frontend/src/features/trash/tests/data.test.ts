@@ -40,6 +40,7 @@ function recording(uuid: string, libraryUuid: string, deletedAt: string): Schema
     duration_ms: 60_000,
     has_waveform: true,
     transcription_state: 'none',
+    is_favourite: false,
     is_shared_individually: false,
     level: 40,
     recorded_at: null,
