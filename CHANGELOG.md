@@ -20,6 +20,13 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ## [Unreleased]
 
+### Added
+
+- **An export carries each account's favourites.** Every recording's sidecar names who marked it
+  as a favourite and when, and `resonand import` gives each account its favourites back in the
+  order it marked them, printing any address it has no account for. An export written before
+  this imports as it always has.
+
 ### Changed
 
 - **Only somebody who can manage a library can take a recording out of it.** Moving a recording

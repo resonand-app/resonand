@@ -48,10 +48,10 @@ from resonand.core import colours
 from resonand.core.errors import NotFoundError
 from resonand.core.formats import normalise_extension
 from resonand.core.levels import GRANTABLE, Level
-from resonand.core.time import now_instant
+from resonand.core.time import is_instant, now_instant
 from resonand.db import libraries as libraries_repo
 from resonand.db import search_index, tags, transcripts, users
-from resonand.db.models import Audio, Category, Library, Share, Transcript, User
+from resonand.db.models import Audio, Category, Favourite, Library, Share, Transcript, User
 from resonand.db.transcripts import Origin, SegmentDraft
 from resonand.media import storage
 from resonand.media.subtitles import Cue, to_srt, to_vtt
@@ -132,6 +132,7 @@ def sidecar_for(session: Session, audio: Audio) -> dict[str, Any]:
         "category": category.name if category else None,
         "tags": [tag.name for tag in tags.tags_for_audio(session, audio.id)],
         "shares": _shares_on(session, audio_id=audio.id),
+        "favourited_by": _favourites_on(session, audio_id=audio.id),
         "original_filename": audio.original_filename,
         "sha256": audio.sha256,
         "size_bytes": audio.size_bytes,
@@ -235,11 +236,16 @@ def read_sidecar(path: Path) -> dict[str, Any]:
     return payload
 
 
-def apply_sidecar(session: Session, audio: Audio, payload: dict[str, Any]) -> None:
+def apply_sidecar(
+    session: Session, audio: Audio, payload: dict[str, Any], *, missing: list[str] | None = None
+) -> None:
     """Put a sidecar's metadata onto a recording.
 
     Used by both halves of the round trip: importing a new recording, and updating one that is
     already here because the sidecar carried its ``uuid``.
+
+    A favourite whose address has no account here is skipped, and the address is added to
+    ``missing`` for the caller to name. No account is ever made for it.
     """
     audio.title = str(payload.get("title") or audio.title)
     audio.notes = payload.get("notes") or None
@@ -255,6 +261,7 @@ def apply_sidecar(session: Session, audio: Audio, payload: dict[str, Any]) -> No
     if payload.get("tags"):
         tags.set_audio_tags(session, audio.id, [str(name) for name in payload["tags"]])
     _grant_all(session, payload.get("shares"), library_id=None, audio_id=audio.id)
+    _mark_all(session, payload.get("favourited_by"), audio_id=audio.id, missing=missing)
     transcript = payload.get("transcript")
     if isinstance(transcript, dict) and transcript.get("segments"):
         _apply_transcript(session, audio, transcript)
@@ -538,6 +545,56 @@ def _grant(
         )
     )
     session.flush()
+
+
+def _favourites_on(session: Session, *, audio_id: int) -> list[dict[str, str]]:
+    """Who marked a recording as a favourite, and when, oldest first (``ING-15``).
+
+    Every row, a hidden one included: losing access keeps the mark so that the same grant given
+    back returns it (``DAT-11``), and an export that left it out would break that on the far side.
+    """
+    return [
+        {"email": account.email, "at": favourite.created_at}
+        for favourite, account in session.execute(
+            select(Favourite, User)
+            .join(User, Favourite.user_id == User.id)
+            .where(Favourite.audio_id == audio_id)
+            .order_by(Favourite.created_at, User.email)
+        ).all()
+    ]
+
+
+def _mark_all(
+    session: Session, described: object, *, audio_id: int, missing: list[str] | None = None
+) -> None:
+    """Put back the favourites an export described, skipping the ones with nobody to mark them.
+
+    A mark already here keeps the instant it has, as marking twice does. One whose ``at`` is not
+    an instant is marked now: the mark is what nobody should have to make twice, and only its
+    place in the order is lost.
+    """
+    if not isinstance(described, list):
+        return
+    for entry in described:
+        if not isinstance(entry, dict):
+            continue
+        address = str(entry.get("email") or "")
+        account = users.find_by_email(session, address) if address else None
+        if account is None:
+            if address and missing is not None:
+                missing.append(address)
+            continue
+        if session.get(Favourite, (account.id, audio_id)) is not None:
+            continue
+        at = entry.get("at")
+        session.add(
+            Favourite(
+                user_id=account.id,
+                audio_id=audio_id,
+                created_at=at if isinstance(at, str) and is_instant(at) else now_instant(),
+            )
+        )
+        session.flush()
 
 
 def _apply_transcript(session: Session, audio: Audio, payload: dict[str, Any]) -> None:
