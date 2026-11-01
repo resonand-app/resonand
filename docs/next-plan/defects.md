@@ -73,3 +73,34 @@ minted in. The bar is the same as there — a defect gets a number when it is wo
       in one commit and nothing renders them again — the heading is there and, on the old code, no
       line is. The criterion above names the ordering that was suspected; the test reproduces the
       one that was found.*
+
+- [x] **BUG-5** · **An import onto a recording in the trash updates it there and reports
+      "updated".** Raised as #68. A tool writes sidecars carrying each recording's `uuid` and runs
+      `resonand import` per file; recordings trashed in the interface that morning came back
+      `Imported 0 recordings, updated 1.` and were nowhere in their library. `find_by_uuid` looks
+      in the trash on purpose, and the update applied the sidecar there without a word: new title
+      and transcript, still trashed, and still counting down to the retention purge — which would
+      then take the import's work with it. A recording whose library is in the trash had the same
+      fault through a different door, though new recordings were already refused a trashed
+      library for exactly that reason.
+
+      Restoring by default was rejected. The two mistakes do not cost the same: one left in the
+      trash with a warning is a click away from coming back for the whole retention period, thirty
+      days by default, and one restored that should not have been comes back silently — to everybody
+      its library is shared with, and possibly after being trashed for a reason. The import is also,
+      in the report itself, a script that re-runs over an inbox, so restoring would undo whatever
+      was trashed in the interface since the last run. An export makes it sharper: it never carries
+      a trashed recording, so a sidecar naming one predates the trashing and restoring it would let
+      the older decision overrule the newer. Restoring is therefore asked for, with `--restore`, and
+      a library is never restored by an import, because that would bring back everything in it.
+
+      The exit status is unchanged. A non-zero one would be the louder signal, and it would also
+      break exactly the per-file loop this was reported from; `import --json`, which would let a
+      script tell properly, is a feature of its own and not part of this.
+
+      *Done when:* an import that updates a recording in the trash, or in a trashed library, names
+      it on stderr, counts it in the summary as still in the trash, and leaves it there; with
+      `--restore` it takes the recording out and puts it back in the search index, and a trashed
+      library stays trashed; `--dry-run` says which of these would happen; and the summary line
+      is unchanged when nothing was in the trash. 🧪 *`tests/cli/test_import_command.py`, one test
+      per case, the trashed ones failing on the code that reported "updated".*

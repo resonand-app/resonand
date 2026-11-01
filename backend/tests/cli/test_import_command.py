@@ -23,8 +23,10 @@ from resonand.cli.main import app
 from resonand.core.config import reset_settings_cache
 from resonand.db import libraries, tags, users
 from resonand.db.audio import create_audio
-from resonand.db.models import Audio
+from resonand.db.models import Audio, Library
 from resonand.media import storage
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 from typer.testing import CliRunner
 
 if TYPE_CHECKING:
@@ -160,6 +162,124 @@ def test_a_dry_run_says_when_it_would_skip(instance: Instance, tmp_path: Path) -
     assert "would skip" in result.output
 
 
+# --- A recording that is in the trash (BUG-5) --------------------------------
+
+
+def retitle(instance: Instance, title: str) -> None:
+    """Change the title the exported sidecar carries, so a re-import has something to apply."""
+    sidecar = instance.export / instance.uuid / "resonand.json"
+    payload = json.loads(sidecar.read_text(encoding="utf-8"))
+    payload["title"] = title
+    sidecar.write_text(json.dumps(payload), encoding="utf-8")
+
+
+def trash(database: Database, uuid: str, *, library_too: bool = False) -> None:
+    with database.write_session() as session:
+        audio = find_by_uuid(session, uuid)
+        assert audio is not None
+        audio.deleted_at = "2026-10-31T09:00:00Z"
+        if library_too:
+            library = session.get(Library, audio.library_id)
+            assert library is not None
+            library.deleted_at = "2026-10-31T09:00:00Z"
+
+
+def indexed(session: Session, audio: Audio) -> bool:
+    found = session.execute(
+        text("SELECT rowid FROM audio_fts WHERE rowid = :id"), {"id": audio.id}
+    ).first()
+    return found is not None
+
+
+def test_an_update_onto_a_live_recording_reads_as_it_always_has(
+    instance: Instance, database: Database
+) -> None:
+    """Scripts read this line, so a recording nobody trashed must not change it."""
+    retitle(instance, "Renamed")
+
+    result = runner.invoke(app, ["import", str(instance.export)])
+
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[-1] == "Imported 0 recordings, updated 1."
+
+
+def test_an_update_onto_a_trashed_recording_leaves_it_there_and_says_so(
+    instance: Instance, database: Database
+) -> None:
+    """Counted as a plain update, it read as success while the recording stayed out of sight
+    and went on counting down to its purge."""
+    trash(database, instance.uuid)
+    retitle(instance, "Renamed")
+
+    result = runner.invoke(app, ["import", str(instance.export)])
+
+    assert result.exit_code == 0, result.output
+    assert "which is in the trash: pass --restore" in result.output
+    assert "updated 1 (1 still in the trash)." in result.output
+    with database.read_session() as session:
+        audio = find_by_uuid(session, instance.uuid)
+        assert audio is not None
+        assert audio.title == "Renamed"
+        assert audio.deleted_at is not None, "trashing it was a decision the import did not see"
+        assert not indexed(session, audio)
+
+
+def test_restore_takes_a_trashed_recording_back_out(instance: Instance, database: Database) -> None:
+    trash(database, instance.uuid)
+    retitle(instance, "Renamed")
+
+    result = runner.invoke(app, ["import", str(instance.export), "--restore"])
+
+    assert result.exit_code == 0, result.output
+    assert "updated 1 (1 taken out of the trash)." in result.output
+    with database.read_session() as session:
+        audio = find_by_uuid(session, instance.uuid)
+        assert audio is not None
+        assert (audio.title, audio.deleted_at) == ("Renamed", None)
+        assert indexed(session, audio), "a restored recording is found by search again"
+
+
+def test_restore_does_not_bring_back_a_trashed_library(
+    instance: Instance, database: Database
+) -> None:
+    """Restoring the library would bring back everything in it, which is not what one file asks."""
+    trash(database, instance.uuid, library_too=True)
+
+    result = runner.invoke(app, ["import", str(instance.export), "--restore"])
+
+    assert result.exit_code == 0, result.output
+    assert "its library Family is in the trash" in result.output
+    assert "updated 1 (1 still in the trash)." in result.output
+    with database.read_session() as session:
+        audio = find_by_uuid(session, instance.uuid)
+        assert audio is not None
+        library = session.get(Library, audio.library_id)
+        assert library is not None
+        assert library.deleted_at is not None
+
+
+@pytest.mark.parametrize(
+    ("flags", "verdict"),
+    [
+        ([], "would update (in the trash)"),
+        (["--restore"], "would update and take out of the trash"),
+    ],
+)
+def test_a_dry_run_says_when_the_recording_is_in_the_trash(
+    instance: Instance, database: Database, flags: list[str], verdict: str
+) -> None:
+    trash(database, instance.uuid)
+
+    result = runner.invoke(app, ["import", str(instance.export), "--dry-run", *flags])
+
+    assert result.exit_code == 0, result.output
+    assert f"{verdict}: " in result.output
+    with database.read_session() as session:
+        audio = find_by_uuid(session, instance.uuid)
+        assert audio is not None
+        assert audio.deleted_at is not None
+
+
 # --- When there is no manifest to read --------------------------------------
 
 
@@ -279,8 +399,6 @@ def test_a_sidecar_suffixed_with_the_old_name_is_still_found(
 
 
 def libraries_of(session: object, audio: Audio) -> str:
-    from resonand.db.models import Library  # noqa: PLC0415 -- one assertion needs the name
-
     library = session.get(Library, audio.library_id)  # type: ignore[attr-defined]
     assert library is not None
     return str(library.name)
