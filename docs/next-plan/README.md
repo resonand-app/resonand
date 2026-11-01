@@ -35,7 +35,7 @@ first version, which shipped as `0.1.0` on 2026-09-23.
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
 | [`data.md`](data.md) | `DAT` | The schema and who may do what, after the first version, where favourites are introduced, and how long a name can be |
 | [`api.md`](api.md) | `API` | Endpoints the first version did not have: marking a favourite, the listing across libraries, and emptying the trash |
-| [`interface.md`](interface.md) | `UI` | Views the first version did not build: the heart, the favourites view, and fields that know a name's limit |
+| [`interface.md`](interface.md) | `UI` | Views the first version did not build: the heart, the favourites view, fields that know a name's limit, and toasts that say what happened |
 | [`integration.md`](integration.md) | `INT` | Work across tracks: confirming a permanent deletion, and emptying the trash |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
 | [`defects.md`](defects.md) | `BUG` | Faults found by using the archive since it shipped |

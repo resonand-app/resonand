@@ -153,3 +153,84 @@ The limits are decided in [`data.md`](data.md), beside `DAT-12`.
 
       *Done when:* no field in the interface accepts a name the API would refuse for its length,
       and no view draws a name at either limit outside its container.
+
+## Saying what happened, and then getting out of the way
+
+The bulk bar reports a run with `BulkReport`, a `StateCard` drawn between the bar and the grid that
+stays until somebody presses *Dismiss*. A run where everything succeeded therefore leaves a card
+over the grid for good news nobody has to act on, and the next run cannot start without first
+clearing the last one's report out of the way. This is not what the first version designed:
+`BulkBar`'s own docstring, `UI-9c`'s dependency on `UI-34h` and `UI-35f`, and the second example in
+`Toast.prompt.md` — "9 moved, 3 failed. The three that failed are still selected." — all describe a
+toast. The card is where the build drifted from the plan.
+
+The toast host exists since `FBK-1`, but only a failed write raises one. Nothing raises a success,
+so a recording sent to the trash from its own page, a recording moved, or a library sent to the
+trash ends in silence: the dialog closes and the screen changes, and whether that was the action
+working is left to be inferred.
+
+**A toast that carries a button stays longer.** It is the region's own rule — "an action nobody had
+time to read is an action nobody was offered" — applied to success as well as to failure: a plain
+success goes after the region's six seconds, a success with an action after twelve, and a failure
+with an action stays until it is dismissed. Every timer **pauses while the pointer or the focus is
+inside its toast**, so reaching for *Undo* never races the clock.
+
+**Undo is offered only where it is an exact inverse.** Sending to the trash is undone by restoring,
+which puts back everything the deletion took. Moving is not offered one: a move drops the
+recording's category, and moving it back would not bring the category with it — an *Undo* that
+undoes part of something is a promise the button cannot keep.
+
+No copy for any of this exists in `docs/internal/`. The strings are drafted in the tasks against
+the design system's content rules — a number where there is one, no exclamation mark — and reviewed
+as copy in their pull requests.
+
+- [ ] **UI-46** · 🧪 **A bulk run reports itself in a toast.** The toast store's `RaisedToast` gains
+      one optional action, a label and what to call, and `Toast` draws it for either tone; pressing
+      it takes the toast away and runs. `ToastRegion`'s timer pauses on hover and on focus within.
+      The timeouts are the section's: six seconds plain, twelve with an action, and a failure with
+      an action stays.
+
+      `BulkReport` goes, and `useBulk` raises the toast where the run ends, so that every view
+      holding a bulk bar reports the same way without rendering anything. All succeeded is a `done`
+      toast in the words the card used. Some failed is a `failed` toast saying how many of each,
+      the grouped reasons, and that the failures are still selected, with *Retry N* acting on
+      exactly those. A trash run that moved anything carries *Undo*, which restores what it moved
+      through the same run and reports itself the same way.
+
+      *Cost, named:* the favourites stack (#51, #58, #59) renders `<BulkReport>` in the view it
+      adds, so whichever of the two lands second deletes that line when it is rebased.
+
+      🧪 A run that succeeds raises one `done` toast and draws no card; a run where a third fail
+      raises one `failed` toast with *Retry N*, leaves those selected, and its retry runs on them
+      alone; *Undo* after a trash restores what went; a toast with an action outlives a plain one;
+      a timer does not fire while the toast is hovered or focused. Exercised in a browser.
+      ⇢ UI-9c, UI-34h, UI-35f, FBK-1
+
+      *Done when:* no bulk run leaves anything on the screen that has to be dismissed unless
+      something failed, and a person who looked away sees the result in the same place every time.
+
+- [ ] **UI-47** · 🧪 **Acting on one thing says it worked.** A recording sent to the trash from its
+      page raises "*title* sent to the trash" with *Undo*, on the library it goes back to; *Undo*
+      restores it and says so. A recording moved raises "Moved to *library*", with no *Undo*, for
+      the section's reason. A library sent to the trash, from its card or from its settings, raises
+      "*name* sent to the trash" with *Undo*, which restores the library. A failure of any of
+      these, *Undo* included, raises the API's own `detail`, as `FBK-1` does for a failed mutation.
+
+      🧪 Each of the three raises its toast once; *Undo* after a recording's trash and after a
+      library's restores it and refreshes the views that lost it; a refused restore says so.
+      Exercised in a browser. ⇢ UI-46
+
+      *Done when:* none of the three ends in silence, and the two that can be undone can be undone
+      from where somebody lands.
+
+- [ ] **UI-48** · 🧪 **Restoring from the trash says where it went.** Restoring a recording or a
+      library from V9 removes its row and says nothing else. It raises a `done` toast naming the
+      library it went back to, or the library itself, and a library restored with its recordings
+      says how many. Not *Undo*: the way back is the trash it just left, one click away in the
+      sidebar. Scoped after `INT-8`, which rewrites the trash view's rows and data and already
+      raises a toast for what an emptying destroyed — so the two land in one voice.
+
+      🧪 Restoring a recording and a library each raises one toast naming where it went.
+      ⇢ UI-46, INT-8
+
+      *Done when:* nothing leaves the trash without the screen saying where it went.
