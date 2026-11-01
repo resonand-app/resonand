@@ -11,20 +11,21 @@
  * restore the library too -- which is the only answer that leaves somebody where they expected
  * to be.
  *
- * **Restore is one call per item and Delete now is `TypedConfirm`.** The asymmetry is the point.
- * Restoring is free and reversible, so it is a button; destroying is neither, so it costs the
- * name typed out and states what goes in numbers first (`UI-34m`).
+ * **Restore is one call per item and Delete now asks once.** The asymmetry is the point.
+ * Restoring is free and reversible, so it is a button; destroying is neither, so it opens a
+ * dialog that names it, says *permanently* in the title and on the button, and opens with the
+ * focus on Cancel (`DEC-28`). Nothing is typed: reaching this button already took sending the
+ * thing to the trash and opening the trash.
  *
  * **The last day is marked unmistakably**, because it is the only row on this screen where doing
  * nothing is a decision.
  */
 
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 
 import { colourOf } from '@/app/library-data';
-import { Button, Chip, TypedConfirm } from '@/design-system';
-import { total } from '@/i18n/format';
+import { Button, Chip, Dialog, Modal } from '@/design-system';
 import { daysLeft, instant } from '@/i18n/time';
 
 import type { TrashActions, TrashEntry, TrashedLibrary, TrashedRecording } from './data';
@@ -52,7 +53,6 @@ export function TrashRow({ entry, retention, actions }: TrashRowProps) {
           }}
           purge={{
             name: entry.recording.title,
-            consequence: t('destroys.recording'),
             onConfirm: () => {
               actions.purgeRecording.mutate(entry.recording);
             },
@@ -77,10 +77,6 @@ export function TrashRow({ entry, retention, actions }: TrashRowProps) {
         }}
         purge={{
           name: library.name,
-          consequence: t('destroys.library', {
-            count: library.audio_count,
-            duration: total(library.total_duration_ms),
-          }),
           onConfirm: () => {
             actions.purgeLibrary.mutate(library);
           },
@@ -148,7 +144,6 @@ function OrphanedChild({
         }}
         purge={{
           name: recording.title,
-          consequence: t('destroys.recording'),
           onConfirm: () => {
             actions.purgeRecording.mutate(recording);
           },
@@ -189,7 +184,7 @@ interface RowProps {
   deletedAt: string;
   retention: number | undefined;
   onRestore: () => void;
-  purge: { name: string; consequence: string; onConfirm: () => void };
+  purge: { name: string; onConfirm: () => void };
   extra?: React.ReactNode;
 }
 
@@ -317,18 +312,56 @@ function Row({
           {t('deleteNow')}
         </Button>
       </div>
-      <TypedConfirm
+      <Modal
         open={confirming}
-        name={purge.name}
-        consequence={purge.consequence}
-        onCancel={() => {
+        onClose={() => {
           setConfirming(false);
         }}
-        onConfirm={() => {
-          setConfirming(false);
-          purge.onConfirm();
-        }}
-      />
+      >
+        <Dialog
+          title={
+            <Trans
+              t={t}
+              i18nKey="purge.title"
+              values={{ name: purge.name }}
+              components={{
+                name: (
+                  <span style={{ fontWeight: 'var(--weight-regular)', color: 'var(--text-2)' }} />
+                ),
+              }}
+            />
+          }
+          onClose={() => {
+            setConfirming(false);
+          }}
+          labels={{ close: t('common:action.close') }}
+          footer={
+            <>
+              {/* Enter on a dialog opened by habit has to cancel, never destroy. */}
+              <Button
+                variant="ghost"
+                type="button"
+                data-initial-focus=""
+                onClick={() => {
+                  setConfirming(false);
+                }}
+              >
+                {t('common:action.cancel')}
+              </Button>
+              <Button
+                variant="danger"
+                type="button"
+                onClick={() => {
+                  setConfirming(false);
+                  purge.onConfirm();
+                }}
+              >
+                {t('purge.confirm')}
+              </Button>
+            </>
+          }
+        />
+      </Modal>
     </div>
   );
 }

@@ -6,7 +6,7 @@ export interface ModalProps {
   open: boolean;
   /** Asked to close: `Esc`, a pointer on the scrim, or the panel's own close control. */
   onClose: () => void;
-  /** The panel. A `Dialog`, or a `TypedConfirm`. */
+  /** The panel: a `Dialog`. */
   children: ReactNode;
 }
 
@@ -24,9 +24,9 @@ export interface ModalProps {
  * should be trapping a keyboard.
  *
  * Focus lands on the first focusable thing in the panel, which for a `Dialog` is its close
- * control. That is right for a confirm -- `Enter` then means cancel -- and wrong for anything
- * somebody opened in order to type, so a dialog with a field puts `data-initial-focus` on it and
- * gets the caret instead.
+ * control, unless something inside carries `data-initial-focus`. A dialog with a field puts it
+ * there and gets the caret; a permanent deletion puts it on Cancel, so that `Enter` on a dialog
+ * dismissed by habit destroys nothing (`DEC-28`).
  *
  * `Sheet` is the phone's answer to the same problem and does its own placing for the same reason:
  * it is anchored to the bottom of the viewport rather than to a control on the page.

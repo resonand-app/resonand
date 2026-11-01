@@ -9,12 +9,12 @@ continues from it: an identifier is never reused, whichever folder minted it.
 `DEC-28` in [`decisions.md`](decisions.md) replaces the typed name with an ordinary dialog. These
 two tasks apply it: to the deletion that exists, and to the bulk deletion that does not yet.
 
-- [ ] **INT-7** · 🧪 **Delete now asks once, in words, and nothing is typed.** Raised as #69.
+- [x] **INT-7** · 🧪 **Delete now asks once, in words, and nothing is typed.** Raised as #69.
       `TrashRow`'s `TypedConfirm` becomes a `Dialog` inside a `Modal`, as `TrashLibraryDialog`
       already is, for a recording and a library alike. Its copy follows `DEC-28`: a title that says
-      *permanently* and names the item, a description stating the cost in numbers and that it
-      cannot be undone, Cancel and a danger *Delete permanently*, and **the initial focus on
-      Cancel**, through the overlay's existing initial-focus marker. A name wraps inside the title
+      *permanently* and names the item, the name drawn apart from the sentence, no description,
+      Cancel and a danger *Delete permanently*, and **the initial focus on Cancel**, through the
+      overlay's existing initial-focus marker. A name wraps inside the title
       rather than running past the dialog's edge, with `overflow-wrap: anywhere`, and stays whole —
       never clipped, since the title is how somebody checks they pressed the right row. Every
       string lives in `src/i18n/en/`, which `TypedConfirm`'s English, written inside the design
@@ -34,8 +34,8 @@ two tasks apply it: to the deletion that exists, and to the bulk deletion that d
       no longer for the name. ⇢ DEC-28
 
       🧪 Nothing is destroyed until the danger button is pressed; Enter pressed as the dialog
-      opens cancels rather than destroys; Escape cancels; the description carries the numbers for
-      a recording and for a library. Checked in a browser with a 200-character title, with and
+      opens cancels rather than destroys; Escape cancels; the name is drawn apart inside the title,
+      and nothing is said under it. Checked in a browser with a 200-character title, with and
       without spaces, in both themes.
 
       *Done when:* no permanent deletion in the product asks for a name, and nothing imports
@@ -45,9 +45,9 @@ two tasks apply it: to the deletion that exists, and to the bulk deletion that d
       the trash can be selected, as recordings in a library can, and a selection replaces the
       view's header with the `BulkBar`, whose one destructive action is *Delete permanently*. When
       the trash is not empty, its header also offers *Empty trash*. Both open one dialog, under
-      `DEC-28`'s rules: the title counts what goes, the description totals it — from the selection
-      for a part, from `GET /api/trash/summary` for the whole, since the list is paged — and the
-      initial focus is on Cancel.
+      `DEC-28`'s rules: the title counts what goes — from the selection for a part, from
+      `GET /api/trash/summary` for the whole, since the list is paged — and the initial focus is
+      on Cancel.
 
       A library's row selects what it groups, and a recording inside a selected library is counted
       once, as `API-28` counts it. *Empty trash* sends the summary's instant as `trashed_before`,
@@ -58,7 +58,7 @@ two tasks apply it: to the deletion that exists, and to the bulk deletion that d
       Restoring in bulk is not part of this: Restore stays one call per item, which `INT-1c`
       decided and nobody has yet asked to change. ⇢ API-28, INT-7
 
-      🧪 The bulk bar replaces the header at the same height; the dialog's numbers are the
+      🧪 The bulk bar replaces the header at the same height; the dialog's count is the
       selection's, or the summary's when emptying; nothing goes before the danger button; Enter on
       open cancels; a library and one of its recordings, both selected, count once; the list is
       empty after *Empty trash*, and shows the trash's good empty state. Checked in a browser on

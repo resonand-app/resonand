@@ -90,21 +90,27 @@ now* only by being sent to the trash, then by opening the trash, then by pressin
 its row.
 
 **Decided** on 2026-11-01: **a permanent deletion is confirmed in an ordinary dialog, and nothing
-is typed.** What `TypedConfirm` was there to protect is kept, and moved into the dialog's words
-and its focus:
+is typed.** What `TypedConfirm` was there to protect is kept, and moved into the dialog's title,
+its button and its focus:
 
 - The title says *permanently* and names what goes: one recording by its title, or several by
-  their count.
-- The description states the cost in numbers — recordings, duration, transcripts — and that it
-  cannot be undone, which is the promise `UI-34m` was written to keep and the reason "Are you
-  sure?" alone is never enough.
+  their count. **A name is drawn apart from the sentence around it** — regular weight, a quieter
+  colour — so the thing being destroyed reads as the subject and not as more of the question.
+- **There is no description.** The title already says *permanently*, the button says it again,
+  and the row the button sat on already stated what goes with it — "3 recordings go with it" —
+  so a sentence restating the cost and that it cannot be undone was read as a third copy of the
+  same warning rather than as information.
 - The danger button repeats the verb — *Delete permanently* — so the button read last says the
   same as the title read first.
 - **Focus opens on Cancel**, so a dialog dismissed by habit with Enter destroys nothing.
 
-The difference from sending something to the trash is now in what the dialog says rather than in
-what it asks for: one says it can be restored for so many days, the other says it cannot be
-undone.
+The difference from sending something to the trash is now in the word rather than in what the
+dialog asks for: one dialog moves something to the trash and says for how long it can come back,
+the other deletes it *permanently*.
+
+*Amended* on 2026-11-01, while `INT-7` was in review: the first version of this decision kept a
+description stating the cost in numbers and that it could not be undone. Seen in the product it
+repeated the title, so it went, and the name was set apart in the title instead.
 
 *Rejected:* keeping the typed name and fixing how it is shown, which is what #69 offered. It makes
 one deletion easier to read and still asks for twelve retypes, or twelve selections, where twelve
@@ -115,7 +121,8 @@ to read, since the word is the same every time.
 
 **The cost, named:** a confirm without a gesture is easier to pass on autopilot. What stands
 between a click and a loss is the trash itself and the retention window in front of it, the three
-steps above, and the focus on Cancel. The specification in `docs/internal/`, which names typed
+steps above, and the focus on Cancel. And with no description, a library's dialog no longer
+repeats how many recordings go with it: the row says so, and the dialog does not. The specification in `docs/internal/`, which names typed
 confirmation for the trash, is superseded on this point.
 
 **Blocks** `INT-7` and `INT-8` in [`integration.md`](integration.md), which apply it.

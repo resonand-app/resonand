@@ -1,9 +1,9 @@
 /**
  * Whether two tag names are the same tag (`UI-13c`).
  *
- * Its own module for the reason `name-match.ts` and `peaks.ts` are: it is a rule somebody will
- * want to look up, and a rule about which tag a typed word refers to should not be reachable only
- * through the component that happens to ask.
+ * Its own module for the reason `peaks.ts` is: it is a rule somebody will want to look up, and a
+ * rule about which tag a typed word refers to should not be reachable only through the component
+ * that happens to ask.
  */
 
 /**
@@ -14,12 +14,8 @@
  * same tag, and `resolve_tag` will return the one that is there whatever spelling the request
  * carried. **The backend stays the authority** -- this is a display preference, so the chip shows
  * the name the recording is about to have rather than the one somebody typed, and a disagreement
- * corrects itself when the response arrives carrying the tags as stored.
- *
- * Deliberately not `matchesName`, which is accent-*sensitive* on purpose: that one guards a typed
- * confirmation before something is destroyed, where "Album" must not pass for "Álbum". Here being
- * strict would offer to create a second spelling of a tag that already exists, which is the
- * mistake in the other direction.
+ * corrects itself when the response arrives carrying the tags as stored. Being strict here would
+ * offer to create a second spelling of a tag that already exists.
  */
 export function sameTag(typed: string, name: string): boolean {
   const fold = (value: string) =>
