@@ -21,6 +21,7 @@ from resonand.core import colours
 from resonand.core.colours import Colour
 from resonand.core.levels import Level
 from resonand.core.states import TranscriptionState
+from resonand.core.text import LIBRARY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH
 
 _EMAIL_SHAPE = re.compile(r"^[^@\s]+@[^@\s]+$")
 
@@ -229,13 +230,13 @@ class LibrarySummary(Api):
 
 
 class CreateLibrary(Api):
-    name: str = Field(min_length=1, max_length=200)
+    name: str = Field(min_length=1, max_length=LIBRARY_NAME_MAX_LENGTH)
     description: str | None = None
     colour: Colour = colours.DEFAULT
 
 
 class UpdateLibrary(Api):
-    name: str | None = Field(default=None, min_length=1, max_length=200)
+    name: str | None = Field(default=None, min_length=1, max_length=LIBRARY_NAME_MAX_LENGTH)
     description: str | None = None
     colour: Colour | None = None
 
@@ -344,7 +345,7 @@ class AudioDetail(AudioSummary):
 
 
 class UpdateAudio(Api):
-    title: str | None = Field(default=None, min_length=1, max_length=500)
+    title: str | None = Field(default=None, min_length=1, max_length=TITLE_MAX_LENGTH)
     notes: str | None = None
     recorded_at: str | None = None
     recorded_at_offset: int | None = None

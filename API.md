@@ -56,6 +56,11 @@ setting a cookie the browser will discard.
   `request_id` in a bug report — it is the one thing that finds the request again in the logs.
 - **Lists are pages**: `{ "items": [...], "limit": …, "offset": …, "total": … }`, with `limit` and
   `offset` as query parameters. `total` is the whole count, not the page's.
+- **A name has a ceiling.** A recording's `title` is at most 200 characters and a library's
+  `name` at most 100, counted in Unicode code points. A longer one sent to `PATCH` or to create a
+  library is refused with `422`. A title the archive takes from a filename on upload, or from a
+  sidecar on `resonand import`, is shortened at a word instead, and the whole filename stays in
+  `original_filename`.
 - **No CORS headers are sent**, deliberately — the interface is served from the same origin as the
   API, so nothing needs them. A browser application on another origin cannot call this instance;
   a server-side client can, and that is the supported shape.

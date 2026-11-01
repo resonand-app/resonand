@@ -108,6 +108,22 @@ def test_creating_and_renaming_a_library(client: TestClient, accounts: dict[str,
     assert renamed.json()["name"] == "Field interviews"
 
 
+def test_a_library_name_over_the_limit_is_refused_when_typed(
+    client: TestClient, accounts: dict[str, int]
+) -> None:
+    """DAT-12: a name somebody typed is refused, not shortened behind their back."""
+    sign_in(client, "admin")
+    refused = client.post("/libraries", json={"name": "n" * 101})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    made = client.post("/libraries", json={"name": "n" * 100})
+    assert made.status_code == status.HTTP_201_CREATED, made.text
+    uuid = made.json()["uuid"]
+    refused = client.patch(f"/libraries/{uuid}", json={"name": "m" * 101})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    renamed = client.patch(f"/libraries/{uuid}", json={"name": "m" * 100})
+    assert renamed.json()["name"] == "m" * 100
+
+
 def test_a_library_colour_is_chosen_and_can_be_changed(
     client: TestClient, accounts: dict[str, int]
 ) -> None:
@@ -255,6 +271,17 @@ def test_a_recording_carries_its_four_state_transcription_status(
     sign_in(client, "admin")
     listed = client.get("/audio").json()
     assert listed["items"][0]["transcription_state"] == "none"
+
+
+def test_a_title_over_the_limit_is_refused_when_typed(
+    client: TestClient, database: Database, accounts: dict[str, int], owner_library: str
+) -> None:
+    uuid = _recording(database, owner_library, accounts["admin"])
+    sign_in(client, "admin")
+    refused = client.patch(f"/audio/{uuid}", json={"title": "t" * 201})
+    assert refused.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+    saved = client.patch(f"/audio/{uuid}", json={"title": "t" * 200})
+    assert saved.json()["title"] == "t" * 200
 
 
 def test_a_recording_keeps_its_own_reading_of_the_clock(

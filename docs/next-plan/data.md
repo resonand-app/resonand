@@ -104,7 +104,7 @@ names on arrival. A library name is a label somebody types and reads in a sideba
 than any of them needs. Characters are code points, which is what pydantic's `max_length` and
 Python's `len` count.
 
-- [ ] **DAT-12** · 🧪 **A name has one ceiling, on every path that writes it.** The two limits are
+- [x] **DAT-12** · 🧪 **A name has one ceiling, on every path that writes it.** The two limits are
       constants in `core/`, and every writer reads them: `UpdateAudio.title` and the library
       create and update schemas in `api/schemas.py`, the upload through `clean_title`, and the
       import in `archive.py`, which sets a title from a sidecar with no check today.
@@ -120,9 +120,10 @@ Python's `len` count.
 
       **A migration shortens what is already there**, by the same rule, so an archive upgraded
       from `0.1.0` holds no row over either limit. Recordings in the trash included, since they
-      can be restored. It updates `audio.title` through SQL, so the triggers that keep the search
-      index in step with titles fire as they would for an edit, and it logs how many rows of each
-      kind it shortened, which is the number an operator would ask for.
+      can be restored. `audio_fts` is written by `db/search_index.py` and not by triggers, so the
+      migration rewrites the index row of every title it shortens itself, or a search would go on
+      finding words the title no longer has. It logs how many rows of each kind it shortened,
+      which is the number an operator would ask for.
 
       `CHANGELOG.md` says it under *Changed*, in plain words: titles longer than 200 characters
       and library names longer than 100 were shortened at a word on upgrade, the full filename is
