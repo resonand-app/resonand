@@ -15,10 +15,9 @@
  *
  * **Trashing it is the last thing on the screen, and it is not permanent** (`UI-17f`). Deletion is
  * a `deleted_at` and never a cascade: nothing inside is touched, which is what makes restoring it
- * one line. So the confirm is an ordinary dialog with a danger button rather than `TypedConfirm` --
- * that gesture means "this cannot be undone", and spending it on something recoverable is how it
- * stops meaning anything the day it is needed. What the confirm owes is the count and the window:
- * how many recordings go with it, and for how long it can come back.
+ * one line. So the confirm says so: what it owes is the count and the window, how many recordings
+ * go with it and for how long it can come back -- where deleting from the trash says it cannot be
+ * undone (`DEC-28`).
  *
  * **A library you can only edit is not a settings screen, and the route says so.** Level 30 is
  * what this needs, and below it the screen is one card and a way back rather than a form whose

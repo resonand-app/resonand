@@ -2,7 +2,8 @@
  * V9 · Trash, as a screen (`INT-1a`, `INT-1c`, `INT-1d`, §V9).
  *
  * The states are the work here, not the happy path: the empty case is the **good** case, the last
- * day has to be unmistakable, and permanent deletion has to cost the name typed out.
+ * day has to be unmistakable, and permanent deletion has to name what goes and open on Cancel
+ * (`DEC-28`).
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -127,36 +128,70 @@ describe('restoring', () => {
 });
 
 describe('deleting now', () => {
-  it('states what is destroyed in numbers, and will not fire before the name is typed', async () => {
+  async function open(name: string) {
+    await userEvent.click(
+      await screen.findByRole('button', { name: `Delete ${name} permanently` }),
+    );
+    return screen.findByRole('dialog', { name: `Delete ${name} permanently?` });
+  }
+
+  it('names a library apart from the sentence around it, and asks for nothing to be typed', async () => {
     trashLibrary(RECORDINGS, daysAgo(3));
     show();
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Delete Field recordings permanently' }),
-    );
-    const confirm = await screen.findByRole('dialog');
-    expect(within(confirm).getByText(/3 recordings, 2 h 04 min of audio/)).toBeVisible();
-    const action = within(confirm).getByRole('button', { name: /Delete/ });
-    expect(action).toBeDisabled();
-    await userEvent.type(within(confirm).getByRole('textbox'), 'Field recordings');
-    expect(action).toBeEnabled();
-    await userEvent.click(action);
+    const confirm = await open('Field recordings');
+    const title = within(confirm).getByRole('heading', {
+      name: 'Delete Field recordings permanently?',
+    });
+    expect(within(title).getByText('Field recordings')).not.toBe(title);
+    expect(within(confirm).queryByRole('textbox')).toBeNull();
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
     await waitFor(() => {
       expect(archive.libraries.some((one) => one.uuid === RECORDINGS)).toBe(false);
     });
   });
 
-  it('destroys a recording once its own title has been typed', async () => {
+  it('says nothing under the title but the buttons', async () => {
     trashRecording(CASSETTE, daysAgo(3));
     show();
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Delete Digitised cassette permanently' }),
-    );
-    const confirm = await screen.findByRole('dialog');
-    await userEvent.type(within(confirm).getByRole('textbox'), 'Digitised cassette');
-    await userEvent.click(within(confirm).getByRole('button', { name: /Delete/ }));
+    const confirm = await open('Digitised cassette');
+    expect(confirm.querySelector('p')).toBeNull();
+    expect(within(confirm).queryByText(/destroys|cannot be undone/)).toBeNull();
+  });
+
+  it('destroys nothing until the danger button is pressed', async () => {
+    trashRecording(CASSETTE, daysAgo(3));
+    show();
+    const confirm = await open('Digitised cassette');
+    expect(archive.recordings.some((one) => one.uuid === CASSETTE)).toBe(true);
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
     await waitFor(() => {
       expect(archive.recordings.some((one) => one.uuid === CASSETTE)).toBe(false);
     });
+  });
+
+  it('opens on Cancel, so Enter pressed by habit cancels', async () => {
+    trashRecording(CASSETTE, daysAgo(3));
+    show();
+    const confirm = await open('Digitised cassette');
+    await waitFor(() => {
+      expect(within(confirm).getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    });
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+    expect(archive.recordings.some((one) => one.uuid === CASSETTE)).toBe(true);
+  });
+
+  it('cancels on Escape', async () => {
+    trashRecording(CASSETTE, daysAgo(3));
+    show();
+    await open('Digitised cassette');
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+    expect(archive.recordings.some((one) => one.uuid === CASSETTE)).toBe(true);
   });
 });
 

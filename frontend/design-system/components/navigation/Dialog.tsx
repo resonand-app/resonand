@@ -1,9 +1,11 @@
+import { useId } from 'react';
 import type { HTMLAttributes, ReactNode } from 'react';
 
 import { Icon } from '../foundation/Icon';
 
-export interface DialogProps extends HTMLAttributes<HTMLDivElement> {
-  title: string;
+export interface DialogProps extends Omit<HTMLAttributes<HTMLDivElement>, 'title'> {
+  /** A node, so that part of it can be drawn apart: the name a permanent deletion is about. */
+  title: ReactNode;
   /** One line of consequence, especially for destructive confirms. */
   description?: string;
   /** Panel width in px. 420 default; 520 for share. */
@@ -53,6 +55,7 @@ export function Dialog({
   style,
   ...rest
 }: DialogProps) {
+  const titleId = useId();
   return (
     <div
       style={{
@@ -68,13 +71,14 @@ export function Dialog({
       }}
       role="dialog"
       aria-modal
-      aria-label={title}
+      aria-labelledby={titleId}
       data-ds="dialog"
       {...rest}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
           <h2
+            id={titleId}
             style={{
               margin: 0,
               fontFamily: 'var(--font-sans)',

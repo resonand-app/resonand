@@ -4,7 +4,7 @@
  * `Modal` supplies the modality -- the scrim, the trap, `Esc` -- and none of that reaches a screen
  * reader's browse mode, which walks the document rather than following focus. `aria-modal` is the
  * one statement that does, and it belongs on the element carrying `role="dialog"`, which is this.
- * `Sheet` and `TypedConfirm` have said it since they were written; this had not.
+ * `Sheet` has said it since it was written.
  */
 
 import { render, screen } from '@testing-library/react';
@@ -20,9 +20,9 @@ describe('Dialog', () => {
     expect(dialog).toHaveAttribute('aria-modal', 'true');
   });
 
-  it('says the same thing the other two panels say', () => {
-    // The point of the fix: three panels, one statement. A reader meeting any of them is told the
-    // rest of the page is not available, and is told it the same way.
+  it('says the same thing the sheet says', () => {
+    // Two panels, one statement: a reader meeting either is told the rest of the page is not
+    // available, and is told it the same way.
     render(<Dialog title="Move" />);
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
   });

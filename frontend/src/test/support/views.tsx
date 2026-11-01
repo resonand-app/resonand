@@ -439,7 +439,7 @@ export const STATES: readonly StateUnderTest[] = [
     prepare: fillTheTrash,
     settled: 'Digitised cassette',
     raise: (user) => press(user, 'Delete Digitised cassette permanently'),
-    reached: 'Delete Digitised cassette permanently',
+    reached: 'Delete permanently',
   },
   {
     name: 'V10 - Sessions',

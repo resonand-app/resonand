@@ -72,8 +72,8 @@ function harness(): string {
 /**
  * Every module that draws an overlay, by its path relative to `src/`.
  *
- * `Modal` and `TypedConfirm` are the two primitives the system has for putting something over
- * the page, so a module that mounts one is a surface somebody can be looking at -- and the file
+ * `Modal` is the primitive the system has for putting something over the page, so a module that
+ * mounts one is a surface somebody can be looking at -- and the file
  * that mounts it is the one worth naming, not the several that raise it. `UploadDialog` is
  * raised twice by the shell, once for each of the two layouts, and it is one thing to audit.
  *
@@ -87,9 +87,7 @@ function overlaysOnDisk(): string[] {
       (path) =>
         !path.includes('.test.') && !path.startsWith('dev/') && !path.split('/').includes('tests'),
     )
-    .filter((path) =>
-      /<(Modal|TypedConfirm)[\s>]/.test(readFileSync(resolve(SOURCE, path), 'utf8')),
-    )
+    .filter((path) => /<Modal[\s>]/.test(readFileSync(resolve(SOURCE, path), 'utf8')))
     .sort();
 }
 

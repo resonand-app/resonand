@@ -20,11 +20,9 @@
   "restoreNamed": "Restore {{name}}",
   "deleteNow": "Delete now",
   "deleteNamed": "Delete {{name}} permanently",
-  "destroys": {
-    "recording": "this recording, its original audio and its transcript",
-    "library_zero": "this library and everything in it",
-    "library_one": "{{count}} recording, {{duration}} of audio, and their transcripts",
-    "library_other": "{{count}} recordings, {{duration}} of audio, and their transcripts"
+  "purge": {
+    "title": "Delete <name>{{name}}</name> permanently?",
+    "confirm": "Delete permanently"
   },
   "empty": {
     "title": "Nothing is waiting to be deleted",

@@ -39,6 +39,9 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
   at the last word that fits, recordings in the trash included; the full filename is still on the
   recording, under its technical details. From now on a longer name is refused when it is typed,
   and one that comes from a filename or an imported sidecar is shortened the same way.
+- **Deleting from the trash asks for a confirmation, and no longer for the name.** *Delete now*
+  opens a dialog that names what goes and says it goes permanently; nothing has to be typed. It
+  opens with the focus on *Cancel*, so pressing Enter as it appears destroys nothing.
 - **The browser tab shows the whole mark.** The favicon was the S on its own, which read as a
   stray letter rather than as Resonand; it is now the full mark, arcs included.
 

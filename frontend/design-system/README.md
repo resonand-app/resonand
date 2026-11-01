@@ -107,7 +107,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `components/foundation/` | `Icon` `Logo` |
 | `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` `Switch` `Checkbox` `Progress` |
 | `components/media/` | `Waveform` `PlayerBar` `TranscriptLine` |
-| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` `LevelSelector` `InlineField` `TypedConfirm` `EgressNotice` `AvatarStack` `KeyValueList` |
+| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` `LevelSelector` `InlineField` `EgressNotice` `AvatarStack` `KeyValueList` |
 | `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Breadcrumb` `Dialog` `Menu` `Tabs` `Sheet` `Toast` `ToastRegion` `Tooltip` |
 | `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |
@@ -119,7 +119,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 
 Component inventory note: no source defined a component list, so the first twenty-one were an authored set sized to the brief. There were no speculative primitives, and there still are none — everything added since was named by a view that needed it.
 
-**The specification's thirteen are built** (`UI-34`). `Select`, `Menu`, `Tabs`, `Switch`, `Checkbox`, `Sheet`, `Toast`, `Progress` and `Tooltip` are the nine primitives; `LevelSelector`, `InlineField`, `TypedConfirm` and `EgressNotice` are the four compositions. They extend this folder in place — same two files per component, same family folders, same rules — because there is one system and it is versioned with the code.
+**The specification's twelve are built** (`UI-34`). `Select`, `Menu`, `Tabs`, `Switch`, `Checkbox`, `Sheet`, `Toast`, `Progress` and `Tooltip` are the nine primitives; `LevelSelector`, `InlineField` and `EgressNotice` are the three compositions. They extend this folder in place — same two files per component, same family folders, same rules — because there is one system and it is versioned with the code.
 
 Underneath five of them is `components/overlay/useAnchoredOverlay` (`UI-34a`), which settles placement, focus trapping, `Esc`, the outside click and the scroll lock once. It is **not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay.
 

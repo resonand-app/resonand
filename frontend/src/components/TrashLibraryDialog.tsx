@@ -3,10 +3,9 @@
  *
  * **Recoverable, and the confirm says so.** Deletion here is a `deleted_at` on one row: the ACL
  * stops resolving the library and not a single recording is touched, which is what makes restoring
- * it a one-line operation. So this is an ordinary dialog with a danger button and not
- * `TypedConfirm` -- typing a name out is the gesture that means "this cannot be undone", and
- * spending it on something that can be undone is how it stops meaning anything on the day it is
- * needed (`UI-34m`).
+ * it a one-line operation. So this dialog says it can come back, and for how long; the one that
+ * deletes from the trash for good says it cannot be undone instead, and that sentence is the
+ * whole difference between the two (`DEC-28`).
  *
  * **What it owes is the count and the window.** How many recordings go with it, and how long it
  * can come back -- read from the instance rather than written here, because the retention period

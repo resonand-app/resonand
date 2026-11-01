@@ -20,6 +20,7 @@ import {
   LibraryCard,
   Logo,
   Menu,
+  Modal,
   PageHeader,
   PlayerBar,
   ProfileMenu,
@@ -45,7 +46,6 @@ import {
   TopNav,
   TranscriptLine,
   TRANSCRIPTION_STATE_NAMES,
-  TypedConfirm,
   useTheme,
   WAVE_SIZES,
   Waveform,
@@ -641,17 +641,15 @@ export default function Specimens() {
         </Panel>
         <Panel label="Dialog" width={420}>
           <Dialog
-            title="Delete this library?"
-            description="Deleting Field recordings also deletes its 37 recordings. They go to the trash for 30 days."
+            title="Move Field recordings to the trash?"
+            description="Its 37 recordings go with it. It can be restored for 30 days."
             footer={
               <>
                 <Button variant="ghost">Cancel</Button>
-                <Button variant="danger">Delete library</Button>
+                <Button variant="danger">Move to the trash</Button>
               </>
             }
-          >
-            <TextField label="Type the library name to confirm" placeholder="Field recordings" />
-          </Dialog>
+          />
         </Panel>
       </Section>
 
@@ -819,7 +817,7 @@ export default function Specimens() {
             <IconButton icon="share-2" variant="ghost" label="Share this library" />
           </Tooltip>
         </Panel>
-        <Panel label="TypedConfirm · permanent deletion only">
+        <Panel label="Modal · a permanent deletion, focus on Cancel">
           <Button
             variant="danger"
             icon="trash-2"
@@ -829,17 +827,48 @@ export default function Specimens() {
           >
             Delete Field recordings
           </Button>
-          <TypedConfirm
+          <Modal
             open={confirm}
-            name="Field recordings"
-            consequence="84 recordings, 12 h 40 min of audio and their transcripts"
-            onConfirm={() => {
+            onClose={() => {
               setConfirm(false);
             }}
-            onCancel={() => {
-              setConfirm(false);
-            }}
-          />
+          >
+            <Dialog
+              title={
+                <>
+                  Delete{' '}
+                  <span style={{ fontWeight: 'var(--weight-regular)', color: 'var(--text-2)' }}>
+                    Field recordings
+                  </span>{' '}
+                  permanently?
+                </>
+              }
+              onClose={() => {
+                setConfirm(false);
+              }}
+              footer={
+                <>
+                  <Button
+                    variant="ghost"
+                    data-initial-focus=""
+                    onClick={() => {
+                      setConfirm(false);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      setConfirm(false);
+                    }}
+                  >
+                    Delete permanently
+                  </Button>
+                </>
+              }
+            />
+          </Modal>
         </Panel>
         <Panel label="Sheet · the phone's metadata panel">
           <Button
