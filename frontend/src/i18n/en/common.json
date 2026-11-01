@@ -65,5 +65,9 @@
     "local": "Transcription runs on {{host}}, on your own network. The audio does not leave it.",
     "retry": "Retrying sends the audio to {{host}} again.",
     "external": "Transcription is sent to {{host}}. The audio leaves this instance."
+  },
+  "limit": {
+    "title": "A title can be at most {{max}} characters long.",
+    "libraryName": "A library name can be at most {{max}} characters long."
   }
 }

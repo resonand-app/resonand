@@ -43,6 +43,8 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { TITLE_MAX_LENGTH } from '@/api/limits';
+import { isApiProblem } from '@/api/problem';
 import { InlineField } from '@/design-system';
 import { CategoryPicker } from '@/features/library/CategoryPicker';
 import { recordedAt } from '@/i18n/time';
@@ -72,6 +74,8 @@ export function MetadataPanel({
 
   const readOnly = !context.canEdit;
   const when = recordedAt(recording, i18n.language);
+  const titleRefused =
+    isApiProblem(update.error) && update.error.fieldDetail('title') !== undefined;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -79,6 +83,8 @@ export function MetadataPanel({
         label={t('panel.title')}
         value={recording.title}
         readOnly={readOnly}
+        maxLength={TITLE_MAX_LENGTH}
+        error={titleRefused ? t('common:limit.title', { max: TITLE_MAX_LENGTH }) : undefined}
         onSave={(title) => {
           // An empty title is not a title. The endpoint refuses one, and offering to send it
           // would be offering to fail.

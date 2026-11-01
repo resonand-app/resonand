@@ -60,6 +60,15 @@ describe('what the library is called', () => {
     });
   });
 
+  it('refuses a 101st character in the name (UI-45)', async () => {
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: /Field recordings/ }));
+    const field = screen.getByRole('textbox', { name: 'Name' });
+    await userEvent.clear(field);
+    await userEvent.paste('n'.repeat(101));
+    expect(field).toHaveValue('n'.repeat(100));
+  });
+
   it('says the colour reaches the sidebar straight away, because it does', async () => {
     show();
     expect(await screen.findByText(/appears in the sidebar straight away/i)).toBeVisible();

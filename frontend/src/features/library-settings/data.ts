@@ -17,6 +17,7 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import { get, patch, post, put, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
+import { HANDLED_INVALID } from '@/api/query-client';
 import type { components } from '@/api/contract/schema';
 
 type Schemas = components['schemas'];
@@ -33,6 +34,8 @@ export function useUpdateLibrary(uuid: string): UseMutationResult<unknown, unkno
   return useMutation({
     mutationFn: (body: UpdateLibrary) =>
       patch('/api/libraries/{library_uuid}', { path: { library_uuid: uuid }, body }),
+    // A name over the limit is drawn under the name field, not in a toast.
+    meta: HANDLED_INVALID,
     onSuccess: async () => {
       await invalidate(client, { kind: 'library', library: uuid });
     },

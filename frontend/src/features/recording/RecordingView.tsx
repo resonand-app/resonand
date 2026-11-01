@@ -76,6 +76,7 @@ import type { ReactNode, RefObject } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
+import { TITLE_MAX_LENGTH } from '@/api/limits';
 import { isApiProblem } from '@/api/problem';
 import { isPlainClick } from '@/app/links';
 import { transcriptionState } from '@/features/library/recordings';
@@ -401,6 +402,11 @@ function Essentials({
       {...(context.canEdit
         ? {
             editLabel: t('essentials.editTitle'),
+            titleMaxLength: TITLE_MAX_LENGTH,
+            titleError:
+              isApiProblem(update.error) && update.error.fieldDetail('title') !== undefined
+                ? t('common:limit.title', { max: TITLE_MAX_LENGTH })
+                : undefined,
             onTitleSave: (title: string) => {
               // An empty title is not a title. The endpoint refuses one, and offering to send it
               // would be offering to fail.

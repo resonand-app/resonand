@@ -95,6 +95,37 @@ describe('the dialog', () => {
     expect(sent[0]).toEqual({ name: 'Field recordings', colour: 'plum' });
   });
 
+  it('refuses a 101st character in the name (UI-45)', async () => {
+    const { user } = renderDialog();
+    const field = screen.getByLabelText('Name');
+    await user.click(field);
+    await user.paste('n'.repeat(101));
+    expect(field).toHaveValue('n'.repeat(100));
+  });
+
+  it('says a name is too long in its own words rather than the validator words', async () => {
+    server.use(
+      http.post('/api/libraries', () =>
+        HttpResponse.json(
+          {
+            type: '/errors/invalid_request',
+            title: 'Invalid request',
+            detail: 'String should have at most 100 characters',
+            status: 422,
+            errors: [{ field: 'name', detail: 'String should have at most 100 characters' }],
+          },
+          { status: 422, headers: { 'content-type': 'application/problem+json' } },
+        ),
+      ),
+    );
+    const { user } = renderDialog();
+    await user.type(screen.getByLabelText('Name'), 'Interviews');
+    await user.click(screen.getByRole('button', { name: 'Create' }));
+    expect(
+      await screen.findByText('A library name can be at most 100 characters long.'),
+    ).toBeInTheDocument();
+  });
+
   it('puts a duplicate name beside the field, never in a banner', async () => {
     server.use(
       http.post('/api/libraries', () =>

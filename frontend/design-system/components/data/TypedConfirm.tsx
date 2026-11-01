@@ -100,6 +100,7 @@ export function TypedConfirm({
               fontWeight: 'var(--type-title-weight)',
               letterSpacing: 'var(--type-title-tracking)',
               color: 'var(--text)',
+              overflowWrap: 'anywhere',
             }}
           >
             {verb} {name} permanently

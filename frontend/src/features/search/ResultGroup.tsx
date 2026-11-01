@@ -103,13 +103,23 @@ export function ResultGroup({
         gap: 'var(--space-2)',
       }}
     >
-      <header style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
+      {/* The meta carries the library's name, so it can be as long as the title: it shrinks, and
+          on a narrow screen it takes a line of its own rather than squeezing the title out. */}
+      <header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          columnGap: 'var(--space-3)',
+          rowGap: 'var(--space-1)',
+        }}
+      >
         <button
           type="button"
           data-app="result-title"
           onClick={onOpen}
           style={{
-            flex: 1,
+            flex: '1 1 12rem',
             minWidth: 0,
             border: 'none',
             background: 'transparent',
@@ -130,11 +140,15 @@ export function ResultGroup({
         {meta !== undefined && (
           <span
             style={{
-              flex: '0 0 auto',
+              flex: '0 1 auto',
+              minWidth: 0,
               fontFamily: 'var(--font-mono)',
               fontSize: 'var(--type-numeric-size)',
               fontVariantNumeric: 'var(--type-numeric-variant)',
               color: 'var(--text-3)',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
             {meta}
@@ -210,6 +224,7 @@ function MetadataMatch({ match }: { match: ResultMatch }) {
           fontSize: 'var(--type-ui-size)',
           lineHeight: 'var(--type-body-leading)',
           color: 'var(--text-2)',
+          overflowWrap: 'anywhere',
         }}
       >
         {match.text}

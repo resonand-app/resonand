@@ -19,6 +19,7 @@ import { HttpResponse, http } from 'msw';
 import type { HttpHandler } from 'msw';
 
 import type { components } from '@/api/contract/schema';
+import { LIBRARY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH } from '@/api/limits';
 
 import { ALEX, LOGIN_ATTEMPTS_PER_MINUTE, SAM, archive, detailOf } from './archive';
 
@@ -78,6 +79,13 @@ function setDisabled(id: number, disabledAt: string | null) {
 
 /** What the API says about anything the caller may not read, or that is not there (`DEC-14`). */
 const NOT_FOUND = () => problem(404, 'There is no such thing here, or it is not yours.');
+
+/** A name over its limit, refused field by field as the API's validation refuses it (`DAT-12`). */
+function tooLong(field: string, value: string | null | undefined, limit: number) {
+  if (value === null || value === undefined || Array.from(value).length <= limit) return undefined;
+  const detail = `String should have at most ${String(limit)} characters`;
+  return problem(422, detail, { errors: [{ field, detail }] });
+}
 
 /**
  * The one answer an unknown address, a wrong password and a disabled account all get (§V1).
@@ -195,6 +203,8 @@ export const handlers: HttpHandler[] = [
   ),
   http.post('/api/libraries', async ({ request }) => {
     const body = (await request.json()) as Required<Schemas['CreateLibrary']>;
+    const refused = tooLong('name', body.name, LIBRARY_NAME_MAX_LENGTH);
+    if (refused) return refused;
     if (archive.libraries.some((one) => one.name === body.name)) {
       return problem(409, `You already have a library called ${body.name}.`);
     }
@@ -220,6 +230,8 @@ export const handlers: HttpHandler[] = [
     const body = (await request.json()) as Schemas['UpdateLibrary'];
     const existing = archive.libraries.find((one) => one.uuid === params.library_uuid);
     if (!existing) return NOT_FOUND();
+    const refused = tooLong('name', body.name, LIBRARY_NAME_MAX_LENGTH);
+    if (refused) return refused;
     const updated = {
       ...existing,
       ...(body.name ? { name: body.name } : {}),
@@ -440,6 +452,8 @@ export const handlers: HttpHandler[] = [
     const body = (await request.json()) as Schemas['UpdateAudio'];
     const existing = archive.recordings.find((one) => one.uuid === params.audio_uuid);
     if (!existing) return NOT_FOUND();
+    const refused = tooLong('title', body.title, TITLE_MAX_LENGTH);
+    if (refused) return refused;
     const updated = {
       ...existing,
       ...(body.title ? { title: body.title } : {}),

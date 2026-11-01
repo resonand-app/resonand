@@ -102,4 +102,20 @@ describe('PageHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: /Field recording, long take/ }));
     expect(screen.getByRole('textbox', { name: 'Edit the title' })).toBeDefined();
   });
+
+  it('takes no more than its titleMaxLength, and says why a save was refused', async () => {
+    render(
+      <PageHeader
+        title="Field"
+        editLabel="Edit the title"
+        titleMaxLength={8}
+        titleError="Too long."
+        onTitleSave={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Too long.');
+    await userEvent.click(screen.getByRole('button', { name: /Field/ }));
+    await userEvent.type(screen.getByRole('textbox'), ' recording');
+    expect(screen.getByRole('textbox')).toHaveValue('Field re');
+  });
 });

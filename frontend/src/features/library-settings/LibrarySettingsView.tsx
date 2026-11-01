@@ -35,6 +35,7 @@
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 
+import { LIBRARY_NAME_MAX_LENGTH } from '@/api/limits';
 import { isApiProblem } from '@/api/problem';
 import { colourOf, useCanTrashLibrary } from '@/app/library-data';
 import { isPlainClick } from '@/app/links';
@@ -126,6 +127,12 @@ export function LibrarySettingsView() {
           <InlineField
             label={t('identity.name')}
             value={library.name}
+            maxLength={LIBRARY_NAME_MAX_LENGTH}
+            error={
+              isApiProblem(update.error) && update.error.fieldDetail('name') !== undefined
+                ? t('common:limit.libraryName', { max: LIBRARY_NAME_MAX_LENGTH })
+                : undefined
+            }
             onSave={(name) => {
               const trimmed = name.trim();
               if (trimmed === '' || trimmed === library.name) return;
