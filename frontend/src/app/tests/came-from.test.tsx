@@ -39,9 +39,10 @@ const noop = () => undefined;
 /**
  * Give the dense list a viewport, because jsdom performs no layout.
  *
- * `offsetHeight` is zero for every element ever, and that is what the virtualiser measures its
- * scroll container with. Told it has no height, it draws no rows -- and a test that opens "the
- * first row" would then pass by finding nothing to open.
+ * `clientHeight` and `offsetHeight` are zero for every element ever, and the virtualiser measures
+ * its scroll container with the first and its rows with the second. Told it has no height, it
+ * draws no rows -- and a test that opens "the first row" would then pass by finding nothing to
+ * open.
  */
 function measured(height = 720) {
   vi.stubGlobal(
@@ -53,6 +54,7 @@ function measured(height = 720) {
     },
   );
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(height);
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(height);
 }
 
 function renderAt(entry: string) {

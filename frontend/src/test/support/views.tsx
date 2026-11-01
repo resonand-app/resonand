@@ -152,10 +152,13 @@ export const VIEWS: readonly ViewUnderTest[] = [
  * jsdom's answer is zero and it is zero for everybody. Only the files that mount views import
  * this module, so no component test inherits it.
  */
-Object.defineProperty(HTMLElement.prototype, 'offsetHeight', {
-  configurable: true,
-  get: () => 720,
-});
+// The virtualiser measures its scroller with `clientHeight` and its rows with `offsetHeight`.
+for (const property of ['clientHeight', 'offsetHeight']) {
+  Object.defineProperty(HTMLElement.prototype, property, {
+    configurable: true,
+    get: () => 720,
+  });
+}
 if (!('ResizeObserver' in globalThis)) {
   Object.defineProperty(globalThis, 'ResizeObserver', {
     configurable: true,

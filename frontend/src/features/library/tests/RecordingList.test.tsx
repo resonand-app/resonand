@@ -44,10 +44,10 @@ afterEach(() => {
 /**
  * Give the list a viewport, because jsdom does not.
  *
- * jsdom performs no layout, so `offsetHeight` is zero for every element ever -- and that is the
- * property `@tanstack/virtual-core` measures a scroll container with. A virtualiser told its
- * viewport is zero pixels tall draws no rows, which would make every row-level assertion below
- * pass by rendering nothing at all.
+ * jsdom performs no layout, so `clientHeight` and `offsetHeight` are zero for every element ever
+ * -- and `@tanstack/virtual-core` measures a scroll container with the first and a row with the
+ * second. A virtualiser told its viewport is zero pixels tall draws no rows, which would make
+ * every row-level assertion below pass by rendering nothing at all.
  *
  * So this is the setup for a virtualised list rather than a workaround: what is under test is
  * which rows it decides to draw for a given height, and it has to be given one. There is no
@@ -67,6 +67,7 @@ function measured(height = 720) {
     },
   );
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(height);
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(height);
 }
 
 /** One drawn row. Cheaper to match than a role and a name, which this file does a lot of. */

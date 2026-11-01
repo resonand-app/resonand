@@ -66,8 +66,8 @@ for (const name of ['ReadableStream', 'TransformStream', 'WritableStream'] as co
  * so the call throws, and a throw inside an event handler is an unhandled error: every test still
  * passes and the run still fails, which is exactly how it reached CI.
  *
- * Stubbed here rather than guarded in the component, for the reason `ResizeObserver` and
- * `offsetHeight` are stubbed in the tests that need them: this is a gap in the test environment,
+ * Stubbed here rather than guarded in the component, for the reason `ResizeObserver` and the
+ * element heights are stubbed in the tests that need them: this is a gap in the test environment,
  * not a thing the product should be defending against.
  */
 if (typeof Element.prototype.setPointerCapture !== 'function') {
