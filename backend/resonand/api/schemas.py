@@ -241,6 +241,45 @@ class UpdateLibrary(Api):
     colour: Colour | None = None
 
 
+# --- The trash ------------------------------------------------------------
+
+PURGE_SELECTION_LIMIT = 500
+"""Uuids per kind in one purge. Every row goes inside the instance's one write lock, so the bound
+is on how long one request may hold every other writer back."""
+
+
+class TrashTally(Api):
+    """What a part of the trash amounts to, in the numbers a confirmation states (``API-28``)."""
+
+    recordings: int
+    """Each once, whether it was trashed on its own, inside a trashed library, or both."""
+
+    libraries: int
+    duration_ms: int
+    transcripts: int
+    """Recordings that have a transcript, rather than transcript versions."""
+
+
+class TrashSummary(TrashTally):
+    counted_at: str
+    """The instant the numbers hold at. Emptying the trash is bounded by it, so what is sent to
+    the trash after somebody read them is not destroyed with what they agreed to."""
+
+
+class PurgeSelection(Api):
+    library_uuids: list[str] = Field(default_factory=list, max_length=PURGE_SELECTION_LIMIT)
+    """Each takes everything in it."""
+
+    audio_uuids: list[str] = Field(default_factory=list, max_length=PURGE_SELECTION_LIMIT)
+
+
+class PurgeResult(Api):
+    destroyed: TrashTally
+    skipped: list[str]
+    """Every uuid given that was not destroyed, none of them told apart: not in the trash, not the
+    caller's to manage and not there at all read the same."""
+
+
 ShareSource = Literal["library", "audio"]
 """Where a grant was made. A ``share`` row carries a library or a recording, never both."""
 

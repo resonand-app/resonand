@@ -1154,6 +1154,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Empty
+         * @description Empty the trash of everything sent to it up to ``trashed_before``, and nothing after.
+         *
+         *     The instant is required rather than defaulting to now: what was trashed after somebody read
+         *     the numbers is not what they agreed to destroy, and is left where it is.
+         */
+        delete: operations["empty_api_trash_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trash/audio": {
         parameters: {
             query?: never;
@@ -1247,6 +1270,51 @@ export interface paths {
          *     Its transaction is its own, for the reason the recording's purge gives.
          */
         delete: operations["purge_trashed_library_api_trash_libraries__library_uuid__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trash/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Purge
+         * @description Destroy a selection of the trash, and report every uuid that was not destroyed.
+         *
+         *     Its transaction is its own, and the files go after the commit, for the reason
+         *     ``DELETE /trash/audio/{audio_uuid}`` gives (``REV-1``).
+         */
+        post: operations["purge_api_trash_purge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trash/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Summary
+         * @description What emptying the trash would destroy, counted now.
+         *
+         *     The interface cannot add this up itself, because the trash it lists is paged.
+         */
+        get: operations["summary_api_trash_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1710,6 +1778,19 @@ export interface components {
             /** Usable */
             usable: boolean | null;
         };
+        /** PurgeResult */
+        PurgeResult: {
+            destroyed: components["schemas"]["TrashTally"];
+            /** Skipped */
+            skipped: string[];
+        };
+        /** PurgeSelection */
+        PurgeSelection: {
+            /** Audio Uuids */
+            audio_uuids?: string[];
+            /** Library Uuids */
+            library_uuids?: string[];
+        };
         /** ReorderCategories */
         ReorderCategories: {
             /** Ordered Ids */
@@ -2002,6 +2083,33 @@ export interface components {
             /** Started At */
             started_at: string | null;
             state: components["schemas"]["TranscriptionState"];
+        };
+        /** TrashSummary */
+        TrashSummary: {
+            /** Counted At */
+            counted_at: string;
+            /** Duration Ms */
+            duration_ms: number;
+            /** Libraries */
+            libraries: number;
+            /** Recordings */
+            recordings: number;
+            /** Transcripts */
+            transcripts: number;
+        };
+        /**
+         * TrashTally
+         * @description What a part of the trash amounts to, in the numbers a confirmation states (``API-28``).
+         */
+        TrashTally: {
+            /** Duration Ms */
+            duration_ms: number;
+            /** Libraries */
+            libraries: number;
+            /** Recordings */
+            recordings: number;
+            /** Transcripts */
+            transcripts: number;
         };
         /** UpdateAudio */
         UpdateAudio: {
@@ -4019,6 +4127,38 @@ export interface operations {
             };
         };
     };
+    empty_api_trash_delete: {
+        parameters: {
+            query: {
+                /** @description The `counted_at` of the summary somebody agreed to. Required. */
+                trashed_before: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrashTally"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_trash_api_trash_audio_get: {
         parameters: {
             query?: {
@@ -4137,6 +4277,59 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purge_api_trash_purge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurgeSelection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgeResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    summary_api_trash_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TrashSummary"];
                 };
             };
         };
