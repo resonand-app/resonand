@@ -3,19 +3,41 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toLibrarySettings } from '@/app/routes';
+import { useToasts } from '@/app/toasts';
 import { RECORDINGS, PERSONAL, archive } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { LibrarySettingsView } from '../LibrarySettingsView';
 
 mockApi();
+
+afterEach(() => {
+  useToasts.setState({ toasts: [] });
+});
+
+/** What the toast store holds now: what was said, and the label of what it offers. */
+function said() {
+  return useToasts
+    .getState()
+    .toasts.map((one) => ({ tone: one.tone, message: one.message, action: one.action?.label }));
+}
+
+/** Press a toast's button, as the region would: it goes, and its action runs. */
+function press(message: string) {
+  const toast = useToasts.getState().toasts.find((one) => one.message === message);
+  if (toast?.action === undefined) throw new Error(`nothing to press on ${message}`);
+  useToasts.getState().dismiss(toast.id);
+  act(() => {
+    toast.action?.run();
+  });
+}
 
 function Where() {
   const location = useLocation();
@@ -64,6 +86,24 @@ describe('trashing a library', () => {
       expect(screen.getByTestId('where')).toHaveTextContent(routes.libraries);
     });
     expect(archive.libraries.find((one) => one.uuid === RECORDINGS)?.deleted_at).not.toBeNull();
+  });
+
+  it('says it went, and undoing it brings it back (UI-47)', async () => {
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: /move this library/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Move it to the trash' }));
+    await waitFor(() => {
+      expect(said()).toEqual([
+        { tone: 'done', message: 'Field recordings sent to the trash', action: 'Undo' },
+      ]);
+    });
+    press('Field recordings sent to the trash');
+    await waitFor(() => {
+      expect(said()).toEqual([
+        { tone: 'done', message: 'Field recordings restored', action: undefined },
+      ]);
+    });
+    expect(archive.libraries.find((one) => one.uuid === RECORDINGS)?.deleted_at).toBeNull();
   });
 
   it('is offered for the personal library, which is only the first of them', async () => {

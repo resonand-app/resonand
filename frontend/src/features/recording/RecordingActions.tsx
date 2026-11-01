@@ -29,7 +29,9 @@
  * is V9's hard delete, where something is actually destroyed -- but a dialog stating the retention
  * the instance is configured with, read from `GET /instance` rather than written down here.
  * Afterwards it goes back to the library, because somebody who has just sent a recording away is
- * not looking at that recording any more.
+ * not looking at that recording any more -- and a toast says it went, with *Undo* (`UI-47`). A
+ * move says where it went and offers no undo: it drops the category, and moving back would not
+ * bring that back.
  */
 
 import { useQueryClient } from '@tanstack/react-query';
@@ -40,8 +42,10 @@ import { useNavigate } from 'react-router';
 import { post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { useFavourite } from '@/app/hooks/use-favourite';
+import { useAllLibraries } from '@/app/library-data';
 import { toLibrary, toLibrarySettings } from '@/app/routes';
 import { useInstance } from '@/app/session';
+import { reportOn } from '@/app/toasts';
 import { MoveDialog } from '@/components/MoveDialog';
 import { Button, Dialog, IconButton, Modal } from '@/design-system';
 
@@ -53,6 +57,7 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
   const navigate = useNavigate();
   const client = useQueryClient();
   const instance = useInstance();
+  const libraries = useAllLibraries();
   const [confirming, setConfirming] = useState(false);
   const [moving, setMoving] = useState(false);
   const favourite = useFavourite();
@@ -62,31 +67,67 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
 
   const library = context.library;
 
+  const lifecycle = {
+    kind: 'recording-lifecycle',
+    recording: recording.uuid,
+    library: recording.library_uuid,
+  } as const;
+  const title = recording.title;
+
+  const restore = () =>
+    reportOn(
+      async () => {
+        await post('/api/audio/{audio_uuid}/restore', { path: { audio_uuid: recording.uuid } });
+        await invalidate(client, lifecycle);
+      },
+      { message: t('actions.restored', { title }) },
+    );
+
   const trash = async () => {
-    await remove('/api/audio/{audio_uuid}', { path: { audio_uuid: recording.uuid } });
-    await invalidate(client, {
-      kind: 'recording-lifecycle',
-      recording: recording.uuid,
-      library: recording.library_uuid,
-    });
+    const gone = await reportOn(
+      async () => {
+        await remove('/api/audio/{audio_uuid}', { path: { audio_uuid: recording.uuid } });
+        await invalidate(client, lifecycle);
+      },
+      {
+        message: t('actions.trashed', { title }),
+        action: {
+          label: t('common:action.undo'),
+          run: () => {
+            void restore();
+          },
+        },
+      },
+    );
     setConfirming(false);
-    if (library !== undefined) void navigate(toLibrary(library.uuid));
+    if (gone && library !== undefined) void navigate(toLibrary(library.uuid));
   };
 
   const move = async (destination: string) => {
     setMoving(false);
-    await post('/api/audio/{audio_uuid}/move', {
-      path: { audio_uuid: recording.uuid },
-      body: { library_uuid: destination },
-    });
-    // Both libraries: the one that lost a recording shows a count too, and this screen is now
-    // showing a recording that belongs somewhere else.
-    await invalidate(client, {
-      kind: 'recording-moved',
-      recording: recording.uuid,
-      from: recording.library_uuid,
-      to: destination,
-    });
+    const name = libraries.find((one) => one.uuid === destination)?.name;
+    await reportOn(
+      async () => {
+        await post('/api/audio/{audio_uuid}/move', {
+          path: { audio_uuid: recording.uuid },
+          body: { library_uuid: destination },
+        });
+        // Both libraries: the one that lost a recording shows a count too, and this screen is
+        // now showing a recording that belongs somewhere else.
+        await invalidate(client, {
+          kind: 'recording-moved',
+          recording: recording.uuid,
+          from: recording.library_uuid,
+          to: destination,
+        });
+      },
+      {
+        message:
+          name === undefined
+            ? t('actions.movedAway', { title })
+            : t('actions.moved', { title, library: name }),
+      },
+    );
   };
 
   return (

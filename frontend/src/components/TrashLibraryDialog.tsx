@@ -17,13 +17,18 @@
  * under a heading, and the landing page offers a row in a card's menu, which are two gestures for
  * one consequence. Where to go afterwards is the caller's as well, because it differs -- a
  * settings screen for a library that no longer resolves has to be left, and the grid the card was
- * in only has to be told.
+ * in only has to be told. What it went to is the same from both, so the toast that says so, with
+ * *Undo*, is raised here (`UI-47`).
  */
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 
+import { post } from '@/api/client';
+import { invalidate } from '@/api/invalidate';
 import { isApiProblem } from '@/api/problem';
 import { useInstance } from '@/app/session';
+import { raiseToast, reportOn } from '@/app/toasts';
 import { Button, Dialog, Modal } from '@/design-system';
 import { useTrashLibrary } from '@/features/library-settings/data';
 
@@ -39,6 +44,31 @@ export function TrashLibraryDialog({ library, open, onClose, onTrashed }: TrashL
   const { t } = useTranslation('librarySettings');
   const retention = useInstance().data?.trash_retention_days;
   const trash = useTrashLibrary(library.uuid);
+  const client = useQueryClient();
+  const { uuid, name } = library;
+
+  const restore = () =>
+    reportOn(
+      async () => {
+        await post('/api/libraries/{library_uuid}/restore', { path: { library_uuid: uuid } });
+        await invalidate(client, { kind: 'library', library: uuid });
+      },
+      { message: t('trash.restored', { name }) },
+    );
+
+  const trashed = () => {
+    raiseToast({
+      tone: 'done',
+      message: t('trash.done', { name }),
+      action: {
+        label: t('common:action.undo'),
+        run: () => {
+          void restore();
+        },
+      },
+    });
+    onTrashed();
+  };
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -62,7 +92,9 @@ export function TrashLibraryDialog({ library, open, onClose, onTrashed }: TrashL
               type="button"
               disabled={trash.isPending}
               onClick={() => {
-                trash.mutate(undefined, { onSuccess: onTrashed });
+                // Not `mutate`'s own `onSuccess`: the invalidation unmounts a settings screen whose
+                // library no longer resolves, and that callback is skipped once nothing observes it.
+                trash.mutateAsync().then(trashed, () => undefined);
               }}
             >
               {t('trash.confirm')}
