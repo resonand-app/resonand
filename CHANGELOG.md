@@ -20,6 +20,12 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ## [Unreleased]
 
+### Added
+
+- **`resonand import --restore`** takes a recording it updates back out of the trash. Without it,
+  the trash is left as it is and the import says so; a library in the trash is never restored by
+  an import, since that would bring back everything in it.
+
 ### Changed
 
 - **Only somebody who can manage a library can take a recording out of it.** Moving a recording
@@ -33,6 +39,12 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ### Fixed
 
+- **An import onto a recording in the trash no longer reads as an ordinary update.** It applied
+  the sidecar there and counted it as updated, so the recording stayed out of sight and went on
+  counting down to its purge with nothing said. Each one is now named as it is imported, the
+  summary ends `(1 still in the trash)`, and `--dry-run` says `would update (in the trash)`. The
+  same goes for a recording whose library is in the trash. The summary line is unchanged when
+  nothing was in the trash, and so is the exit status.
 - **A recording no longer opens with its transcript missing.** About one load in five showed
   how many segments there were and no lines under them, until the column was scrolled. The
   lines are now drawn on every load.

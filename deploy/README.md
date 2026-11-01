@@ -367,6 +367,13 @@ account, so the one here already has its own and the export's is mapped onto it.
 carry no sidecar needs it. `--dry-run` says what would happen, and where, without importing
 anything.
 
+**A recording in the trash stays there.** An import that finds the recording in the trash updates
+it where it is and says so, file by file and in the summary — `updated 1 (1 still in the trash)`.
+Trashing it was somebody's decision, and an import is often a script that never saw it.
+`--restore` takes the recording back out. A recording whose library is in the trash is reported
+the same way, and `--restore` leaves the library alone: restoring it would bring back everything
+in it, so that stays a decision made in the interface.
+
 **This is not a way to restore an instance.** It restores the archive and its shape; it does not
 restore passwords, sessions, or anything else an account has. Restoring an instance whole is what
 the backup above is for.

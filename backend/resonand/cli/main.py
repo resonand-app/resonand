@@ -12,9 +12,10 @@ database is not one of the accounts.
 from __future__ import annotations
 
 import json
+from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
 from pydantic import SecretStr
@@ -133,12 +134,21 @@ def import_files(
     ] = None,
     dry_run: Annotated[bool, typer.Option("--dry-run", help="Say what would happen.")] = False,
     transcribe: Annotated[bool, typer.Option(help="Queue transcription for each one.")] = False,
+    restore: Annotated[
+        bool,
+        typer.Option("--restore", help="Take a recording it updates back out of the trash."),
+    ] = False,
 ) -> None:
     """Import recordings, recursively.
 
     **Re-import is idempotent.** A file next to a Resonand sidecar carrying a ``uuid`` that is
     already here updates that recording rather than creating a second copy -- which is what makes
     the export round trip verify the archive instead of doubling it.
+
+    **The trash is left alone unless asked.** A recording updated where it lies in the trash is
+    named, and counted as still there, because trashing it was somebody's decision and an import
+    is often a script that never saw it. ``--restore`` takes the recording back out; a library in
+    the trash is never restored by an import, since that would bring back everything in it.
 
     An export carries an archive manifest, and reading it back recreates the libraries and the
     sharing they had -- against accounts that are already here. Accounts are never created from
@@ -159,24 +169,31 @@ def import_files(
     resolved = {} if dry_run else _restore_instance(database, manifest, manifest_path)
     planned = _libraries_named_by(manifest)
 
-    added = updated = 0
+    tally = dict.fromkeys(Landed, 0)
     for path in candidates:
         sidecar = _sidecar_beside(path)
         if dry_run:
-            typer.echo(f"{_dry_run_verdict(database, sidecar, library, planned)}: {path.name}")
+            verdict = _dry_run_verdict(database, sidecar, library, planned, restore=restore)
+            typer.echo(f"{verdict}: {path.name}")
             continue
         try:
-            if _import_one(
-                database, settings, path, library, sidecar, resolved, transcribe=transcribe
-            ):
-                updated += 1
-            else:
-                added += 1
+            landed = _import_one(
+                database,
+                settings,
+                path,
+                library,
+                sidecar,
+                resolved,
+                transcribe=transcribe,
+                restore=restore,
+            )
         except ResonandError as error:
             typer.echo(f"skipped {path.name}: {error.detail}", err=True)
+        else:
+            tally[landed] += 1
 
     if not dry_run:
-        typer.echo(f"Imported {added} recordings, updated {updated}.")
+        typer.echo(_summary(tally))
 
 
 @app.command()
@@ -612,6 +629,8 @@ def _dry_run_verdict(
     sidecar: Path | None,
     library_uuid: str | None,
     planned: dict[str, str],
+    *,
+    restore: bool,
 ) -> str:
     """What ``--dry-run`` says about one file.
 
@@ -621,8 +640,11 @@ def _dry_run_verdict(
     """
     payload = _read_sidecar_quietly(sidecar)
     with database.read_session() as session:
-        if payload is not None and find_by_uuid(session, str(payload.get("uuid", ""))) is not None:
-            return "would update"
+        existing = None
+        if payload is not None:
+            existing = find_by_uuid(session, str(payload.get("uuid", "")))
+        if existing is not None:
+            return _would_update(session, existing, restore=restore)
         coming = planned.get(_library_uuid_in(payload))
         if coming is not None:
             return f"would add to {coming}"
@@ -631,6 +653,17 @@ def _dry_run_verdict(
         except ResonandError as error:
             return f"would skip ({error.detail})"
         return f"would add to {destination.name}"
+
+
+def _would_update(session: Session, existing: Audio, *, restore: bool) -> str:
+    trashed_library = _trashed_library_of(session, existing)
+    if trashed_library is not None:
+        return f"would update (its library {trashed_library.name} is in the trash)"
+    if existing.deleted_at is None:
+        return "would update"
+    if restore:
+        return "would update and take out of the trash"
+    return "would update (in the trash)"
 
 
 def _library_uuid_in(payload: dict[str, object] | None) -> str:
@@ -666,6 +699,62 @@ def _destination_library(
     return library
 
 
+class Landed(StrEnum):
+    """Where one imported file ended up, which is what the summary line counts."""
+
+    ADDED = "added"
+    UPDATED = "updated"
+    RESTORED = "restored"
+    IN_TRASH = "in the trash"
+
+
+def _summary(tally: dict[Landed, int]) -> str:
+    """The last line of an import. Its first half is unchanged, so a script reading it still can."""
+    updated = tally[Landed.UPDATED] + tally[Landed.RESTORED] + tally[Landed.IN_TRASH]
+    line = f"Imported {tally[Landed.ADDED]} recordings, updated {updated}"
+    notes = []
+    if tally[Landed.RESTORED]:
+        notes.append(f"{tally[Landed.RESTORED]} taken out of the trash")
+    if tally[Landed.IN_TRASH]:
+        notes.append(f"{tally[Landed.IN_TRASH]} still in the trash")
+    return f"{line} ({', '.join(notes)})." if notes else f"{line}."
+
+
+def _trashed_library_of(session: Session, audio: Audio) -> Library | None:
+    library = session.get(Library, audio.library_id)
+    return library if library is not None and library.deleted_at is not None else None
+
+
+def _update_existing(
+    session: Session, audio: Audio, payload: dict[str, Any], path: Path, *, restore: bool
+) -> Landed:
+    """Apply a sidecar to a recording already here, and say so when nobody will see the result.
+
+    Taking it out of the trash comes first, because ``apply_sidecar`` re-indexes and the index
+    leaves out anything still in the trash.
+    """
+    trashed_library = _trashed_library_of(session, audio)
+    restored = restore and audio.deleted_at is not None
+    if restored:
+        audio.deleted_at = None
+        session.flush()
+    apply_sidecar(session, audio, payload)
+    if trashed_library is not None:
+        typer.echo(
+            f"updated {path.name}, but its library {trashed_library.name} is in the trash: "
+            "restore the library to see it.",
+            err=True,
+        )
+        return Landed.IN_TRASH
+    if audio.deleted_at is not None:
+        typer.echo(
+            f"updated {path.name}, which is in the trash: pass --restore to take it out.",
+            err=True,
+        )
+        return Landed.IN_TRASH
+    return Landed.RESTORED if restored else Landed.UPDATED
+
+
 def _import_one(
     database: Database,
     settings: Settings,
@@ -675,8 +764,9 @@ def _import_one(
     resolved: dict[str, int],
     *,
     transcribe: bool,
-) -> bool:
-    """Import one file. Returns whether it updated a recording that was already here."""
+    restore: bool,
+) -> Landed:
+    """Import one file, and say where it ended up."""
     payload = None
     if sidecar is not None:
         try:
@@ -688,8 +778,7 @@ def _import_one(
         if payload is not None:
             existing = find_by_uuid(session, str(payload.get("uuid", "")))
             if existing is not None:
-                apply_sidecar(session, existing, payload)
-                return True
+                return _update_existing(session, existing, payload, path, restore=restore)
 
         library = _destination_library(session, payload, library_uuid, resolved)
         audio = create_audio(
@@ -719,7 +808,7 @@ def _import_one(
         enqueue(session, "probe", audio_id=audio.id, idempotency_key=f"probe:{audio.uuid}")
         if transcribe:
             enqueue_transcription(session, audio_id=audio.id, audio_uuid=audio.uuid)
-    return False
+    return Landed.ADDED
 
 
 def _chunks(path: Path, size: int = 1024 * 1024) -> list[bytes]:
