@@ -107,4 +107,19 @@ describe('InlineField', () => {
     await userEvent.tab();
     expect(onSave).toHaveBeenCalledWith('One\nTwo');
   });
+
+  it('takes no more than its maxLength', async () => {
+    render(<InlineField label="Title" value="" maxLength={5} onSave={vi.fn()} />);
+    await userEvent.click(screen.getByRole('button', { name: 'Title' }));
+    await userEvent.type(screen.getByRole('textbox'), 'abcdefgh');
+    expect(screen.getByRole('textbox')).toHaveValue('abcde');
+  });
+
+  it('says why the last save was refused, at rest and while editing', async () => {
+    render(<InlineField label="Title" value="x" error="Too long." onSave={vi.fn()} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Too long.');
+    await userEvent.click(screen.getByRole('button', { name: /x/ }));
+    expect(screen.getByRole('textbox')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('alert')).toHaveTextContent('Too long.');
+  });
 });

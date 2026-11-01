@@ -207,6 +207,7 @@ export function RecordingCard({
               // on Field notes" is an ordinary title, and an ellipsis in the middle of it is a
               // recording somebody cannot identify (§V3).
               textWrap: 'pretty',
+              overflowWrap: 'anywhere',
             }}
           >
             {href === undefined ? (

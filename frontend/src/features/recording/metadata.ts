@@ -31,6 +31,7 @@ import type { UseMutationResult } from '@tanstack/react-query';
 import { patch } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
 import { keys } from '@/api/keys';
+import { HANDLED_INVALID } from '@/api/query-client';
 import { usePlayback } from '@/player/store';
 import type { components } from '@/api/contract/schema';
 
@@ -45,6 +46,8 @@ export function useUpdateRecording(uuid: string, libraryUuid: string): Update {
   return useMutation({
     mutationFn: (body: MetadataPatch) =>
       patch('/api/audio/{audio_uuid}', { path: { audio_uuid: uuid }, body }),
+    // A title over the limit is drawn under the title field, not in a toast.
+    meta: HANDLED_INVALID,
     onSuccess: async (updated) => {
       // The answer is the recording as it now stands, so it is put straight into the cache: the
       // panel is looking at that query, and a refetch before the invalidation lands would show

@@ -77,6 +77,7 @@ export function TextField({
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size-sm)',
             color: 'var(--text-3)',
+            overflowWrap: 'anywhere',
           }}
         >
           {label}

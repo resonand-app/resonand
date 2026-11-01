@@ -194,7 +194,7 @@ export function PhonePlayer() {
         </p>
       )}
 
-      <div>
+      <div style={{ overflowWrap: 'anywhere' }}>
         <h2
           style={{
             fontFamily: 'var(--font-sans)',

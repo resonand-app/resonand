@@ -95,6 +95,15 @@ export function Select<Value extends string = string>({
     align: 'start',
   });
 
+  /* A menu is as wide as its trigger, or as its widest option up to 320px. Beyond that an option
+     wraps, so a long library name stays inside the dialog that opened it. */
+  const [menuMaxWidth, setMenuMaxWidth] = useState(Math.max(width, 320));
+  useEffect(() => {
+    if (!open) return;
+    const trigger = anchorRef.current?.getBoundingClientRect().width ?? 0;
+    setMenuMaxWidth(Math.max(width, 320, trigger));
+  }, [anchorRef, open, width]);
+
   /* An overlay places focus once, as it opens, and must not keep taking it afterwards. So a
      control that arrives later -- this one, whose options are a query that had not answered when
      the dialog appeared -- cannot be focused by that pass and has to claim it. Only from where
@@ -243,6 +252,7 @@ export function Select<Value extends string = string>({
             ...surfaceStyle,
             zIndex: 'var(--z-menu)',
             minWidth: width,
+            maxWidth: `min(${String(menuMaxWidth)}px, 100vw - 32px)`,
             maxHeight: 320,
             overflowY: 'auto',
             padding: 6,
@@ -290,7 +300,7 @@ export function Select<Value extends string = string>({
               }}
             >
               <span style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                <span>{option.label}</span>
+                <span style={{ overflowWrap: 'anywhere' }}>{option.label}</span>
                 {option.description !== undefined && (
                   <span
                     style={{

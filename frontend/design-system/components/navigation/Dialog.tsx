@@ -73,7 +73,7 @@ export function Dialog({
       {...rest}
     >
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 5 }}>
           <h2
             style={{
               margin: 0,
@@ -82,6 +82,7 @@ export function Dialog({
               fontSize: 'var(--type-title-size)',
               letterSpacing: 'var(--type-title-tracking)',
               color: 'var(--text)',
+              overflowWrap: 'anywhere',
             }}
           >
             {title}
@@ -95,6 +96,7 @@ export function Dialog({
                 lineHeight: 'var(--type-body-leading)',
                 color: 'var(--text-3)',
                 textWrap: 'pretty',
+                overflowWrap: 'anywhere',
               }}
             >
               {description}

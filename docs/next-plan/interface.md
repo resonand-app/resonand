@@ -128,7 +128,7 @@ reviewed as copy in its pull request rather than taken as settled.
 
 The limits are decided in [`data.md`](data.md), beside `DAT-12`.
 
-- [ ] **UI-45** · 🧪 **A field says how long a name can be before the API has to.** Every field
+- [x] **UI-45** · 🧪 **A field says how long a name can be before the API has to.** Every field
       that edits a recording's title or a library's name — the metadata panel's `InlineField`, the
       create-library dialog, a library's settings — carries `maxLength` at the limit `DAT-12`
       sets, so a name over it cannot be typed or pasted, rather than being refused on save. The

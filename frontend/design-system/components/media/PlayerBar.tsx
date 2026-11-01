@@ -239,6 +239,9 @@ export function PlayerBar({
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size-sm)',
             color: 'var(--text-3)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
           }}
         >
           {library}

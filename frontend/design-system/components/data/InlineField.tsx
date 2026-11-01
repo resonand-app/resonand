@@ -27,6 +27,10 @@ export interface InlineFieldProps {
   readOnly?: boolean;
   /** A textarea rather than an input. The notes field, and nothing else so far. */
   multiline?: boolean;
+  /** The longest value the field takes, so one the API would refuse cannot be typed or pasted. */
+  maxLength?: number;
+  /** Why the last save was refused, shown beneath the field until the next one. */
+  error?: string | undefined;
 }
 
 /**
@@ -53,6 +57,8 @@ export function InlineField({
   placeholder,
   readOnly = false,
   multiline = false,
+  maxLength,
+  error,
 }: InlineFieldProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
@@ -109,6 +115,20 @@ export function InlineField({
 
   const shown = value === '' ? (placeholder ?? '') : value;
 
+  const refusal =
+    error === undefined ? null : (
+      <span
+        role="alert"
+        style={{
+          fontFamily: 'var(--font-sans)',
+          fontSize: 'var(--type-ui-size-sm)',
+          color: 'var(--state-failed)',
+        }}
+      >
+        {error}
+      </span>
+    );
+
   if (readOnly) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
@@ -122,6 +142,7 @@ export function InlineField({
             padding: '9px 0',
             fontFamily: 'var(--font-sans)',
             fontSize: 'var(--type-ui-size)',
+            overflowWrap: 'anywhere',
           }}
         >
           {shown}
@@ -139,7 +160,9 @@ export function InlineField({
       },
       onBlur: commit,
       onKeyDown,
+      maxLength,
       'aria-label': label,
+      'aria-invalid': error === undefined ? undefined : true,
       style: {
         width: '100%',
         border: 'none',
@@ -167,9 +190,11 @@ export function InlineField({
         >
           {multiline ? <textarea rows={3} {...shared} /> : <input type="text" {...shared} />}
         </span>
-        <span style={{ fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
-          Saves when you click away.
-        </span>
+        {refusal ?? (
+          <span style={{ fontSize: 'var(--type-ui-size-sm)', color: 'var(--text-3)' }}>
+            Saves when you click away.
+          </span>
+        )}
       </div>
     );
   }
@@ -203,11 +228,21 @@ export function InlineField({
           transition: 'background var(--transition-state)',
         }}
       >
-        <span style={{ minWidth: 0, whiteSpace: multiline ? 'pre-wrap' : 'normal' }}>{shown}</span>
+        {/* A name with no spaces is one word as wide as its 200 characters. */}
+        <span
+          style={{
+            minWidth: 0,
+            whiteSpace: multiline ? 'pre-wrap' : 'normal',
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {shown}
+        </span>
         <span data-ds="inline-field-pencil" aria-hidden style={{ display: 'flex' }}>
           <Icon name="pencil" size={15} />
         </span>
       </button>
+      {refusal}
     </div>
   );
 }

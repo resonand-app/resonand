@@ -11,6 +11,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -376,5 +377,46 @@ describe('on a phone', () => {
     renderRecording();
     await screen.findByRole('heading', { name: 'Field recording, long take' });
     expect(screen.queryByRole('button', { name: 'Hide the details' })).toBeNull();
+  });
+});
+
+describe('how long a title can be (UI-45)', () => {
+  it('refuses a 201st character rather than letting the API refuse the save', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    await user.click(
+      within(await panel()).getByRole('button', { name: /Field recording, long take/ }),
+    );
+    const field = screen.getByRole('textbox', { name: 'Title' });
+    await user.clear(field);
+    await user.paste('t'.repeat(201));
+    expect(field).toHaveValue('t'.repeat(200));
+  });
+
+  it('says why under the title when the API refuses one for its length anyway', async () => {
+    server.use(
+      http.patch('/api/audio/:audio_uuid', () =>
+        HttpResponse.json(
+          {
+            type: '/errors/invalid_request',
+            title: 'Invalid request',
+            detail: 'String should have at most 200 characters',
+            status: 422,
+            errors: [{ field: 'title', detail: 'String should have at most 200 characters' }],
+          },
+          { status: 422, headers: { 'content-type': 'application/problem+json' } },
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderRecording();
+    await user.click(
+      within(await panel()).getByRole('button', { name: /Field recording, long take/ }),
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Title' }), ' again');
+    await user.tab();
+    expect(
+      await within(await panel()).findByText('A title can be at most 200 characters long.'),
+    ).toBeInTheDocument();
   });
 });

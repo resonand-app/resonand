@@ -37,6 +37,9 @@ export const RETRIES = 2;
 /** The status a race answers with: somebody else got there first. */
 export const CONFLICT = 409;
 
+/** The status a request the API could not accept answers with, one field at a time. */
+export const INVALID = 422;
+
 /** What the interface does when the instance says there is no session. */
 export type SessionEnded = () => void;
 
@@ -59,6 +62,9 @@ export const HANDLED = { handled: true } as const;
  * for the instance being unreachable. `meta: HANDLED_CONFLICT` says which of the two this is.
  */
 export const HANDLED_CONFLICT = { handled: CONFLICT } as const;
+
+/** The same for a field-level refusal, which a view draws under the field it belongs to. */
+export const HANDLED_INVALID = { handled: INVALID } as const;
 
 /**
  * Whether a failed write is this client's to report (`FBK-1`).

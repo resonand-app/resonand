@@ -142,6 +142,7 @@ export function LibraryCard({
           letterSpacing: 'var(--type-title-tracking)',
           color: 'var(--text)',
           textWrap: 'pretty',
+          overflowWrap: 'anywhere',
         }}
       >
         {href === undefined ? (

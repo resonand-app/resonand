@@ -32,6 +32,10 @@ export interface PageHeaderProps {
    * The design system holds no copy, so the word arrives from the view's own translations.
    */
   editLabel?: string;
+  /** The longest title the input takes. Ignored without `onTitleSave`. */
+  titleMaxLength?: number;
+  /** Why the last save of the title was refused, shown under it until the next one. */
+  titleError?: string | undefined;
   /** The mono meta line under it: "37 recordings · 24 h 12 min". Numbers, tabular. */
   meta?: string;
   /** A library's colour dot, or a state badge -- anything that qualifies the title. */
@@ -67,6 +71,8 @@ export function PageHeader({
   title,
   onTitleSave,
   editLabel,
+  titleMaxLength,
+  titleError,
   meta,
   before,
   actions,
@@ -149,6 +155,7 @@ export function PageHeader({
               color: 'var(--text)',
               minWidth: 0,
               textWrap: 'pretty',
+              overflowWrap: 'anywhere',
             }}
           >
             {onTitleSave === undefined ? (
@@ -158,7 +165,9 @@ export function PageHeader({
                 type="text"
                 ref={input}
                 value={draft}
+                maxLength={titleMaxLength}
                 aria-label={editLabel}
+                aria-invalid={titleError === undefined ? undefined : true}
                 onChange={(event) => {
                   setDraft(event.target.value);
                 }}
@@ -220,6 +229,18 @@ export function PageHeader({
             )}
           </h1>
         </div>
+        {titleError !== undefined && (
+          <span
+            role="alert"
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--type-ui-size-sm)',
+              color: 'var(--state-failed)',
+            }}
+          >
+            {titleError}
+          </span>
+        )}
         {meta !== undefined && (
           <span
             style={{

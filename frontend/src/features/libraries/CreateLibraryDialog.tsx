@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 
 import { post } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
+import { LIBRARY_NAME_MAX_LENGTH } from '@/api/limits';
 import { isApiProblem } from '@/api/problem';
 import { HANDLED } from '@/api/query-client';
 import { Button, ColorSwatchPicker, Dialog, Modal, TextField } from '@/design-system';
@@ -72,7 +73,12 @@ export function CreateLibraryDialog({ open, onClose }: CreateLibraryDialogProps)
   // A conflict is the name, and everything else is not: a 409 goes under the field somebody can
   // act on, and any other failure keeps the detail the API wrote for it.
   const problem = isApiProblem(create.error) ? create.error : undefined;
-  const nameError = problem?.isConflict === true ? problem.detail : problem?.fieldDetail('name');
+  const nameError =
+    problem?.isConflict === true
+      ? problem.detail
+      : problem?.fieldDetail('name') === undefined
+        ? undefined
+        : t('common:limit.libraryName', { max: LIBRARY_NAME_MAX_LENGTH });
   const otherError = problem !== undefined && nameError === undefined ? problem.detail : undefined;
 
   return (
@@ -105,7 +111,7 @@ export function CreateLibraryDialog({ open, onClose }: CreateLibraryDialogProps)
           <TextField
             label={t('create.name')}
             value={name}
-            maxLength={200}
+            maxLength={LIBRARY_NAME_MAX_LENGTH}
             data-initial-focus=""
             onChange={(event) => {
               setName(event.target.value);
