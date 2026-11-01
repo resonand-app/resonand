@@ -88,3 +88,59 @@ The tasks are `DAT-11` here, `API-26` and `API-27` in [`api.md`](api.md), `ING-1
       *Done when:* an account's favourites are a set of recordings it can read right now, no query
       can tell anybody else what is in it, and nothing but its owner and the cascade ever deletes
       from it.
+
+## How long a name can be
+
+A recording's title is capped at 500 characters when it is edited and not at all when it is
+uploaded, because `clean_title` takes it from a filename whatever its length; a library's name is
+capped at 200. Neither number was chosen for a screen. The first leaves a title the edit endpoint
+refuses to save back unchanged, and both put names into the sidebar, a card and a dialog that none
+of those was drawn for.
+
+**Recording titles are capped at 200 characters and library names at 100**, decided on 2026-11-01.
+Two hundred because a title starts life as a filename, filesystems stop at 255 bytes, and what
+recorders, podcasts and download scripts produce often runs past 100: a lower cap would cut real
+names on arrival. A library name is a label somebody types and reads in a sidebar, and 100 is more
+than any of them needs. Characters are code points, which is what pydantic's `max_length` and
+Python's `len` count.
+
+- [ ] **DAT-12** · 🧪 **A name has one ceiling, on every path that writes it.** The two limits are
+      constants in `core/`, and every writer reads them: `UpdateAudio.title` and the library
+      create and update schemas in `api/schemas.py`, the upload through `clean_title`, and the
+      import in `archive.py`, which sets a title from a sidecar with no check today.
+
+      **Typed by somebody, a name over the limit is refused** with the API's usual `422`. **Taken
+      from a filename or a sidecar, it is shortened**: an upload must never fail because a file
+      had a long name, and an archive must never fail to import because it was exported before
+      this. Shortening cuts at the last space inside the limit, or at the limit where there is no
+      space, strips what is left, and adds no ellipsis — the result is a name somebody can still
+      edit, not one that claims to be truncated. A recording loses nothing it cannot get back:
+      `original_filename` keeps the whole name, and the recording's technical details already
+      show it.
+
+      **A migration shortens what is already there**, by the same rule, so an archive upgraded
+      from `0.1.0` holds no row over either limit. Recordings in the trash included, since they
+      can be restored. It updates `audio.title` through SQL, so the triggers that keep the search
+      index in step with titles fire as they would for an edit, and it logs how many rows of each
+      kind it shortened, which is the number an operator would ask for.
+
+      `CHANGELOG.md` says it under *Changed*, in plain words: titles longer than 200 characters
+      and library names longer than 100 were shortened at a word on upgrade, the full filename is
+      still on the recording, and a longer name is now refused when typed. `API.md` documents both
+      limits where it documents the fields. The OpenAPI snapshot and `schema.ts` are regenerated
+      in the same commit.
+
+      *Rejected:* a `CHECK` constraint in SQLite. Adding one means rebuilding `audio` and `library`
+      in a batch migration, and `audio` carries the search triggers and every foreign key in the
+      schema; every write already goes through `db/`, and the test below holds each path to the
+      limit instead.
+
+      🧪 A title of 201 characters through `PATCH`, and a library name of 101 through create and
+      update, are refused with `422`; 200 and 100 pass. An upload whose filename stem is 300
+      characters arrives with a title of at most 200, cut at a space, and its `original_filename`
+      intact. An import whose sidecar carries a 300-character title does the same. The migration,
+      run over a database seeded with over-long titles and names, leaves none, and a search for a
+      word in a shortened title still finds it.
+
+      *Done when:* no path through the API, the upload or the import stores a title over 200
+      characters or a library name over 100, and no archive upgraded to this version holds one.

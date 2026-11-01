@@ -33,9 +33,10 @@ first version, which shipped as `0.1.0` on 2026-09-23.
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
 | [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build, what an export carries, and corrections to what it did |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
-| [`data.md`](data.md) | `DAT` | The schema and who may do what, after the first version, and where favourites are introduced |
-| [`api.md`](api.md) | `API` | Endpoints the first version did not have: marking a favourite, and the listing across libraries |
-| [`interface.md`](interface.md) | `UI` | Views the first version did not build: the heart, and the favourites view |
+| [`data.md`](data.md) | `DAT` | The schema and who may do what, after the first version, where favourites are introduced, and how long a name can be |
+| [`api.md`](api.md) | `API` | Endpoints the first version did not have: marking a favourite, the listing across libraries, and emptying the trash |
+| [`interface.md`](interface.md) | `UI` | Views the first version did not build: the heart, the favourites view, and fields that know a name's limit |
+| [`integration.md`](integration.md) | `INT` | Work across tracks: confirming a permanent deletion, and emptying the trash |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
 | [`defects.md`](defects.md) | `BUG` | Faults found by using the archive since it shipped |
 

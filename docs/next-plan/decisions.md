@@ -74,3 +74,48 @@ meant them to keep both has to raise them to Can manage. That makes it a minor r
 `CHANGELOG.md` entry has to say it in those words.
 
 **Blocks** `DAT-10` in [`data.md`](data.md), which applies it.
+
+## DEC-28 · How a permanent deletion is confirmed
+
+`UI-34m` built `TypedConfirm` for the one gesture the archive cannot take back: before a recording
+or a library leaves the trash for good, the name has to be typed. It was meant to be the gesture
+that says *this is the irreversible one*, distinct from the ordinary confirm that sends something
+to the trash.
+
+It does not hold up once somebody uses it. Raised as #69: a title taken from a filename is long,
+the name only ever appears inside a sentence, and the placeholder that repeats it cannot be
+selected — so somebody clearing a dozen recordings drags a selection twelve times, one row at a
+time. And it guards a step that is already the third deliberate one: a recording reaches *Delete
+now* only by being sent to the trash, then by opening the trash, then by pressing the button on
+its row.
+
+**Decided** on 2026-11-01: **a permanent deletion is confirmed in an ordinary dialog, and nothing
+is typed.** What `TypedConfirm` was there to protect is kept, and moved into the dialog's words
+and its focus:
+
+- The title says *permanently* and names what goes: one recording by its title, or several by
+  their count.
+- The description states the cost in numbers — recordings, duration, transcripts — and that it
+  cannot be undone, which is the promise `UI-34m` was written to keep and the reason "Are you
+  sure?" alone is never enough.
+- The danger button repeats the verb — *Delete permanently* — so the button read last says the
+  same as the title read first.
+- **Focus opens on Cancel**, so a dialog dismissed by habit with Enter destroys nothing.
+
+The difference from sending something to the trash is now in what the dialog says rather than in
+what it asks for: one says it can be restored for so many days, the other says it cannot be
+undone.
+
+*Rejected:* keeping the typed name and fixing how it is shown, which is what #69 offered. It makes
+one deletion easier to read and still asks for twelve retypes, or twelve selections, where twelve
+clicks would do — and bulk deletion (`INT-8`) cannot ask for a name at all, so the product would
+carry two confirmations for the same consequence.
+*Rejected:* typing a fixed word, "delete", instead of the name. It is friction with nothing left
+to read, since the word is the same every time.
+
+**The cost, named:** a confirm without a gesture is easier to pass on autopilot. What stands
+between a click and a loss is the trash itself and the retention window in front of it, the three
+steps above, and the focus on Cancel. The specification in `docs/internal/`, which names typed
+confirmation for the trash, is superseded on this point.
+
+**Blocks** `INT-7` and `INT-8` in [`integration.md`](integration.md), which apply it.
