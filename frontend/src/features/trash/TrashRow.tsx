@@ -17,6 +17,10 @@
  * focus on Cancel (`DEC-28`). Nothing is typed: reaching this button already took sending the
  * thing to the trash and opening the trash.
  *
+ * **A ticked library ticks what it groups** (`INT-8`): its children are drawn ticked and cannot be
+ * unticked on their own, because destroying the library destroys them whatever their own box
+ * says, and a box that disagreed would be a count that lied.
+ *
  * **The last day is marked unmistakably**, because it is the only row on this screen where doing
  * nothing is a decision.
  */
@@ -25,20 +29,31 @@ import { useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { colourOf } from '@/app/library-data';
-import { Button, Chip, Dialog, Modal } from '@/design-system';
+import { Button, Checkbox, Chip, Dialog, Modal } from '@/design-system';
 import { daysLeft, instant } from '@/i18n/time';
 
 import type { TrashActions, TrashEntry, TrashedLibrary, TrashedRecording } from './data';
+import type { Selected } from './selection';
 
 export interface TrashRowProps {
   entry: TrashEntry;
   /** From `GET /instance`. `undefined` until it has answered, and then no countdown is drawn. */
   retention: number | undefined;
   actions: TrashActions;
+  selection: { selected: Selected; onToggle: (uuid: string) => void };
 }
 
-export function TrashRow({ entry, retention, actions }: TrashRowProps) {
+export function TrashRow({ entry, retention, actions, selection }: TrashRowProps) {
   const { t } = useTranslation('trash');
+  const tick = (uuid: string, name: string, within?: string) => ({
+    checked:
+      selection.selected.has(uuid) || (within !== undefined && selection.selected.has(within)),
+    disabled: within !== undefined && selection.selected.has(within),
+    label: t('select', { name }),
+    onChange: () => {
+      selection.onToggle(uuid);
+    },
+  });
 
   if (entry.kind === 'recording') {
     return (
@@ -48,6 +63,7 @@ export function TrashRow({ entry, retention, actions }: TrashRowProps) {
           name={entry.recording.title}
           deletedAt={entry.deletedAt}
           retention={retention}
+          select={tick(entry.recording.uuid, entry.recording.title)}
           onRestore={() => {
             actions.restoreRecording.mutate(entry.recording);
           }}
@@ -72,6 +88,7 @@ export function TrashRow({ entry, retention, actions }: TrashRowProps) {
         detail={t('contains', { count: library.audio_count })}
         deletedAt={entry.deletedAt}
         retention={retention}
+        select={tick(library.uuid, library.name)}
         onRestore={() => {
           actions.restoreLibrary.mutate(library);
         }}
@@ -104,6 +121,7 @@ export function TrashRow({ entry, retention, actions }: TrashRowProps) {
                 library={library}
                 retention={retention}
                 actions={actions}
+                select={tick(child.uuid, child.title, library.uuid)}
               />
             </li>
           ))}
@@ -125,11 +143,13 @@ function OrphanedChild({
   library,
   retention,
   actions,
+  select,
 }: {
   recording: TrashedRecording;
   library: TrashedLibrary;
   retention: number | undefined;
   actions: TrashActions;
+  select: RowProps['select'];
 }) {
   const { t } = useTranslation('trash');
   return (
@@ -139,6 +159,7 @@ function OrphanedChild({
         name={recording.title}
         deletedAt={recording.deleted_at ?? ''}
         retention={retention}
+        select={select}
         onRestore={() => {
           actions.restoreRecording.mutate(recording);
         }}
@@ -183,6 +204,8 @@ interface RowProps {
   note?: string;
   deletedAt: string;
   retention: number | undefined;
+  /** The row's box in a selection (`INT-8`). */
+  select: { checked: boolean; disabled: boolean; label: string; onChange: () => void };
   onRestore: () => void;
   purge: { name: string; onConfirm: () => void };
   extra?: React.ReactNode;
@@ -196,6 +219,7 @@ function Row({
   note,
   deletedAt,
   retention,
+  select,
   onRestore,
   purge,
   extra,
@@ -218,69 +242,80 @@ function Row({
       }}
     >
       <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 'var(--space-1)',
-          minWidth: 0,
-        }}
+        style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--space-3)', minWidth: 0 }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-          {colour !== undefined && (
+        <Checkbox
+          checked={select.checked}
+          disabled={select.disabled}
+          label={select.label}
+          onChange={select.onChange}
+          size="row"
+        />
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-1)',
+            minWidth: 0,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            {colour !== undefined && (
+              <span
+                aria-hidden
+                style={{
+                  width: 10,
+                  height: 10,
+                  flex: '0 0 auto',
+                  borderRadius: 'var(--radius-chip)',
+                  background: colour,
+                }}
+              />
+            )}
             <span
-              aria-hidden
               style={{
-                width: 10,
-                height: 10,
-                flex: '0 0 auto',
-                borderRadius: 'var(--radius-chip)',
-                background: colour,
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--type-overline-size)',
+                textTransform: 'uppercase',
+                letterSpacing: 'var(--type-overline-tracking)',
+                color: 'var(--text-3)',
               }}
-            />
-          )}
+            >
+              {type}
+            </span>
+          </div>
           <span
             style={{
-              fontFamily: 'var(--font-mono)',
-              fontSize: 'var(--type-overline-size)',
-              textTransform: 'uppercase',
-              letterSpacing: 'var(--type-overline-tracking)',
+              fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--type-ui-size)',
+              color: 'var(--text)',
+              overflowWrap: 'anywhere',
+            }}
+          >
+            {name}
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: 'var(--type-ui-size-sm)',
               color: 'var(--text-3)',
             }}
           >
-            {type}
+            {[detail, instant(deletedAt)].filter(Boolean).join(' · ')}
           </span>
+          {note !== undefined && (
+            <span
+              style={{
+                maxWidth: 460,
+                fontFamily: 'var(--font-sans)',
+                fontSize: 'var(--type-ui-size-sm)',
+                color: 'var(--text-2)',
+              }}
+            >
+              {note}
+            </span>
+          )}
         </div>
-        <span
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'var(--type-ui-size)',
-            color: 'var(--text)',
-            overflowWrap: 'anywhere',
-          }}
-        >
-          {name}
-        </span>
-        <span
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: 'var(--type-ui-size-sm)',
-            color: 'var(--text-3)',
-          }}
-        >
-          {[detail, instant(deletedAt)].filter(Boolean).join(' · ')}
-        </span>
-        {note !== undefined && (
-          <span
-            style={{
-              maxWidth: 460,
-              fontFamily: 'var(--font-sans)',
-              fontSize: 'var(--type-ui-size-sm)',
-              color: 'var(--text-2)',
-            }}
-          >
-            {note}
-          </span>
-        )}
       </div>
       <div
         style={{

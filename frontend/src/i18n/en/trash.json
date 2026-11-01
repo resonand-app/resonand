@@ -24,6 +24,26 @@
     "title": "Delete <name>{{name}}</name> permanently?",
     "confirm": "Delete permanently"
   },
+  "select": "Select {{name}}",
+  "selectAll": "Select everything in the trash",
+  "held_one": "{{count}} item",
+  "held_other": "{{count}} items",
+  "emptyTrash": "Empty trash",
+  "bulk": {
+    "action": "Delete permanently",
+    "recordings_one": "{{count}} recording",
+    "recordings_other": "{{count}} recordings",
+    "libraries_one": "{{count}} library",
+    "libraries_other": "{{count}} libraries",
+    "pair": "{{first}} and {{second}}",
+    "title": "Delete <count>{{what}}</count> permanently?",
+    "counting": "Counting what is in the trash…",
+    "uncounted": "What is in the trash could not be counted, so nothing will be deleted.",
+    "done": "{{what}} deleted permanently.",
+    "skipped_one": "{{count}} item was no longer in the trash and was left as it was.",
+    "skipped_other": "{{count}} items were no longer in the trash and were left as they were.",
+    "failed": "Deleting did not finish. {{detail}}"
+  },
   "empty": {
     "title": "Nothing is waiting to be deleted",
     "body": "Deleting a recording or a library puts it here first, and it stays for {{count}} days before anything is destroyed."

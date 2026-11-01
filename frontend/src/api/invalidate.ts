@@ -28,6 +28,11 @@ export type Change =
   | { kind: 'recording-moved'; recording: string; from: string; to: string }
   /** A recording was trashed or restored, which changes a library and the trash. */
   | { kind: 'recording-lifecycle'; recording: string; library?: string }
+  /**
+   * Some of the trash, or all of it, was destroyed in one call. Which libraries lost a recording
+   * is not in the answer, so every library and every recording the cache holds is suspect.
+   */
+  | { kind: 'trash-destroyed' }
   /** An upload finished, so a library has something it did not have. */
   | { kind: 'upload'; library: string }
   /** Transcription was asked for, finished, or failed. */
@@ -83,6 +88,15 @@ export function staleAfter(change: Change): readonly (readonly unknown[])[] {
         keys.libraries(),
         keys.search(),
         ...(change.library ? [keys.library(change.library)] : []),
+      ];
+    case 'trash-destroyed':
+      return [
+        keys.trash(),
+        keys.libraries(),
+        ['recordings'],
+        keys.search(),
+        keys.allTags(),
+        keys.systemStatus(),
       ];
     case 'upload':
       return [keys.library(change.library), keys.libraries(), keys.search()];

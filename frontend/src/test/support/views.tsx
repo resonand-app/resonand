@@ -442,6 +442,24 @@ export const STATES: readonly StateUnderTest[] = [
     reached: 'Delete permanently',
   },
   {
+    name: 'V9 - Empty the trash',
+    of: view('V9 - Trash'),
+    draws: 'features/trash/BulkPurgeDialog.tsx',
+    prepare: fillTheTrash,
+    settled: 'Digitised cassette',
+    raise: (user) => press(user, 'Empty trash'),
+    reached: /permanently\?$/,
+  },
+  {
+    name: 'V9 - A selection in the trash',
+    of: view('V9 - Trash'),
+    prepare: fillTheTrash,
+    settled: 'Digitised cassette',
+    raise: (user) =>
+      user.click(screen.getByRole('checkbox', { name: 'Select Digitised cassette' })),
+    reached: '1 selected',
+  },
+  {
     name: 'V10 - Sessions',
     of: view('V10 - Settings'),
     at: `${routes.settings}?${SECTION_PARAM}=sessions`,

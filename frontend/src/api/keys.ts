@@ -55,6 +55,8 @@ export const keys = {
   trash: () => ['trash'] as const,
   trashedAudio: (filters?: ListFilters) => ['trash', 'audio', filters ?? {}] as const,
   trashedLibraries: (filters?: ListFilters) => ['trash', 'libraries', filters ?? {}] as const,
+  /** What emptying it would destroy, counted at an instant (`API-28`). */
+  trashSummary: () => ['trash', 'summary'] as const,
 
   /** Where audio goes when it is transcribed. Readable by anybody (`API-12`). */
   transcriptionDestination: () => ['transcription', 'destination'] as const,

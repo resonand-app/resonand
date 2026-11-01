@@ -41,7 +41,7 @@ two tasks apply it: to the deletion that exists, and to the bulk deletion that d
       *Done when:* no permanent deletion in the product asks for a name, and nothing imports
       `TypedConfirm`.
 
-- [ ] **INT-8** · 🧪 **The trash can be emptied, whole or in part, with one confirmation.** Rows in
+- [x] **INT-8** · 🧪 **The trash can be emptied, whole or in part, with one confirmation.** Rows in
       the trash can be selected, as recordings in a library can, and a selection replaces the
       view's header with the `BulkBar`, whose one destructive action is *Delete permanently*. When
       the trash is not empty, its header also offers *Empty trash*. Both open one dialog, under
