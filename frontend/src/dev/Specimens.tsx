@@ -783,6 +783,11 @@ export default function Specimens() {
         <Panel label="Toast · done" width={420}>
           <Toast onDismiss={() => undefined}>12 recordings moved to Field recordings</Toast>
         </Panel>
+        <Panel label="Toast · done, with an undo" width={420}>
+          <Toast onDismiss={() => undefined} actions={<Button variant="secondary">Undo</Button>}>
+            3 recordings sent to the trash
+          </Toast>
+        </Panel>
         <Panel label="Toast · failed, and still selected" width={420}>
           <Toast
             tone="failed"

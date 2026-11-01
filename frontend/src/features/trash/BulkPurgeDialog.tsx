@@ -53,13 +53,13 @@ export function BulkPurgeDialog({ open, selection, onClose, onSettled }: BulkPur
 
   const report = {
     onSuccess: (destroyed: TrashTally, skipped: readonly string[] = []) => {
-      raiseToast({
-        tone: 'done',
-        message: t('bulk.done', { what: what(t, destroyed.recordings, destroyed.libraries) }),
-      });
-      if (skipped.length > 0) {
-        raiseToast({ tone: 'failed', message: t('bulk.skipped', { count: skipped.length }) });
-      }
+      const gone = what(t, destroyed.recordings, destroyed.libraries);
+      // One toast, not two: a second would replace the first (`UI-46`).
+      raiseToast(
+        skipped.length === 0
+          ? { tone: 'done', message: t('bulk.done', { what: gone }) }
+          : { tone: 'failed', message: t('bulk.skipped', { what: gone, count: skipped.length }) },
+      );
     },
     onError: (error: unknown) => {
       raiseToast({

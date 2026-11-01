@@ -19,7 +19,7 @@ describe('Toast', () => {
     expect(screen.getByText('12 recordings moved to Field recordings')).toBeDefined();
   });
 
-  it('carries actions for a failure and none for a success', () => {
+  it('carries an action only when it is given one', () => {
     const { rerender } = render(<Toast>12 recordings moved</Toast>);
     expect(screen.queryByRole('button', { name: 'Retry 3' })).toBeNull();
     rerender(
@@ -28,6 +28,13 @@ describe('Toast', () => {
       </Toast>,
     );
     expect(screen.getByRole('button', { name: 'Retry 3' })).toBeDefined();
+  });
+
+  it('lets a success carry an undo', () => {
+    // A trash is undone exactly by a restore, so its success can offer one (`UI-46`).
+    render(<Toast actions={<button type="button">Undo</button>}>3 sent to the trash</Toast>);
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDefined();
+    expect(document.querySelector('[data-tone="done"]')).not.toBeNull();
   });
 
   it('tells the two apart with a glyph and not only a colour', () => {

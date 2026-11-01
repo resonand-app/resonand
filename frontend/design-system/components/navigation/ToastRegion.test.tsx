@@ -7,7 +7,7 @@
  * before it was read.
  */
 
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { Toast } from './Toast';
@@ -63,6 +63,61 @@ describe('ToastRegion', () => {
       vi.advanceTimersByTime(60_000);
     });
     expect(onDismiss).not.toHaveBeenCalled();
+  });
+
+  it('holds the timer while the pointer is on the toast, and resumes where it stopped', () => {
+    // Reaching for Undo must never race the clock that takes it away (`UI-46`).
+    const onDismiss = vi.fn();
+    render(<ToastRegion toasts={[entry('a', 1000)]} onDismiss={onDismiss} />);
+    const slot = screen.getByText('Moved a').closest<HTMLElement>('[data-ds="toast-slot"]');
+    if (slot === null) throw new Error('no slot');
+    act(() => {
+      vi.advanceTimersByTime(600);
+    });
+    fireEvent.pointerEnter(slot);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(onDismiss).not.toHaveBeenCalled();
+    fireEvent.pointerLeave(slot);
+    act(() => {
+      vi.advanceTimersByTime(300);
+    });
+    expect(onDismiss).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(onDismiss).toHaveBeenCalledWith('a');
+  });
+
+  it('holds the timer while the focus is inside the toast', () => {
+    const onDismiss = vi.fn();
+    render(
+      <ToastRegion
+        toasts={[
+          {
+            id: 'a',
+            timeout: 1000,
+            content: <Toast actions={<button type="button">Undo</button>}>Moved a</Toast>,
+          },
+        ]}
+        onDismiss={onDismiss}
+      />,
+    );
+    act(() => {
+      screen.getByRole('button', { name: 'Undo' }).focus();
+    });
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(onDismiss).not.toHaveBeenCalled();
+    act(() => {
+      screen.getByRole('button', { name: 'Undo' }).blur();
+    });
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(onDismiss).toHaveBeenCalledWith('a');
   });
 
   it('sits above the player rather than over it', () => {

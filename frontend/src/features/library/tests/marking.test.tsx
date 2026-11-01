@@ -111,7 +111,7 @@ describe('the heart on a card', () => {
       expect(heart.getAttribute('aria-pressed')).toBe('false');
     });
     expect(useToasts.getState().toasts.map((one) => one.message)).toEqual([
-      'Field recording, long take could not be marked as a favourite, so its heart is empty again.',
+      'Field recording, long take could not be marked as a favourite, so its heart is empty again',
     ]);
     expect(marked(FIELD_TAKE)).toBe(false);
   });
@@ -126,7 +126,11 @@ describe('the heart in the bulk bar', () => {
       await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
     }
     await user.click(screen.getByRole('button', { name: 'Add to favourites' }));
-    expect(await screen.findByText('2 recordings added to your favourites')).toBeVisible();
+    await waitFor(() => {
+      expect(useToasts.getState().toasts.map((one) => one.message)).toEqual([
+        '2 recordings added to your favourites',
+      ]);
+    });
     expect([marked(FIELD_TAKE), marked(CASSETTE)]).toEqual([true, true]);
 
     // One marked and one not: a selection that is partly marked can still be cleared in one press.
@@ -142,7 +146,11 @@ describe('the heart in the bulk bar', () => {
       await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
     }
     await user.click(await screen.findByRole('button', { name: 'Remove from favourites' }));
-    expect(await screen.findByText('2 recordings taken out of your favourites')).toBeVisible();
+    await waitFor(() => {
+      expect(useToasts.getState().toasts.map((one) => one.message)).toEqual([
+        '2 recordings taken out of your favourites',
+      ]);
+    });
     expect([marked(FIELD_TAKE), marked(CASSETTE)]).toEqual([false, false]);
   });
 });

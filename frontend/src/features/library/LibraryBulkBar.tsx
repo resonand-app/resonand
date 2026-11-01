@@ -4,17 +4,8 @@
  * A count and never a list of names: it has to survive a selection of two hundred, and two
  * hundred titles is a paragraph where a number belongs. `BulkBar` owns the row -- the same height
  * as `FilterBar`, so nothing moves when the first checkbox is ticked -- and this fills it with the
- * four actions §V3 names, plus the report that follows a run.
- *
- * **The report is a designed state, not an error** (§3.5). Every action here is one request per
- * recording, so some succeeding and some failing is the ordinary case at two hundred. It says
- * what moved and what did not, groups the reasons rather than listing two hundred identical
- * lines, and leaves the failures selected so a retry is one click.
- *
- * **`BulkReport` is exported and rendered by the view rather than by this bar**, because it has to
- * outlive the selection: when everything succeeds nothing stays selected, this bar is replaced by
- * the filter bar, and a report nested inside it would vanish at exactly the moment it had good
- * news. That was a real bug and a test caught it.
+ * four actions §V3 names. What a run did is reported by `useBulk` in a toast (`UI-46`), which
+ * outlives this bar: when everything succeeds nothing stays selected and the filter bar is back.
  *
  * **Every action here is a glyph** (`BulkBar` says why). The four are a category, a tag, a move
  * and the trash, which are the four a person reads off an icon without being told -- and the row
@@ -50,11 +41,9 @@ import { useTranslation } from 'react-i18next';
 import { useNarrowerThan } from '@/app/hooks/use-narrower-than';
 import { BulkBar } from '@/components/BulkBar';
 import { MoveDialog } from '@/components/MoveDialog';
-import { Button, IconButton, Menu, StateCard, TextField } from '@/design-system';
+import { Button, IconButton, Menu, TextField } from '@/design-system';
 
 import { CategoryPicker } from './CategoryPicker';
-import { reasonsIn } from './bulk';
-import type { Outcome } from './bulk';
 import type { Category, Recording } from './recordings';
 import type { Bulk } from './use-bulk';
 
@@ -99,8 +88,6 @@ export interface LibraryBulkBarProps {
   /** Whether the caller manages everything selected, which sending it to the trash needs. */
   canTrash: boolean;
   bulk: Bulk;
-  /** After a run: keep only these selected, which is what did not succeed (`UI-9c`). */
-  onOutcome: (outcome: Outcome) => void;
 }
 
 export function LibraryBulkBar({
@@ -116,7 +103,6 @@ export function LibraryBulkBar({
   canMove,
   canTrash,
   bulk,
-  onOutcome,
 }: LibraryBulkBarProps) {
   const { t } = useTranslation('library');
   const [tagging, setTagging] = useState(false);
@@ -124,10 +110,6 @@ export function LibraryBulkBar({
   const [tag, setTag] = useState('');
   const collapsed = useNarrowerThan(COLLAPSE);
   const uuids = selected.map((one) => one.uuid);
-
-  const after = (outcome: Outcome) => {
-    onOutcome(outcome);
-  };
 
   return (
     <>
@@ -145,14 +127,14 @@ export function LibraryBulkBar({
                 icon="heart"
                 label={t('bulk.favourite')}
                 onClick={() => {
-                  void bulk.favourite(uuids, true).then(after);
+                  void bulk.favourite(uuids, true);
                 }}
               />
               <IconButton
                 icon="heart-off"
                 label={t('bulk.unfavourite')}
                 onClick={() => {
-                  void bulk.favourite(uuids, false).then(after);
+                  void bulk.favourite(uuids, false);
                 }}
               />
               {canEdit && categories !== undefined && (
@@ -165,7 +147,8 @@ export function LibraryBulkBar({
                   // a category by accident while trying to clear a filter.
                   placeholder={t('bulk.category')}
                   onChange={(categoryId) => {
-                    void bulk.assignCategory(uuids, categoryId ?? null).then(after);
+                    const category = categories.find((one) => one.id === categoryId);
+                    void bulk.assignCategory(uuids, category ?? null);
                   }}
                 />
               )}
@@ -200,7 +183,7 @@ export function LibraryBulkBar({
                   ]}
                   onSelect={(id) => {
                     if (id === 'move') setMoving(true);
-                    if (id === 'trash') void bulk.trash(uuids).then(after);
+                    if (id === 'trash') void bulk.trash(uuids);
                   }}
                 />
               ) : (
@@ -219,7 +202,7 @@ export function LibraryBulkBar({
                       icon="trash-2"
                       label={t('bulk.trash')}
                       onClick={() => {
-                        void bulk.trash(uuids).then(after);
+                        void bulk.trash(uuids);
                       }}
                     />
                   )}
@@ -254,7 +237,7 @@ export function LibraryBulkBar({
           }}
           onConfirm={(destination) => {
             setMoving(false);
-            void bulk.move(uuids, destination).then(after);
+            void bulk.move(uuids, destination);
           }}
         />
       )}
@@ -281,7 +264,7 @@ export function LibraryBulkBar({
               const name = tag.trim();
               setTag('');
               setTagging(false);
-              void bulk.addTag(selected, name).then(after);
+              void bulk.addTag(selected, name);
             }}
           >
             {t('bulk.apply')}
@@ -298,51 +281,5 @@ export function LibraryBulkBar({
         </div>
       )}
     </>
-  );
-}
-
-/**
- * What a run did, per §3.5's partial-failure state.
- *
- * The successes are a number and the failures are their reasons, grouped: two hundred failures
- * with one cause is one thing to fix, and two hundred identical lines is a wall somebody scrolls
- * past. Retry acts on what is still selected, which is exactly what failed.
- */
-export function BulkReport({ bulk }: { bulk: Bulk }) {
-  const { t } = useTranslation('library');
-  const outcome = bulk.outcome;
-  if (outcome === null) return null;
-
-  const failed = outcome.failed.length;
-  const done = outcome.succeeded.length;
-
-  return (
-    <div style={{ marginBottom: 'var(--space-4)' }}>
-      <StateCard
-        icon={failed === 0 ? 'check' : 'alert-circle'}
-        title={
-          failed === 0
-            ? t(`bulk.allDone.${outcome.kind}`, { count: done })
-            : t('bulk.partial', { done, failed })
-        }
-        body={
-          failed === 0 ? undefined : (
-            <span>
-              {reasonsIn(outcome.failed).map((reason) => (
-                <span key={reason.detail} style={{ display: 'block' }}>
-                  {t('bulk.reason', { count: reason.count, detail: reason.detail })}
-                </span>
-              ))}
-            </span>
-          )
-        }
-        action={
-          <Button variant="secondary" onClick={bulk.dismiss}>
-            {t('bulk.dismiss')}
-          </Button>
-        }
-        {...(failed === 0 ? {} : { footnote: t('bulk.stillSelected', { count: failed }) })}
-      />
-    </div>
   );
 }

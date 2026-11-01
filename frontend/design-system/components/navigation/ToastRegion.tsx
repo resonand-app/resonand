@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 
 import { usePrefersReducedMotion } from '../../theme/reduced-motion';
@@ -24,7 +24,10 @@ export interface ToastRegionProps {
 /** How long an ordinary success stays. */
 const DEFAULT_TIMEOUT = 6000;
 
-/** One toast's own timer, so a stack of three does not expire together. */
+/**
+ * One toast's own timer, so a stack of three does not expire together, and held while the pointer
+ * or the focus is inside it -- reaching for a button must never race the clock that removes it.
+ */
 function Timed({
   entry,
   onDismiss,
@@ -33,19 +36,43 @@ function Timed({
   onDismiss: (id: string) => void;
 }) {
   const { id, timeout } = entry;
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const left = useRef(timeout ?? DEFAULT_TIMEOUT);
+  const held = hovered || focused;
 
   useEffect(() => {
-    if (timeout === null) return;
-    const after = timeout ?? DEFAULT_TIMEOUT;
+    if (timeout === null || held) return;
+    const started = Date.now();
     const timer = setTimeout(() => {
       onDismiss(id);
-    }, after);
+    }, left.current);
     return () => {
       clearTimeout(timer);
+      left.current -= Date.now() - started;
     };
-  }, [id, onDismiss, timeout]);
+  }, [id, onDismiss, timeout, held]);
 
-  return <>{entry.content}</>;
+  return (
+    <div
+      data-ds="toast-slot"
+      style={{ pointerEvents: 'auto', maxWidth: '100%' }}
+      onPointerEnter={() => {
+        setHovered(true);
+      }}
+      onPointerLeave={() => {
+        setHovered(false);
+      }}
+      onFocus={() => {
+        setFocused(true);
+      }}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false);
+      }}
+    >
+      {entry.content}
+    </div>
+  );
 }
 
 /**
@@ -65,9 +92,13 @@ function Timed({
  * reachable while anything else is happening, and a toast covering the play button while an
  * upload finishes is the one moment somebody is most likely to reach for it.
  *
- * Each toast holds its own timer, so a stack of three does not expire together, and a failure
- * carrying a retry takes `timeout: null` -- an action nobody had time to read is an action nobody
- * was offered.
+ * **The product shows one at a time** (`UI-46`): the app's store replaces the toast on screen with
+ * the newer one rather than stacking them, so what is showing is always the latest answer. The
+ * region still stacks whatever it is given, and draws the newest at the bottom.
+ *
+ * Each toast holds its own timer, so a stack of three does not expire together; the timer waits
+ * while the pointer or the focus is inside its toast; and a failure carrying a retry takes
+ * `timeout: null` -- an action nobody had time to read is an action nobody was offered.
  */
 export function ToastRegion({ toasts, onDismiss, playerVisible = false }: ToastRegionProps) {
   const reduced = usePrefersReducedMotion();
@@ -97,9 +128,7 @@ export function ToastRegion({ toasts, onDismiss, playerVisible = false }: ToastR
       }}
     >
       {toasts.map((entry) => (
-        <div key={entry.id} style={{ pointerEvents: 'auto', maxWidth: '100%' }}>
-          <Timed entry={entry} onDismiss={onDismiss} />
-        </div>
+        <Timed key={entry.id} entry={entry} onDismiss={onDismiss} />
       ))}
     </div>
   );

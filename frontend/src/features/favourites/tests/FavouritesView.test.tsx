@@ -8,18 +8,23 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes } from '@/app/routes';
 import { ThemeProvider } from '@/design-system';
 import { CASSETTE, FIELD_TAKE, REHEARSAL, VOICE_NOTE, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
+import { useToasts } from '@/app/toasts';
 
 import { FavouritesView } from '../FavouritesView';
 import { rulesFor } from '../rules';
 
 mockApi();
+
+afterEach(() => {
+  useToasts.setState({ toasts: [] });
+});
 
 /** Mark these, oldest first, at these levels. */
 function marked(...entries: { uuid: string; level?: 10 | 20 | 30 | 40 }[]) {
@@ -274,7 +279,11 @@ describe('what a selection offers', () => {
     renderFavourites();
     await select(user, 'Field recording, long take');
     await user.click(screen.getByRole('button', { name: 'Remove from favourites' }));
-    expect(await screen.findByText('One recording taken out of your favourites')).toBeVisible();
+    await waitFor(() => {
+      expect(useToasts.getState().toasts.map((one) => one.message)).toEqual([
+        'One recording taken out of your favourites',
+      ]);
+    });
     await waitFor(() => {
       expect(screen.queryByText('Field recording, long take')).toBeNull();
     });

@@ -61,7 +61,7 @@ import { LibraryFilters } from './LibraryFilters';
 import { ListFailed, Loading, NothingMatched, NothingYet } from './LibraryStates';
 import { LibraryHeader } from './LibraryHeader';
 import { MoreRecordings } from './MoreRecordings';
-import { BulkReport, LibraryBulkBar } from './LibraryBulkBar';
+import { LibraryBulkBar } from './LibraryBulkBar';
 import { RecordingGrid } from './RecordingGrid';
 import { RecordingList } from './RecordingList';
 import { useLibrary } from './data';
@@ -90,7 +90,16 @@ export function LibraryView() {
   const source = inLibrary(uuid);
   const recordings = useRecordings(source, libraryQuery(filters));
   const [selection, setSelection] = useState(EMPTY);
-  const bulk = useBulk(uuid);
+  // What is left selected after a run is what did not succeed, so Retry is one click rather than
+  // a reconstruction of what somebody had picked (`UI-9c`).
+  const bulk = useBulk(uuid, (outcome) => {
+    setSelection((was) =>
+      retain(
+        was,
+        outcome.failed.map((failure) => failure.uuid),
+      ),
+    );
+  });
   const [stickyRef, headerHeight] = useStickyHeader();
   // What a run needs in full rather than by uuid: adding a tag reads a recording's own tags
   // before it writes them back (`use-bulk.ts`). The page in hand covers the ordinary selection;
@@ -243,24 +252,11 @@ export function LibraryView() {
             canMove={context.canManage}
             canTrash={context.canManage}
             bulk={bulk}
-            onOutcome={(outcome) => {
-              // What is left selected is what did not succeed, so Retry is one click rather than a
-              // reconstruction of what somebody had picked (`UI-9c`).
-              setSelection((was) =>
-                retain(
-                  was,
-                  outcome.failed.map((failure) => failure.uuid),
-                ),
-              );
-            }}
           />
         ) : (
           <LibraryFilters categories={categories.all} />
         )}
       </div>
-      {/* Outside the swap above: a run that succeeded entirely leaves nothing selected, and a
-          report inside the bulk bar would disappear at the moment it had something to say. */}
-      {bulk.outcome !== null && <BulkReport bulk={bulk} />}
       {body()}
     </section>
   );

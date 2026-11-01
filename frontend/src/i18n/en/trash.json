@@ -39,9 +39,9 @@
     "title": "Delete <count>{{what}}</count> permanently?",
     "counting": "Counting what is in the trash…",
     "uncounted": "What is in the trash could not be counted, so nothing will be deleted.",
-    "done": "{{what}} deleted permanently.",
-    "skipped_one": "{{count}} item was no longer in the trash and was left as it was.",
-    "skipped_other": "{{count}} items were no longer in the trash and were left as they were.",
+    "done": "{{what}} deleted permanently",
+    "skipped_one": "{{what}} deleted permanently. {{count}} item was no longer in the trash and was left as it was.",
+    "skipped_other": "{{what}} deleted permanently. {{count}} items were no longer in the trash and were left as they were.",
     "failed": "Deleting did not finish. {{detail}}"
   },
   "empty": {

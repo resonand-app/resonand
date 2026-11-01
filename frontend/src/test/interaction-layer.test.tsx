@@ -154,11 +154,13 @@ describe('the interaction layer', WHOLE_SYSTEM, () => {
     // because it is not painting: a tooltip's existence is the thing hovering decides, and no
     // stylesheet can render an element that is not there. It uses the pointer events rather than
     // the mouse ones, which is what this matcher permits and the rule below still forbids.
+    // `ToastRegion` is the second, for the same reason: it holds a toast's timer while the pointer
+    // is on it (`UI-46`), and a stylesheet cannot stop a clock.
     const sources = Object.entries(SOURCES).filter(([path]) => !path.includes('.test.'));
     expect(sources.length).toBeGreaterThan(15);
     for (const [path, source] of sources) {
       expect(source, path).not.toMatch(/onMouseEnter|onMouseLeave|onMouseOver/);
-      if (path.endsWith('Tooltip.tsx')) continue;
+      if (path.endsWith('Tooltip.tsx') || path.endsWith('ToastRegion.tsx')) continue;
       expect(source, path).not.toMatch(/onPointerEnter|onPointerLeave/);
     }
   });

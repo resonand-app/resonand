@@ -4,11 +4,11 @@ import { Icon } from '../foundation/Icon';
 import { IconButton } from '../forms/IconButton';
 
 export interface ToastProps {
-  /** `done` is one line and a tick; `failed` is multi-line and carries actions. */
+  /** `done` is one line and a tick; `failed` is multi-line and says what did not happen. */
   tone?: 'done' | 'failed';
   /** What happened, in numbers. "12 recordings moved to Field recordings". */
   children: ReactNode;
-  /** Buttons for a failure: a retry, and a way to put it away. */
+  /** One thing to do about it: a retry after a failure, an undo after something reversible. */
   actions?: ReactNode;
   onDismiss?: () => void;
 }
@@ -16,10 +16,15 @@ export interface ToastProps {
 /**
  * Something finished while you were looking somewhere else (`UI-34h`).
  *
- * Bulk outcomes, an upload finishing, a background failure. Success is one line and a tick;
- * failure is multi-line, says what succeeded and what did not, and carries the retry -- because
- * the normal case for a bulk action in this product is partial (§3.5: there is no bulk endpoint,
- * so 200 recordings is 200 requests, and some of them fail).
+ * Bulk outcomes, an upload finishing, a background failure. Success is a tick, and may carry an
+ * undo where the thing it reports can be taken back exactly; failure says what succeeded and what
+ * did not, and carries the retry -- because the normal case for a bulk action in this product is
+ * partial (§3.5: there is no bulk endpoint, so 200 recordings is 200 requests, and some of them
+ * fail).
+ *
+ * **One line wherever the width allows, its button included** (`UI-46`). The sentence and the
+ * button sit side by side and wrap only when they do not fit the window, so the toast is as short
+ * as it can be over the view it covers. No width of its own: the region's is the only limit.
  *
  * **Never the only place a result exists.** A toast is a courtesy for somebody who was looking
  * elsewhere, and it is gone in a few seconds; the recordings that failed to move are still
@@ -42,21 +47,32 @@ export function Toast({ tone = 'done', children, actions, onDismiss }: ToastProp
       data-tone={tone}
       style={{
         display: 'flex',
-        alignItems: failed ? 'flex-start' : 'center',
+        alignItems: 'center',
         gap: 12,
-        padding: '12px 14px',
+        padding: '10px 14px',
         borderRadius: 'var(--radius-panel)',
         boxShadow: 'var(--elevation-overlay)',
         fontFamily: 'var(--font-sans)',
-        maxWidth: 420,
       }}
     >
-      <span data-ds="toast-glyph" style={{ display: 'flex', paddingTop: failed ? 1 : 0 }}>
+      <span data-ds="toast-glyph" style={{ display: 'flex' }}>
         <Icon name={failed ? 'alert-circle' : 'check'} size={17} />
       </span>
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          columnGap: 12,
+          rowGap: 6,
+        }}
+      >
         <span
           style={{
+            flex: '1 1 auto',
+            minWidth: 0,
             fontSize: 'var(--type-ui-size)',
             lineHeight: 'var(--type-body-leading)',
             color: 'var(--text)',

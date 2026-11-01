@@ -34,7 +34,7 @@ import type { Filters, ViewSorts } from '@/app/url-state';
 import { Button, PageHeader, StateCard } from '@/design-system';
 import { LibraryFilters } from '@/features/library/LibraryFilters';
 import { ListFailed, Loading } from '@/features/library/LibraryStates';
-import { BulkReport, LibraryBulkBar } from '@/features/library/LibraryBulkBar';
+import { LibraryBulkBar } from '@/features/library/LibraryBulkBar';
 import { MoreRecordings } from '@/features/library/MoreRecordings';
 import { RecordingGrid } from '@/features/library/RecordingGrid';
 import { RecordingList } from '@/features/library/RecordingList';
@@ -88,7 +88,16 @@ function Favourites() {
     queryFn: () => get('/api/audio', { query: { favourite: true, limit: 1 } }),
   });
   const [selection, setSelection] = useState(EMPTY);
-  const bulk = useBulk();
+  // What is left selected after a run is what did not succeed, so Retry is one click rather than
+  // a reconstruction of what somebody had picked (`UI-9c`).
+  const bulk = useBulk(undefined, (outcome) => {
+    setSelection((was) =>
+      retain(
+        was,
+        outcome.failed.map((failure) => failure.uuid),
+      ),
+    );
+  });
   const [stickyRef, headerHeight] = useStickyHeader();
   const [everything, setEverything] = useState<{ query: string; items: Recording[] } | null>(null);
   const queryKey = JSON.stringify(query);
@@ -222,20 +231,11 @@ function Favourites() {
             canMove={rules.canMove}
             canTrash={rules.canTrash}
             bulk={bulk}
-            onOutcome={(outcome) => {
-              setSelection((was) =>
-                retain(
-                  was,
-                  outcome.failed.map((failure) => failure.uuid),
-                ),
-              );
-            }}
           />
         ) : (
           <LibraryFilters />
         )}
       </div>
-      {bulk.outcome !== null && <BulkReport bulk={bulk} />}
       {body()}
     </section>
   );
