@@ -71,7 +71,7 @@ destroy something before its retention runs out is `API-19`'s one call per item,
 the trash can only be emptied one row at a time. The view is `INT-8` in
 [`integration.md`](integration.md).
 
-- [ ] **API-28** · 🧪 **Destroying many things in the trash in one call, and saying first what
+- [x] **API-28** · 🧪 **Destroying many things in the trash in one call, and saying first what
       that would destroy.** Three routes, all in the trash namespace for the reason `purge`'s
       docstring gives — the irreversible call is never a flag on the reversible one — and all
       resolving through `acl/query.py` at manage, as `DAT-10` left the trash:
@@ -92,6 +92,15 @@ the trash can only be emptied one row at a time. The view is `INT-8` in
       go in the one write session and the files after the commit, as `purge` does today (`REV-1`);
       if the full demo archive shows that holding the write lock for longer than a second, the rows
       are committed in chunks, and the task records the measurement either way.
+
+      **Measured, and no chunks.** The full demo archive with `extras.sh`'s shapes, every
+      recording trashed: 250 recordings and a library emptied in one call held the write lock
+      for about 0.6 s, and most of that was not the rows. `remove_recording`'s delete synchronised
+      the session after each row by scanning every recording already loaded, which made a purge
+      of *n* quadratic — the retention purge and `purge_library` included. With that turned off
+      the same empty holds the lock for 85 ms, about 0.34 ms a recording, so a second is somewhere
+      near 3,000 recordings in one empty. The summary reads the same set in 45 ms. A selection
+      is bounded at 500 uuids of each kind, which is `422` past it.
 
       Each route has a client in `src/api/` and the OpenAPI snapshot and `schema.ts` are
       regenerated in the same commit. `API.md` documents them. ⇢ DAT-10

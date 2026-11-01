@@ -1292,6 +1292,50 @@
         "title": "ProviderStatus",
         "type": "object"
       },
+      "PurgeResult": {
+        "additionalProperties": false,
+        "properties": {
+          "destroyed": {
+            "$ref": "#/components/schemas/TrashTally"
+          },
+          "skipped": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "destroyed",
+          "skipped"
+        ],
+        "title": "PurgeResult",
+        "type": "object"
+      },
+      "PurgeSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "audio_uuids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Audio Uuids",
+            "type": "array"
+          },
+          "library_uuids": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "title": "Library Uuids",
+            "type": "array"
+          }
+        },
+        "title": "PurgeSelection",
+        "type": "object"
+      },
       "ReorderCategories": {
         "additionalProperties": false,
         "properties": {
@@ -2056,6 +2100,70 @@
           "error"
         ],
         "title": "TranscriptionStatus",
+        "type": "object"
+      },
+      "TrashSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "counted_at": {
+            "title": "Counted At",
+            "type": "string"
+          },
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "libraries": {
+            "title": "Libraries",
+            "type": "integer"
+          },
+          "recordings": {
+            "title": "Recordings",
+            "type": "integer"
+          },
+          "transcripts": {
+            "title": "Transcripts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "recordings",
+          "libraries",
+          "duration_ms",
+          "transcripts",
+          "counted_at"
+        ],
+        "title": "TrashSummary",
+        "type": "object"
+      },
+      "TrashTally": {
+        "additionalProperties": false,
+        "description": "What a part of the trash amounts to, in the numbers a confirmation states (``API-28``).",
+        "properties": {
+          "duration_ms": {
+            "title": "Duration Ms",
+            "type": "integer"
+          },
+          "libraries": {
+            "title": "Libraries",
+            "type": "integer"
+          },
+          "recordings": {
+            "title": "Recordings",
+            "type": "integer"
+          },
+          "transcripts": {
+            "title": "Transcripts",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "recordings",
+          "libraries",
+          "duration_ms",
+          "transcripts"
+        ],
+        "title": "TrashTally",
         "type": "object"
       },
       "UpdateAudio": {
@@ -5316,6 +5424,52 @@
         ]
       }
     },
+    "/api/trash": {
+      "delete": {
+        "description": "Empty the trash of everything sent to it up to ``trashed_before``, and nothing after.\n\nThe instant is required rather than defaulting to now: what was trashed after somebody read\nthe numbers is not what they agreed to destroy, and is left where it is.",
+        "operationId": "empty_api_trash_delete",
+        "parameters": [
+          {
+            "description": "The `counted_at` of the summary somebody agreed to. Required.",
+            "in": "query",
+            "name": "trashed_before",
+            "required": true,
+            "schema": {
+              "description": "The `counted_at` of the summary somebody agreed to. Required.",
+              "format": "date-time",
+              "title": "Trashed Before",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrashTally"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Empty",
+        "tags": [
+          "trash"
+        ]
+      }
+    },
     "/api/trash/audio": {
       "get": {
         "description": "What is in the trash, with the closest to being purged first (``INT-1``).",
@@ -5499,6 +5653,70 @@
         "summary": "Purge Trashed Library",
         "tags": [
           "libraries"
+        ]
+      }
+    },
+    "/api/trash/purge": {
+      "post": {
+        "description": "Destroy a selection of the trash, and report every uuid that was not destroyed.\n\nIts transaction is its own, and the files go after the commit, for the reason\n``DELETE /trash/audio/{audio_uuid}`` gives (``REV-1``).",
+        "operationId": "purge_api_trash_purge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PurgeSelection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurgeResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Purge",
+        "tags": [
+          "trash"
+        ]
+      }
+    },
+    "/api/trash/summary": {
+      "get": {
+        "description": "What emptying the trash would destroy, counted now.\n\nThe interface cannot add this up itself, because the trash it lists is paged.",
+        "operationId": "summary_api_trash_summary_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrashSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Summary",
+        "tags": [
+          "trash"
         ]
       }
     },

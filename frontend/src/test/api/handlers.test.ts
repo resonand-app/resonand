@@ -8,12 +8,21 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { get, patch, post } from '@/api/client';
+import { get, patch, post, remove } from '@/api/client';
 import { ApiProblem } from '@/api/problem';
 
 import openapi from '@/api/contract/openapi.json';
 
-import { RECORDINGS, REHEARSAL, FIELD_TAKE, PERSONAL, archive } from './archive';
+import {
+  CASSETTE,
+  FIELD_TAKE,
+  INTERVIEW,
+  PERSONAL,
+  RECORDINGS,
+  REHEARSAL,
+  VOICE_NOTE,
+  archive,
+} from './archive';
 import { handlers } from './handlers';
 import { mockApi } from './server';
 
@@ -103,5 +112,50 @@ describe('what a view sees', () => {
     expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.title).toBe(
       'Field recording, long take',
     );
+  });
+});
+
+describe('the trash as a whole', () => {
+  /** The library of three in the trash, one of its recordings trashed before it, and a note after. */
+  function trashSome() {
+    const at: Record<string, string> = {
+      [CASSETTE]: '2026-10-01T10:00:00.000Z',
+      [RECORDINGS]: '2026-10-02T10:00:00.000Z',
+      [VOICE_NOTE]: '2026-10-03T10:00:00.000Z',
+    };
+    archive.libraries = archive.libraries.map((one) => ({
+      ...one,
+      deleted_at: at[one.uuid] ?? one.deleted_at,
+    }));
+    archive.recordings = archive.recordings.map((one) => ({
+      ...one,
+      deleted_at: at[one.uuid] ?? one.deleted_at,
+    }));
+  }
+
+  it('counts a recording reached through its library and on its own once', async () => {
+    trashSome();
+    const summary = await get('/api/trash/summary');
+    expect(summary).toMatchObject({ recordings: 4, libraries: 1 });
+  });
+
+  it('skips what it could not destroy, and destroys a library with what it holds', async () => {
+    trashSome();
+    const result = await post('/api/trash/purge', {
+      body: { library_uuids: [RECORDINGS], audio_uuids: [CASSETTE, INTERVIEW, 'nope'] },
+    });
+    expect(result.destroyed).toMatchObject({ recordings: 3, libraries: 1 });
+    expect(result.skipped).toEqual([INTERVIEW, 'nope']);
+    expect(archive.recordings.map((one) => one.uuid)).toEqual([VOICE_NOTE, INTERVIEW]);
+    expect(archive.libraries.map((one) => one.uuid)).not.toContain(RECORDINGS);
+  });
+
+  it('leaves what was trashed after the instant it was given', async () => {
+    trashSome();
+    const emptied = await remove('/api/trash', {
+      query: { trashed_before: '2026-10-02T12:00:00.000Z' },
+    });
+    expect(emptied).toMatchObject({ recordings: 3, libraries: 1 });
+    expect(archive.recordings.map((one) => one.uuid)).toEqual([VOICE_NOTE, INTERVIEW]);
   });
 });

@@ -37,6 +37,7 @@ from resonand.api.routes import (
     operations,
     search,
     transcription,
+    trash,
     users,
 )
 from resonand.api.spa import inline_script_hashes, install_spa
@@ -136,6 +137,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         auth.router,
         libraries.router,
         libraries.trash_router,
+        trash.router,
         audio.router,
         ingest.router,
         events.router,

@@ -76,6 +76,7 @@ setting a cookie the browser will discard.
 | `POST /api/audio/{audio_uuid}/transcribe` | Ask for one; `GET …/transcription` is what is happening to it; `…/transcribe/cancel` gives up |
 | `GET /api/audio/{audio_uuid}/transcript` | The active transcript as timed segments. `…/transcripts` lists every version, and one is made active with `…/transcripts/{id}/activate` |
 | `GET /api/audio/{audio_uuid}/original` | The original file, byte for byte, exactly as it was ingested |
+| `GET /api/trash/summary` | What emptying the trash would destroy — recordings, libraries, duration, transcripts — and the `counted_at` instant they hold at. `DELETE /api/trash?trashed_before=<counted_at>` destroys exactly that and nothing trashed since; `POST /api/trash/purge` destroys a selection of `library_uuids` and `audio_uuids`, and lists every uuid it did not destroy without saying why |
 | `GET /api/events` | `text/event-stream`: what changed, as it changes, rather than polling |
 
 **Playback is the one endpoint shaped by the browser rather than by the API.**

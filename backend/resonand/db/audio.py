@@ -211,9 +211,9 @@ def trashed_audio(user_id: int) -> Select[tuple[Audio, int]]:
 def remove_recording(session: Session, audio: Audio) -> str:
     """Delete one recording's row, returning the uuid whose files now have to go.
 
-    **It resolves nothing.** Both callers have already decided they may do this -- the retention
-    purge because the instance's own clock said so, :func:`purge_audio` because it asked the ACL --
-    and this is the row half of the operation on its own.
+    **It resolves nothing.** Every caller has already decided it may do this -- the retention
+    purge because the instance's own clock said so, the purges in the trash because they asked
+    the ACL -- and this is the row half of the operation on its own.
 
     The caller deletes the files afterwards and **outside this transaction**, which is the
     opposite of the intuitive order and deliberate: a crash between the two leaves files no row
@@ -222,7 +222,13 @@ def remove_recording(session: Session, audio: Audio) -> str:
     """
     audio_uuid = audio.uuid
     search_index.remove_audio(session, audio.id)
-    session.execute(delete(Audio).where(Audio.id == audio.id))
+    # The default synchronisation scans every loaded recording on each call, which makes a purge
+    # of n quadratic inside the write lock; no mapped relationship needs it.
+    session.execute(
+        delete(Audio).where(Audio.id == audio.id),
+        execution_options={"synchronize_session": False},
+    )
+    session.expunge(audio)
     return audio_uuid
 
 

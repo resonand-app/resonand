@@ -77,6 +77,42 @@ function setDisabled(id: number, disabledAt: string | null) {
   return HttpResponse.json(changed);
 }
 
+interface Doomed {
+  libraries: Schemas['LibrarySummary'][];
+  recordings: Schemas['AudioSummary'][];
+}
+
+/** What a purge or an empty would take: trashed libraries with all they hold, and trashed recordings. */
+function doomed(scope: { libraries?: string[]; audio?: string[]; before?: string }): Doomed {
+  const inScope = (deletedAt: string | null, uuid: string, picked?: string[]) =>
+    deletedAt !== null &&
+    (!picked || picked.includes(uuid)) &&
+    (!scope.before || deletedAt <= scope.before);
+  const libraries = archive.libraries.filter((one) =>
+    inScope(one.deleted_at, one.uuid, scope.libraries),
+  );
+  const taken = new Set(libraries.map((one) => one.uuid));
+  const recordings = archive.recordings.filter(
+    (one) => taken.has(one.library_uuid) || inScope(one.deleted_at, one.uuid, scope.audio),
+  );
+  return { libraries, recordings };
+}
+
+function tally({ libraries, recordings }: Doomed): Schemas['TrashTally'] {
+  return {
+    recordings: recordings.length,
+    libraries: libraries.length,
+    duration_ms: recordings.reduce((sum, one) => sum + (one.duration_ms ?? 0), 0),
+    transcripts: recordings.filter((one) => one.transcription_state === 'done').length,
+  };
+}
+
+function destroy(found: Doomed): Schemas['TrashTally'] {
+  archive.libraries = archive.libraries.filter((one) => !found.libraries.includes(one));
+  archive.recordings = archive.recordings.filter((one) => !found.recordings.includes(one));
+  return tally(found);
+}
+
 /** What the API says about anything the caller may not read, or that is not there (`DEC-14`). */
 const NOT_FOUND = () => problem(404, 'There is no such thing here, or it is not yours.');
 
@@ -666,6 +702,30 @@ export const handlers: HttpHandler[] = [
     // endpoint does -- and a mock that left them would make the confirmation's count a lie.
     archive.recordings = archive.recordings.filter((one) => one.library_uuid !== existing.uuid);
     return new HttpResponse(null, { status: 204 });
+  }),
+  // `API-28`. The three read one set the way the endpoints do: a library takes everything in it,
+  // a recording reached twice counts once, and an instant bounds what an empty may take.
+  http.get('/api/trash/summary', () => {
+    const counted_at = new Date().toISOString();
+    return HttpResponse.json({ ...tally(doomed({ before: counted_at })), counted_at });
+  }),
+  http.post('/api/trash/purge', async ({ request }) => {
+    const body = (await request.json()) as Schemas['PurgeSelection'];
+    const libraries = body.library_uuids ?? [];
+    const audio = body.audio_uuids ?? [];
+    const found = doomed({ libraries, audio });
+    const destroyed = new Set(found.recordings.map((one) => one.uuid));
+    const purged = new Set(found.libraries.map((one) => one.uuid));
+    const skipped = [
+      ...new Set(libraries.filter((uuid) => !purged.has(uuid))),
+      ...new Set(audio.filter((uuid) => !destroyed.has(uuid))),
+    ];
+    return HttpResponse.json({ destroyed: destroy(found), skipped });
+  }),
+  http.delete('/api/trash', ({ request }) => {
+    const before = new URL(request.url).searchParams.get('trashed_before');
+    if (!before) return problem(422, 'trashed_before is required.');
+    return HttpResponse.json(destroy(doomed({ before })));
   }),
 
   // --- Where audio goes, and who may know -----------------------------------

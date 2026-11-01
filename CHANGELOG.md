@@ -22,6 +22,10 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 
 ### Added
 
+- **The trash can be destroyed in one call, whole or in part.** `GET /api/trash/summary` says
+  what emptying it would destroy, in numbers and as of an instant; `DELETE /api/trash` takes that
+  instant as `trashed_before` and leaves anything trashed since; `POST /api/trash/purge` destroys a
+  selection and lists back every uuid it did not. `API.md` has the details.
 - **`resonand import --restore`** takes a recording it updates back out of the trash. Without it,
   the trash is left as it is and the import says so; a library in the trash is never restored by
   an import, since that would bring back everything in it.
