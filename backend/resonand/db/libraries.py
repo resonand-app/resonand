@@ -25,6 +25,7 @@ from resonand.acl.query import library_acl, library_select, require_library
 from resonand.core import colours
 from resonand.core.errors import ConflictError, InvalidRequestError, NotFoundError
 from resonand.core.levels import GRANTABLE, Level
+from resonand.core.text import LIBRARY_NAME_MAX_LENGTH
 from resonand.core.time import now_instant
 from resonand.db.audio import remove_recording
 from resonand.db.models import Audio, Library, Share, User
@@ -77,6 +78,18 @@ def totals_for_libraries(
     return {library_id: counted.get(library_id, (0, 0)) for library_id in library_ids}
 
 
+def _library_name(name: str) -> str:
+    """A name somebody typed, trimmed, and refused when it is empty or over the limit."""
+    cleaned = name.strip()
+    if not cleaned:
+        raise InvalidRequestError("A library needs a name.")
+    if len(cleaned) > LIBRARY_NAME_MAX_LENGTH:
+        raise InvalidRequestError(
+            f"A library name can be at most {LIBRARY_NAME_MAX_LENGTH} characters long."
+        )
+    return cleaned
+
+
 def create_library(
     session: Session,
     owner_id: int,
@@ -86,12 +99,9 @@ def create_library(
     colour: str = colours.DEFAULT.value,
 ) -> Library:
     """Create a library owned by this user. Anybody with an account may."""
-    cleaned = name.strip()
-    if not cleaned:
-        raise InvalidRequestError("A library needs a name.")
     library = Library(
         owner_id=owner_id,
-        name=cleaned,
+        name=_library_name(name),
         description=(description or None),
         colour=colours.Colour(colour).value,
         created_at=now_instant(),
@@ -117,10 +127,7 @@ def update_library(
     """
     library, level = require_library(session, user_id, library_uuid, Level.EDIT)
     if name is not None:
-        cleaned = name.strip()
-        if not cleaned:
-            raise InvalidRequestError("A library needs a name.")
-        library.name = cleaned
+        library.name = _library_name(name)
     if description is not None:
         library.description = description or None
     if colour is not None:

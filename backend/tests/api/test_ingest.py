@@ -12,6 +12,7 @@ from fastapi import status
 from fastapi.testclient import TestClient
 from resonand.api.app import create_app
 from resonand.core.config import Settings
+from resonand.core.text import TITLE_MAX_LENGTH
 from resonand.db.audio import create_audio
 from resonand.db.engine import Database
 from resonand.db.models import Audio, Job, Library
@@ -66,6 +67,28 @@ def test_an_uploaded_recording_is_stored_and_hashed_in_one_pass(
     assert made["sha256"]
     assert made["size_bytes"] == recording.stat().st_size
     assert made["title"] == "Recording 2024-03-11 18.22", "the filename, lightly cleaned"
+
+
+@needs_ffmpeg
+@pytest.mark.ffmpeg
+def test_a_long_filename_arrives_as_a_title_inside_the_limit(
+    client: TestClient, accounts: dict[str, int], owner_library: str, recording: Path
+) -> None:
+    """DAT-12: an upload never fails for its name, and the whole name is kept beside the title."""
+    stem = " ".join(f"word{index:03d}" for index in range(38))[:300]
+    assert len(stem) == 300
+    sign_in(client, "admin")
+    with recording.open("rb") as handle:
+        response = client.post(
+            f"/libraries/{owner_library}/audio",
+            files={"file": (f"{stem}.wav", handle, "audio/wav")},
+        )
+    assert response.status_code == status.HTTP_201_CREATED, response.text
+    made = response.json()
+    assert len(made["title"]) <= TITLE_MAX_LENGTH
+    assert stem[len(made["title"])] == " ", "cut at a space, not inside a word"
+    detail = client.get(f"/audio/{made['uuid']}").json()
+    assert detail["original_filename"] == f"{stem}.wav"
 
 
 @needs_ffmpeg

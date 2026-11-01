@@ -34,6 +34,11 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
   recording off into a library of their own, which handed it to them. **If you gave somebody
   *Can edit* and want them to keep moving and trashing recordings, raise them to *Can manage*** in
   the library's *Who has access*. Uploading and changing titles, categories and tags are unchanged.
+- **Titles and library names have a length limit.** A recording's title is at most 200
+  characters and a library's name at most 100. On upgrade, any longer title or name is shortened
+  at the last word that fits, recordings in the trash included; the full filename is still on the
+  recording, under its technical details. From now on a longer name is refused when it is typed,
+  and one that comes from a filename or an imported sidecar is shortened the same way.
 - **The browser tab shows the whole mark.** The favicon was the S on its own, which read as a
   stray letter rather than as Resonand; it is now the full mark, arcs included.
 

@@ -13,6 +13,17 @@ import unicodedata
 
 _NON_SLUG = re.compile(r"[^a-z0-9]+")
 
+TITLE_MAX_LENGTH = 200
+"""The longest title a recording may carry, in code points (``DAT-12``).
+
+Room for what recorders, podcasts and download scripts put in a filename, which is where a title
+starts, while staying under the 255 bytes a filesystem allows one.
+"""
+
+LIBRARY_NAME_MAX_LENGTH = 100
+"""The longest name a library may carry, in code points (``DAT-12``): a label somebody types and
+reads in a sidebar."""
+
 
 def normalise_email(email: str) -> str:
     """The unique key for an address: trimmed and lowercased, and nothing cleverer.
@@ -53,7 +64,24 @@ def clean_title(filename: str) -> str:
         stem = stem.rsplit(".", 1)[0]
     spaced = re.sub(r"[_]+", " ", stem)
     collapsed = re.sub(r"\s{2,}", " ", spaced).strip(" -")
-    return collapsed or stem or filename
+    return shorten(collapsed or stem or filename, TITLE_MAX_LENGTH)
+
+
+def shorten(name: str, limit: int) -> str:
+    """Fit a name nobody typed -- a filename, a sidecar -- under ``limit`` (``DAT-12``).
+
+    The cut falls at the last space inside the limit, or at the limit where there is none, and
+    adds no ellipsis: what comes out is a name somebody can still edit, not one that claims to be
+    truncated. A name somebody typed is refused instead, by whoever validates it.
+    """
+    if len(name) <= limit:
+        return name
+    head = name[:limit]
+    if not name[limit].isspace():
+        boundary = head.rfind(" ")
+        if boundary > 0:
+            head = head[:boundary]
+    return head.rstrip(" -,;:").strip() or name.strip()[:limit].strip()
 
 
 def is_ascii_slug(value: str) -> bool:

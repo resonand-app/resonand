@@ -21,6 +21,7 @@ import pytest
 from resonand.archive import export_recording, find_by_uuid
 from resonand.cli.main import app
 from resonand.core.config import reset_settings_cache
+from resonand.core.text import TITLE_MAX_LENGTH
 from resonand.db import libraries, tags, users
 from resonand.db.audio import create_audio
 from resonand.db.models import Audio, Library
@@ -201,6 +202,25 @@ def test_an_update_onto_a_live_recording_reads_as_it_always_has(
 
     assert result.exit_code == 0, result.output
     assert result.output.splitlines()[-1] == "Imported 0 recordings, updated 1."
+
+
+def test_a_sidecar_title_over_the_limit_is_shortened_rather_than_refused(
+    instance: Instance, database: Database, db_settings: Settings
+) -> None:
+    """DAT-12: an export written before the limit existed still imports."""
+    stem = " ".join(f"word{index:03d}" for index in range(38))[:300]
+    retitle(instance, stem)
+    forget(database, db_settings, instance.uuid)
+
+    result = runner.invoke(app, ["import", str(instance.export)])
+
+    assert result.exit_code == 0, result.output
+    with database.read_session() as session:
+        audio = find_by_uuid(session, instance.uuid)
+        assert audio is not None
+        assert len(audio.title) <= TITLE_MAX_LENGTH
+        assert stem[len(audio.title)] == " ", "cut at a space, not inside a word"
+        assert audio.original_filename == "note.m4a"
 
 
 def test_an_update_onto_a_trashed_recording_leaves_it_there_and_says_so(

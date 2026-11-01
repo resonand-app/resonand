@@ -48,6 +48,7 @@ from resonand.core import colours
 from resonand.core.errors import NotFoundError
 from resonand.core.formats import normalise_extension
 from resonand.core.levels import GRANTABLE, Level
+from resonand.core.text import LIBRARY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH, shorten
 from resonand.core.time import now_instant
 from resonand.db import libraries as libraries_repo
 from resonand.db import search_index, tags, transcripts, users
@@ -241,7 +242,7 @@ def apply_sidecar(session: Session, audio: Audio, payload: dict[str, Any]) -> No
     Used by both halves of the round trip: importing a new recording, and updating one that is
     already here because the sidecar carried its ``uuid``.
     """
-    audio.title = str(payload.get("title") or audio.title)
+    audio.title = shorten(str(payload.get("title") or audio.title), TITLE_MAX_LENGTH)
     audio.notes = payload.get("notes") or None
     audio.recorded_at = payload.get("recorded_at") or None
     audio.recorded_at_offset = payload.get("recorded_at_offset_minutes")
@@ -415,7 +416,7 @@ def _library_from_manifest(session: Session, described: dict[str, Any], owner: U
     library = libraries_repo.create_library(
         session,
         owner.id,
-        name=str(described.get("name") or "Library"),
+        name=shorten(str(described.get("name") or "Library"), LIBRARY_NAME_MAX_LENGTH),
         description=described.get("description"),
         colour=_colour_of(described.get("colour")),
     )

@@ -23,7 +23,7 @@ from resonand.acl.query import audio_acl, audio_select, require_audio, require_l
 from resonand.core.errors import ConflictError, InvalidRequestError, NotFoundError
 from resonand.core.ids import new_uuid
 from resonand.core.levels import GRANTABLE, Level
-from resonand.core.text import clean_title
+from resonand.core.text import TITLE_MAX_LENGTH, clean_title, shorten
 from resonand.core.time import PRECISION_SECOND, is_wall_clock, now_instant
 from resonand.db import search_index
 from resonand.db.models import Audio, Library, Share, User
@@ -113,6 +113,8 @@ def update_metadata(
         cleaned = patch.title.strip()
         if not cleaned:
             raise InvalidRequestError("A recording needs a title.")
+        if len(cleaned) > TITLE_MAX_LENGTH:
+            raise InvalidRequestError(f"A title can be at most {TITLE_MAX_LENGTH} characters long.")
         audio.title = cleaned
     if patch.notes is not None:
         audio.notes = patch.notes or None
@@ -376,7 +378,7 @@ def create_audio(  # noqa: PLR0913 -- columns of one row, and every one of them 
         uuid=uuid or new_uuid(),
         library_id=library_id,
         uploaded_by=uploaded_by,
-        title=(title or clean_title(original_filename)),
+        title=shorten(title or clean_title(original_filename), TITLE_MAX_LENGTH),
         storage_path=storage_path,
         original_filename=original_filename,
         sha256=sha256,
