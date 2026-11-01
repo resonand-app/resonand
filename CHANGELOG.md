@@ -26,6 +26,10 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
   what emptying it would destroy, in numbers and as of an instant; `DELETE /api/trash` takes that
   instant as `trashed_before` and leaves anything trashed since; `POST /api/trash/purge` destroys a
   selection and lists back every uuid it did not. `API.md` has the details.
+- **The trash can be emptied, or any part of it, in one go.** Rows in the trash can be ticked,
+  and *Delete permanently* destroys what is ticked; *Empty trash* destroys everything in it.
+  Either asks once, saying how many recordings go, and anything sent to the trash while that
+  question was open is left alone.
 - **`resonand import --restore`** takes a recording it updates back out of the trash. Without it,
   the trash is left as it is and the import says so; a library in the trash is never restored by
   an import, since that would bring back everything in it.

@@ -11,16 +11,28 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
+import { useToasts } from '@/app/toasts';
 import { ThemeProvider } from '@/design-system';
-import { RECORDINGS, FIELD_TAKE, CASSETTE, PERSONAL, archive } from '@/test/api/archive';
+import {
+  RECORDINGS,
+  FIELD_TAKE,
+  CASSETTE,
+  PERSONAL,
+  VOICE_NOTE,
+  archive,
+} from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { TrashView } from '../TrashView';
 
 mockApi();
+
+beforeEach(() => {
+  useToasts.setState({ toasts: [] });
+});
 
 /** How long ago, as the API writes an instant. */
 function daysAgo(days: number): string {
@@ -249,5 +261,164 @@ describe('the personal library', () => {
     show();
     await screen.findByText('Nothing is waiting to be deleted');
     expect(archive.libraries.find((one) => one.uuid === PERSONAL)?.deleted_at).toBeNull();
+  });
+});
+
+describe('destroying part of the trash, or all of it', () => {
+  const MINUTE = 60_000;
+
+  /**
+   * A recording trashed out of a library that is then trashed too, with the library's totals
+   * lowered as the API lowers them: `audio_count` leaves out what was trashed on its own.
+   */
+  function trashBoth() {
+    trashRecording(CASSETTE, daysAgo(3));
+    trashLibrary(RECORDINGS, daysAgo(2));
+    const cassette = archive.recordings.find((one) => one.uuid === CASSETTE)?.duration_ms ?? 0;
+    archive.libraries = archive.libraries.map((one) =>
+      one.uuid === RECORDINGS
+        ? { ...one, audio_count: 2, total_duration_ms: one.total_duration_ms - cassette }
+        : one,
+    );
+  }
+
+  function toasts() {
+    return useToasts.getState().toasts.map((one) => one.message);
+  }
+
+  async function tick(name: string) {
+    await userEvent.click(await screen.findByRole('checkbox', { name: `Select ${name}` }));
+  }
+
+  async function confirmSelection() {
+    await userEvent.click(screen.getByRole('button', { name: 'Delete permanently' }));
+    return screen.findByRole('dialog', { name: /permanently\?$/ });
+  }
+
+  it('replaces the bar above the list with the bulk bar, at the same height', async () => {
+    trashRecording(CASSETTE, daysAgo(3));
+    trashRecording(VOICE_NOTE, daysAgo(2));
+    show();
+    const held = (await screen.findByText('2 items')).closest('div[style*="min-height"]');
+    expect(held?.getAttribute('style')).toContain('min-height: var(--hit-target)');
+    await tick('Digitised cassette');
+    expect(screen.queryByText('2 items')).toBeNull();
+    const bulk = screen.getByText('1 selected').closest('div[style*="min-height"]');
+    expect(bulk?.getAttribute('style')).toContain('min-height: var(--hit-target)');
+  });
+
+  it('counts the selection in the title, apart, and says nothing under it', async () => {
+    trashRecording(CASSETTE, daysAgo(3));
+    trashRecording(VOICE_NOTE, daysAgo(2));
+    trashRecording(FIELD_TAKE, daysAgo(1));
+    show();
+    await tick('Digitised cassette');
+    await tick('Short voice note');
+    const confirm = await confirmSelection();
+    const title = within(confirm).getByRole('heading', {
+      name: 'Delete 2 recordings permanently?',
+    });
+    expect(within(title).getByText('2 recordings')).not.toBe(title);
+    expect(confirm.querySelector('p')).toBeNull();
+    expect(archive.recordings.filter((one) => one.deleted_at !== null)).toHaveLength(3);
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
+    await waitFor(() => {
+      expect(archive.recordings.map((one) => one.uuid)).not.toContain(CASSETTE);
+    });
+    expect(archive.recordings.map((one) => one.uuid)).not.toContain(VOICE_NOTE);
+    expect(archive.recordings.map((one) => one.uuid)).toContain(FIELD_TAKE);
+    await waitFor(() => {
+      expect(toasts()).toContain('2 recordings deleted permanently.');
+    });
+    expect(await screen.findByText('1 item')).toBeVisible();
+  });
+
+  it('opens on Cancel, so Enter pressed by habit cancels and keeps the selection', async () => {
+    trashRecording(CASSETTE, daysAgo(3));
+    show();
+    await tick('Digitised cassette');
+    const confirm = await confirmSelection();
+    await waitFor(() => {
+      expect(within(confirm).getByRole('button', { name: 'Cancel' })).toHaveFocus();
+    });
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+    expect(archive.recordings.some((one) => one.uuid === CASSETTE)).toBe(true);
+    expect(screen.getByText('1 selected')).toBeVisible();
+  });
+
+  it('counts a library and a recording inside it once, both ticked', async () => {
+    trashBoth();
+    show();
+    await tick('Digitised cassette');
+    await tick('Field recordings');
+    const child = screen.getByRole('checkbox', { name: 'Select Digitised cassette' });
+    expect(child).toBeChecked();
+    expect(child).toBeDisabled();
+    expect(screen.getByText('1 selected')).toBeVisible();
+    const confirm = await confirmSelection();
+    expect(within(confirm).getByRole('heading')).toHaveTextContent(
+      'Delete 3 recordings and 1 library permanently?',
+    );
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
+    await waitFor(() => {
+      expect(toasts()).toContain('3 recordings and 1 library deleted permanently.');
+    });
+    expect(archive.recordings.map((one) => one.uuid)).not.toContain(CASSETTE);
+  });
+
+  it("empties the whole trash with the summary's count, and ends on the good empty state", async () => {
+    trashLibrary(RECORDINGS, daysAgo(2));
+    trashRecording(VOICE_NOTE, daysAgo(1));
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Empty trash' }));
+    const confirm = await screen.findByRole('dialog', {
+      name: 'Delete 4 recordings and 1 library permanently?',
+    });
+    expect(confirm.querySelector('p')).toBeNull();
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
+    expect(await screen.findByText('Nothing is waiting to be deleted')).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Empty trash' })).toBeNull();
+    expect(toasts()).toContain('4 recordings and 1 library deleted permanently.');
+  });
+
+  it('leaves what was trashed after the numbers were counted', async () => {
+    trashRecording(VOICE_NOTE, daysAgo(1));
+    let sent: string | null = null;
+    server.events.on('request:start', ({ request }) => {
+      if (request.method === 'DELETE' && new URL(request.url).pathname === '/api/trash') {
+        sent = new URL(request.url).searchParams.get('trashed_before');
+      }
+    });
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Empty trash' }));
+    const confirm = await screen.findByRole('dialog', {
+      name: 'Delete 1 recording permanently?',
+    });
+    trashRecording(CASSETTE, new Date(Date.now() + MINUTE).toISOString());
+    await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
+    await waitFor(() => {
+      expect(archive.recordings.map((one) => one.uuid)).not.toContain(VOICE_NOTE);
+    });
+    expect(sent).not.toBeNull();
+    expect(archive.recordings.map((one) => one.uuid)).toContain(CASSETTE);
+    server.events.removeAllListeners();
+  });
+
+  it('cancels on Escape, and Escape with nothing open clears the selection', async () => {
+    trashRecording(CASSETTE, daysAgo(3));
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Empty trash' }));
+    await screen.findByRole('dialog', { name: 'Delete 1 recording permanently?' });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+    expect(archive.recordings.some((one) => one.uuid === CASSETTE)).toBe(true);
+    await tick('Digitised cassette');
+    await userEvent.keyboard('{Escape}');
+    expect(await screen.findByText('1 item')).toBeVisible();
   });
 });

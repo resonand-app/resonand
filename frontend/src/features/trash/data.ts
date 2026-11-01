@@ -19,8 +19,8 @@
  * days would otherwise be shown 30.
  */
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import type { UseMutationResult } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
 
 import { get, post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
@@ -32,6 +32,9 @@ import type { components } from '@/api/contract/schema';
 type Schemas = components['schemas'];
 export type TrashedLibrary = Schemas['LibrarySummary'];
 export type TrashedRecording = Schemas['AudioSummary'];
+export type TrashSummary = Schemas['TrashSummary'];
+export type TrashTally = Schemas['TrashTally'];
+export type PurgeResult = Schemas['PurgeResult'];
 
 /** One row of the merged list: a library with whatever is grouped under it, or a recording. */
 export type TrashEntry =
@@ -120,8 +123,7 @@ export interface TrashActions {
  * away from the reversible one, which is the same reason `API-19` gave the purge a path of its
  * own instead of a query parameter.
  *
- * **One request per item, and the interface says so where it matters.** There is no bulk
- * endpoint, and pretending otherwise would make a partial failure invisible.
+ * Destroying many at once is `useBulkPurge`, one call rather than many of these.
  */
 export function useTrashActions(): TrashActions {
   const client = useQueryClient();
@@ -156,6 +158,46 @@ export function useTrashActions(): TrashActions {
       mutationFn: (library: TrashedLibrary) =>
         remove('/api/trash/libraries/{library_uuid}', { path: { library_uuid: library.uuid } }),
       onSuccess: (_answer, library) => settleLibrary(library),
+    }),
+  };
+}
+
+/**
+ * What emptying the trash would destroy, counted now (`API-28`).
+ *
+ * Only while a confirmation is open, and never from the cache: the numbers are what somebody is
+ * agreeing to, and the instant they come with is what bounds the empty.
+ */
+export function useTrashSummary(open: boolean): UseQueryResult<TrashSummary> {
+  return useQuery({
+    queryKey: keys.trashSummary(),
+    queryFn: () => get('/api/trash/summary'),
+    enabled: open,
+    staleTime: 0,
+    gcTime: 0,
+  });
+}
+
+export interface BulkPurge {
+  /** A selection: libraries with all they hold, and recordings outside them. */
+  purgeSelection: UseMutationResult<PurgeResult, unknown, Schemas['PurgeSelection']>;
+  /** The whole trash as it stood at the summary's `counted_at`, and nothing trashed since. */
+  emptyTrash: UseMutationResult<TrashTally, unknown, string>;
+}
+
+/** Destroying much of the trash in one call each (`INT-8`). */
+export function useBulkPurge(): BulkPurge {
+  const client = useQueryClient();
+  const settle = () => invalidate(client, { kind: 'trash-destroyed' });
+  return {
+    purgeSelection: useMutation({
+      mutationFn: (body: Schemas['PurgeSelection']) => post('/api/trash/purge', { body }),
+      onSettled: settle,
+    }),
+    emptyTrash: useMutation({
+      mutationFn: (countedAt: string) =>
+        remove('/api/trash', { query: { trashed_before: countedAt } }),
+      onSettled: settle,
     }),
   };
 }
