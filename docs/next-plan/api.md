@@ -63,3 +63,44 @@ The feature is introduced in [`data.md`](data.md), beside `DAT-11`.
 
       *Done when:* the favourites view can be built on this listing alone, and so can a view of
       recordings shared individually.
+
+## Emptying the trash
+
+What [`ROADMAP.md`](../../ROADMAP.md) called *emptying the trash in bulk*. Today the only way to
+destroy something before its retention runs out is `API-19`'s one call per item, which is also why
+the trash can only be emptied one row at a time. The view is `INT-8` in
+[`integration.md`](integration.md).
+
+- [ ] **API-28** · 🧪 **Destroying many things in the trash in one call, and saying first what
+      that would destroy.** Three routes, all in the trash namespace for the reason `purge`'s
+      docstring gives — the irreversible call is never a flag on the reversible one — and all
+      resolving through `acl/query.py` at manage, as `DAT-10` left the trash:
+
+      - `GET /api/trash/summary` — what the caller's trash holds, in the numbers a confirmation
+        states: recordings, libraries, total duration, transcripts, and the instant it was counted
+        at. The interface cannot add these up itself, because the trash listing is paged.
+      - `POST /api/trash/purge` — destroys a selection, given as recording and library uuids. A
+        uuid the caller cannot purge — not in the trash, not theirs to manage, already gone — is
+        skipped and reported back with the rest, never told apart, for the reason a `404` is never
+        a `403` here. A selection over a bound the task sets is refused with `422`.
+      - `DELETE /api/trash?trashed_before=<instant>` — empties it. The instant is required, and is
+        the one the summary returned: what was sent to the trash after somebody read the numbers is
+        not what they agreed to destroy, and is left where it is.
+
+      All three answer the same way `purge_library` already does: a library takes everything in
+      it, and a recording inside a library that is also being destroyed is counted once. The rows
+      go in the one write session and the files after the commit, as `purge` does today (`REV-1`);
+      if the full demo archive shows that holding the write lock for longer than a second, the rows
+      are committed in chunks, and the task records the measurement either way.
+
+      Each route has a client in `src/api/` and the OpenAPI snapshot and `schema.ts` are
+      regenerated in the same commit. `API.md` documents them. ⇢ DAT-10
+
+      🧪 An editor's trash empties nothing they do not manage; a selection mixing a trashed
+      recording, a live one and somebody else's destroys only the first and reports the other two
+      alike; the summary's numbers match what the purge then destroys; an item trashed after
+      `trashed_before` survives the empty; a library and a recording inside it, both selected, are
+      destroyed once and counted once; the files are gone from `storage/` afterwards.
+
+      *Done when:* the whole trash, or any part of it, can be destroyed in one call whose effect
+      was stated in numbers beforehand, and nothing outside what was stated is touched.

@@ -123,3 +123,33 @@ reviewed as copy in its pull request rather than taken as settled.
 
       *Done when:* every recording somebody has marked and can still read is one click from
       anywhere, and nothing on that page offers what the API would refuse.
+
+## How long a name can be
+
+The limits are decided in [`data.md`](data.md), beside `DAT-12`.
+
+- [ ] **UI-45** · 🧪 **A field says how long a name can be before the API has to.** Every field
+      that edits a recording's title or a library's name — the metadata panel's `InlineField`, the
+      create-library dialog, a library's settings — carries `maxLength` at the limit `DAT-12`
+      sets, so a name over it cannot be typed or pasted, rather than being refused on save. The
+      two numbers live in one module in `src/`, and a `*.node.test.ts` holds them against the
+      `maxLength` the committed `openapi.json` declares, so the interface cannot drift from the API
+      the way the generated types are held to it today.
+
+      `maxLength` counts UTF-16 code units and the API counts code points, so a name full of emoji
+      is held a little shorter in the field than the API would accept. That is the safe direction,
+      and it is left alone: the field never lets through something the API refuses.
+
+      A `422` from either endpoint still lands as a field error with copy in `src/i18n/en/`, for a
+      client that is not this interface and for the race the field cannot see.
+
+      Long names are drawn where they appear — a card, a row, the sidebar, a dialog title — without
+      running past their container: `overflow-wrap: anywhere` where a name wraps, and the ellipsis
+      already in place where it does not. Checked in a browser at 200 and 100 characters, with and
+      without spaces, in both themes. ⇢ DAT-12
+
+      🧪 A title field refuses a 201st character; a library name field a 101st; the node test fails
+      when either number disagrees with `openapi.json`.
+
+      *Done when:* no field in the interface accepts a name the API would refuse for its length,
+      and no view draws a name at either limit outside its container.
