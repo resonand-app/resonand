@@ -109,6 +109,13 @@ makes sense once the API is stable enough that tools built on it do not break.
   never applied directly**. Tags already carry the source that makes this possible; the category
   half needs the suggestion storage deferred out of the first migration, which is written up in
   [`docs/v0.1.0-plan/decisions.md`](docs/v0.1.0-plan/decisions.md).
+- **A machine-readable result from `resonand import`**, as `--json` beside the one `fsck` already
+  has. Imports are often a script — another tool writing sidecars and calling the command once per
+  file — and today all it can read is a summary line meant for a person. What is wanted is one
+  entry per file saying where it went: added, updated, skipped and why, and whether it is in the
+  trash or was taken out of it. The exit status is deliberately unchanged by anything the import
+  reports, so that a loop over files keeps going; this is how such a script tells instead. Asked
+  for in #68.
 
 ## 5 · What "shared" means
 
