@@ -10,6 +10,28 @@ continues from both.
 What is still open: the demo instance, a guide for somebody with an account, and one-click
 packaging.
 
+## How a release is made
+
+- [x] **OPS-12b1** · **The image's version label carries no `v`.** Out of `OPS-12b`, and found the
+      way that one was: by inspecting what `0.2.0` published rather than by reading the workflow.
+      `revision` and `created` came back right, and `org.opencontainers.image.version` read
+      `v0.2.0` beside registry tags that all read `0.2.0`. `OPS-12`'s entry and a comment in the
+      publish job both said metadata-action would write the semver there, and in the publish job
+      it would have — but the labels come from the build job, whose metadata-action was given no
+      `tags:` and so fell back to its default `type=ref`, which is the tag's name.
+
+      The label is metadata-action's `version.main`, which is the first enabled tag after sorting
+      by priority; `type=semver` outranks `type=ref`, so giving the build job the same
+      `type=semver,pattern={{version}}` the publish job has makes it `0.2.0`. Read in the action's
+      source at the pinned digest rather than assumed. The publish job's comment now says what is
+      true there: its labels are never used, because a join gathers images that already exist.
+
+      Retagging `0.2.0` to correct it was rejected: the cost is a label nobody reads by hand, and
+      moving a published tag is the one thing this workflow is built never to do. `0.2.0` keeps its
+      `v`, and `resonand version` inside it was always right.
+      *Done when:* `docker inspect` on the next release's image reads its version without a `v`.
+      **Not verifiable until that tag**, like `OPS-12b` before it.
+
 ## After the release
 
 - [ ] **REL-4** · **Demo instance, linked from the repository itself.** "Self-hosted audio archive"
