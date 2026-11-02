@@ -104,14 +104,17 @@ class Hit:
 class SortField(StrEnum):
     """What a list of recordings can be ordered by (``API-10``).
 
-    Four, and deliberately not every column: these are the ones ``UI-7d`` offers, and a sort
-    nobody can reach from the interface is a query somebody can make expensive for no benefit.
+    Deliberately not every column: the four ``UI-7d`` offers, and when a favourite was marked,
+    which the favourites view sorts by (``API-27``). A sort nobody can reach from the interface is
+    a query somebody can make expensive for no benefit.
     """
 
     RECORDED_AT = "recorded_at"
     CREATED_AT = "created_at"
     DURATION_MS = "duration_ms"
     TITLE = "title"
+    FAVOURITED_AT = "favourited_at"
+    """Only beside the favourite filter: a recording nobody marked has no such time."""
 
 
 class SortDirection(StrEnum):
