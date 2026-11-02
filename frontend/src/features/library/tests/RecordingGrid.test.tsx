@@ -11,10 +11,12 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { toLibrary } from '@/app/routes';
+import { Toasts } from '@/app/shell/Toasts';
+import { useToasts } from '@/app/toasts';
 import { ThemeProvider } from '@/design-system';
 import { RECORDINGS, FIELD_TAKE, PERSONAL, archive } from '@/test/api/archive';
 import { usePlayback } from '@/player/store';
@@ -28,6 +30,7 @@ mockApi();
 // next test's stale mark.
 afterEach(() => {
   usePlayback.getState().stop();
+  useToasts.setState({ toasts: [] });
 });
 
 /** The address, so a test can assert what a control put in it (`UI-4b`). */
@@ -573,6 +576,11 @@ describe('selecting recordings', () => {
 });
 
 describe('a bulk action where some fail', () => {
+  // The region is the shell's; here it is mounted beside the view, where a run reports itself.
+  beforeEach(() => {
+    render(<Toasts />);
+  });
+
   /** Refuse the trash for one recording and accept it for the rest. */
   function refuse(uuid: string) {
     server.use(
@@ -599,13 +607,23 @@ describe('a bulk action where some fail', () => {
     await user.click(screen.getByRole('button', { name: 'Send to trash' }));
   }
 
-  it('reports what worked and what did not, in the API own words', async () => {
+  /** The one toast on screen, found by what it says. */
+  async function toastSaying(text: RegExp): Promise<HTMLElement> {
+    const toast = (await screen.findByText(text)).closest<HTMLElement>('[data-ds="toast"]');
+    if (toast === null) throw new Error(`no toast says ${String(text)}`);
+    return toast;
+  }
+
+  it('reports what worked and what did not in a toast, in the API own words', async () => {
     refuse(FIELD_TAKE);
     const user = userEvent.setup();
     renderLibrary();
     await selectAllThenTrash(user);
-    expect(await screen.findByText('2 done, 1 not')).toBeVisible();
-    expect(screen.getByText(/already in the trash/)).toBeVisible();
+    const toast = await toastSaying(/2 sent to the trash, 1 was not/);
+    expect(toast).toHaveAttribute('data-tone', 'failed');
+    expect(within(toast).getByText(/already in the trash/)).toBeVisible();
+    // A toast and not a card: nothing is left over the grid to be cleared away (`UI-46`).
+    expect(document.querySelector('[data-ds="state-card"]')).toBeNull();
   });
 
   it('leaves the failures selected, so the retry is one click', async () => {
@@ -613,19 +631,108 @@ describe('a bulk action where some fail', () => {
     const user = userEvent.setup();
     renderLibrary();
     await selectAllThenTrash(user);
-    await screen.findByText('2 done, 1 not');
+    const toast = await toastSaying(/2 sent to the trash, 1 was not/);
     // One left selected, and it is the one that failed -- not a selection somebody has to rebuild.
     expect(screen.getByText('1 selected')).toBeVisible();
-    expect(screen.getByText(/still selected/)).toBeVisible();
+    expect(within(toast).getByText(/still selected/)).toBeVisible();
   });
 
-  it('clears the selection entirely when everything worked', async () => {
+  it('retries exactly what failed, and clears it once it goes', async () => {
+    refuse(FIELD_TAKE);
     const user = userEvent.setup();
     renderLibrary();
     await selectAllThenTrash(user);
-    expect(await screen.findByText(/3 recordings sent to the trash/)).toBeVisible();
+    const toast = await toastSaying(/2 sent to the trash, 1 was not/);
+    const asked: string[] = [];
+    server.use(
+      http.delete('/api/audio/:audio_uuid', ({ params }) => {
+        asked.push(String(params.audio_uuid));
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    await user.click(within(toast).getByRole('button', { name: 'Retry' }));
+    await toastSaying(/One recording sent to the trash/);
+    expect(asked).toEqual([FIELD_TAKE]);
+    expect(screen.queryByText(/2 sent to the trash, 1 was not/)).toBeNull();
+    expect(await screen.findByRole('button', { name: /Any category/ })).toBeVisible();
+  });
+
+  it('says so in a toast and clears the selection entirely when everything worked', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await selectAllThenTrash(user);
+    const toast = await toastSaying(/3 recordings sent to the trash/);
+    expect(toast).toHaveAttribute('data-tone', 'done');
+    // Said once, in the toast; the card this library shows now is its own empty state.
+    expect(screen.getAllByText(/3 recordings sent to the trash/)).toHaveLength(1);
     // Nothing failed, so nothing is retained, and the filter bar comes back.
     expect(await screen.findByRole('button', { name: /Any category/ })).toBeVisible();
+  });
+
+  it('puts back what a trash took when it is undone', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await selectAllThenTrash(user);
+    const toast = await toastSaying(/3 recordings sent to the trash/);
+    await waitFor(() => {
+      expect(screen.queryByText('Field recording, long take')).toBeNull();
+    });
+    await user.click(within(toast).getByRole('button', { name: 'Undo' }));
+    await toastSaying(/3 recordings restored/);
+    expect(await screen.findByText('Field recording, long take')).toBeVisible();
+  });
+
+  it('names the category it filed them under, and says when it cleared one', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('button', { name: 'Assign a category' }));
+    await user.click(await screen.findByRole('radio', { name: /Fieldwork/ }));
+    await toastSaying(/^One recording filed under Fieldwork$/);
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('button', { name: 'Assign a category' }));
+    await user.click(await screen.findByRole('radio', { name: /Any category/ }));
+    await toastSaying(/^One recording no longer has a category$/);
+  });
+
+  it('names the library it moved them to', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('button', { name: 'Move to another library' }));
+    await user.click(await screen.findByRole('combobox', { name: 'Move to' }));
+    await user.click(await screen.findByRole('option', { name: 'Personal' }));
+    await user.click(screen.getByRole('button', { name: 'Move it' }));
+    await toastSaying(/^One recording moved to Personal$/);
+  });
+
+  it('shows one toast at a time, the newer replacing the older', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('button', { name: 'Add a tag' }));
+    await user.type(screen.getByRole('textbox', { name: 'Tag' }), 'kept');
+    await user.click(screen.getByRole('button', { name: 'Add it' }));
+    await toastSaying(/One recording tagged kept/);
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('button', { name: 'Send to trash' }));
+    await toastSaying(/One recording sent to the trash/);
+    expect(document.querySelectorAll('[data-ds="toast"]')).toHaveLength(1);
+  });
+
+  it('offers no undo for what cannot be undone exactly', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    const card = await cardFor('Field recording, long take');
+    await user.click(within(card).getByRole('checkbox', { name: /^Select/ }));
+    await user.click(screen.getByRole('button', { name: 'Add a tag' }));
+    await user.type(screen.getByRole('textbox', { name: 'Tag' }), 'kept');
+    await user.click(screen.getByRole('button', { name: 'Add it' }));
+    const toast = await toastSaying(/One recording tagged/);
+    expect(within(toast).queryByRole('button', { name: 'Undo' })).toBeNull();
   });
 });
 

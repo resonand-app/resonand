@@ -328,7 +328,7 @@ describe('destroying part of the trash, or all of it', () => {
     expect(archive.recordings.map((one) => one.uuid)).not.toContain(VOICE_NOTE);
     expect(archive.recordings.map((one) => one.uuid)).toContain(FIELD_TAKE);
     await waitFor(() => {
-      expect(toasts()).toContain('2 recordings deleted permanently.');
+      expect(toasts()).toContain('2 recordings deleted permanently');
     });
     expect(await screen.findByText('1 item')).toBeVisible();
   });
@@ -364,7 +364,7 @@ describe('destroying part of the trash, or all of it', () => {
     );
     await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
     await waitFor(() => {
-      expect(toasts()).toContain('3 recordings and 1 library deleted permanently.');
+      expect(toasts()).toContain('3 recordings and 1 library deleted permanently');
     });
     expect(archive.recordings.map((one) => one.uuid)).not.toContain(CASSETTE);
   });
@@ -381,7 +381,7 @@ describe('destroying part of the trash, or all of it', () => {
     await userEvent.click(within(confirm).getByRole('button', { name: 'Delete permanently' }));
     expect(await screen.findByText('Nothing is waiting to be deleted')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Empty trash' })).toBeNull();
-    expect(toasts()).toContain('4 recordings and 1 library deleted permanently.');
+    expect(toasts()).toContain('4 recordings and 1 library deleted permanently');
   });
 
   it('leaves what was trashed after the numbers were counted', async () => {

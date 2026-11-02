@@ -9,32 +9,50 @@
  * the one control that must stay reachable while anything else is happening.
  */
 
-import { Toast, ToastRegion } from '@/design-system';
+import { Button, Toast, ToastRegion } from '@/design-system';
 import type { ToastEntry } from '@/design-system';
 import { playerShowing, usePlayback } from '@/player/store';
 
-import { FAILED_AFTER_MS, useToasts } from '@/app/toasts';
+import { timeoutOf, useToasts } from '@/app/toasts';
 
 export function Toasts() {
   const raised = useToasts((state) => state.toasts);
   const dismiss = useToasts((state) => state.dismiss);
   const playerVisible = usePlayback(playerShowing);
 
-  const entries: ToastEntry[] = raised.map((one) => ({
-    id: one.id,
-    // Longer than the region's default for a failure, and the default for everything else.
-    ...(one.tone === 'failed' ? { timeout: FAILED_AFTER_MS } : {}),
-    content: (
-      <Toast
-        tone={one.tone}
-        onDismiss={() => {
-          dismiss(one.id);
-        }}
-      >
-        {one.message}
-      </Toast>
-    ),
-  }));
+  const entries: ToastEntry[] = raised.map((one) => {
+    const timeout = timeoutOf(one);
+    const action = one.action;
+    return {
+      id: one.id,
+      ...(timeout === undefined ? {} : { timeout }),
+      content: (
+        <Toast
+          tone={one.tone}
+          onDismiss={() => {
+            dismiss(one.id);
+          }}
+          {...(action === undefined
+            ? {}
+            : {
+                actions: (
+                  <Button
+                    variant="secondary"
+                    onClick={() => {
+                      dismiss(one.id);
+                      action.run();
+                    }}
+                  >
+                    {action.label}
+                  </Button>
+                ),
+              })}
+        >
+          {one.message}
+        </Toast>
+      ),
+    };
+  });
 
   return <ToastRegion toasts={entries} onDismiss={dismiss} playerVisible={playerVisible} />;
 }
