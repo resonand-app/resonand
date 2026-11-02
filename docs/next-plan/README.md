@@ -23,22 +23,20 @@ So a piece of work sits in exactly one of three states, and its home says which:
 | `docs/<version>-plan/` | What one version contained | Yes, kept for good |
 
 [`docs/v0.1.0-plan/`](../v0.1.0-plan/) is the first of those version folders: the record of the
-first version, which shipped as `0.1.0` on 2026-09-23.
+first version, which shipped as `0.1.0` on 2026-09-23. [`docs/v0.2.0-plan/`](../v0.2.0-plan/) is
+the second, and holds what was scoped here and shipped as `0.2.0`.
 
 ## What is here
 
 | File | Track | What it covers |
 |---|---|---|
-| [`infrastructure.md`](infrastructure.md) | `INF` | The repository itself, after the first version |
+| [`infrastructure.md`](infrastructure.md) | `INF` | The repository itself: the tests' assumptions about a browser |
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
-| [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build, what an export carries, and corrections to what it did |
-| [`release.md`](release.md) | `REL`, `INF`, `OPS` | What it takes to open the repository, and then to ship something installable |
-| [`data.md`](data.md) | `DAT` | The schema and who may do what, after the first version, where favourites are introduced, and how long a name can be |
-| [`api.md`](api.md) | `API` | Endpoints the first version did not have: marking a favourite, the listing across libraries, and emptying the trash |
-| [`interface.md`](interface.md) | `UI` | Views the first version did not build: the heart, the favourites view, fields that know a name's limit, and toasts that say what happened |
-| [`integration.md`](integration.md) | `INT` | Work across tracks: confirming a permanent deletion, and emptying the trash |
+| [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build |
+| [`release.md`](release.md) | `REL`, `INF`, `OPS` | What comes after a release: a demo instance, a guide for somebody with an account, one-click packaging |
+| [`interface.md`](interface.md) | `UI` | Toasts that say what happened, where `0.2.0` left them short |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
-| [`defects.md`](defects.md) | `BUG` | Faults found by using the archive since it shipped |
+| [`data.md`](data.md), [`api.md`](api.md), [`integration.md`](integration.md), [`defects.md`](defects.md) | `DAT`, `API`, `INT`, `BUG` | Nothing queued: each keeps its rules for the next task in the track |
 
 Notation is the plan's: `⇢ X, Y` depends on those · `🔒` critical path · `🧪` carries a mandatory
 test. **A task is done when it meets the criterion written next to it, not when it works.**

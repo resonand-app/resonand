@@ -17,7 +17,7 @@ services:
     # should be a line somebody changed on purpose, not whatever the tag pointed at the morning
     # they happened to run `pull`. `latest` exists and moves with each release for anyone who
     # wants it.
-    image: ghcr.io/resonand-app/resonand:0.1.0
+    image: ghcr.io/resonand-app/resonand:0.2.0
     restart: unless-stopped
     env_file: .env
     volumes:

@@ -13,22 +13,24 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
-  <a href="https://github.com/resonand-app/resonand/pkgs/container/resonand"><img alt="Release: 0.1.0" src="https://img.shields.io/badge/release-0.1.0-E98A5F"></a>
+  <a href="https://github.com/resonand-app/resonand/pkgs/container/resonand"><img alt="Release: 0.2.0" src="https://img.shields.io/badge/release-0.2.0-E98A5F"></a>
 </p>
 
 ---
 
-> ### Status: `0.1.0` is out, and it is the first one.
+> ### Status: `0.2.0` is out, and it is the second one.
 >
-> `ghcr.io/resonand-app/resonand:0.1.0`, for `linux/amd64` and `linux/arm64`.
-> [`deploy/`](deploy/README.md) is a compose file, an `.env` and a volume.
+> `ghcr.io/resonand-app/resonand:0.2.0`, for `linux/amd64` and `linux/arm64`.
+> [`deploy/`](deploy/README.md) is a compose file, an `.env` and a volume. **Coming from `0.1.0`,
+> read [`CHANGELOG.md`](CHANGELOG.md) first**: who may move a recording out of a library has
+> changed, and long titles and library names are shortened on the way up.
 >
 > It was used before it was offered: a real archive imported, transcribed and searched; a second
 > person on a shared library; a restore performed on real hardware rather than only in CI; and the
 > whole archive exported and read back into an empty instance. Every screenshot here is a running
 > instance rather than a mockup.
 >
-> It is still a first release, and the honest version of that is: one person has relied on it, on
+> It is still early, and the honest version of that is: one person has relied on it, on
 > one kind of hardware. [`CHANGELOG.md`](CHANGELOG.md) says what the number promises, and
 > [`SECURITY.md`](SECURITY.md) says what is known to be thin.
 
@@ -111,7 +113,7 @@ entirely through environment variables. An instance is three things: the image, 
 that passes `resonand check-transcription`. It migrates its own database on the way up.
 
 ```bash
-docker pull ghcr.io/resonand-app/resonand:0.1.0
+docker pull ghcr.io/resonand-app/resonand:0.2.0
 ```
 
 [`deploy/`](deploy/README.md) describes the arrangement — the compose file, how much the volume
@@ -163,6 +165,7 @@ I'll be the one maintaining it in the end :)
 | [`VISION.md`](VISION.md) | Why it exists, who it is for, the principles it will not break, and how it will be sustained |
 | [`ROADMAP.md`](ROADMAP.md) | What comes after the first version, and what is explicitly out of scope |
 | [`docs/v0.1.0-plan/`](docs/v0.1.0-plan/) | The build plan for the first version, one file per work track |
+| [`docs/v0.2.0-plan/`](docs/v0.2.0-plan/) | What `0.2.0` shipped, as it was scoped and closed |
 | [`docs/next-plan/`](docs/next-plan/) | What is scoped and waiting for a version to claim it |
 | [`deploy/`](deploy/README.md) | What an operator needs: the first account, the volume, the `.env`, the proxy, backups, and which transcription endpoints work |
 | [`frontend/design-system/`](frontend/design-system/README.md) | The interface's visual language: tokens, components, the mark and the specimen cards |

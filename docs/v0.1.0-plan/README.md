@@ -90,6 +90,7 @@ it.
 | `BUG` | Defects found in use | Faults found by using the archive rather than by reading it | [`defects.md`](defects.md) |
 | `REV` | Backend review | What a read of the finished backend found, and what settled each finding | [`review.md`](review.md) |
 | `NAM` | The name | The rename to `resonand`, and everywhere the old string had reached | [`naming.md`](naming.md) |
+| `REL` | The release | How the repository opened and `0.1.0` was published, with the `INF` and `OPS` tasks of those two days | [`release.md`](release.md) |
 
 Notation:
 
@@ -196,9 +197,8 @@ half of it that matters is the half a pipeline cannot run; the reasoning is in
 [`integration.md`](integration.md).
 
 **The repository opened on 2026-09-22.** The three tasks that stood between this plan and that
-day — `INF-10`, `REL-6` and `REL-1` — are closed in
-[`docs/next-plan/release.md`](../next-plan/release.md), which now holds the release and nothing
-else. Three of the five conditions below are acts rather than tasks, performed against the real
+day — `INF-10`, `REL-6` and `REL-1` — are closed in [`release.md`](release.md), beside the
+release they led to. Three of the five conditions below are acts rather than tasks, performed against the real
 archive and not tickable anywhere, and they are what the tag waits for.
 
 ---

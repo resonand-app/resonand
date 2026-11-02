@@ -60,7 +60,7 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
       file, [`DEC-26`](decisions.md) superseding `DEC-7`, and the two open entries elsewhere that
       describe a world where the name does not change: [`INF-11`](infrastructure.md), whose whole
       remaining job is to outline a wordmark this rename deletes, and
-      [`REL-1`](../next-plan/release.md), whose screenshots were taken of the old brand.
+      [`REL-1`](release.md), whose screenshots were taken of the old brand.
 
       **The rule it hands to `NAM-3`, because otherwise it gets decided five times.** A passage
       recording what was settled on a day keeps its words and gains a pointer — `DEC-7` claiming
@@ -141,7 +141,7 @@ again. That is `NAM-5`, it is design work rather than a rename, and it is why
 - [x] **NAM-4** · **An export written under the old name still reads.** The one identifier that
       gets a fallback, and deliberately the only one. An export is the single artefact this product
       builds to outlive the instance that wrote it — [`VISION.md`](../../VISION.md) promises
-      exactly that, and [`REL-2`](../next-plan/release.md) will document it as a supported way to
+      exactly that, and [`REL-2`](release.md) will document it as a supported way to
       leave — so a reader that refuses the format it was writing last month undercuts the one
       feature whose whole claim is longevity. The import accepts `sonarium-archive.json`,
       `.sonarium.json` and a `"sonarium"` header key; the export writes only the new names.

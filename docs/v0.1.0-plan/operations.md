@@ -64,7 +64,7 @@ nobody can back up or upgrade is one nobody should trust an archive to.
       files carry the restorer's uid, and the container exits on "attempt to write a readonly
       database" before it serves anything. The upgrade is written as a walk over the revision
       tree, so it covers `0004` on the day it lands rather than the session after; `OPS-9` in
-      [`next-plan`](../next-plan/release.md) narrows to the cross-version half accordingly.
+      [`next-plan`](../v0.2.0-plan/release.md) narrows to the cross-version half accordingly.
       What remains is not a task: performing the restore against the real archive, which is
       condition 3 of [when v0 is done](README.md).*
 

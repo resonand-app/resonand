@@ -9,7 +9,7 @@ transcribes it through a provider you choose, and lets you search inside every t
 A single container — Python 3.12 + FastAPI + SQLite/FTS5 on the back, React 19 + TypeScript + Vite
 on the front, one in-process job worker. Licence AGPL-3.0.
 
-**Status: `0.1.0` is released**, as `ghcr.io/resonand-app/resonand` for `linux/amd64` and
+**Status: `0.2.0` is released**, as `ghcr.io/resonand-app/resonand` for `linux/amd64` and
 `linux/arm64`. Somebody is running this, so a change reaches an archive that already exists: a
 migration runs on somebody's data, a setting rename breaks somebody's `.env`, and an endpoint that
 moves breaks whatever they wrote against it. `CHANGELOG.md` says what the number promises -- a

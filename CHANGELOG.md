@@ -18,7 +18,23 @@ will later:
 Every release migrates its own database on the way up, whatever the number says. The path back is
 in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a down-migration.
 
-## [Unreleased]
+## [0.2.0] — 2026-11-02
+
+Favourites, a trash that can be emptied in one go, and a limit on how long a name can be. **Read
+*Upgrading from 0.1.0* before taking it**: one permission narrows, and the upgrade rewrites any
+title or library name over its new limit.
+
+### Upgrading from 0.1.0
+
+- **Take a database backup first**, as [`deploy/README.md`](deploy/README.md) describes under
+  *Upgrading*. Two migrations run on the way up, and the second shortens every title over 200
+  characters and every library name over 100. That backup is the only way back to the long ones;
+  the startup log's `names_shortened` line says how many were changed.
+- **Look at who has *Can edit* on a shared library.** From this release they can no longer move a
+  recording out of it, send one to the trash, restore one or delete one for good. Raise anybody
+  who should keep doing that to *Can manage* in the library's *Who has access*.
+- Then pin `0.2.0` in `docker-compose.yml` and run `docker compose pull && docker compose up -d`.
+  Nothing in `.env` changes.
 
 ### Added
 
@@ -29,7 +45,8 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
   selected, to mark or unmark a selection. Over the API, `PUT` and `DELETE` on
   `/api/audio/{audio_uuid}/favourite` mark and unmark, every recording carries `is_favourite`, and
   `GET /api/audio` now takes a library's filters and sorts, with `favourite=true` and
-  `sort=favourited_at`, and without a `sort` lists the most recently recorded first.
+  `sort=favourited_at`, and without a `sort` lists the most recently recorded first. A library's
+  listing and `GET /api/search` take `favourite=true` as well.
 - **The trash can be destroyed in one call, whole or in part.** `GET /api/trash/summary` says
   what emptying it would destroy, in numbers and as of an instant; `DELETE /api/trash` takes that
   instant as `trashed_before` and leaves anything trashed since; `POST /api/trash/purge` destroys a
@@ -38,6 +55,9 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
   and *Delete permanently* destroys what is ticked; *Empty trash* destroys everything in it.
   Either asks once, saying how many recordings go, and anything sent to the trash while that
   question was open is left alone.
+- **Trashing or moving a recording, and trashing a library, says that it worked.** Each ends in
+  a toast, and a trash carries *Undo*, which puts it back where it was. When one fails, the toast
+  gives the reason the instance gave.
 - **`resonand import --restore`** takes a recording it updates back out of the trash. Without it,
   the trash is left as it is and the import says so; a library in the trash is never restored by
   an import, since that would bring back everything in it.
@@ -63,6 +83,13 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 - **Deleting from the trash asks for a confirmation, and no longer for the name.** *Delete now*
   opens a dialog that names what goes and says it goes permanently; nothing has to be typed. It
   opens with the focus on *Cancel*, so pressing Enter as it appears destroys nothing.
+- **A run on a selection reports in a toast that goes away on its own.** Tagging, categorising,
+  moving or trashing several recordings used to end in a report drawn above the grid that stayed
+  until somebody dismissed it. It is a toast now: gone after six seconds, or twelve when it carries
+  an action; *Retry* on whatever failed, *Undo* after a trash; and a failure with something to do
+  about it stays until it is dismissed. Pointing at it or focusing it holds it.
+- **The published image says which commit built it.** `docker inspect` on it carries the
+  `version`, `revision` and `created` labels, which `0.1.0`'s did not.
 - **The browser tab shows the whole mark.** The favicon was the S on its own, which read as a
   stray letter rather than as Resonand; it is now the full mark, arcs included.
 
@@ -77,10 +104,14 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 - **A recording no longer opens with its transcript missing.** About one load in five showed
   how many segments there were and no lines under them, until the column was scrolled. The
   lines are now drawn on every load.
+- **The account menu can be walked with the keyboard.** The arrow keys, Home and End move
+  through it, as they do through any menu.
 - **`resonand fsck` no longer fails on work in progress.** Run on a live instance while a recording
   was being transcoded or cut up for transcription, it reported the file being written as left
   behind and exited non-zero. A fragment is now a finding only once every job for its recording
   has finished, failed or been cancelled.
+
+Published as `ghcr.io/resonand-app/resonand:0.2.0` for `linux/amd64` and `linux/arm64`.
 
 ## [0.1.0] — 2026-09-23
 
@@ -121,4 +152,5 @@ Two constraints worth knowing before you trust an archive to it:
 
 Published as `ghcr.io/resonand-app/resonand:0.1.0` for `linux/amd64` and `linux/arm64`.
 
+[0.2.0]: https://github.com/resonand-app/resonand/releases/tag/v0.2.0
 [0.1.0]: https://github.com/resonand-app/resonand/releases/tag/v0.1.0
