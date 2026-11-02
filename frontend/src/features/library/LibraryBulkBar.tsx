@@ -37,6 +37,11 @@
  *
  * **Move and trash need Can manage** (`DEC-27`), so a library somebody only edits gets the first
  * two and no overflow menu at all: a menu holding nothing they may do is a door to a refusal.
+ *
+ * **The heart is first, and it is there for anybody who can read** (`UI-42`): a favourite is the
+ * caller's own mark and asks nothing of the recordings, so a library shared read-only gets a
+ * selection with the two favourite actions in it and nothing else. Two rather than one toggle,
+ * because a selection that is partly marked has to be able to go either way in one press.
  */
 
 import { useState } from 'react';
@@ -79,6 +84,8 @@ export interface LibraryBulkBarProps {
   /** The recordings selected, which "add a tag" needs in full to avoid replacing what is there. */
   selected: readonly Recording[];
   categories: readonly Category[];
+  /** Whether the caller edits the library, which a category and a tag need. */
+  canEdit: boolean;
   /** Whether the caller manages the library, which moving out and trashing need. */
   canRemove: boolean;
   bulk: Bulk;
@@ -95,6 +102,7 @@ export function LibraryBulkBar({
   onSelectEverything,
   selected,
   categories,
+  canEdit,
   canRemove,
   bulk,
   onOutcome,
@@ -122,26 +130,44 @@ export function LibraryBulkBar({
         actions={
           bulk.running === null ? (
             <>
-              <CategoryPicker
-                categories={categories}
-                value={undefined}
-                compact
-                // Not "Any category": in the bulk bar this control does something rather than
-                // narrowing something, and a filter's words on an action is how somebody assigns
-                // a category by accident while trying to clear a filter.
-                placeholder={t('bulk.category')}
-                onChange={(categoryId) => {
-                  void bulk.assignCategory(uuids, categoryId ?? null).then(after);
+              <IconButton
+                icon="heart"
+                label={t('bulk.favourite')}
+                onClick={() => {
+                  void bulk.favourite(uuids, true).then(after);
                 }}
               />
               <IconButton
-                icon="tag"
-                label={t('bulk.addTag')}
-                aria-expanded={tagging}
+                icon="heart-off"
+                label={t('bulk.unfavourite')}
                 onClick={() => {
-                  setTagging(true);
+                  void bulk.favourite(uuids, false).then(after);
                 }}
               />
+              {canEdit && (
+                <>
+                  <CategoryPicker
+                    categories={categories}
+                    value={undefined}
+                    compact
+                    // Not "Any category": in the bulk bar this control does something rather than
+                    // narrowing something, and a filter's words on an action is how somebody assigns
+                    // a category by accident while trying to clear a filter.
+                    placeholder={t('bulk.category')}
+                    onChange={(categoryId) => {
+                      void bulk.assignCategory(uuids, categoryId ?? null).then(after);
+                    }}
+                  />
+                  <IconButton
+                    icon="tag"
+                    label={t('bulk.addTag')}
+                    aria-expanded={tagging}
+                    onClick={() => {
+                      setTagging(true);
+                    }}
+                  />
+                </>
+              )}
               {!canRemove ? null : collapsed ? (
                 <Menu
                   label={t('bulk.more')}

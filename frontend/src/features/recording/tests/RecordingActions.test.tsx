@@ -96,10 +96,12 @@ describe('downloading the original', () => {
 });
 
 describe('what a level does not allow', () => {
-  it('offers nothing but the download at level 10', async () => {
+  it('offers nothing but the heart and the download at level 10', async () => {
     at(10);
     renderRecording();
     await screen.findByRole('link', { name: 'Download the original' });
+    // The mark is the reader's own and asks nothing of the recording (`UI-42`).
+    expect(screen.getByRole('button', { name: 'Favourite' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Move to another library' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Trash' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Share' })).toBeNull();
@@ -132,6 +134,34 @@ describe('what a level does not allow', () => {
     renderRecording();
     await user.click(await screen.findByRole('button', { name: 'Share' }));
     expect(await screen.findByText('library settings')).toBeInTheDocument();
+  });
+});
+
+describe('marking it as a favourite (UI-42)', () => {
+  it('fills the heart at once, and the mark is what the archive now holds', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    const heart = await screen.findByRole('button', { name: 'Favourite' });
+    expect(heart.getAttribute('aria-pressed')).toBe('false');
+    await user.click(heart);
+    expect(heart.getAttribute('aria-pressed')).toBe('true');
+    await waitFor(() => {
+      expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.is_favourite).toBe(true);
+    });
+    await user.click(heart);
+    expect(heart.getAttribute('aria-pressed')).toBe('false');
+    await waitFor(() => {
+      expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.is_favourite).toBe(false);
+    });
+  });
+
+  it('draws no heart on a recording in the trash, which cannot be marked', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === FIELD_TAKE ? { ...one, deleted_at: '2026-03-12T10:00:00Z' } : one,
+    );
+    renderRecording();
+    await screen.findByRole('link', { name: 'Download the original' });
+    expect(screen.queryByRole('button', { name: 'Favourite' })).toBeNull();
   });
 });
 

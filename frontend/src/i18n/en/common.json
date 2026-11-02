@@ -69,5 +69,9 @@
   "limit": {
     "title": "A title can be at most {{max}} characters long.",
     "libraryName": "A library name can be at most {{max}} characters long."
+  },
+  "favourite": {
+    "markFailed": "{{title}} could not be marked as a favourite, so its heart is empty again.",
+    "unmarkFailed": "The mark could not be taken off {{title}}, so its heart is still filled."
   }
 }
