@@ -3,11 +3,12 @@
 Everything here describes the software as it stands. Where something has not been exercised yet,
 it says so — an operations document that overstates what has been tested is worse than none.
 
-> **Status: `0.1.0` is published**, at `ghcr.io/resonand-app/resonand`, for `linux/amd64` and
+> **Status: `0.2.0` is published**, at `ghcr.io/resonand-app/resonand`, for `linux/amd64` and
 > `linux/arm64`. Two files and a volume are an instance — copy this directory's compose file and
 > `.env.example` somewhere of their own and you never need the source. Every instruction below is
-> exercised: CI restores a backup into a clean container by following this file step for step, on
-> each architecture.
+> exercised: CI restores a backup into a clean container by following this file step for step,
+> and before a release is published its image is started, on each architecture, over an archive
+> every earlier release wrote.
 
 ## What an instance is
 

@@ -6,7 +6,7 @@ is the standard reports are read against.
 
 ## Status
 
-**`0.1.0` is the first release, and the latest release is the only supported one.** A fix lands on
+**`0.2.0` is the latest release, and the latest release is the only supported one.** A fix lands on
 `main` and goes out in the next release; nothing is backported to an older tag, and there is no
 long-term-support version to ask for.
 

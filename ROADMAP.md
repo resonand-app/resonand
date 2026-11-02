@@ -14,7 +14,7 @@ under [`docs/`](docs/), and there are two kinds:
   link to it never goes stale and "what is queued" is always one place.
 - **`docs/<version>-plan/`** — one per version, holding what that version contained.
   [`docs/v0.1.0-plan/`](docs/v0.1.0-plan/) is the first: the record of the first version, which
-  shipped as `0.1.0`.
+  shipped as `0.1.0`. [`docs/v0.2.0-plan/`](docs/v0.2.0-plan/) is the second.
 
 A feature therefore travels: written here without a number, given one when it is scoped into
 `next-plan/`, and coming to rest in the folder of the version that shipped it.
