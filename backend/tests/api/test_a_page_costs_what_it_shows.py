@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import pytest
 from fastapi.testclient import TestClient
+from resonand.db import favourites, transcripts
 from resonand.db import libraries as library_repo
 from resonand.db import tags as tag_repo
-from resonand.db import transcripts
 from resonand.db.audio import create_audio
 from resonand.db.engine import Database
 from resonand.db.transcripts import SegmentDraft
@@ -30,7 +30,8 @@ RECORDINGS = 40
 
 @pytest.fixture
 def crowded(database: Database, accounts: dict[str, int]) -> None:
-    """One library of recordings in every state the badge distinguishes, and some tagged."""
+    """One library of recordings in every state the badge distinguishes, some tagged, and some
+    marked as favourites."""
     with database.write_session() as session:
         library = library_repo.create_library(session, accounts["admin"], name="Everything")
         for index in range(RECORDINGS):
@@ -50,6 +51,8 @@ def crowded(database: Database, accounts: dict[str, int]) -> None:
                 queue.enqueue(session, queue.KIND_TRANSCRIBE, audio_id=recording.id)
             if index % 3 == 0:
                 tag_repo.set_audio_tags(session, recording.id, ["kitchen"])
+            if index % 5 == 0:
+                favourites.mark(session, accounts["admin"], recording.uuid)
 
 
 def _cost(database: Database, client: TestClient, path: str) -> int:

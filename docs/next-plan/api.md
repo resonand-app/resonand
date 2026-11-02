@@ -12,7 +12,7 @@ documents.
 
 The feature is introduced in [`data.md`](data.md), beside `DAT-11`.
 
-- [ ] **API-26** · 🧪 **Marking a favourite, and every recording saying whether it is one.**
+- [x] **API-26** · 🧪 **Marking a favourite, and every recording saying whether it is one.**
       `PUT /api/audio/{audio_uuid}/favourite` marks it and `DELETE` on the same path unmarks it,
       both `204` and both idempotent, through `DAT-11`'s module; a recording the caller cannot read
       is `404`, as everywhere. The routes depend on `current_caller` and name their parameter
