@@ -30,6 +30,7 @@ from resonand.archive import (
     MANIFEST_NAME,
     SIDECAR_NAME,
     SIDECAR_SUFFIX,
+    ManifestApplied,
     apply_manifest,
     apply_sidecar,
     export_recording,
@@ -166,10 +167,12 @@ def import_files(
     manifest_path = _manifest_at(source)
     manifest = _read_manifest_quietly(manifest_path)
     _say_if_no_manifest(source, manifest, library_uuid=library)
-    resolved = {} if dry_run else _restore_instance(database, manifest, manifest_path)
+    applied = None if dry_run else _restore_instance(database, manifest, manifest_path)
+    resolved = applied.libraries if applied else {}
     planned = _libraries_named_by(manifest)
 
     tally = dict.fromkeys(Landed, 0)
+    missing: list[str] = []
     for path in candidates:
         sidecar = _sidecar_beside(path)
         if dry_run:
@@ -184,6 +187,7 @@ def import_files(
                 library,
                 sidecar,
                 resolved,
+                missing,
                 transcribe=transcribe,
                 restore=restore,
             )
@@ -193,6 +197,7 @@ def import_files(
             tally[landed] += 1
 
     if not dry_run:
+        _say_whose_favourites_wait(missing, applied)
         typer.echo(_summary(tally))
 
 
@@ -590,10 +595,10 @@ def _manifests_below(source: Path, limit: int = 3) -> list[Path]:
 
 def _restore_instance(
     database: Database, manifest: dict[str, object] | None, path: Path | None = None
-) -> dict[str, int]:
+) -> ManifestApplied | None:
     """Recreate the libraries and the sharing the export described, and say what it could not."""
     if manifest is None:
-        return {}
+        return None
     with database.write_session() as session:
         applied = apply_manifest(session, manifest)
     for address in applied.missing_accounts:
@@ -609,7 +614,22 @@ def _restore_instance(
         # rename carries the old one, and naming the wrong file is how an hour goes missing.
         read = path.name if path else MANIFEST_NAME
         typer.echo(f"Restored {len(applied.libraries)} libraries from {read}.")
-    return applied.libraries
+    return applied
+
+
+def _say_whose_favourites_wait(missing: list[str], applied: ManifestApplied | None) -> None:
+    """Name each address a favourite was skipped for, once.
+
+    One the manifest has already named is not named again: creating it and running the import a
+    second time puts its favourites back along with everything else.
+    """
+    named = set(applied.missing_accounts) if applied else set()
+    for address in sorted({address.lower() for address in missing} - named):
+        typer.echo(
+            f"no account here for {address}: create it and run this again to restore its "
+            "favourites.",
+            err=True,
+        )
 
 
 def _libraries_named_by(manifest: dict[str, object] | None) -> dict[str, str]:
@@ -726,7 +746,13 @@ def _trashed_library_of(session: Session, audio: Audio) -> Library | None:
 
 
 def _update_existing(
-    session: Session, audio: Audio, payload: dict[str, Any], path: Path, *, restore: bool
+    session: Session,
+    audio: Audio,
+    payload: dict[str, Any],
+    path: Path,
+    missing: list[str],
+    *,
+    restore: bool,
 ) -> Landed:
     """Apply a sidecar to a recording already here, and say so when nobody will see the result.
 
@@ -738,7 +764,7 @@ def _update_existing(
     if restored:
         audio.deleted_at = None
         session.flush()
-    apply_sidecar(session, audio, payload)
+    apply_sidecar(session, audio, payload, missing=missing)
     if trashed_library is not None:
         typer.echo(
             f"updated {path.name}, but its library {trashed_library.name} is in the trash: "
@@ -755,13 +781,14 @@ def _update_existing(
     return Landed.RESTORED if restored else Landed.UPDATED
 
 
-def _import_one(
+def _import_one(  # noqa: PLR0913 -- one file, and what the run around it already knows
     database: Database,
     settings: Settings,
     path: Path,
     library_uuid: str | None,
     sidecar: Path | None,
     resolved: dict[str, int],
+    missing: list[str],
     *,
     transcribe: bool,
     restore: bool,
@@ -778,7 +805,7 @@ def _import_one(
         if payload is not None:
             existing = find_by_uuid(session, str(payload.get("uuid", "")))
             if existing is not None:
-                return _update_existing(session, existing, payload, path, restore=restore)
+                return _update_existing(session, existing, payload, path, missing, restore=restore)
 
         library = _destination_library(session, payload, library_uuid, resolved)
         audio = create_audio(
@@ -802,7 +829,7 @@ def _import_one(
         audio.size_bytes = digest.size_bytes
         session.flush()
         if payload is not None:
-            apply_sidecar(session, audio, payload)
+            apply_sidecar(session, audio, payload, missing=missing)
         else:
             search_index.index_audio(session, audio.id)
         enqueue(session, "probe", audio_id=audio.id, idempotency_key=f"probe:{audio.uuid}")

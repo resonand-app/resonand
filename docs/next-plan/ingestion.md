@@ -50,7 +50,7 @@ with it, and corrections to what it did. Everything else in the track shipped, a
 
 ## The archive, leaving and coming back
 
-- [ ] **ING-15** · 🧪 **Favourites survive an export and an import.** Nobody types a favourite twice:
+- [x] **ING-15** · 🧪 **Favourites survive an export and an import.** Nobody types a favourite twice:
       a set somebody spent a year curating, gone after a restore, is a loss even though no audio
       was. The per-recording sidecar gains `favourited_by` beside `shares`, a list of
       `{email, at}`, so the order `UI-44` sorts by survives as well as the mark. Import resolves

@@ -33,6 +33,11 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
 - **`resonand import --restore`** takes a recording it updates back out of the trash. Without it,
   the trash is left as it is and the import says so; a library in the trash is never restored by
   an import, since that would bring back everything in it.
+- **An export carries each account's favourites.** Every recording's sidecar names who marked it
+  as a favourite and when, and `resonand import` gives each account its favourites back in the
+  order it marked them, printing any address it has no account for. An export written before
+  this imports as it always has, and `0.1.0` reading one written after it imports everything but
+  the favourites, without saying so.
 
 ### Changed
 
