@@ -90,6 +90,31 @@ probably the highest felt value per hour spent on it.
 - **A profile picture.**
 - **Refusing an upload that has no duration**, which is otherwise a file that fails three jobs later
   and gives nobody a reason why.
+- **Where a recording was made**, as coordinates on the recording and a point on a map. The data
+  is mostly already in the archive: a phone that knows its position writes it into the container
+  — `com.apple.quicktime.location.iso6709` or `location` on an `.m4a` — and `ffprobe` already
+  reads every container tag at ingest, only for the recording date to be looked for and the rest
+  thrown away. The derivative is written with `-map_metadata -1` and carries none of it, but the
+  original keeps it byte for byte, so the recordings already uploaded can be backfilled from
+  their originals without anybody uploading anything again. Many recorders write no position at
+  all, and a WAV has nowhere to put one, so most archives will have it on some recordings and not
+  on others. What has been decided:
+  - **Anybody who can read the recording sees it**, as they see the codec and the hash: it is part
+    of the technical metadata, not a separate grant. The consequence is worth saying in the sharing
+    panel rather than leaving to be found — sharing a library of voice notes shares where each was
+    recorded, which is often somebody's home.
+  - **A position read from the file cannot be edited by hand**, any more than its duration can. It
+    keeps the source it came from, as the recording date does; a position may be set by hand only
+    on a recording whose file carries none.
+  - **The map is OpenStreetMap's.** Its tiles are fetched by the viewer's browser from
+    openstreetmap.org, which learns who is looking at roughly where — so the map falls under the
+    same egress disclosure as transcription, the coordinates are shown without it, and the
+    instance's `img-src 'self' data:` has to admit the tile host. The tile usage policy requires
+    the attribution and forbids heavy use, which an instance with a handful of people is not.
+  - **Filtering by where**, as an area on the map rather than a place name: turning coordinates
+    into a name means a geocoding service, which is a second egress and has not been decided.
+  - **It travels with the archive**: written into the export's sidecar, and read back by
+    `resonand import`.
 
 ## 4 · The archive as something other tools use
 
