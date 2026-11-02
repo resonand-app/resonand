@@ -78,6 +78,7 @@ function measured(height = 720) {
     },
   );
   vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(height);
+  vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(height);
 }
 
 /** The card or row about one recording, by its title. */

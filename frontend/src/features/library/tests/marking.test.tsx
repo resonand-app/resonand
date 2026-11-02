@@ -167,6 +167,7 @@ describe('the heart on a row', () => {
       },
     );
     vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(720);
+    vi.spyOn(HTMLElement.prototype, 'clientHeight', 'get').mockReturnValue(720);
     renderLibrary('?view=list');
     const name = await screen.findByText('Digitised cassette');
     const row = name.closest<HTMLElement>('[data-ds="recording-row"]');
