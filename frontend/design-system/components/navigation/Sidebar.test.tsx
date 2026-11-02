@@ -123,7 +123,7 @@ describe('Sidebar', () => {
     const panel = screen.getByRole('navigation');
     const region = libraries(panel);
     expect(region).toContainElement(screen.getByRole('button', { name: /Library 19/ }));
-    for (const name of ['Trash', 'Settings', 'Libraries']) {
+    for (const name of ['Trash', 'Settings', 'Libraries', 'Favourites']) {
       expect(region).not.toContainElement(screen.getByRole('button', { name: new RegExp(name) }));
     }
   });

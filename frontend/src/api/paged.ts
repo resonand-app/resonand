@@ -14,7 +14,12 @@
  * like the same number until a collection is longer than one page.
  */
 
-import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { InfiniteData, Query, QueryKey, UseQueryResult } from '@tanstack/react-query';
 
 /** The envelope every list endpoint answers with. */
@@ -147,6 +152,7 @@ export function useInfinitePages<Item>(
   } = {},
 ): InfiniteResult<Item> {
   const { enabled, refetchInterval } = options;
+  const client = useQueryClient();
   const query = useInfiniteQuery({
     queryKey: key,
     queryFn: ({ pageParam }) => fetchPage({ limit: PAGE_SIZE, offset: pageParam }),
@@ -188,7 +194,12 @@ export function useInfinitePages<Item>(
     isFetchingMore: query.isFetchingNextPage,
     error: query.error,
     fetchMore: () => {
-      void query.fetchNextPage();
+      void (async () => {
+        // The next offset is read off the pages held. Once they are out of date (a favourite
+        // unmarked in place), it skips as many rows as the list has lost.
+        if (client.getQueryState(key)?.isInvalidated === true) await query.refetch();
+        await query.fetchNextPage();
+      })();
     },
     refetch: () => {
       void query.refetch();

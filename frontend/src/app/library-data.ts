@@ -40,6 +40,15 @@ export function useAllLibraries(): LibrarySummary[] {
   return data ?? [];
 }
 
+/** Whether the libraries list has answered, so a row with no library name is unreadable rather than early. */
+export function useLibrariesSettled(): boolean {
+  const { isPending } = useQuery({
+    queryKey: keys.libraries(),
+    queryFn: () => get('/api/libraries'),
+  });
+  return !isPending;
+}
+
 export function useLibraries(): Libraries {
   const { account } = useSession();
   const { data } = useQuery({ queryKey: keys.libraries(), queryFn: () => get('/api/libraries') });

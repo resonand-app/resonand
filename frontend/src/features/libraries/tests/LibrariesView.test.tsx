@@ -422,6 +422,15 @@ describe('the way to the trash on a phone (UI-4f1)', () => {
     ).toBeInTheDocument();
   });
 
+  it('offers the favourites beside it, and goes there (UI-44)', async () => {
+    atWidth(430);
+    showWithLocation();
+    await userEvent.click(await screen.findByRole('button', { name: 'Favourites' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('where')).toHaveTextContent('/favourites');
+    });
+  });
+
   it('goes to the trash when it is pressed', async () => {
     atWidth(430);
     showWithLocation();

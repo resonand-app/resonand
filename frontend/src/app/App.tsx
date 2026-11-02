@@ -18,6 +18,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
 
 import { DEPLOYMENT_BASE } from '@/api/client';
 import { createQueryClient } from '@/api/query-client';
+import { FavouritesView } from '@/features/favourites/FavouritesView';
 import { LibrariesView } from '@/features/libraries/LibrariesView';
 import { LibraryView } from '@/features/library/LibraryView';
 import { LibrarySettingsView } from '@/features/library-settings/LibrarySettingsView';
@@ -97,6 +98,7 @@ export function AppRoutes() {
           <Route path={routes.library} element={<LibraryView />} />
           <Route path={routes.librarySettings} element={<LibrarySettingsView />} />
           <Route path={routes.recording} element={<RecordingView />} />
+          <Route path={routes.favourites} element={<FavouritesView />} />
           <Route path={routes.search} element={<SearchView />} />
           <Route path={routes.trash} element={<TrashView />} />
           <Route path={routes.settings} element={<SettingsView />} />

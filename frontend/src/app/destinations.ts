@@ -16,15 +16,17 @@ import { routes, toLibrary } from './routes';
  */
 export function destinationOf(pathname: string): string {
   if (pathname.startsWith('/library/')) return pathname.split('/')[2] ?? 'libraries';
+  if (pathname.startsWith(routes.favourites)) return 'favourites';
   if (pathname.startsWith(routes.trash)) return 'trash';
   if (pathname.startsWith(routes.settings)) return 'settings';
   if (pathname === routes.libraries) return 'libraries';
   return '';
 }
 
-/** Where a sidebar entry goes. The three fixed ones, and a library by its uuid. */
+/** Where a sidebar entry goes. The four fixed ones, and a library by its uuid. */
 export function destinationTo(id: string): string {
   if (id === 'libraries') return routes.libraries;
+  if (id === 'favourites') return routes.favourites;
   if (id === 'trash') return routes.trash;
   if (id === 'settings') return routes.settings;
   return toLibrary(id);
