@@ -8,21 +8,44 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router';
-import { describe, expect, it } from 'vitest';
+import { HttpResponse, http } from 'msw';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import type { components } from '@/api/contract/schema';
 import { routes, toRecording } from '@/app/routes';
+import { useToasts } from '@/app/toasts';
 import { ThemeProvider } from '@/design-system';
 import { RECORDINGS, FIELD_TAKE, PERSONAL, archive } from '@/test/api/archive';
-import { mockApi } from '@/test/api/server';
+import { mockApi, server } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
 
 mockApi();
+
+afterEach(() => {
+  useToasts.setState({ toasts: [] });
+});
+
+/** What the toast store holds now: what was said, and the label of what it offers. */
+function said() {
+  return useToasts
+    .getState()
+    .toasts.map((one) => ({ tone: one.tone, message: one.message, action: one.action?.label }));
+}
+
+/** Press a toast's button, as the region would: it goes, and its action runs. */
+function press(message: string) {
+  const toast = useToasts.getState().toasts.find((one) => one.message === message);
+  if (toast?.action === undefined) throw new Error(`nothing to press on ${message}`);
+  useToasts.getState().dismiss(toast.id);
+  act(() => {
+    toast.action?.run();
+  });
+}
 
 /** Where the router ended up, so a test can assert what an action did with it. */
 function Where() {
@@ -196,6 +219,48 @@ describe('sending it to the trash', () => {
     });
     expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.deleted_at).not.toBeNull();
   });
+
+  async function trashIt() {
+    const user = userEvent.setup();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: 'Trash' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(await within(dialog).findByRole('button', { name: 'Trash' }));
+    await waitFor(() => {
+      expect(said()).toEqual([
+        { tone: 'done', message: 'Field recording, long take sent to the trash', action: 'Undo' },
+      ]);
+    });
+  }
+
+  it('says it went, once, and undoing it brings it back (UI-47)', async () => {
+    await trashIt();
+    press('Field recording, long take sent to the trash');
+    await waitFor(() => {
+      expect(said()).toEqual([
+        { tone: 'done', message: 'Field recording, long take restored', action: undefined },
+      ]);
+    });
+    expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.deleted_at).toBeNull();
+  });
+
+  it('says a refused undo in the API own words', async () => {
+    await trashIt();
+    server.use(
+      http.post('/api/audio/:audio_uuid/restore', () =>
+        HttpResponse.json(
+          { type: 'about:blank', title: 'Gone', status: 404, detail: 'No such recording.' },
+          { status: 404, headers: { 'content-type': 'application/problem+json' } },
+        ),
+      ),
+    );
+    press('Field recording, long take sent to the trash');
+    await waitFor(() => {
+      expect(said()).toEqual([
+        { tone: 'failed', message: 'No such recording.', action: undefined },
+      ]);
+    });
+  });
 });
 
 describe('moving it', () => {
@@ -215,6 +280,17 @@ describe('moving it', () => {
       expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.library_uuid).toBe(
         PERSONAL,
       );
+    });
+    // Where it went, and no Undo: the move dropped its category, and moving back would not bring
+    // that back (UI-47).
+    await waitFor(() => {
+      expect(said()).toEqual([
+        {
+          tone: 'done',
+          message: 'Field recording, long take moved to Personal',
+          action: undefined,
+        },
+      ]);
     });
   });
 

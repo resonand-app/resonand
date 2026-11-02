@@ -74,6 +74,8 @@
     "body_other": "Its {{count}} recordings go with it.",
     "window_one": "You can put it back for {{count}} day.",
     "window_other": "You can put it back for {{count}} days.",
-    "confirm": "Move it to the trash"
+    "confirm": "Move it to the trash",
+    "done": "{{name}} sent to the trash",
+    "restored": "{{name}} restored"
   }
 }

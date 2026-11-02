@@ -25,6 +25,8 @@
 
 import { create } from 'zustand';
 
+import { detailOf } from '@/api/query-client';
+
 /** How long a failure stays. Longer than the region's default: it is a sentence, not a tick. */
 export const FAILED_AFTER_MS = 12_000;
 
@@ -87,4 +89,23 @@ export const useToasts = create<ToastsState>((set, get) => ({
 /** Raise one from outside React, which is where most failures are caught. */
 export function raiseToast(toast: Omit<RaisedToast, 'id'>): string {
   return useToasts.getState().raise(toast);
+}
+
+/**
+ * Do a write that is not a mutation, and say how it went (`UI-47`): the caller's words when it
+ * worked, the API's own `detail` when it did not. An *Undo* pressed in a toast runs after the view
+ * that offered it has gone, so there is no mutation and no cache to report the failure for it.
+ */
+export async function reportOn(
+  work: () => Promise<unknown>,
+  done: Omit<RaisedToast, 'id' | 'tone'>,
+): Promise<boolean> {
+  try {
+    await work();
+  } catch (cause) {
+    raiseToast({ tone: 'failed', message: detailOf(cause) });
+    return false;
+  }
+  raiseToast({ tone: 'done', ...done });
+  return true;
 }
