@@ -310,6 +310,13 @@ jobs:
           docker rm -f resonand-restored > /dev/null
           docker volume rm resonand-restored > /dev/null
 
+      - name: Check an archive every release wrote upgrades into it
+        # OPS-9. The walk in the backend suite seeds old revisions with SQL this checkout wrote;
+        # this lets each published image write its own archive, which is what an instance holds.
+        # Here as well as in release.yml so a migration that breaks one fails its pull request
+        # rather than the tag.
+        run: .github/scripts/upgrade-from-releases.sh resonand:ci
+
       - name: Check the CLI works inside the image
         run: docker run --rm resonand:ci resonand version
 

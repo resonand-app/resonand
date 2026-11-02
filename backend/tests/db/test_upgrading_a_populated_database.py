@@ -8,8 +8,9 @@ there.
 **It is a walk over the revision tree rather than a pair.** Writing it as "the previous revision
 to head" means rewriting it every time a revision lands, and the rewrite happens in the same
 session as the migration it is meant to be checking. The walk is the version that already covers
-``0004`` on the day somebody writes it, and it is the single-hop half of ``OPS-9``, which owes the
-rest: this runs against the revisions in *this* checkout, not against every version ever released.
+``0004`` on the day somebody writes it. It runs against the revisions in *this* checkout; an
+archive written by every published image is ``OPS-9``'s, in
+``.github/scripts/upgrade-from-releases.sh``.
 
 The seed is raw SQL on purpose. ``resonand.db.models`` describes the schema at head, so using the
 ORM to populate a database at ``0001`` would fail on a column that revision has never heard of --

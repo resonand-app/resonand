@@ -518,7 +518,7 @@ dependencies allow.
 The uncounted metric for the whole project: whether instances that already hold somebody's archive
 survive being updated.
 
-- [ ] **OPS-9** · **Cross-version migration matrix**: upgrade a database populated by every
+- [x] **OPS-9** · **Cross-version migration matrix**: upgrade a database populated by every
       released *image*, not one seeded at an old revision by the current code, in CI. ⇢ OPS-8 🧪
       *`OPS-6` settled the half that can be tested from one checkout: a walk over the revision
       tree, populating at each revision and asserting the archive survives the upgrade to head.
@@ -529,5 +529,43 @@ survive being updated.
       *It starts empty on purpose: the matrix compares published images, and the first release is
       one row with nothing to compare against. Its first real assertion is at the second release,
       which is the argument for building it then rather than now.*
+
+      **Done, at the second release, and the published image writes the archive itself.**
+      `.github/scripts/upgrade-from-releases.sh` pulls each released image, starts it on an empty
+      volume, and fills it the way somebody's instance was filled: `create-admin` and
+      `resonand import` for three generated recordings, then the release's own API for a second
+      account, a library shared with it at *Can edit*, a category, a tag, a recording moved into the
+      shared library and one sent to the trash. A title of 260 characters and a library name of 135
+      go in too, because nothing before `0.2.0` refused them and `0006` has to shorten both. The
+      container goes, the volume stays, and the candidate is started over it.
+
+      What it asks afterwards is whether an operator would notice anything: `resonand fsck` clean
+      with all three originals re-hashed, both passwords still signing in, the title and the name
+      shortened under their limits and still prefixes of what was typed, search finding the
+      recording by its shortened title — `0006` reindexes it, and a stale index is a recording
+      nobody can find — the tag and category still on it, the guest still reading the shared library
+      and the recording moved into it, and the trash still holding what was in it.
+
+      **The rows are the repository's `v*` tags**, read with `git ls-remote` so a shallow checkout
+      sees them. A pre-release is skipped, and so is a tag on the commit being built: on release day
+      that image is the candidate, not something anybody has pulled. No row at all fails, because a
+      green check over an upgrade nobody ran is the fault this exists to remove. A matrix file listing
+      the versions by hand was the alternative, and it is one more thing release day has to remember.
+
+      It runs in two places, as `smoke-image.sh` does: `ci.yml`'s `Image` job, so a migration that
+      breaks an old archive fails its pull request rather than the tag, and `release.yml`'s build
+      job before anything is pushed — on both architectures, which makes it the first upgrade ever
+      exercised on arm64. **The cost** is a pull of every released image on each run, 669 MB for
+      `0.1.0` and growing by one image a release; when that starts to matter, the rows can be
+      thinned to the last release of each minor.
+
+      The writes go through each release's own API, so **a release that changes one of those calls
+      keeps the old call for the releases before it.** The script says so where the calls are.
+
+      *Verified* against `0.1.0` from the registry and a candidate built from `main`: `0004` to
+      `0006`, one title and one name shortened, every assertion passing, nothing left behind. Run
+      with `0.1.0` itself as the candidate, it fails on the unshortened title, which is the
+      assertion biting rather than merely passing. **Not verified:** the arm64 half, which runs for
+      the first time on the next tag.
 
 - [ ] **OPS-11** · Packaging for one-click installation platforms. ⇢ DEC-6
