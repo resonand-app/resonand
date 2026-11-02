@@ -24,6 +24,11 @@ export interface RecordingRowProps
   date?: string;
   /** The category's name, resolved against the library's tree by the caller. */
   category?: string;
+  /**
+   * The category column holds a library and then a category, across libraries, and is drawn
+   * wider for it. The list's heading has to match.
+   */
+  wideCategory?: boolean;
   /** User-entered tags, shown verbatim. */
   tags?: string[];
   state?: TranscriptionState;
@@ -77,6 +82,7 @@ export function RecordingRow({
   duration,
   date,
   category,
+  wideCategory = false,
   tags = [],
   state = 'done',
   selected = false,
@@ -231,11 +237,12 @@ export function RecordingRow({
       </span>
       <span
         data-column="category"
+        {...(category === undefined ? {} : { title: category })}
         style={{
           fontFamily: 'var(--font-sans)',
           fontSize: 'var(--type-ui-size-sm)',
           color: 'var(--text-3)',
-          width: 116,
+          width: wideCategory ? 156 : 116,
           flex: '0 0 auto',
           whiteSpace: 'nowrap',
           overflow: 'hidden',

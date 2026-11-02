@@ -65,7 +65,14 @@ import { BulkReport, LibraryBulkBar } from './LibraryBulkBar';
 import { RecordingGrid } from './RecordingGrid';
 import { RecordingList } from './RecordingList';
 import { useLibrary } from './data';
-import { fetchEveryRecording, libraryQuery, useCategories, useRecordings } from './recordings';
+import { oneLibrary } from './places';
+import {
+  fetchEveryRecording,
+  inLibrary,
+  libraryQuery,
+  useCategories,
+  useRecordings,
+} from './recordings';
 import type { Recording } from './recordings';
 import { EMPTY, coverage, extendTo, retain, selectAll, toggle } from './selection';
 import { useBulk } from './use-bulk';
@@ -80,7 +87,8 @@ export function LibraryView() {
   const isPhone = useIsPhone();
   // Both densities are handed the filters alone: the grid accumulates pages behind this, and the
   // dense list windows over the whole library itself.
-  const recordings = useRecordings(uuid, libraryQuery(filters));
+  const source = inLibrary(uuid);
+  const recordings = useRecordings(source, libraryQuery(filters));
   const [selection, setSelection] = useState(EMPTY);
   const bulk = useBulk(uuid);
   const [stickyRef, headerHeight] = useStickyHeader();
@@ -116,7 +124,7 @@ export function LibraryView() {
     return <Unavailable error={context.error} onRetry={context.refetch} />;
   }
 
-  const libraryName = context.library?.name ?? '';
+  const places = oneLibrary(context.library?.name ?? '', categories);
   // Whether the dense list is what this screen currently is. It is the only body that scrolls on
   // its own, so it is the only one that asks the frame for a settled height to fill (`UI-11c`) --
   // the grid and the five other states keep the page they lengthen. Not on the phone (`DEC-23`):
@@ -164,10 +172,9 @@ export function LibraryView() {
     if (filters.view === 'list') {
       return (
         <RecordingList
-          libraryUuid={uuid}
-          categories={categories}
+          source={source}
+          places={places}
           query={libraryQuery(filters)}
-          libraryName={libraryName}
           headerOffset={`${String(headerHeight)}px`}
           fills={fills}
           {...(selectable === undefined ? {} : { selection: selectable })}
@@ -178,8 +185,7 @@ export function LibraryView() {
       <>
         <RecordingGrid
           recordings={recordings.items}
-          categories={categories}
-          libraryName={libraryName}
+          places={places}
           waveforms={painted}
           {...(selectable === undefined ? {} : { selection: selectable })}
         />
@@ -228,7 +234,7 @@ export function LibraryView() {
             }}
             matching={recordings.total}
             onSelectEverything={() => {
-              void fetchEveryRecording(uuid, libraryQuery(filters)).then((items) => {
+              void fetchEveryRecording(source, libraryQuery(filters)).then((items) => {
                 setEverything({ query: queryKey, items });
                 setSelection({ selected: new Set(items.map((one) => one.uuid)), anchor: null });
               });

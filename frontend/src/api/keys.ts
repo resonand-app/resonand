@@ -38,6 +38,9 @@ export const keys = {
   transcripts: (uuid: string) => ['recordings', uuid, 'transcripts'] as const,
   waveform: (uuid: string, peaks: number) => ['recordings', uuid, 'waveform', peaks] as const,
 
+  /** Every recording the caller can see, across libraries, filtered (`UI-43`). */
+  everyRecording: (filters?: ListFilters) => ['every-recording', filters ?? {}] as const,
+
   /** The whole archive, filtered. */
   search: (filters?: ListFilters) => ['search', filters ?? {}] as const,
   searchAbout: () => ['search', 'about'] as const,

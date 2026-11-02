@@ -55,7 +55,7 @@ reviewed as copy in its pull request rather than taken as settled.
       *Done when:* a recording can be marked and unmarked from its card, its row and its own page,
       in any library the caller can read, one at a time or as a selection.
 
-- [ ] **UI-43** · 🧪 **The grid and the list draw recordings from more than one library.** Both
+- [x] **UI-43** · 🧪 **The grid and the list draw recordings from more than one library.** Both
       assume one today: `RecordingGrid` takes a single `libraryName` and a single `categories`, and
       `RecordingList`'s pages are fixed to `/api/libraries/{uuid}/audio` in `rows.ts`, as is the
       select-all that `fetchEveryRecording` performs. Each row now carries its own library: the name

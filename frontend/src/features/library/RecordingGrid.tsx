@@ -17,6 +17,9 @@
  * outlives every view (`UI-5a`), so a card hands it a recording and reads back whether that
  * recording is the one playing -- there is one playback state, and a grid that kept its own idea
  * of what was playing would be the second.
+ *
+ * **It is not tied to a library** (`UI-43`). Each card is named against its own library, and a
+ * grid whose cards come from several says on each which one, after the date.
  */
 
 import { useTranslation } from 'react-i18next';
@@ -29,16 +32,20 @@ import * as format from '@/i18n/format';
 import { recordedAt } from '@/i18n/time';
 import { usePlayback } from '@/player/store';
 
+import { usePlaces } from './places';
+import type { Places } from './places';
 import { transcriptionState } from './recordings';
 import { useKeepPlace } from './use-keep-place';
 import { useLongPress } from './use-long-press';
-import type { Categories, Recording } from './recordings';
+import type { Recording } from './recordings';
 
 export interface RecordingGridProps {
   recordings: Recording[];
-  categories: Categories;
-  /** The library's name, which the player shows under the title (§3.1). */
-  libraryName: string;
+  /**
+   * Where the cards live, when the view already knows: one library's name and tree. Absent, and
+   * each card is named against its own library (`UI-43`).
+   */
+  places?: Places;
   /** Whether the deferred per-card waveform fetches may start (`UI-31b`). */
   waveforms: boolean;
   /**
@@ -53,14 +60,10 @@ export interface RecordingGridProps {
   };
 }
 
-export function RecordingGrid({
-  recordings,
-  categories,
-  libraryName,
-  waveforms,
-  selection,
-}: RecordingGridProps) {
+export function RecordingGrid({ recordings, places, waveforms, selection }: RecordingGridProps) {
   const { root, open } = useKeepPlace();
+  const resolved = usePlaces(places === undefined ? recordings : []);
+  const where = places ?? resolved;
   return (
     <div
       ref={root}
@@ -75,8 +78,9 @@ export function RecordingGrid({
         <Card
           key={recording.uuid}
           recording={recording}
-          category={categories.nameOf(recording.category_id)}
-          libraryName={libraryName}
+          category={where.categoryOf(recording)}
+          libraryName={where.libraryOf(recording)}
+          showLibrary={where.spansLibraries}
           waveforms={waveforms}
           onOpen={open}
           {...(selection === undefined ? {} : { selection })}
@@ -90,13 +94,16 @@ function Card({
   recording,
   category,
   libraryName,
+  showLibrary,
   waveforms,
   onOpen,
   selection,
 }: {
   recording: Recording;
   category: string | undefined;
-  libraryName: string;
+  /** Undefined where the caller cannot read the library this recording sits in. */
+  libraryName: string | undefined;
+  showLibrary: boolean;
   waveforms: boolean;
   onOpen: (uuid: string) => void;
   selection?: RecordingGridProps['selection'];
@@ -139,7 +146,11 @@ function Card({
       }}
       name={recording.title}
       href={toRecording(recording.uuid)}
-      meta={`${format.duration(recording.duration_ms)} · ${when.text}`}
+      meta={[
+        format.duration(recording.duration_ms),
+        when.text,
+        ...(showLibrary && libraryName !== undefined ? [libraryName] : []),
+      ].join(' · ')}
       state={state}
       {...(category === undefined ? {} : { category })}
       tags={recording.tags.map((tag) => tag.name)}
@@ -169,7 +180,7 @@ function Card({
           state.play({
             uuid: recording.uuid,
             title: recording.title,
-            library: libraryName,
+            library: libraryName ?? '',
             durationMs: recording.duration_ms,
             hasWaveform: recording.has_waveform,
           });
