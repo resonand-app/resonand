@@ -88,6 +88,10 @@ jobs:
         uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
         with:
           images: ${{ env.IMAGE }}
+          # Never pushed from this job, but the version label is the first tag's: without these,
+          # the default `type=ref` makes it `v0.2.0` beside registry tags that all read `0.2.0`.
+          tags: |
+            type=semver,pattern={{version}}
         # Here as well as in the join, because a label is part of the image and the join only
         # gathers manifests that already exist. Its tags are ignored in this job -- what is pushed
         # below is a digest with no name.
@@ -188,10 +192,8 @@ jobs:
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-          # No `labels:` here on purpose. metadata-action already writes the three the Dockerfile
-          # cannot know for itself -- version, revision and created -- and its version is the
-          # semver the tag parses to rather than the ref name, so it says 0.1.0 where `v0.1.0`
-          # would have been wrong beside every tag in the registry.
+          # No `labels:` here: a join gathers images that already exist, so the labels are the
+          # build job's, and the tags above are what this step is for.
 
       - name: Join the two into one manifest list
         id: join
