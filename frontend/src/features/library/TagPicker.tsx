@@ -128,7 +128,8 @@ export function TagPicker({ value, onChange }: TagPickerProps) {
               <li key={suggestion.tag.slug}>
                 <button
                   type="button"
-                  data-ds="tag-suggestion"
+                  // The menu's row, so the stylesheet paints it rather than the browser.
+                  data-ds="menu-row"
                   onClick={() => {
                     // The slug is what the API filters on, and the name is what a person reads.
                     onChange([...value, suggestion.tag.slug]);
@@ -147,7 +148,6 @@ export function TagPicker({ value, onChange }: TagPickerProps) {
                     padding: '0 var(--space-3)',
                     fontFamily: 'var(--font-sans)',
                     fontSize: 'var(--type-ui-size)',
-                    cursor: 'pointer',
                   }}
                 >
                   <span>{suggestion.tag.name}</span>

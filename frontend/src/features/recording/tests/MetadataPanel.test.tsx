@@ -21,6 +21,7 @@ import { ThemeProvider } from '@/design-system';
 import { usePlayback } from '@/player/store';
 import { INTERVIEW, FIELD_TAKE, CASSETTE, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
+import { paintedBy } from '@/test/support/painted';
 
 import { RecordingView } from '../RecordingView';
 
@@ -276,6 +277,19 @@ describe('the category', () => {
     });
   });
 
+  it('draws its rows with the stylesheet, which can then mark the chosen one', async () => {
+    archive.recordings = archive.recordings.map((one) =>
+      one.uuid === FIELD_TAKE ? { ...one, category_id: 1 } : one,
+    );
+    const user = userEvent.setup();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: /Interviews/ }));
+    const chosen = await screen.findByRole('radio', { name: 'Interviews' });
+    // A row the stylesheet has no rule for is a grey browser button, chosen or not.
+    expect(paintedBy(chosen)).toContain('background');
+    expect(chosen.dataset.selected).toBe('true');
+  });
+
   it('is a fact rather than a control when it is not yours to change', async () => {
     archive.recordings = archive.recordings.map((one) =>
       one.uuid === FIELD_TAKE ? { ...one, level: 10, category_id: 1 } : one,
@@ -300,6 +314,13 @@ describe('the tags', () => {
     await waitFor(() => {
       expect(bodies[0]).toEqual({ tags: ['field', 'outdoor', 'music'] });
     });
+  });
+
+  it('draws its suggestions with the stylesheet rather than as browser buttons', async () => {
+    const user = userEvent.setup();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: 'Add a tag' }));
+    expect(paintedBy(await screen.findByRole('button', { name: /music/ }))).toContain('background');
   });
 
   it('offers the canonical spelling rather than the one that was typed', async () => {

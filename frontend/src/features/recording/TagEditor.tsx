@@ -185,7 +185,8 @@ export function TagEditor({ value, onChange, readOnly = false }: TagEditorProps)
               <li key={suggestion.tag.slug}>
                 <button
                   type="button"
-                  data-ds="tag-suggestion"
+                  // The menu's row, so the stylesheet paints it rather than the browser.
+                  data-ds="menu-row"
                   onClick={() => {
                     add(suggestion.tag.name);
                   }}
@@ -201,7 +202,6 @@ export function TagEditor({ value, onChange, readOnly = false }: TagEditorProps)
                     padding: '0 var(--space-3)',
                     fontFamily: 'var(--font-sans)',
                     fontSize: 'var(--type-ui-size)',
-                    cursor: 'pointer',
                   }}
                 >
                   <span>{suggestion.tag.name}</span>

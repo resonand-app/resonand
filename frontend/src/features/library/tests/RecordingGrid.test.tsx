@@ -21,6 +21,7 @@ import { ThemeProvider } from '@/design-system';
 import { RECORDINGS, FIELD_TAKE, PERSONAL, archive } from '@/test/api/archive';
 import { usePlayback } from '@/player/store';
 import { mockApi, server } from '@/test/api/server';
+import { paintedBy } from '@/test/support/painted';
 
 import { LibraryView } from '../LibraryView';
 
@@ -312,6 +313,14 @@ describe('the tag filter', () => {
     const remove = await screen.findByRole('button', { name: /Stop filtering by field/ });
     await user.click(remove);
     expect(screen.getByTestId('where').textContent).not.toContain('tag=');
+  });
+
+  it('draws its suggestions with the stylesheet rather than as browser buttons', async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await screen.findByRole('heading', { name: 'Field recordings', level: 1 });
+    await user.click(screen.getByRole('button', { name: 'Tag' }));
+    expect(paintedBy(await screen.findByRole('button', { name: /field/ }))).toContain('background');
   });
 
   it('does not offer a tag that is already narrowing the list', async () => {
