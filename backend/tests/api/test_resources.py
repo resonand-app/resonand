@@ -347,10 +347,10 @@ def test_a_recording_goes_to_the_trash_and_comes_back(
     uuid = _recording(database, owner_library, accounts["admin"])
     sign_in(client, "admin")
     assert client.delete(f"/audio/{uuid}").status_code == status.HTTP_204_NO_CONTENT
-    assert client.get(f"/audio/{uuid}").status_code == status.HTTP_404_NOT_FOUND
+    assert client.get(f"/audio/{uuid}").json()["deleted_at"] is not None
     assert client.get("/trash/audio").json()["total"] == 1
     assert client.post(f"/audio/{uuid}/restore").status_code == status.HTTP_200_OK
-    assert client.get(f"/audio/{uuid}").status_code == status.HTTP_200_OK
+    assert client.get(f"/audio/{uuid}").json()["deleted_at"] is None
 
 
 def test_moving_a_recording_reports_the_library_it_landed_in(

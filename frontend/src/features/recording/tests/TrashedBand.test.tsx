@@ -67,16 +67,6 @@ describe('the band', () => {
     expect(band.closest('[data-ds="toast-region"]')).toBeNull();
     expect(band.closest('[data-app="trashed-band"]')).toHaveAttribute('role', 'status');
   });
-
-  it('replaces the read-only line rather than sitting above it', async () => {
-    archive.recordings = archive.recordings.map((one) =>
-      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
-    );
-    renderRecording();
-    await screen.findByText(/This recording is in the trash/);
-    // Both would be true, and only one of them is the reason nothing here can be changed.
-    expect(screen.queryByText(/You can read this recording/)).toBeNull();
-  });
 });
 
 describe('what it still does', () => {
@@ -98,13 +88,14 @@ describe('what it still does', () => {
     expect(screen.queryByText(/This recording is in the trash/)).toBeNull();
   });
 
-  it('offers no way back to somebody who could only read it', async () => {
+  it('is not there for somebody who could not put it back (BUG-7)', async () => {
+    // A reader or an editor is answered 404, as the API answers anybody below manage.
     archive.recordings = archive.recordings.map((one) =>
-      one.uuid === FIELD_TAKE ? { ...one, level: 10 } : one,
+      one.uuid === FIELD_TAKE ? { ...one, level: 20 } : one,
     );
     renderRecording();
-    await screen.findByText(/This recording is in the trash/);
-    expect(screen.queryByRole('button', { name: 'Put it back' })).toBeNull();
+    expect(await screen.findByText('This recording is not here')).toBeInTheDocument();
+    expect(screen.queryByText(/This recording is in the trash/)).toBeNull();
   });
 });
 

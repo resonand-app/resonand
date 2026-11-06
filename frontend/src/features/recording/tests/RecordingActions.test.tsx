@@ -19,7 +19,7 @@ import type { components } from '@/api/contract/schema';
 import { routes, toRecording } from '@/app/routes';
 import { useToasts } from '@/app/toasts';
 import { ThemeProvider } from '@/design-system';
-import { RECORDINGS, FIELD_TAKE, PERSONAL, archive } from '@/test/api/archive';
+import { RECORDINGS, FIELD_TAKE, PERSONAL, archive, detailOf } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { RecordingView } from '../RecordingView';
@@ -218,6 +218,31 @@ describe('sending it to the trash', () => {
       expect(screen.getByTestId('where').textContent).toBe(`/library/${RECORDINGS}`);
     });
     expect(archive.recordings.find((one) => one.uuid === FIELD_TAKE)?.deleted_at).not.toBeNull();
+  });
+
+  it('leaves for the library without waiting for the recording to answer again (BUG-6)', async () => {
+    let release: () => void = () => undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    // Held once trashed, so the page can only reach the library first if leaving does not wait.
+    server.use(
+      http.get('/api/audio/:audio_uuid', async ({ params }) => {
+        const one = detailOf(String(params.audio_uuid));
+        if (one?.deleted_at !== null) await held;
+        return HttpResponse.json(one);
+      }),
+    );
+    const user = userEvent.setup();
+    renderRecording();
+    await user.click(await screen.findByRole('button', { name: 'Trash' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(await within(dialog).findByRole('button', { name: 'Trash' }));
+    await waitFor(() => {
+      expect(screen.getByTestId('where').textContent).toBe(`/library/${RECORDINGS}`);
+    });
+    expect(screen.queryByText('This recording is not here')).toBeNull();
+    release();
   });
 
   async function trashIt() {

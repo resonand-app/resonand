@@ -61,6 +61,10 @@ setting a cookie the browser will discard.
   library is refused with `422`. A title the archive takes from a filename on upload, or from a
   sidecar on `resonand import`, is shortened at a word instead, and the whole filename stays in
   `original_filename`.
+- **A recording in the trash still answers whoever could restore it.** At *Can manage* and above
+  its detail, waveform, transcripts, stream and original keep answering, with `deleted_at` set;
+  below that it is `404`, as anything you cannot read is. Nothing in the trash can be changed:
+  `PATCH`, a favourite or a transcription answers `404` until it is restored.
 - **No CORS headers are sent**, deliberately — the interface is served from the same origin as the
   API, so nothing needs them. A browser application on another origin cannot call this instance;
   a server-side client can, and that is the supported shape.

@@ -13,6 +13,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toRecording } from '@/app/routes';
+import { FIELD_TAKE as FIELD_TAKE_UUID } from '@/test/api/archive';
 import { mockApi } from '@/test/api/server';
 
 import { MediaSession } from '../MediaSession';
@@ -23,7 +24,7 @@ import { usePlayback } from '../store';
 mockApi();
 
 const FIELD_TAKE = {
-  uuid: 'field-take',
+  uuid: FIELD_TAKE_UUID,
   title: 'Field recording, long take',
   library: 'Field recordings',
   durationMs: 2_892_000,

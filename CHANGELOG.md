@@ -18,6 +18,20 @@ will later:
 Every release migrates its own database on the way up, whatever the number says. The path back is
 in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a down-migration.
 
+## [Unreleased]
+
+### Fixed
+
+- **Trashing a recording from its own page no longer says it is not there.** For a moment after
+  *Trash*, the page read *This recording is not here* before the library opened. It now goes to
+  the library at once.
+- **A recording in the trash opens again, for whoever could put it back.** Its own address said
+  *This recording is not here — it may never have been yours* to everybody, its owner included,
+  so the band that plays it, restores it and counts the days it has left was never seen. At
+  *Can manage* and above it now opens under that band; below that it is still not there. Over the
+  API, the detail, waveform, transcripts, transcription status, stream, original and playback
+  token of a trashed recording answer at that level with `deleted_at` set, rather than `404`.
+
 ## [0.2.0] — 2026-11-02
 
 Favourites, a trash that can be emptied in one go, and a limit on how long a name can be. **Read
