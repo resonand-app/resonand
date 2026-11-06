@@ -11,7 +11,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from resonand.acl.query import require_audio
+from resonand.acl.query import require_audio, require_viewable_audio
 from resonand.api.deps import (
     ArchiveDatabase,
     CurrentCaller,
@@ -101,7 +101,7 @@ def list_audio(
 
 @router.get("/audio/{audio_uuid}", response_model=AudioDetail)
 def get_audio(audio_uuid: str, caller: CurrentCaller, session: ReadSession) -> AudioDetail:
-    audio, level = require_audio(session, caller.id, audio_uuid)
+    audio, level = require_viewable_audio(session, caller.id, audio_uuid)
     return audio_detail(session, caller.id, audio, level)
 
 
@@ -276,7 +276,7 @@ def list_transcripts(
     audio_uuid: str, caller: CurrentCaller, session: ReadSession
 ) -> list[TranscriptSummary]:
     """Every transcript a recording has. Re-transcribing keeps the old ones (``UI-14``)."""
-    audio, _ = require_audio(session, caller.id, audio_uuid)
+    audio, _ = require_viewable_audio(session, caller.id, audio_uuid)
     return [
         transcript_summary(session, transcript)
         for transcript in transcript_repo.list_transcripts(session, audio.id)
@@ -288,7 +288,7 @@ def get_active_transcript(
     audio_uuid: str, caller: CurrentCaller, session: ReadSession
 ) -> TranscriptDetail:
     """The active transcript with its segments, which is what the detail view highlights."""
-    audio, _ = require_audio(session, caller.id, audio_uuid)
+    audio, _ = require_viewable_audio(session, caller.id, audio_uuid)
     transcript = transcript_repo.active_transcript(session, audio.id)
     if transcript is None:
         raise NotFoundError("This recording has no transcript yet.")
@@ -331,7 +331,7 @@ def get_transcription_status(
     explicit test, and a status endpoint that contacted it would make opening a recording an
     egress.
     """
-    audio, _ = require_audio(session, caller.id, audio_uuid)
+    audio, _ = require_viewable_audio(session, caller.id, audio_uuid)
     return transcription_status(session, audio.id)
 
 

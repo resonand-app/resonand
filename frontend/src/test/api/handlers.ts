@@ -161,6 +161,14 @@ function favourite(uuid: string, on: boolean): Response {
   return new HttpResponse(null, { status: 204 });
 }
 
+/** A recording as the reads its page makes see it (`BUG-7`): live to anybody who can read it, and
+ *  in the trash only to whoever could restore it, level 30 and up. */
+function viewable(uuid: string) {
+  return archive.recordings.find(
+    (one) => one.uuid === uuid && (one.deleted_at === null || one.level >= 30),
+  );
+}
+
 /** Answer with a thing, or with the 404 that covers both "gone" and "not yours" (`DEC-14`). */
 function found(value: unknown): Response {
   return value === undefined ? NOT_FOUND() : HttpResponse.json(value);
@@ -508,7 +516,10 @@ export const handlers: HttpHandler[] = [
     return HttpResponse.json(page(ordered(filtered, key, descending), url));
   }),
   http.get('/api/audio/duplicates/:sha256', () => HttpResponse.json([])),
-  http.get('/api/audio/:audio_uuid', ({ params }) => found(detailOf(String(params.audio_uuid)))),
+  http.get('/api/audio/:audio_uuid', ({ params }) => {
+    const uuid = String(params.audio_uuid);
+    return found(viewable(uuid) && detailOf(uuid));
+  }),
   http.patch('/api/audio/:audio_uuid', async ({ params, request }) => {
     const body = (await request.json()) as Schemas['UpdateAudio'];
     const existing = archive.recordings.find((one) => one.uuid === params.audio_uuid);
@@ -592,7 +603,7 @@ export const handlers: HttpHandler[] = [
   }),
   http.get('/api/audio/:audio_uuid/transcription', ({ params }) => {
     const uuid = String(params.audio_uuid);
-    const existing = archive.recordings.find((one) => one.uuid === uuid);
+    const existing = viewable(uuid);
     if (!existing) return NOT_FOUND();
     // Derived from the jobs the way the API derives it, rather than stored beside the recording:
     // a fixture that carried both would let a test pass with a state and an error that could not
@@ -605,11 +616,14 @@ export const handlers: HttpHandler[] = [
       error: job?.error ?? null,
     });
   }),
-  http.get('/api/audio/:audio_uuid/transcript', ({ params }) =>
-    found(archive.transcripts[String(params.audio_uuid)]),
-  ),
+  http.get('/api/audio/:audio_uuid/transcript', ({ params }) => {
+    const uuid = String(params.audio_uuid);
+    return found(viewable(uuid) && archive.transcripts[uuid]);
+  }),
   http.get('/api/audio/:audio_uuid/transcripts', ({ params }) => {
-    const one = archive.transcripts[String(params.audio_uuid)];
+    const uuid = String(params.audio_uuid);
+    if (!viewable(uuid)) return NOT_FOUND();
+    const one = archive.transcripts[uuid];
     if (!one) return HttpResponse.json([]);
     const { segments: _segments, ...summary } = one;
     return HttpResponse.json([summary]);
@@ -617,14 +631,21 @@ export const handlers: HttpHandler[] = [
   http.post('/api/audio/:audio_uuid/transcripts/:transcript_id/activate', ({ params }) =>
     found(archive.transcripts[String(params.audio_uuid)]),
   ),
-  http.post('/api/audio/:audio_uuid/playback-token', ({ params }) =>
-    HttpResponse.json({ token: `token-for-${String(params.audio_uuid)}`, expires_in: 300 }),
-  ),
+  http.post('/api/audio/:audio_uuid/playback-token', ({ params }) => {
+    const uuid = String(params.audio_uuid);
+    if (!viewable(uuid)) return NOT_FOUND();
+    return HttpResponse.json({ token: `token-for-${uuid}`, expires_in: 300 });
+  }),
   // Audio and peaks are bytes rather than JSON. A view test never plays anything -- jsdom has no
   // audio -- so these answer the shape and not the sound.
-  http.get('/api/audio/:audio_uuid/stream', () => new HttpResponse(new ArrayBuffer(8))),
-  http.get('/api/audio/:audio_uuid/original', () => new HttpResponse(new ArrayBuffer(8))),
-  http.get('/api/audio/:audio_uuid/waveform', ({ request }) => {
+  http.get('/api/audio/:audio_uuid/stream', ({ params }) =>
+    viewable(String(params.audio_uuid)) ? new HttpResponse(new ArrayBuffer(8)) : NOT_FOUND(),
+  ),
+  http.get('/api/audio/:audio_uuid/original', ({ params }) =>
+    viewable(String(params.audio_uuid)) ? new HttpResponse(new ArrayBuffer(8)) : NOT_FOUND(),
+  ),
+  http.get('/api/audio/:audio_uuid/waveform', ({ params, request }) => {
+    if (!viewable(String(params.audio_uuid))) return NOT_FOUND();
     const peaks = Number(new URL(request.url).searchParams.get('peaks') ?? 200);
     // The stored form, header and all (`ING-5`): version 2, the duration in milliseconds, the
     // bucket count, then int8 pairs. A fixture that sent bare pairs would pass against a decoder

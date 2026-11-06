@@ -35,7 +35,7 @@
  */
 
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 
@@ -61,6 +61,8 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
   const [confirming, setConfirming] = useState(false);
   const [moving, setMoving] = useState(false);
   const favourite = useFavourite();
+  const onLeaving = useRef<() => void>(undefined);
+  useEffect(() => () => onLeaving.current?.(), []);
   const recording = context.recording;
 
   if (recording === undefined) return null;
@@ -84,10 +86,17 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
     );
 
   const trash = async () => {
-    const gone = await reportOn(
+    await reportOn(
       async () => {
         await remove('/api/audio/{audio_uuid}', { path: { audio_uuid: recording.uuid } });
-        await invalidate(client, lifecycle);
+        if (library === undefined) {
+          await invalidate(client, lifecycle);
+          return;
+        }
+        // The route changes in a transition, so this page outlives the navigation by a render or
+        // two; refetching before it is gone draws the answer on it.
+        onLeaving.current = () => void invalidate(client, lifecycle);
+        void navigate(toLibrary(library.uuid));
       },
       {
         message: t('actions.trashed', { title }),
@@ -100,7 +109,6 @@ export function RecordingActions({ context }: { context: RecordingContext }) {
       },
     );
     setConfirming(false);
-    if (gone && library !== undefined) void navigate(toLibrary(library.uuid));
   };
 
   const move = async (destination: string) => {

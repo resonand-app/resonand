@@ -84,6 +84,14 @@ for release in $releases; do
   docker pull -q "$image" > /dev/null
   docker volume create "$volume" > /dev/null
 
+  # A release from 0.2.0 on refuses both with 422, so it is handed the longest it accepts and
+  # the checks below still hold: what comes back is at most the limit and a prefix of the long one.
+  if [[ "$(printf '%s\n' 0.2.0 "$release" | sort -V | head -1)" == 0.2.0 ]]; then
+    title_written="${long_title:0:200}" name_written="${long_name:0:100}"
+  else
+    title_written="$long_title" name_written="$long_name"
+  fi
+
   # --- The archive, written by the release ---------------------------------------
   start "$image"
   personal=$(docker exec "$container" resonand create-admin \
@@ -100,7 +108,7 @@ for release in $releases; do
   sign_in owner
   guest=$(api owner POST /api/admin/users "$(jq -nc --arg p "$password" \
     '{email: "guest@example.test", display_name: "Guest", password: $p}')" | jq -r .id)
-  shared=$(api owner POST /api/libraries "{\"name\": \"$long_name\"}" | jq -r .uuid)
+  shared=$(api owner POST /api/libraries "{\"name\": \"$name_written\"}" | jq -r .uuid)
   api owner PUT "/api/libraries/$shared/shares" "{\"grantee_id\": $guest, \"level\": 20}" \
     > /dev/null
 
@@ -116,7 +124,7 @@ for release in $releases; do
   category=$(api owner POST "/api/libraries/$personal/categories" '{"name": "Interviews"}' \
     | jq -r .id)
   api owner PATCH "/api/audio/$titled" \
-    "{\"title\": \"$long_title\", \"tags\": [\"kept\"], \"category_id\": $category}" > /dev/null
+    "{\"title\": \"$title_written\", \"tags\": [\"kept\"], \"category_id\": $category}" > /dev/null
   api owner POST "/api/audio/$moved/move" "{\"library_uuid\": \"$shared\"}" > /dev/null
   api owner DELETE "/api/audio/$trashed" > /dev/null
 

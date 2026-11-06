@@ -183,6 +183,23 @@ def require_audio(
     return audio, level
 
 
+def require_viewable_audio(session: Session, user_id: int, audio_uuid: str) -> tuple[Audio, Level]:
+    """Fetch one recording to look at or listen to: live at read, or in the trash at manage.
+
+    A recording in the trash is shown, played and restored from its own page (``UI-11d``) by
+    whoever could restore it -- the line the trash lists at (``INT-1``), so this tells nobody
+    anything the trash does not. Below manage a trashed recording answers 404 (``DEC-14``).
+    Never for a write: nothing in the trash is edited.
+    """
+    try:
+        return require_audio(session, user_id, audio_uuid)
+    except NotFoundError:
+        audio, level = require_audio(session, user_id, audio_uuid, include_trashed=True)
+        if audio.deleted_at is None or level < Level.MANAGE:
+            raise
+        return audio, level
+
+
 def library_level(
     session: Session, user_id: int, library_uuid: str, *, include_trashed: bool = False
 ) -> Level | None:

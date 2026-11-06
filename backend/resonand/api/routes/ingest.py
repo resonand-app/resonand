@@ -26,7 +26,7 @@ from fastapi import APIRouter, Depends, File, Form, Query, Request, Response, Up
 from sqlalchemy.orm import Session as DbSession
 from starlette.responses import FileResponse, StreamingResponse
 
-from resonand.acl.query import require_audio, require_library
+from resonand.acl.query import require_library, require_viewable_audio
 from resonand.api.deps import (
     ArchiveDatabase,
     Caller,
@@ -143,7 +143,7 @@ def playback_token(
 
     The real permissions are checked here; the token only records that the check happened.
     """
-    require_audio(session, caller.id, audio_uuid)
+    require_viewable_audio(session, caller.id, audio_uuid)
     secret = settings.secret_key
     if secret is None:
         raise InvalidRequestError(
@@ -168,7 +168,7 @@ def stream(
     """
     with database.read_session() as session:
         user_id = _who(session, caller, settings, audio_uuid, token)
-        audio, _ = require_audio(session, user_id, audio_uuid)
+        audio, _ = require_viewable_audio(session, user_id, audio_uuid)
         derived = audio.derived_path
         original = audio.storage_path
     root = settings.resolved_storage_dir
@@ -186,7 +186,7 @@ def download(
 
     Principle 1 at its most literal: whatever else happens, the bytes you put in come back out.
     """
-    audio, _ = require_audio(session, caller.id, audio_uuid)
+    audio, _ = require_viewable_audio(session, caller.id, audio_uuid)
     path = storage.resolve(settings.resolved_storage_dir, audio.storage_path)
     if not path.exists():
         raise NotFoundError("The original file for this recording is missing from storage.")
@@ -225,7 +225,7 @@ def waveform_blob(
 
     Asking for more than are stored returns what is stored, rather than inventing the difference.
     """
-    audio, _ = require_audio(session, caller.id, audio_uuid)
+    audio, _ = require_viewable_audio(session, caller.id, audio_uuid)
     if audio.waveform is None:
         raise NotFoundError("This recording has no waveform yet.")
     blob = audio.waveform
