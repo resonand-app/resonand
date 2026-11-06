@@ -179,7 +179,8 @@ function Row({
       type="button"
       role="radio"
       aria-checked={selected}
-      data-ds="category-row"
+      // `Select`'s option, so the stylesheet paints the chosen one and the browser paints none.
+      data-ds="select-option"
       data-selected={selected ? 'true' : undefined}
       onClick={onSelect}
       style={{
@@ -194,7 +195,6 @@ function Row({
         textAlign: 'left',
         fontFamily: 'var(--font-sans)',
         fontSize: 'var(--type-ui-size)',
-        cursor: 'pointer',
       }}
     >
       <span style={{ width: 15, flex: '0 0 auto' }}>
