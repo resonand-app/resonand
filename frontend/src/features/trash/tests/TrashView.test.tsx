@@ -234,6 +234,67 @@ describe('a recording whose library is in the trash too', () => {
   });
 });
 
+describe('restoring says where it went (UI-48)', () => {
+  function toasts() {
+    return useToasts.getState().toasts.map((one) => one.message);
+  }
+
+  function inRecordings(): number {
+    return archive.recordings.filter(
+      (one) => one.library_uuid === RECORDINGS && one.deleted_at === null,
+    ).length;
+  }
+
+  it('names the library a recording went back to', async () => {
+    trashRecording(CASSETTE, daysAgo(1));
+    show();
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Restore Digitised cassette' }),
+    );
+    await waitFor(() => {
+      expect(toasts()).toEqual(['Digitised cassette is back in Field recordings.']);
+    });
+    expect(useToasts.getState().toasts[0]?.action).toBeUndefined();
+  });
+
+  it('says how many recordings a library came back with', async () => {
+    trashLibrary(RECORDINGS, daysAgo(2));
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Restore Field recordings' }));
+    await waitFor(() => {
+      expect(toasts()).toEqual([
+        `Field recordings is back, with its ${String(inRecordings())} recordings.`,
+      ]);
+    });
+  });
+
+  it('says a recording restored alone went into a library still in the trash', async () => {
+    trashLibrary(RECORDINGS, daysAgo(2));
+    trashRecording(CASSETTE, daysAgo(1));
+    show();
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Restore Digitised cassette' }),
+    );
+    await waitFor(() => {
+      expect(toasts()).toEqual([
+        'Digitised cassette is back in Field recordings, which is still in the trash.',
+      ]);
+    });
+  });
+
+  it('reports restoring both as one thing, counting the recording with the rest', async () => {
+    trashLibrary(RECORDINGS, daysAgo(2));
+    trashRecording(CASSETTE, daysAgo(1));
+    show();
+    await userEvent.click(await screen.findByRole('button', { name: 'Restore the library too' }));
+    await waitFor(() => {
+      expect(toasts()).toEqual([
+        `Field recordings is back, with its ${String(inRecordings())} recordings, Digitised cassette among them.`,
+      ]);
+    });
+  });
+});
+
 describe('when the trash cannot be read', () => {
   it('says what happened and offers the way back', async () => {
     server.use(

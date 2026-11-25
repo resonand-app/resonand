@@ -324,7 +324,11 @@ export const handlers: HttpHandler[] = [
     archive.libraries = archive.libraries.map((one) =>
       one === restored ? { ...one, deleted_at: null } : one,
     );
-    return HttpResponse.json({ ...restored, deleted_at: null });
+    // Counted as the API counts it: what is in the library and not in the trash on its own.
+    const count = archive.recordings.filter(
+      (one) => one.library_uuid === restored.uuid && one.deleted_at === null,
+    ).length;
+    return HttpResponse.json({ ...restored, deleted_at: null, audio_count: count });
   }),
   http.get('/api/libraries/:library_uuid/audio', ({ params, request }) => {
     const url = new URL(request.url);

@@ -21,6 +21,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { UseMutationResult, UseQueryResult } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 
 import { get, post, remove } from '@/api/client';
 import { invalidate } from '@/api/invalidate';
@@ -28,6 +29,8 @@ import { keys } from '@/api/keys';
 import { usePaged } from '@/api/paged';
 import type { PagedResult } from '@/api/paged';
 import type { components } from '@/api/contract/schema';
+import { useAllLibraries } from '@/app/library-data';
+import { raiseToast } from '@/app/toasts';
 
 type Schemas = components['schemas'];
 export type TrashedLibrary = Schemas['LibrarySummary'];
@@ -109,8 +112,19 @@ export function merge(libraries: TrashedLibrary[], recordings: TrashedRecording[
 }
 
 export interface TrashActions {
-  restoreRecording: UseMutationResult<unknown, unknown, TrashedRecording>;
+  /** `library` is the trashed one it sits in, when there is one: what the toast has to name. */
+  restoreRecording: UseMutationResult<
+    unknown,
+    unknown,
+    { recording: TrashedRecording; library?: TrashedLibrary }
+  >;
   restoreLibrary: UseMutationResult<unknown, unknown, TrashedLibrary>;
+  /** A recording and the trashed library it sits in, the library first, reported as one. */
+  restoreBoth: UseMutationResult<
+    unknown,
+    unknown,
+    { recording: TrashedRecording; library: TrashedLibrary }
+  >;
   purgeRecording: UseMutationResult<unknown, unknown, TrashedRecording>;
   purgeLibrary: UseMutationResult<unknown, unknown, TrashedLibrary>;
 }
@@ -124,9 +138,14 @@ export interface TrashActions {
  * own instead of a query parameter.
  *
  * Destroying many at once is `useBulkPurge`, one call rather than many of these.
+ *
+ * **A restore says where the thing went** (`UI-48`), because the row it leaves is the only trace
+ * of it on this screen. Not *Undo*: the way back is the trash it just left, one click away.
  */
 export function useTrashActions(): TrashActions {
   const client = useQueryClient();
+  const { t } = useTranslation('trash');
+  const libraries = useAllLibraries();
   const settleRecording = async (recording: TrashedRecording) => {
     await invalidate(client, {
       kind: 'recording-lifecycle',
@@ -140,14 +159,63 @@ export function useTrashActions(): TrashActions {
 
   return {
     restoreRecording: useMutation({
-      mutationFn: (recording: TrashedRecording) =>
+      mutationFn: ({ recording }: { recording: TrashedRecording; library?: TrashedLibrary }) =>
         post('/api/audio/{audio_uuid}/restore', { path: { audio_uuid: recording.uuid } }),
-      onSuccess: (_answer, recording) => settleRecording(recording),
+      onSuccess: async (_answer, { recording, library }) => {
+        // Read before the refresh: a library that is in the list now is the one it went back to.
+        const into = libraries.find((one) => one.uuid === recording.library_uuid);
+        await settleRecording(recording);
+        raiseToast({
+          tone: 'done',
+          message:
+            library !== undefined
+              ? t('restored.intoTrashed', { title: recording.title, library: library.name })
+              : into !== undefined
+                ? t('restored.recording', { title: recording.title, library: into.name })
+                : t('restored.recordingSomewhere', { title: recording.title }),
+        });
+      },
     }),
     restoreLibrary: useMutation({
       mutationFn: (library: TrashedLibrary) =>
         post('/api/libraries/{library_uuid}/restore', { path: { library_uuid: library.uuid } }),
-      onSuccess: (_answer, library) => settleLibrary(library),
+      onSuccess: async (restored, library) => {
+        await settleLibrary(library);
+        raiseToast({
+          tone: 'done',
+          message: t('restored.library', { name: library.name, count: restored.audio_count }),
+        });
+      },
+    }),
+    restoreBoth: useMutation({
+      // In turn rather than together: restoring the recording first would put it back into a
+      // library that is still in the trash, which is the outcome this exists to avoid.
+      mutationFn: async ({
+        recording,
+        library,
+      }: {
+        recording: TrashedRecording;
+        library: TrashedLibrary;
+      }) => {
+        const restored = await post('/api/libraries/{library_uuid}/restore', {
+          path: { library_uuid: library.uuid },
+        });
+        await post('/api/audio/{audio_uuid}/restore', { path: { audio_uuid: recording.uuid } });
+        return restored;
+      },
+      onSettled: async (_answer, _error, { recording, library }) => {
+        await Promise.all([settleLibrary(library), settleRecording(recording)]);
+      },
+      onSuccess: (restored, { recording, library }) => {
+        raiseToast({
+          tone: 'done',
+          message: t('restored.both', {
+            library: library.name,
+            title: recording.title,
+            count: restored.audio_count + 1,
+          }),
+        });
+      },
     }),
     purgeRecording: useMutation({
       mutationFn: (recording: TrashedRecording) =>

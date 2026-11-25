@@ -18,6 +18,16 @@
   "restoreBoth": "Restore the library too",
   "restore": "Restore",
   "restoreNamed": "Restore {{name}}",
+  "restored": {
+    "recording": "{{title}} is back in {{library}}.",
+    "recordingSomewhere": "{{title}} is out of the trash.",
+    "intoTrashed": "{{title}} is back in {{library}}, which is still in the trash.",
+    "library_zero": "{{name}} is back. Nothing is in it.",
+    "library_one": "{{name}} is back, with its one recording.",
+    "library_other": "{{name}} is back, with its {{count}} recordings.",
+    "both_one": "{{library}} is back, with {{title}} in it.",
+    "both_other": "{{library}} is back, with its {{count}} recordings, {{title}} among them."
+  },
   "deleteNow": "Delete now",
   "deleteNamed": "Delete {{name}} permanently",
   "purge": {
