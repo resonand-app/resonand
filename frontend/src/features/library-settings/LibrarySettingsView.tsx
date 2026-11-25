@@ -171,7 +171,13 @@ export function LibrarySettingsView() {
 
         <CategoryTree uuid={uuid} categories={categories.all} edits={categoryEdits} canManage />
 
-        <SharePanel library={library} shares={context.shares} edits={shareEdits} canManage />
+        <SharePanel
+          library={library}
+          shares={context.shares}
+          sharesLoaded={context.sharesLoaded}
+          edits={shareEdits}
+          canManage
+        />
 
         {/* An account's last library cannot be deleted, and the affordance is absent rather than
             disabled: the API refuses it, and a button that always fails is worse than none. */}

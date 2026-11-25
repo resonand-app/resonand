@@ -90,6 +90,8 @@ export { KeyValueList } from './components/data/KeyValueList';
 export type { KeyValueListProps, KeyValueRow } from './components/data/KeyValueList';
 export { LevelSelector, OWNER_LEVEL } from './components/data/LevelSelector';
 export type { LevelOption, LevelSelectorProps } from './components/data/LevelSelector';
+export { PersonPicker } from './components/data/PersonPicker';
+export type { PersonOption, PersonPickerProps } from './components/data/PersonPicker';
 export { LibraryCard } from './components/data/LibraryCard';
 export type { LibraryCardProps } from './components/data/LibraryCard';
 export { RecordingCard } from './components/data/RecordingCard';

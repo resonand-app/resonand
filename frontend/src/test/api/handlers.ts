@@ -21,7 +21,7 @@ import type { HttpHandler } from 'msw';
 import type { components } from '@/api/contract/schema';
 import { LIBRARY_NAME_MAX_LENGTH, TITLE_MAX_LENGTH } from '@/api/limits';
 
-import { ALEX, LOGIN_ATTEMPTS_PER_MINUTE, SAM, archive, detailOf } from './archive';
+import { ALEX, LOGIN_ATTEMPTS_PER_MINUTE, ROBIN, SAM, archive, detailOf } from './archive';
 
 type Schemas = components['schemas'];
 
@@ -432,7 +432,10 @@ export const handlers: HttpHandler[] = [
     const key = String(params.library_uuid);
     const existing = archive.shares[key] ?? [];
     const made: Schemas['ShareSummary'] = {
-      grantee: { id: body.grantee_id, display_name: 'Sam Rivera', email: 'sam@example.test' },
+      grantee: [ROBIN, SAM].find((one) => one.id === body.grantee_id) ?? {
+        ...SAM,
+        id: body.grantee_id,
+      },
       level: body.level,
       level_description: 'Can edit: change titles, categories and tags, but not share.',
       granted_by: archive.me.id,
@@ -783,9 +786,10 @@ export const handlers: HttpHandler[] = [
   // --- Where audio goes, and who may know -----------------------------------
 
   http.get('/api/transcription/destination', () => HttpResponse.json(archive.destination)),
+  // Every active account but the caller's, by name (`DEC-29`). Alex is the one signed in.
+  http.get('/api/users', () => HttpResponse.json([ROBIN, SAM])),
   http.get('/api/users/lookup', ({ request }) => {
-    // Full address only, at most one result: a prefix search would let any library manager
-    // enumerate the instance (`API-15`).
+    // Deprecated by `DEC-29`, and still held to what it published: the whole address, at most one.
     const email = new URL(request.url).searchParams.get('email')?.toLowerCase();
     const people = [ALEX, SAM];
     return HttpResponse.json(people.filter((one) => one.email.toLowerCase() === email));

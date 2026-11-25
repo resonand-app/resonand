@@ -125,10 +125,12 @@ export function useCategoryEdits(uuid: string): CategoryEdits {
 
 export interface ShareEdits {
   grant: UseMutationResult<ShareSummary, unknown, { granteeId: number; level: Level }>;
+  /** Several people at one level: one grant each, sent together, and one refresh after them. */
+  grantMany: UseMutationResult<unknown, unknown, { granteeIds: readonly number[]; level: Level }>;
   revoke: UseMutationResult<unknown, unknown, number>;
 }
 
-/** Granting, changing a level and revoking. All three need level 30. */
+/** Granting, changing a level and revoking. All of them need level 30. */
 export function useShareEdits(uuid: string): ShareEdits {
   const client = useQueryClient();
   const settle = async () => {
@@ -144,6 +146,32 @@ export function useShareEdits(uuid: string): ShareEdits {
         }),
       onSuccess: settle,
     }),
+    grantMany: useMutation({
+      // Every grant is sent whatever the others do, and the first refusal is what the toast
+      // says. Who did get access is the shares' answer, refreshed once they have all settled.
+      mutationFn: async ({
+        granteeIds,
+        level,
+      }: {
+        granteeIds: readonly number[];
+        level: Level;
+      }) => {
+        const results = await Promise.allSettled(
+          granteeIds.map((granteeId) =>
+            put('/api/libraries/{library_uuid}/shares', {
+              path: { library_uuid: uuid },
+              body: { grantee_id: granteeId, level },
+            }),
+          ),
+        );
+        const refused = results.find(
+          (one): one is PromiseRejectedResult => one.status === 'rejected',
+        );
+        if (refused !== undefined) throw refused.reason;
+        return results;
+      },
+      onSettled: settle,
+    }),
     revoke: useMutation({
       mutationFn: (granteeId: number) =>
         remove('/api/libraries/{library_uuid}/shares/{grantee_id}', {
@@ -155,23 +183,21 @@ export function useShareEdits(uuid: string): ShareEdits {
 }
 
 /**
- * One person, by their full address (`UI-17d`, `API-15`).
+ * Everybody a library can be shared with (`UI-49`, `DEC-29`).
  *
- * Deliberately not a search. It matches the whole normalised email and returns at most one
- * account, because a prefix or a name search would let any library manager enumerate the
- * instance -- the same class of leak the ACL-filtered tag autocomplete exists to prevent.
- * Sharing needs to confirm one address somebody was given out of band; it does not need a
- * directory, and the interface must not look like one.
+ * Every active account on the instance but the caller's, by name. `DEC-29` chose a list over a
+ * full address typed from memory, and accepted that it shows any library manager who else has
+ * an account here. Who already has access is the panel's to leave out, not the endpoint's.
  */
-export function useLookup(email: string): { person: UserSummary | undefined; isPending: boolean } {
-  const asked = email.trim();
+export function usePeopleToShareWith(): {
+  people: readonly UserSummary[];
+  isPending: boolean;
+  isError: boolean;
+} {
   const query = useQuery({
-    queryKey: ['users', 'lookup', asked.toLowerCase()],
-    queryFn: () => get('/api/users/lookup', { query: { email: asked } }),
-    // Nothing is asked until there is a whole address to ask about: a request per keystroke would
-    // be a request per keystroke about somebody's colleagues.
-    enabled: /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(asked),
+    queryKey: ['users', 'shareable'],
+    queryFn: () => get('/api/users'),
     staleTime: 60_000,
   });
-  return { person: query.data?.[0], isPending: query.isFetching };
+  return { people: query.data ?? [], isPending: query.isPending, isError: query.isError };
 }

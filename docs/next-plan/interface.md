@@ -77,3 +77,34 @@ as copy in their pull requests.
       ⇢ UI-46, INT-8
 
       *Done when:* nothing leaves the trash without the screen saying where it went.
+
+## Choosing who to share with
+
+- [ ] **UI-49** · 🧪 **The share panel offers people rather than an address field.** V7's add form
+      becomes a grid of boxes, one per account `API-29` returns, each with the person's initials
+      and display name, minus the owner and whoever already has access. A new design-system
+      component, `PersonPicker`, draws it: a group of toggles with `LevelSelector`'s keyboard
+      model — one tab stop, arrows to move, `Space` to choose — because choosing people is only a
+      choice: the level and the *Share with…* button come after it, so a stray press shares
+      nothing. Several people can be chosen at once, and all of them get the one level chosen;
+      each grant is its own `PUT`, sent together, and whoever a grant is refused for stays chosen.
+      The form waits for the library's shares to load, or everybody already holding access would
+      be offered for a moment as somebody to add. When there is nobody to offer, one quiet line
+      says why: everybody already has access, or nobody else has an account and an administrator
+      creates them. ⇢ DEC-29, API-29
+
+      The list above it becomes **one row per person** — initials, name, address, who shared it
+      and when, the level, and an × to remove them — where each person was a block of three
+      level rows and a button, about 230 px, so a fourth person sat below the fold. The level is
+      `LevelSelector`'s new `menu` variant, a `Select` whose options carry `level_description`:
+      the sentence is read at the moment a level is changed, which is what §V7 asks of it, and
+      not under every person all the time. Rejected: a summary row that expands the three level
+      rows on *Change*, which keeps the sentences on screen while changing but costs a click for
+      nothing the menu does not already show.
+
+      🧪 The list leaves out who already has access, nothing is granted until the button is
+      pressed, the level chosen is the level granted to everybody chosen, and a refused grant
+      leaves that person chosen while the others are added.
+
+      *Done when:* sharing a library with somebody on the instance takes no knowledge of their
+      address.

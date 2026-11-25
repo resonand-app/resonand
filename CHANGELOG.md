@@ -18,6 +18,25 @@ will later:
 Every release migrates its own database on the way up, whatever the number says. The path back is
 in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a down-migration.
 
+## [Unreleased]
+
+### Changed
+
+- **Sharing a library offers the people on the instance** instead of asking for their whole email
+  address. Every active account appears as a box with its name; choose one or several, choose a
+  level, and share with all of them at once. This means **anybody signed in can see the name and
+  address of every active account**, a trade made on purpose for the small groups Resonand is
+  built for (`DEC-29`).
+- **Who has access is one row per person**: their name, address and when they were added, their
+  level as a menu that explains each level as it is chosen, and a control to remove them. Four
+  people now fit where one did.
+
+### Deprecated
+
+- `GET /api/users/lookup`. The interface no longer calls it; `GET /api/users` lists everybody a
+  library can be shared with. It still answers as before, and will be removed in a minor release
+  that says so here.
+
 ## [0.2.1] — 2026-11-25
 
 Three fixes to `0.2.0`, and nothing to do before taking it: no migration runs, and nothing in

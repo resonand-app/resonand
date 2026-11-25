@@ -38,6 +38,13 @@ const SAM: Schemas['UserSummary'] = {
   email: 'sam@example.test',
 };
 
+/** An account nothing in the archive is shared with: who the add form is for. */
+const ROBIN: Schemas['UserSummary'] = {
+  id: 3,
+  display_name: 'Robin Okafor',
+  email: 'robin@example.test',
+};
+
 /** Minutes, as the API counts durations. */
 const minutes = (count: number): number => Math.round(count * 60_000);
 
@@ -494,4 +501,4 @@ export function detailOf(uuid: string): RecordingDetail | undefined {
   };
 }
 
-export { ALEX, SAM, TAGS };
+export { ALEX, ROBIN, SAM, TAGS };
