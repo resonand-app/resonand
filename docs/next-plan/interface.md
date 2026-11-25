@@ -66,7 +66,7 @@ as copy in their pull requests.
       *Done when:* removing the invalidation in `RecordingActions.tsx` or `TrashLibraryDialog.tsx`
       fails a test.
 
-- [ ] **UI-48** · 🧪 **Restoring from the trash says where it went.** Restoring a recording or a
+- [x] **UI-48** · 🧪 **Restoring from the trash says where it went.** Restoring a recording or a
       library from V9 removes its row and says nothing else. It raises a `done` toast naming the
       library it went back to, or the library itself, and a library restored with its recordings
       says how many. Not *Undo*: the way back is the trash it just left, one click away in the

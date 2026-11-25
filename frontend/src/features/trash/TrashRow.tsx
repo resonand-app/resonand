@@ -65,7 +65,7 @@ export function TrashRow({ entry, retention, actions, selection }: TrashRowProps
           retention={retention}
           select={tick(entry.recording.uuid, entry.recording.title)}
           onRestore={() => {
-            actions.restoreRecording.mutate(entry.recording);
+            actions.restoreRecording.mutate({ recording: entry.recording });
           }}
           purge={{
             name: entry.recording.title,
@@ -161,7 +161,7 @@ function OrphanedChild({
         retention={retention}
         select={select}
         onRestore={() => {
-          actions.restoreRecording.mutate(recording);
+          actions.restoreRecording.mutate({ recording, library });
         }}
         purge={{
           name: recording.title,
@@ -174,10 +174,7 @@ function OrphanedChild({
           <Button
             variant="secondary"
             onClick={() => {
-              // Both, and the library first: restoring the recording into a library that is
-              // still in the trash is the outcome this button exists to avoid.
-              actions.restoreLibrary.mutate(library);
-              actions.restoreRecording.mutate(recording);
+              actions.restoreBoth.mutate({ recording, library });
             }}
           >
             {t('restoreBoth')}

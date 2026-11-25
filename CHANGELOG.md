@@ -27,6 +27,9 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
   level, and share with all of them at once. This means **anybody signed in can see the name and
   address of every active account**, a trade made on purpose for the small groups Resonand is
   built for (`DEC-29`).
+- **Restoring from the trash says where it went.** A recording names the library it went back to,
+  and says so when that library is still in the trash; a library says how many recordings came
+  back with it. Restoring a recording together with its library says it once.
 - **Who has access is one row per person**: their name, address and when they were added, their
   level as a menu that explains each level as it is chosen, and a control to remove them. Four
   people now fit where one did.
