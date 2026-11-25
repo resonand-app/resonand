@@ -80,7 +80,7 @@ as copy in their pull requests.
 
 ## Choosing who to share with
 
-- [ ] **UI-49** · 🧪 **The share panel offers people rather than an address field.** V7's add form
+- [x] **UI-49** · 🧪 **The share panel offers people rather than an address field.** V7's add form
       becomes a grid of boxes, one per account `API-29` returns, each with the person's initials
       and display name, minus the owner and whoever already has access. A new design-system
       component, `PersonPicker`, draws it: a group of toggles with `LevelSelector`'s keyboard
