@@ -13,14 +13,14 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="Licence: AGPL-3.0" src="https://img.shields.io/badge/licence-AGPL--3.0-blue"></a>
-  <a href="https://github.com/resonand-app/resonand/pkgs/container/resonand"><img alt="Release: 0.2.0" src="https://img.shields.io/badge/release-0.2.0-E98A5F"></a>
+  <a href="https://github.com/resonand-app/resonand/pkgs/container/resonand"><img alt="Release: 0.2.1" src="https://img.shields.io/badge/release-0.2.1-E98A5F"></a>
 </p>
 
 ---
 
-> ### Status: `0.2.0` is out, and it is the second one.
+> ### Status: `0.2.1` is out, a patch on the second release.
 >
-> `ghcr.io/resonand-app/resonand:0.2.0`, for `linux/amd64` and `linux/arm64`.
+> `ghcr.io/resonand-app/resonand:0.2.1`, for `linux/amd64` and `linux/arm64`.
 > [`deploy/`](deploy/README.md) is a compose file, an `.env` and a volume. **Coming from `0.1.0`,
 > read [`CHANGELOG.md`](CHANGELOG.md) first**: who may move a recording out of a library has
 > changed, and long titles and library names are shortened on the way up.
@@ -113,7 +113,7 @@ entirely through environment variables. An instance is three things: the image, 
 that passes `resonand check-transcription`. It migrates its own database on the way up.
 
 ```bash
-docker pull ghcr.io/resonand-app/resonand:0.2.0
+docker pull ghcr.io/resonand-app/resonand:0.2.1
 ```
 
 [`deploy/`](deploy/README.md) describes the arrangement — the compose file, how much the volume
