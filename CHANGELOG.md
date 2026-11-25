@@ -18,7 +18,13 @@ will later:
 Every release migrates its own database on the way up, whatever the number says. The path back is
 in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a down-migration.
 
-## [Unreleased]
+## [0.2.1] — 2026-11-25
+
+Three fixes to `0.2.0`, and nothing to do before taking it: no migration runs, and nothing in
+`.env` changes. Pin `0.2.1` in `docker-compose.yml` and run
+`docker compose pull && docker compose up -d`. A script that reads a trashed recording over the
+API should read the second entry below: at *Can manage* it now gets the recording rather than
+`404`.
 
 ### Fixed
 
@@ -31,6 +37,10 @@ in [`deploy/README.md`](deploy/README.md), and it is a restore rather than a dow
   *Can manage* and above it now opens under that band; below that it is still not there. Over the
   API, the detail, waveform, transcripts, transcription status, stream, original and playback
   token of a trashed recording answer at that level with `deleted_at` set, rather than `404`.
+- **Tag suggestions and category rows look like every other menu.** The tag filter, the tag
+  editor on a recording and the category picker drew each row as a light grey slab with black
+  text, in either theme, and the chosen category looked like every other one. They are now drawn
+  as menu rows, and the chosen category carries the accent.
 
 ## [0.2.0] — 2026-11-02
 
@@ -166,5 +176,6 @@ Two constraints worth knowing before you trust an archive to it:
 
 Published as `ghcr.io/resonand-app/resonand:0.1.0` for `linux/amd64` and `linux/arm64`.
 
+[0.2.1]: https://github.com/resonand-app/resonand/releases/tag/v0.2.1
 [0.2.0]: https://github.com/resonand-app/resonand/releases/tag/v0.2.0
 [0.1.0]: https://github.com/resonand-app/resonand/releases/tag/v0.1.0
