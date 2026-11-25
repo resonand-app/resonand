@@ -12,7 +12,7 @@ What `0.2.0` shipped of this track is in [`docs/v0.2.0-plan/api.md`](../v0.2.0-p
 
 ## Who a library can go to
 
-- [ ] **API-29** · 🧪 **`GET /users` lists everybody a library can be shared with.** Every active
+- [x] **API-29** · 🧪 **`GET /users` lists everybody a library can be shared with.** Every active
       account but the caller's, ordered by display name regardless of case and accents, as `UserSummary` —
       the shape a share already answers with, so who runs the instance stays administration's. The
       gate is `API-15`'s, holding manage on one library, which `DEC-29` notes every account passes.
