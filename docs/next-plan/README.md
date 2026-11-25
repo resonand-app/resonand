@@ -34,9 +34,10 @@ the second, and holds what was scoped here and shipped as `0.2.0`.
 | [`transcription.md`](transcription.md) | `TRX`, `JOB` | The findings from the transcriber-compatibility analysis that v0 declined, and the two provider shapes beyond the synchronous one |
 | [`ingestion.md`](ingestion.md) | `ING` | The ways audio gets in that v0 did not build |
 | [`release.md`](release.md) | `REL`, `INF`, `OPS` | What comes after a release: a demo instance, a guide for somebody with an account, one-click packaging |
-| [`interface.md`](interface.md) | `UI` | Toasts that say what happened, where `0.2.0` left them short |
+| [`interface.md`](interface.md) | `UI` | Toasts that say what happened, where `0.2.0` left them short; choosing who to share with |
 | [`decisions.md`](decisions.md) | `DEC` | Decisions that block work here rather than in v0 |
-| [`data.md`](data.md), [`api.md`](api.md), [`integration.md`](integration.md), [`defects.md`](defects.md) | `DAT`, `API`, `INT`, `BUG` | Nothing queued: each keeps its rules for the next task in the track |
+| [`api.md`](api.md) | `API` | The list of people a library can be shared with |
+| [`data.md`](data.md), [`integration.md`](integration.md), [`defects.md`](defects.md) | `DAT`, `INT`, `BUG` | Nothing queued: each keeps its rules for the next task in the track |
 
 Notation is the plan's: `⇢ X, Y` depends on those · `🔒` critical path · `🧪` carries a mandatory
 test. **A task is done when it meets the criterion written next to it, not when it works.**

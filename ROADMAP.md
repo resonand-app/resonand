@@ -161,10 +161,6 @@ This is the half that was deliberately cut.
   the move dialog all read it.
 - **Sharing a transcript without the audio.** A real separation in the permission model rather than
   a flag on a share: a level that reads text but not bytes does not exist today.
-- **Suggestions while sharing**, instead of typing a full address. The lookup is deliberately narrow
-  — full normalised email, at most one result — precisely because a directory of everybody on the
-  instance is what it exists to prevent. So this is a decision about what a manager may see, not a
-  widening of the lookup.
 - **Telling somebody that something was shared with them.** There is no notification surface at
   all; the instance's event stream is the seam one would arrive on.
 - **Public share links.**

@@ -699,6 +699,34 @@
   background: var(--accent);
 }
 
+/* PersonPicker (`UI-49`). The same resting, hover and chosen steps as a level row beside it, plus
+   a resting edge: a box in a grid needs one to read as a box, where a row in a stack does not. The
+   initials flip with the box, or a chosen circle would vanish into its own accent-soft ground. */
+[data-ds='person-option'] {
+  background: transparent;
+  box-shadow: inset 0 0 0 var(--border-control) var(--border);
+  cursor: pointer;
+}
+
+[data-ds='person-option']:hover {
+  background: var(--surface-2);
+}
+
+[data-ds='person-option'][data-selected='true'] {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 var(--border-control) var(--accent);
+}
+
+[data-ds='person-initials'] {
+  background: var(--accent-soft);
+  color: var(--accent-on-soft);
+}
+
+[data-ds='person-option'][data-selected='true'] [data-ds='person-initials'] {
+  background: var(--accent);
+  color: var(--accent-on);
+}
+
 /* RecordingRow. `UI-32a`'s own criterion: hovering a row raises it one surface step, with no
    React state variable anywhere. A selected row is already at `--surface-2`, so its hover has to
    go one further or a pointer over the current selection would do nothing. */

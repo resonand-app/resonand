@@ -28,6 +28,8 @@ export interface LibraryContext {
   library: LibrarySummary | undefined;
   /** Who else has access, for the avatar stack. Readable by anybody who can read the library. */
   shares: ShareSummary[];
+  /** Whether `shares` is the answer yet, rather than the empty list it starts as. */
+  sharesLoaded: boolean;
   /** Whether the library belongs to the signed-in account. */
   isOwn: boolean;
   /** Level 20 or above: titles, notes, categories, tags, uploads. */
@@ -60,6 +62,7 @@ export function useLibrary(uuid: string): LibraryContext {
   return {
     library: library.data,
     shares: shares.data ?? [],
+    sharesLoaded: shares.data !== undefined,
     isOwn: library.data?.owner.id === account?.id,
     canEdit: level >= LEVEL.edit,
     canManage: level >= LEVEL.manage,

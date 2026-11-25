@@ -107,7 +107,7 @@ The registry is written out by hand in `Icon.tsx`, which is what keeps the other
 | `components/foundation/` | `Icon` `Logo` |
 | `components/forms/` | `Button` `IconButton` `TextField` `SearchField` `ColorSwatchPicker` `Select` `Switch` `Checkbox` `Progress` |
 | `components/media/` | `Waveform` `PlayerBar` `TranscriptLine` |
-| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` `LevelSelector` `InlineField` `EgressNotice` `AvatarStack` `KeyValueList` |
+| `components/data/` | `StateBadge` `Chip` `LibraryCard` `CreateLibraryCard` `RecordingRow` `RecordingCard` `LevelSelector` `PersonPicker` `InlineField` `EgressNotice` `AvatarStack` `KeyValueList` |
 | `components/navigation/` | `TopNav` `Sidebar` `ProfileMenu` `SearchResults` `Breadcrumb` `Dialog` `Menu` `Tabs` `Sheet` `Toast` `ToastRegion` `Tooltip` |
 | `components/overlay/` | `useAnchoredOverlay` — placement, focus trapping, `Esc`, outside click and the optional scroll lock, shared by every overlay in the system (`UI-34a`). **Not exported from the barrel**: it is not a component, and a view reaching for it directly is a view inventing a sixth overlay. |
 | `guidelines/` | 17 specimen cards: Colors, Type, Spacing, Brand. Standalone HTML, opened directly or framed by the specimen route. |

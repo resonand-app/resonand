@@ -1,6 +1,8 @@
 import type { KeyboardEvent } from 'react';
 import { useRef } from 'react';
 
+import { Select } from '../forms/Select';
+
 /** The level the API stores. 10 read, 20 edit, 30 manage; 40 is ownership and is never granted. */
 export const OWNER_LEVEL = 40;
 
@@ -23,6 +25,12 @@ export interface LevelSelectorProps {
   /** Names the group: "What Sam Rivera can do". */
   label: string;
   disabled?: boolean;
+  /**
+   * `rows` draws every level with its sentence; `menu` draws the chosen level alone, as a `Select`
+   * whose options carry the sentences. `menu` is for a level somebody already holds, in a list of
+   * people, where three rows per person would push everybody else off the screen.
+   */
+  variant?: 'rows' | 'menu';
 }
 
 /**
@@ -52,16 +60,46 @@ function split(description: string): { name: string; rest: string | undefined } 
  * **The wording is visible, never behind a tooltip** (`UI-34j` says the same thing from the other
  * side). Sharing is where the product's first hard promise is kept or broken -- nothing is shared
  * until you share it -- and a person choosing a level has to be able to read what it does at the
- * moment they choose it, on a phone, without a pointer.
+ * moment they choose it, on a phone, without a pointer. The `menu` variant keeps that promise at
+ * the moment of choosing: its options carry the sentences, and a closed menu names the level.
  *
  * **Owner is never selectable.** It is not a grant: the backend reads it off `library.owner_id`
  * and a `CHECK` refuses a share row carrying it. If one arrives in `levels` anyway it is dropped
  * here rather than drawn and disabled, for `UI-34c`'s reason -- an option nobody can ever pick is
  * an option that should not be in the list.
  */
-export function LevelSelector({ levels, value, onChange, label, disabled = false }: LevelSelectorProps) {
+export function LevelSelector({
+  levels,
+  value,
+  onChange,
+  label,
+  disabled = false,
+  variant = 'rows',
+}: LevelSelectorProps) {
   const grantable = levels.filter((option) => option.level !== OWNER_LEVEL);
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  if (variant === 'menu') {
+    return (
+      <Select
+        ariaLabel={label}
+        value={value === undefined ? undefined : String(value)}
+        disabled={disabled}
+        width={136}
+        options={grantable.map((option) => {
+          const { name, rest } = split(option.description);
+          return {
+            value: String(option.level),
+            label: name,
+            ...(rest === undefined ? {} : { description: rest }),
+          };
+        })}
+        onChange={(picked) => {
+          onChange(Number(picked));
+        }}
+      />
+    );
+  }
 
   const move = (from: number, direction: 1 | -1) => {
     const count = grantable.length;

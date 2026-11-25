@@ -21,12 +21,15 @@
  * **Revoking says what the person loses, in numbers.** "Are you sure?" is not a consequence;
  * "Sam Rivera loses access to all 41 recordings" is.
  *
- * **Adding somebody takes a whole address and nothing shorter** (`UI-17d`, `API-15`). The lookup
- * matches the full normalised email and answers with at most one account, because a prefix or a
- * name search would let any library manager enumerate the instance -- the same class of leak the
- * ACL-filtered tag autocomplete exists to prevent. Sharing needs to confirm one address somebody
- * was given out of band, and **the interface must not look like a directory**: no suggestions
- * while typing, no list, and a field that says plainly it is not searching for people.
+ * **Adding people is choosing them from the instance's accounts** (`UI-49`, `DEC-29`). Every
+ * active account is a box with its name, minus the owner and whoever already has access -- they
+ * are above, with their level -- and choosing is only a choice, of one person or several: the
+ * level and the button come after, so nothing is shared by a stray press. `DEC-29` accepted the
+ * cost, which is that any library manager can see who else has an account here.
+ *
+ * **Somebody who has access is one row**: who, since when, their level as a menu and a control to
+ * remove them. The level's sentence is in the menu, read at the moment it is changed; three rows
+ * of it under every person put the fourth person below the fold on a family library.
  *
  * **The three variants are one panel, not three** (`UI-17e`).
  *
@@ -54,12 +57,20 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useInstance, useSession } from '@/app/session';
-import { Button, Dialog, LevelSelector, Modal, TextField } from '@/design-system';
+import {
+  Button,
+  Dialog,
+  IconButton,
+  LevelSelector,
+  Modal,
+  PersonPicker,
+  initialsOf,
+} from '@/design-system';
 import type { LevelOption } from '@/design-system';
 import { LEVEL } from '@/features/library/data';
 import { instant } from '@/i18n/time';
 
-import { useLookup } from './data';
+import { usePeopleToShareWith } from './data';
 import type { Level, ShareEdits, ShareSummary, UserSummary } from './data';
 
 export interface SharePanelProps {
@@ -71,12 +82,17 @@ export interface SharePanelProps {
     is_personal: boolean;
   };
   shares: readonly ShareSummary[];
+  /**
+   * The add form waits for it: until the shares are in, everybody already holding access would be
+   * offered as somebody to add.
+   */
+  sharesLoaded: boolean;
   edits: ShareEdits;
   /** Level 30. Below it the panel is read-only rather than absent (`UI-17e`). */
   canManage: boolean;
 }
 
-export function SharePanel({ library, shares, edits, canManage }: SharePanelProps) {
+export function SharePanel({ library, shares, sharesLoaded, edits, canManage }: SharePanelProps) {
   const { t, i18n } = useTranslation('librarySettings');
   const { account } = useSession();
   const instance = useInstance();
@@ -88,6 +104,12 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
     ...(account === undefined ? [] : ([[account.id, account.display_name]] as [number, string][])),
     ...shares.map((share): [number, string] => [share.grantee.id, share.grantee.display_name]),
   ]);
+
+  const grantedLine = (share: ShareSummary) =>
+    t(known.has(share.granted_by) ? 'shares.grantedBy' : 'shares.grantedOn', {
+      who: known.get(share.granted_by),
+      when: instant(share.created_at, i18n.language),
+    });
 
   // The instance's own vocabulary, in its order. A share's `level_description` says the same
   // thing for the level somebody already has, so there is nothing to reconcile between them.
@@ -106,33 +128,25 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
       {shares.length === 0 && <p style={quiet}>{t('shares.none')}</p>}
       <ul aria-label={t('shares.title')} style={list}>
         {shares.map((share) => (
-          <li
-            key={share.grantee.id}
-            style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: 'var(--space-2)',
-                flexWrap: 'wrap',
-              }}
-            >
-              <span style={{ fontSize: 'var(--type-ui-size)', color: 'var(--text)' }}>
+          <li key={share.grantee.id} style={row}>
+            <span data-ds="avatar" aria-hidden style={avatar}>
+              {initialsOf(share.grantee.display_name)}
+            </span>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={{ ...cut, fontSize: 'var(--type-ui-size)', color: 'var(--text)' }}>
                 {share.grantee.display_name}
               </span>
-              <span style={{ ...quiet, fontFamily: 'var(--font-mono)' }}>
-                {share.grantee.email}
-              </span>
-              <span style={{ flex: 1 }} />
-              <span style={quiet}>
-                {t(known.has(share.granted_by) ? 'shares.grantedBy' : 'shares.grantedOn', {
-                  who: known.get(share.granted_by),
-                  when: instant(share.created_at, i18n.language),
-                })}
+              <span style={{ display: 'flex', flexWrap: 'wrap', columnGap: 'var(--space-2)' }}>
+                <span style={{ ...quiet, ...cut, fontFamily: 'var(--font-mono)' }}>
+                  {share.grantee.email}
+                </span>
+                <span style={{ ...quiet, ...cut }} title={grantedLine(share)}>
+                  {grantedLine(share)}
+                </span>
               </span>
             </div>
             <LevelSelector
+              variant="menu"
               levels={levels}
               value={share.level}
               disabled={!canManage}
@@ -142,16 +156,14 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
               }}
             />
             {canManage && (
-              <div>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setRevoking(share);
-                  }}
-                >
-                  {t('shares.revoke', { name: share.grantee.display_name })}
-                </Button>
-              </div>
+              <IconButton
+                icon="x"
+                variant="ghost"
+                label={t('shares.revoke', { name: share.grantee.display_name })}
+                onClick={() => {
+                  setRevoking(share);
+                }}
+              />
             )}
           </li>
         ))}
@@ -163,7 +175,10 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
       {library.is_personal ? (
         <p style={quiet}>{t('shares.personal')}</p>
       ) : (
-        canManage && <AddPerson levels={levels} shares={shares} edits={edits} />
+        canManage &&
+        sharesLoaded && (
+          <AddPerson levels={levels} owner={library.owner} shares={shares} edits={edits} />
+        )
       )}
       {!canManage && !library.is_personal && <p style={quiet}>{t('shares.readOnly')}</p>}
 
@@ -216,79 +231,83 @@ export function SharePanel({ library, shares, edits, canManage }: SharePanelProp
 }
 
 /**
- * The narrow lookup, and the grant it leads to.
+ * Choosing people, and the grant it leads to.
  *
- * One address, one answer, and no list. The request is not made until what has been typed is a
- * whole address, so somebody typing a colleague's name into it produces no requests at all rather
- * than a request per keystroke about the people they work with.
+ * The candidates are everybody the endpoint offers minus whoever this library already reaches,
+ * so the list shrinks as people are added and nobody is offered twice. Everybody chosen gets the
+ * one level chosen below them; a different level for one of them is changed in the list above.
+ * Whoever a grant was refused for stays chosen, since they are still somebody to add.
  */
 function AddPerson({
   levels,
+  owner,
   shares,
   edits,
 }: {
   levels: LevelOption[];
+  owner: UserSummary;
   shares: readonly ShareSummary[];
   edits: ShareEdits;
 }) {
   const { t } = useTranslation('librarySettings');
-  const [email, setEmail] = useState('');
+  const [chosen, setChosen] = useState<number[]>([]);
   const [level, setLevel] = useState<Level>(LEVEL.read);
-  const { person, isPending } = useLookup(email);
-  const already = person !== undefined && shares.some((one) => one.grantee.id === person.id);
+  const { people, isPending, isError } = usePeopleToShareWith();
+  const reached = new Set([owner.id, ...shares.map((one) => one.grantee.id)]);
+  const candidates = people.filter((one) => !reached.has(one.id));
+  const picked = candidates.filter((one) => chosen.includes(one.id));
+  const named = { count: picked.length, name: picked[0]?.display_name };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
       <h3 style={{ ...heading, fontWeight: 'var(--weight-medium)' }}>{t('add.title')}</h3>
-      <TextField
-        type="email"
-        label={t('add.email')}
-        value={email}
-        autoComplete="off"
-        maxLength={320}
-        onChange={(event) => {
-          setEmail(event.target.value);
-        }}
-      />
-      <span style={quiet}>{t('add.notADirectory')}</span>
 
-      {email.trim() !== '' && person === undefined && !isPending && (
+      {isError && (
         <span style={quiet} role="status">
-          {t('add.nobody')}
+          {t('add.unavailable')}
         </span>
       )}
+      {!isPending && !isError && candidates.length === 0 && (
+        <span style={quiet}>{t(people.length === 0 ? 'add.nobodyElse' : 'add.everybodyHas')}</span>
+      )}
+      {candidates.length > 0 && (
+        <PersonPicker
+          label={t('add.who')}
+          people={candidates.map((one) => ({ id: one.id, name: one.display_name }))}
+          value={picked.map((one) => one.id)}
+          onChange={setChosen}
+        />
+      )}
 
-      {person !== undefined && (
+      {picked.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-          <span style={{ fontSize: 'var(--type-ui-size)', color: 'var(--text)' }}>
-            {person.display_name}
-          </span>
-          {already ? (
-            <span style={quiet}>{t('add.already', { name: person.display_name })}</span>
-          ) : (
-            <>
-              <LevelSelector
-                levels={levels}
-                value={level}
-                label={t('add.whatTheyCanDo')}
-                onChange={(chosen) => {
-                  setLevel(chosen as Level);
-                }}
-              />
-              <div>
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    edits.grant.mutate({ granteeId: person.id, level });
-                    setEmail('');
-                    setLevel(LEVEL.read);
-                  }}
-                >
-                  {t('add.share', { name: person.display_name })}
-                </Button>
-              </div>
-            </>
-          )}
+          <LevelSelector
+            levels={levels}
+            value={level}
+            label={t('add.whatTheyCanDo', named)}
+            onChange={(next) => {
+              setLevel(next as Level);
+            }}
+          />
+          <div>
+            <Button
+              variant="primary"
+              disabled={edits.grantMany.isPending}
+              onClick={() => {
+                edits.grantMany.mutate(
+                  { granteeIds: picked.map((one) => one.id), level },
+                  {
+                    onSuccess: () => {
+                      setChosen([]);
+                      setLevel(LEVEL.read);
+                    },
+                  },
+                );
+              }}
+            >
+              {t('add.share', named)}
+            </Button>
+          </div>
         </div>
       )}
     </div>
@@ -316,5 +335,30 @@ const list = {
   listStyle: 'none',
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--space-6)',
+  gap: 'var(--space-3)',
+} as const;
+
+const row = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 'var(--space-3)',
+} as const;
+
+const avatar = {
+  flex: '0 0 auto',
+  width: 32,
+  height: 32,
+  borderRadius: 'var(--radius-circle)',
+  display: 'grid',
+  placeItems: 'center',
+  fontFamily: 'var(--font-mono)',
+  fontWeight: 'var(--weight-medium)',
+  fontSize: 'var(--type-overline-size)',
+} as const;
+
+const cut = {
+  minWidth: 0,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
 } as const;

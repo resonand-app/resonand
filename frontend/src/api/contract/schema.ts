@@ -1353,6 +1353,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Everybody a library can go to
+         * @description Every active account but the caller's, by name, for somebody who manages a library.
+         */
+        get: operations["list_shareable_api_users_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/lookup": {
         parameters: {
             query?: never;
@@ -1362,7 +1382,8 @@ export interface paths {
         };
         /**
          * Find one person by address
-         * @description At most one account, for somebody who manages at least one library.
+         * @deprecated
+         * @description At most one account, matched on the whole normalised address. Use ``GET /users``.
          *
          *     A disabled account is not returned: the ACL refuses one anyway, so offering it would offer a
          *     share that could never work.
@@ -4444,6 +4465,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TrashSummary"];
+                };
+            };
+        };
+    };
+    list_shareable_api_users_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserSummary"][];
                 };
             };
         };

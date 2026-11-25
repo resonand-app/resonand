@@ -59,12 +59,14 @@
   },
   "add": {
     "title": "Give somebody access",
-    "email": "Their email address",
-    "notADirectory": "The whole address, exactly. Resonand does not search for people, and will not tell you who else has an account here.",
-    "nobody": "No account here has that address.",
-    "already": "{{name}} already has access. Change their level above.",
-    "whatTheyCanDo": "What they will be able to do",
-    "share": "Share with {{name}}"
+    "who": "Who to share with",
+    "nobodyElse": "Nobody else has an account here yet. An administrator creates them.",
+    "everybodyHas": "Everybody with an account here already has access. Change their level above.",
+    "unavailable": "The people on this instance could not be loaded.",
+    "whatTheyCanDo_one": "What {{name}} will be able to do",
+    "whatTheyCanDo_other": "What these {{count}} people will be able to do",
+    "share_one": "Share with {{name}}",
+    "share_other": "Share with {{count}} people"
   },
   "trash": {
     "action": "Move this library to the trash",

@@ -7,7 +7,7 @@
  */
 
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http } from 'msw';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createQueryClient } from '@/api/query-client';
 import { routes, toLibrarySettings } from '@/app/routes';
-import { RECORDINGS, PERSONAL, archive } from '@/test/api/archive';
+import { RECORDINGS, PERSONAL, ROBIN, SAM, archive } from '@/test/api/archive';
 import { mockApi, server } from '@/test/api/server';
 
 import { LibrarySettingsView } from '../LibrarySettingsView';
@@ -56,7 +56,7 @@ describe('the three variants', () => {
   it('cannot share the personal library away, and says why once', async () => {
     show(PERSONAL);
     expect(await screen.findByText(/personal library cannot be shared/i)).toBeVisible();
-    expect(screen.queryByLabelText(/their email address/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: /who to share with/i })).not.toBeInTheDocument();
   });
 
   it('says which half of the answer it is showing, since a moved recording carries its own', async () => {
@@ -66,58 +66,104 @@ describe('the three variants', () => {
 });
 
 describe('giving somebody access', () => {
-  it('asks nothing until a whole address has been typed, so it cannot be a directory', async () => {
-    const asked: string[] = [];
-    server.events.on('request:start', ({ request }) => {
-      const url = new URL(request.url);
-      if (url.pathname === '/api/users/lookup') asked.push(url.searchParams.get('email') ?? '');
-    });
-    show();
-    await userEvent.type(await screen.findByLabelText(/their email address/i), 'sa');
-    expect(asked).toEqual([]);
-    await userEvent.type(screen.getByLabelText(/their email address/i), 'm@example.test');
-    await waitFor(() => {
-      expect(asked.at(-1)).toBe('sam@example.test');
-    });
-    // Only what is address-shaped is ever asked about. A name, or half of one, produces nothing:
-    // there is no request that could tell somebody whether an account exists for a prefix.
-    expect(asked.every((one) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(one))).toBe(true);
-  });
-
-  it('says it does not search for people, in as many words', async () => {
-    show();
-    expect(await screen.findByText(/does not search for people/i)).toBeVisible();
-  });
-
-  it('answers an address nobody has with a fact rather than with a list', async () => {
-    show();
-    await userEvent.type(
-      await screen.findByLabelText(/their email address/i),
-      'nobody@example.test',
-    );
-    expect(await screen.findByText('No account here has that address.')).toBeVisible();
-  });
-
-  it('grants at the level chosen, and only once the whole address matched', async () => {
-    // A library nobody has been given access to yet, which is what the add form is for. The
-    // personal one has no form at all, and that is `UI-17e`'s business rather than this test's.
+  it('offers the people on the instance as a choice, by name', async () => {
     archive.shares = { ...archive.shares, [RECORDINGS]: [] };
     show();
-    await userEvent.type(await screen.findByLabelText(/their email address/i), 'sam@example.test');
-    await userEvent.click(await screen.findByRole('button', { name: /Share with Sam Rivera/i }));
+    const group = await screen.findByRole('group', { name: /who to share with/i });
+    expect(
+      within(group)
+        .getAllByRole('checkbox')
+        .map((one) => one.textContent),
+    ).toEqual(['RORobin Okafor', 'SRSam Rivera']);
+  });
+
+  it('leaves out whoever already has access, since they are listed above with their level', async () => {
+    show();
+    const group = await screen.findByRole('group', { name: /who to share with/i });
+    expect(within(group).getAllByRole('checkbox')).toHaveLength(1);
+    expect(within(group).queryByRole('checkbox', { name: /Sam Rivera/ })).not.toBeInTheDocument();
+  });
+
+  it('shares nothing until a level is confirmed, then grants at the level chosen', async () => {
+    archive.shares = { ...archive.shares, [RECORDINGS]: [] };
+    show();
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Robin Okafor/ }));
+    expect(archive.shares[RECORDINGS]).toHaveLength(0);
+    const levels = screen.getByRole('radiogroup', { name: /What Robin Okafor will be able to do/ });
+    await userEvent.click(within(levels).getByRole('radio', { name: /Can edit/i }));
+    await userEvent.click(screen.getByRole('button', { name: /Share with Robin Okafor/i }));
     await waitFor(() => {
       expect(archive.shares[RECORDINGS]).toHaveLength(1);
     });
-    expect(archive.shares[RECORDINGS]?.[0]?.level).toBe(10);
+    expect(archive.shares[RECORDINGS]?.[0]?.grantee.id).toBe(3);
+    expect(archive.shares[RECORDINGS]?.[0]?.level).toBe(20);
   });
 
-  it('does not offer to add somebody who is already there', async () => {
+  it('shares with everybody chosen at once, at the one level chosen', async () => {
+    archive.shares = { ...archive.shares, [RECORDINGS]: [] };
     show();
-    await userEvent.type(await screen.findByLabelText(/their email address/i), 'sam@example.test');
-    expect(await screen.findByText(/already has access/i)).toBeVisible();
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Robin Okafor/ }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /Sam Rivera/ }));
+    const levels = screen.getByRole('radiogroup', {
+      name: /What these 2 people will be able to do/,
+    });
+    await userEvent.click(within(levels).getByRole('radio', { name: /Can manage/i }));
+    await userEvent.click(screen.getByRole('button', { name: 'Share with 2 people' }));
+    await waitFor(() => {
+      expect(archive.shares[RECORDINGS]).toHaveLength(2);
+    });
+    expect(archive.shares[RECORDINGS]?.map((one) => [one.grantee.id, one.level])).toEqual([
+      [ROBIN.id, 30],
+      [SAM.id, 30],
+    ]);
     expect(
-      screen.queryByRole('button', { name: /Share with Sam Rivera/i }),
-    ).not.toBeInTheDocument();
+      await screen.findByText(/everybody with an account here already has access/i),
+    ).toBeVisible();
+  });
+
+  it('keeps whoever a grant was refused for chosen, and lets the others through', async () => {
+    archive.shares = { ...archive.shares, [RECORDINGS]: [] };
+    server.use(
+      http.put('/api/libraries/:library_uuid/shares', async ({ request }) => {
+        const body = (await request.clone().json()) as { grantee_id: number };
+        if (body.grantee_id !== SAM.id) return undefined;
+        return HttpResponse.json(
+          { title: 'Refused', status: 409, detail: 'Sam Rivera cannot be given access.' },
+          { status: 409, headers: { 'Content-Type': 'application/problem+json' } },
+        );
+      }),
+    );
+    show();
+    await userEvent.click(await screen.findByRole('checkbox', { name: /Robin Okafor/ }));
+    await userEvent.click(screen.getByRole('checkbox', { name: /Sam Rivera/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'Share with 2 people' }));
+    await waitFor(() => {
+      expect(archive.shares[RECORDINGS]).toHaveLength(1);
+    });
+    const group = await screen.findByRole('group', { name: /who to share with/i });
+    await waitFor(() => {
+      expect(within(group).getAllByRole('checkbox')).toHaveLength(1);
+    });
+    expect(within(group).getByRole('checkbox', { name: /Sam Rivera/ })).toHaveAttribute(
+      'aria-checked',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: /Share with Sam Rivera/ })).toBeVisible();
+  });
+
+  it('says so when everybody already has access, rather than drawing an empty grid', async () => {
+    server.use(http.get('/api/users', () => HttpResponse.json([SAM])));
+    show();
+    expect(
+      await screen.findByText(/everybody with an account here already has access/i),
+    ).toBeVisible();
+    expect(screen.queryByRole('group', { name: /who to share with/i })).not.toBeInTheDocument();
+  });
+
+  it('says who creates accounts when there is nobody else to share with', async () => {
+    server.use(http.get('/api/users', () => HttpResponse.json([])));
+    show();
+    expect(await screen.findByText(/an administrator creates them/i)).toBeVisible();
   });
 });
 
@@ -129,8 +175,12 @@ describe('the sharing panel', () => {
     expect(screen.getByText(/Shared by Alex Morgan/)).toBeInTheDocument();
   });
 
-  it('renders the API’s own wording for a level rather than a copy of it', async () => {
+  it('is one row per person, with their level named and its sentence in the menu', async () => {
     show();
+    const level = await screen.findByRole('combobox', { name: 'What Sam Rivera can do' });
+    expect(level).toHaveTextContent('Can edit');
+    expect(screen.queryByText(/change titles, categories and tags/i)).not.toBeInTheDocument();
+    await userEvent.click(level);
     // The sentence lives beside the levels in the backend and arrives with the share.
     expect(
       await screen.findByText(/change titles, categories and tags, but not move, trash or share/i),
@@ -139,7 +189,8 @@ describe('the sharing panel', () => {
 
   it('changes a level, which is the same grant', async () => {
     show();
-    await userEvent.click(await screen.findByRole('radio', { name: /Can manage/i }));
+    await userEvent.click(await screen.findByRole('combobox', { name: 'What Sam Rivera can do' }));
+    await userEvent.click(await screen.findByRole('option', { name: /Can manage/i }));
     await waitFor(() => {
       expect(archive.shares[RECORDINGS]?.[0]?.level).toBe(30);
     });
@@ -171,6 +222,7 @@ describe('the sharing panel', () => {
 describe('the level selector explains a level nobody holds (API-18)', () => {
   it("offers every grantable level in the instance's own words", async () => {
     show();
+    await userEvent.click(await screen.findByRole('combobox', { name: 'What Sam Rivera can do' }));
     // The mock library is shared at one level only. Before `API-18` the other two had nothing to
     // render, because `level_description` rides on a grant and describes the levels in use.
     for (const clause of [
@@ -184,6 +236,7 @@ describe('the level selector explains a level nobody holds (API-18)', () => {
 
   it('never offers owner, which is held rather than granted', async () => {
     show();
+    await userEvent.click(await screen.findByRole('combobox', { name: 'What Sam Rivera can do' }));
     await screen.findAllByText(/listen and read the transcript/i);
     expect(screen.queryByText(/the library belongs to them/i)).not.toBeInTheDocument();
   });

@@ -17,6 +17,7 @@ import {
   KeyValueList,
   InlineField,
   LevelSelector,
+  PersonPicker,
   LibraryCard,
   Logo,
   Menu,
@@ -292,6 +293,7 @@ export default function Specimens() {
   const [picked, setPicked] = useState(true);
   const [sheet, setSheet] = useState(false);
   const [level, setLevel] = useState(20);
+  const [people, setPeople] = useState<number[]>([3]);
   const [title, setTitle] = useState('Digitised cassette');
   const [confirm, setConfirm] = useState(false);
   const [toasts, setToasts] = useState<ToastEntry[]>([]);
@@ -554,6 +556,23 @@ export default function Specimens() {
             levels={LEVELS}
             value={level}
             onChange={setLevel}
+          />
+        </Panel>
+        <Panel label="LevelSelector · menu, for a level already held" width={360}>
+          <LevelSelector
+            variant="menu"
+            label="What Sam Rivera can do"
+            levels={LEVELS}
+            value={level}
+            onChange={setLevel}
+          />
+        </Panel>
+        <Panel label="PersonPicker · who to share with" width={480}>
+          <PersonPicker
+            label="Who to share with"
+            people={PEOPLE}
+            value={people}
+            onChange={setPeople}
           />
         </Panel>
         <Panel label="LibraryCard · CreateLibraryCard" width={672}>

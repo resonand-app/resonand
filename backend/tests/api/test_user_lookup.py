@@ -1,9 +1,8 @@
-"""Finding one person to share with (``API-15``, ``UI-17d``).
+"""Finding one person to share with (``API-15``), deprecated by ``DEC-29``.
 
-Every test here is about the endpoint refusing to be a directory. That is not a side condition:
-a prefix or name search would let anybody holding manage on one library enumerate every account
-on the instance, so the narrowness *is* the design, and the tests that matter are the ones that
-fail if it widens.
+``GET /users`` now lists everybody a library can go to, and this endpoint stays only for clients
+written against it. The tests hold it to the contract it was published with -- the whole address
+and at most one answer -- so a client that relied on it sees no change until it is removed.
 """
 
 from __future__ import annotations

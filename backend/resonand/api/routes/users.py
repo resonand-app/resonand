@@ -1,17 +1,18 @@
-"""Finding one person to share a library with (``API-15``, ``UI-17d``).
+"""Who a library can be shared with (``DEC-29``, ``API-29``; ``API-15`` before it).
 
 Only administrators could list accounts, so a library manager on a family instance could not
 resolve who to share with -- and ``PUT /shares`` takes an account id, which they had no way to
 discover.
 
-**This is deliberately not a directory, and the shape is the whole design.** It matches on the
-full normalised address and returns at most one account. A prefix search, or a search by name,
-would let anybody holding manage on one library enumerate every account on the instance -- the
-same class of leak the ACL-filtered tag suggestions already exist to prevent. Sharing needs to
-confirm one address somebody was given out of band; it does not need to browse.
+**This is a directory, on purpose.** ``DEC-29`` decided that somebody choosing who to share with
+picks from the instance's accounts rather than typing an address they were given out of band.
+The cost is named there and accepted: anybody who manages a library -- which is every account --
+can read the name and address of every active account on the instance. On the family instance
+Resonand is built for, those are people who already know each other.
 
-Finding nobody is an empty list rather than a 404, because "no account has that address" is a
-state the form draws under the field, not an error.
+``GET /users/lookup`` stays for clients written against ``0.1`` and ``0.2``, and is deprecated
+rather than removed: the interface no longer calls it, and a minor release that took it away
+would break a script for nothing it protects any more.
 """
 
 from __future__ import annotations
@@ -30,19 +31,35 @@ from resonand.db import users
 router = APIRouter(tags=["accounts"])
 
 
-@router.get("/users/lookup", response_model=list[UserSummary], summary="Find one person by address")
+def _require_manager(session: ReadSession, caller_id: int) -> None:
+    if not manages_any_library(session, caller_id):
+        raise PermissionDeniedError("Only somebody who manages a library can look a person up.")
+
+
+@router.get("/users", response_model=list[UserSummary], summary="Everybody a library can go to")
+def list_shareable(caller: CurrentCaller, session: ReadSession) -> list[UserSummary]:
+    """Every active account but the caller's, by name, for somebody who manages a library."""
+    _require_manager(session, caller.id)
+    return [user_summary(user) for user in users.shareable_with(session, caller.id)]
+
+
+@router.get(
+    "/users/lookup",
+    response_model=list[UserSummary],
+    summary="Find one person by address",
+    deprecated=True,
+)
 def lookup_user(
     caller: CurrentCaller,
     session: ReadSession,
     email: Annotated[EmailAddress, Query(description="A full address. Nothing shorter matches.")],
 ) -> list[UserSummary]:
-    """At most one account, for somebody who manages at least one library.
+    """At most one account, matched on the whole normalised address. Use ``GET /users``.
 
     A disabled account is not returned: the ACL refuses one anyway, so offering it would offer a
     share that could never work.
     """
-    if not manages_any_library(session, caller.id):
-        raise PermissionDeniedError("Only somebody who manages a library can look a person up.")
+    _require_manager(session, caller.id)
     found = users.find_by_email(session, email)
     if found is None or found.disabled_at is not None:
         return []

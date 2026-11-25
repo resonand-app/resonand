@@ -18,7 +18,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from resonand.core.errors import ConflictError, NotFoundError
-from resonand.core.text import normalise_email
+from resonand.core.text import normalise_email, normalise_slug
 from resonand.core.time import now_instant
 from resonand.db.models import Library, User
 
@@ -109,6 +109,22 @@ def find_by_email(session: Session, email: str) -> User | None:
     return session.execute(
         select(User).where(User.email_normalised == normalise_email(email))
     ).scalar_one_or_none()
+
+
+def shareable_with(session: Session, caller_id: int) -> list[User]:
+    """Every active account except the caller's, by name (``DEC-29``).
+
+    A disabled account is left out because the ACL resolves it to nothing, so offering it would
+    offer a share that could never work. The caller is left out because nobody is a grantee of
+    their own library.
+
+    Sorted here rather than in SQL, whose ``lower()`` folds neither accents nor anything outside
+    ASCII: *Ángela* would follow *Pere*. The list is one row per person on the instance.
+    """
+    found = session.execute(
+        select(User).where(User.id != caller_id, User.disabled_at.is_(None))
+    ).scalars()
+    return sorted(found, key=lambda user: (normalise_slug(user.display_name), user.id))
 
 
 def get_user(session: Session, user_id: int) -> User:

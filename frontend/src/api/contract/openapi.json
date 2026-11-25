@@ -5966,9 +5966,36 @@
         ]
       }
     },
+    "/api/users": {
+      "get": {
+        "description": "Every active account but the caller's, by name, for somebody who manages a library.",
+        "operationId": "list_shareable_api_users_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/UserSummary"
+                  },
+                  "title": "Response List Shareable Api Users Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Everybody a library can go to",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
     "/api/users/lookup": {
       "get": {
-        "description": "At most one account, for somebody who manages at least one library.\n\nA disabled account is not returned: the ACL refuses one anyway, so offering it would offer a\nshare that could never work.",
+        "deprecated": true,
+        "description": "At most one account, matched on the whole normalised address. Use ``GET /users``.\n\nA disabled account is not returned: the ACL refuses one anyway, so offering it would offer a\nshare that could never work.",
         "operationId": "lookup_user_api_users_lookup_get",
         "parameters": [
           {
